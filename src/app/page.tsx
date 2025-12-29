@@ -2,257 +2,115 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ProjectSelector } from '@/components/project-selector';
-import { FolderOpen, Plus, Trash2, ExternalLink } from 'lucide-react';
-
-interface RegisteredProject {
-  id: string;
-  name: string;
-  displayName: string;
-  filePath: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { FolderOpen, Plus } from 'lucide-react';
+import { useProjectStore, type RecentProject } from '@/lib/store';
+import { RecentProjectsList } from '@/components/recent-projects-list';
+import { OpenProjectModal } from '@/components/open-project-modal';
+import type { Project } from '@/types';
 
 export default function Home() {
   const router = useRouter();
-  const [registeredProjects, setRegisteredProjects] = useState<RegisteredProject[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showRegisterForm, setShowRegisterForm] = useState(false);
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
-  const [projectName, setProjectName] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { recentProjects, loadRecentProjects, addRecentProject } = useProjectStore();
 
-  const loadProjects = useCallback(async () => {
+  // Load recent projects from localStorage on mount
+  useEffect(() => {
+    loadRecentProjects();
+  }, [loadRecentProjects]);
+
+  // Handle opening a project from the modal
+  const handleOpenProject = useCallback((project: Project) => {
+    addRecentProject(project);
+    router.push(`/projects/${encodeURIComponent(project.path)}`);
+  }, [addRecentProject, router]);
+
+  // Handle selecting a recent project
+  const handleSelectRecent = useCallback(async (recentProject: RecentProject) => {
+    // Fetch fresh project data before navigating
     try {
-      const response = await fetch('/api/projects', { cache: 'no-store' });
+      const url = '/api/project?path=' + encodeURIComponent(recentProject.path);
+      const response = await fetch(url);
       if (response.ok) {
-        const projects = await response.json();
-        setRegisteredProjects(projects);
+        const project: Project = await response.json();
+        addRecentProject(project);
       }
-    } catch (err) {
-      console.error('Failed to load projects:', err);
-    } finally {
-      setIsLoading(false);
+    } catch {
+      // Continue even if refresh fails
     }
+    router.push(`/projects/${encodeURIComponent(recentProject.path)}`);
+  }, [addRecentProject, router]);
+
+  // Handle removing a recent project
+  const handleRemoveRecent = useCallback((path: string) => {
+    const { recentProjects } = useProjectStore.getState();
+    const filtered = recentProjects.filter(p => p.path !== path);
+    // Update localStorage directly
+    localStorage.setItem('specboard-recent-projects', JSON.stringify(filtered));
+    useProjectStore.setState({ recentProjects: filtered });
   }, []);
 
-  useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
-
-  const handlePathSelect = (path: string) => {
-    setSelectedPath(path);
-    // Auto-generate slug from path
-    const pathParts = path.split('/');
-    const folderName = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
-    const slug = folderName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    setProjectName(slug);
-    setDisplayName(folderName);
-    setShowRegisterForm(true);
-  };
-
-  const handleRegister = async () => {
-    if (!selectedPath || !projectName || !displayName) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    setIsRegistering(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: projectName,
-          displayName,
-          filePath: selectedPath,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to register project');
-      }
-
-      // Navigate to the new project
-      router.push(`/projects/${projectName}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setIsRegistering(false);
-    }
-  };
-
-  const handleDelete = async (name: string) => {
-    if (!confirm('Are you sure you want to remove this project?')) return;
-
-    try {
-      const response = await fetch(`/api/projects/${name}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        loadProjects();
-      }
-    } catch (err) {
-      console.error('Failed to delete project:', err);
-    }
-  };
-
-  const cancelRegistration = () => {
-    setShowRegisterForm(false);
-    setSelectedPath(null);
-    setProjectName('');
-    setDisplayName('');
-    setError(null);
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-8">
-      <div className="w-full max-w-2xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">SpecBoard</h1>
-          <p className="text-[var(--muted-foreground)]">
-            Visual dashboard for spec-kit task management
-          </p>
-        </div>
-
-        {/* Registered Projects */}
-        {!showRegisterForm && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Your Projects</h2>
-            {isLoading ? (
-              <div className="text-[var(--muted-foreground)] text-center py-8">
-                Loading projects...
-              </div>
-            ) : registeredProjects.length === 0 ? (
-              <div className="text-[var(--muted-foreground)] text-center py-8 border-2 border-dashed border-[var(--border)] rounded-lg">
-                <p className="mb-2">No projects registered yet</p>
-                <p className="text-sm">Select a folder below to register your first project</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {registeredProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="flex items-center justify-between p-4 bg-[var(--card)] border border-[var(--border)] rounded-lg hover:bg-[var(--secondary)] transition-colors"
-                  >
-                    <button
-                      onClick={() => router.push(`/projects/${project.name}`)}
-                      className="flex items-center gap-3 flex-1 text-left"
-                    >
-                      <FolderOpen className="w-5 h-5 text-[var(--muted-foreground)]" />
-                      <div>
-                        <div className="font-medium">{project.displayName}</div>
-                        <div className="text-xs text-[var(--muted-foreground)]">
-                          /{project.name}
-                        </div>
-                      </div>
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => router.push(`/projects/${project.name}`)}
-                        className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
-                        title="Open project"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(project.name)}
-                        className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
-                        title="Remove project"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Registration Form */}
-        {showRegisterForm && selectedPath && (
-          <div className="mb-8 p-6 bg-[var(--card)] border border-[var(--border)] rounded-lg">
-            <h2 className="text-lg font-semibold mb-4">Register Project</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-[var(--muted-foreground)] mb-1">
-                  Project Path
-                </label>
-                <div className="text-sm bg-[var(--secondary)] p-2 rounded truncate">
-                  {selectedPath}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm text-[var(--muted-foreground)] mb-1">
-                  URL Slug (lowercase, hyphens only)
-                </label>
-                <input
-                  type="text"
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  className="w-full p-2 bg-[var(--secondary)] border border-[var(--border)] rounded text-sm"
-                  placeholder="my-project"
-                />
-                <div className="text-xs text-[var(--muted-foreground)] mt-1">
-                  URL: /projects/{projectName || 'my-project'}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm text-[var(--muted-foreground)] mb-1">
-                  Display Name
-                </label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full p-2 bg-[var(--secondary)] border border-[var(--border)] rounded text-sm"
-                  placeholder="My Project"
-                />
-              </div>
-              {error && (
-                <div className="text-red-400 text-sm">{error}</div>
-              )}
-              <div className="flex gap-2">
-                <button
-                  onClick={handleRegister}
-                  disabled={isRegistering}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  <Plus className="w-4 h-4" />
-                  {isRegistering ? 'Registering...' : 'Register Project'}
-                </button>
-                <button
-                  onClick={cancelRegistration}
-                  className="px-4 py-2 bg-[var(--secondary)] hover:bg-[var(--secondary)]/80 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="border-b border-[var(--border)] bg-[var(--card)]">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-3">
+            <FolderOpen className="w-8 h-8 text-green-400" />
+            <div>
+              <h1 className="text-xl font-bold">SpecBoard</h1>
+              <p className="text-sm text-[var(--muted-foreground)]">
+                Visual dashboard for spec-kit projects
+              </p>
             </div>
           </div>
-        )}
+        </div>
+      </header>
 
-        {/* Project Selector */}
-        <div>
-          <h2 className="text-lg font-semibold mb-4">
-            {showRegisterForm ? 'Select a Different Folder' : 'Add New Project'}
-          </h2>
-          <div className="h-[400px]">
-            <ProjectSelector
-              onSelect={handlePathSelect}
-              recentProjects={[]}
-            />
+      {/* Main content - Split view */}
+      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+          {/* Left side - Recent Projects */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Recent Projects</h2>
+              <span className="text-sm text-[var(--muted-foreground)]">
+                {recentProjects.length} project{recentProjects.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="min-h-[400px]">
+              <RecentProjectsList
+                projects={recentProjects}
+                onSelect={handleSelectRecent}
+                onRemove={handleRemoveRecent}
+              />
+            </div>
+          </div>
+
+          {/* Right side - Open Project */}
+          <div className="lg:col-span-1">
+            <h2 className="text-lg font-semibold mb-4">Actions</h2>
+            <div className="space-y-3">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-[var(--border)] rounded-lg hover:bg-[var(--secondary)] transition-colors text-[var(--foreground)]"
+              >
+                <Plus className="w-5 h-5" />
+                Open Project
+              </button>
+              <p className="text-xs text-[var(--muted-foreground)] text-center">
+                Browse or search for a spec-kit project folder
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* Open Project Modal */}
+      <OpenProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onOpen={handleOpenProject}
+      />
     </div>
   );
 }

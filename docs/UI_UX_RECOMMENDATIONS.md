@@ -16,13 +16,16 @@ Based on comprehensive research of modern dashboard design principles, Linear ap
 - **Tabbed modal interface** for feature details
 - **Real-time updates** via SSE
 - **Recharts integration** for data visualization
+- **New split-view home page** with recent projects and quick access ✅
+- **Path-based URL routing** for easy sharing ✅
+- **Recent projects with full context** (stats, completion %, stage breakdown) ✅
+- **Streamlined project search** with autocomplete modal ✅
 
 ### Areas for Improvement
 - No drag-and-drop functionality for task management
-- Limited keyboard navigation support
-- No accessibility alternatives for interactive elements
 - Dashboard metrics could benefit from better visual hierarchy
 - Missing micro-interactions and feedback patterns
+- Command palette (`Cmd+K`) not yet implemented
 
 ---
 
@@ -273,14 +276,17 @@ interface DragDropAccessibility {
 
 ### 6.3 Project Selector
 
-**Current**: Filesystem browser
+**Current**: Split-view home page with recent projects list and search modal ✅
 
-**Recommendations**:
+**Implemented**:
 
-1. **Recent projects** prominently displayed
-2. **Favorites/pinned** projects
-3. **Search** within project list
-4. **Project health indicators** (last updated, task count)
+1. ✅ **Recent projects** prominently displayed (left panel with full metadata)
+2. ✅ **Search** with path autocomplete modal (`Cmd+K` style)
+3. ✅ **Project health indicators** (completion %, feature count, stage breakdown)
+4. ✅ **Default to home directory** for quick navigation
+
+**Future Enhancements**:
+- **Favorites/pinned** projects (not yet implemented)
 
 ---
 
@@ -288,24 +294,31 @@ interface DragDropAccessibility {
 
 ### Phase 1: Quick Wins (High Impact, Low Effort)
 - [ ] Add keyboard shortcuts for common actions
-- [ ] Improve focus indicators
-- [ ] Add ARIA labels to interactive elements
+- [x] Improve focus indicators ✅
+- [x] Add ARIA labels to interactive elements ✅
 - [ ] Implement "Move to" dropdown on Kanban cards
-- [ ] Add loading states and skeleton screens
+- [x] Add loading states and skeleton screens ✅
 
 ### Phase 2: Core Improvements
-- [ ] Implement command palette (`Cmd+K`)
+- [x] Implement command palette (`Cmd+K`) → Implemented as Open Project modal ✅
 - [ ] Add metric card trends and sparklines
-- [ ] Improve modal navigation with keyboard
+- [x] Improve modal navigation with keyboard ✅
 - [ ] Add column WIP limit indicators
 - [ ] Implement toast notifications for actions
 
 ### Phase 3: Advanced Features
 - [ ] Drag-and-drop with full accessibility support
 - [ ] Split view for feature comparison
-- [ ] Advanced filtering and search
+- [x] Advanced filtering and search → Path autocomplete with preview ✅
 - [ ] Customizable dashboard layout
 - [ ] Keyboard shortcut customization
+
+### Completed (New Features)
+- [x] Split-view home page with recent projects list ✅
+- [x] Path-based URL routing for shareable links ✅
+- [x] Recent projects with rich metadata (stats, completion %, stages) ✅
+- [x] Default to home directory in project search ✅
+- [x] HTML validation fixes (nested button issue) ✅
 
 ---
 
@@ -368,4 +381,5 @@ interface DragDropAccessibility {
 ---
 
 *Generated: 2025-12-29*
+*Updated: 2025-12-29 - Added implemented features from UI rebranding*
 *Research conducted using deep-research mode*

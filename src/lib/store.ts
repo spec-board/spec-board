@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import type { Project, Feature, DashboardMetrics, FeatureStage } from '@/types';
 
+// Recent project with full metadata for the new UI
+export interface RecentProject {
+  path: string;
+  name: string;
+  lastOpened: string; // ISO date string
+  summary: string | null; // From constitution.md or README
+  featureCount: number;
+  completionPercentage: number;
+  stageBreakdown: Record<FeatureStage, number>;
+}
+
 interface ProjectStore {
   // State
   project: Project | null;
@@ -8,7 +19,7 @@ interface ProjectStore {
   isLoading: boolean;
   error: string | null;
   projectPath: string | null;
-  recentProjects: string[];
+  recentProjects: RecentProject[];
 
   // Actions
   setProject: (project: Project | null) => void;
@@ -16,13 +27,14 @@ interface ProjectStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setProjectPath: (path: string | null) => void;
-  addRecentProject: (path: string) => void;
+  addRecentProject: (project: Project) => void;
+  loadRecentProjects: () => void;
   getMetrics: () => DashboardMetrics;
 }
 
 const RECENT_PROJECTS_KEY = 'specboard-recent-projects';
 
-function loadRecentProjects(): string[] {
+function loadRecentProjectsFromStorage(): RecentProject[] {
   if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem(RECENT_PROJECTS_KEY);
@@ -32,9 +44,24 @@ function loadRecentProjects(): string[] {
   }
 }
 
-function saveRecentProjects(projects: string[]) {
+function saveRecentProjectsToStorage(projects: RecentProject[]) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(RECENT_PROJECTS_KEY, JSON.stringify(projects));
+}
+
+// Extract summary from constitution or first feature's spec
+function extractSummary(project: Project): string | null {
+  if (project.constitution?.rawContent) {
+    // Get first non-empty line after title
+    const lines = project.constitution.rawContent.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#')) {
+        return trimmed.slice(0, 100) + (trimmed.length > 100 ? '...' : '');
+      }
+    }
+  }
+  return null;
 }
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
@@ -55,12 +82,47 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   setProjectPath: (projectPath) => set({ projectPath }),
 
-  addRecentProject: (path) => {
+  addRecentProject: (project: Project) => {
     const { recentProjects } = get();
-    const filtered = recentProjects.filter((p) => p !== path);
-    const updated = [path, ...filtered].slice(0, 10);
-    saveRecentProjects(updated);
+
+    // Calculate stage breakdown
+    const stageBreakdown: Record<FeatureStage, number> = {
+      specify: 0,
+      plan: 0,
+      tasks: 0,
+      implement: 0,
+      complete: 0,
+    };
+
+    let totalTasks = 0;
+    let completedTasks = 0;
+
+    for (const feature of project.features) {
+      stageBreakdown[feature.stage]++;
+      totalTasks += feature.totalTasks;
+      completedTasks += feature.completedTasks;
+    }
+
+    const newRecentProject: RecentProject = {
+      path: project.path,
+      name: project.name,
+      lastOpened: new Date().toISOString(),
+      summary: extractSummary(project),
+      featureCount: project.features.length,
+      completionPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+      stageBreakdown,
+    };
+
+    // Remove existing entry for this path and add new one at the front
+    const filtered = recentProjects.filter((p) => p.path !== project.path);
+    const updated = [newRecentProject, ...filtered].slice(0, 10);
+    saveRecentProjectsToStorage(updated);
     set({ recentProjects: updated });
+  },
+
+  loadRecentProjects: () => {
+    const projects = loadRecentProjectsFromStorage();
+    set({ recentProjects: projects });
   },
 
   getMetrics: (): DashboardMetrics => {
