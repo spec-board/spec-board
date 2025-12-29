@@ -1,6 +1,6 @@
 # SpecBoard
 
-> Visual dashboard for [spec-kit](https://github.com/github/spec-kit/spec-kit) projects
+> Visual dashboard for [spec-kit](https://github.com/github/spec-kit) projects
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 
