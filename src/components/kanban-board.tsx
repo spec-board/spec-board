@@ -1,18 +1,22 @@
 'use client';
 
+import { useCallback, useRef, KeyboardEvent } from 'react';
 import { cn, getKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature } from '@/types';
 import { FileText, ListTodo, Plus } from 'lucide-react';
 import { PriorityBadge } from '@/components/priority-badge';
+import { Tooltip } from '@/components/tooltip';
+import { announce } from '@/lib/accessibility';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'in_progress', 'done'];
 
 interface FeatureCardProps {
   feature: Feature;
   onClick: () => void;
+  onKeyDown?: (e: KeyboardEvent<HTMLButtonElement>) => void;
 }
 
-function FeatureCard({ feature, onClick }: FeatureCardProps) {
+function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
   const progressPercentage = feature.totalTasks > 0
     ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
     : 0;
@@ -25,15 +29,37 @@ function FeatureCard({ feature, onClick }: FeatureCardProps) {
       }, feature.userStories[0].priority)
     : null;
 
+  // Build accessible label
+  const ariaLabel = [
+    feature.name,
+    highestPriority ? `Priority ${highestPriority.replace('P', '')}` : null,
+    feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null,
+  ].filter(Boolean).join(', ');
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    // Pass to parent handler for navigation
+    onKeyDown?.(e);
+
+    // Handle Enter key for activation
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'w-full text-left p-4 rounded-lg transition-colors duration-150',
-        'bg-[var(--card)] border border-[var(--border)]',
-        'hover:bg-[var(--secondary)]'
-      )}
-    >
+    <Tooltip content="View details [Enter]">
+      <button
+        onClick={onClick}
+        onKeyDown={handleKeyDown}
+        aria-label={ariaLabel}
+        className={cn(
+          'w-full text-left p-4 rounded-lg transition-colors duration-150',
+          'bg-[var(--card)] border border-[var(--border)]',
+          'hover:bg-[var(--secondary)]',
+          'focus-ring'
+        )}
+      >
       {/* Title with priority badge */}
       <div className="flex items-center gap-2 mb-2">
         {highestPriority && <PriorityBadge priority={highestPriority} />}
@@ -80,7 +106,8 @@ function FeatureCard({ feature, onClick }: FeatureCardProps) {
           />
         </div>
       )}
-    </button>
+      </button>
+    </Tooltip>
   );
 }
 
@@ -113,29 +140,47 @@ interface KanbanColumnComponentProps {
 }
 
 function KanbanColumnComponent({ column, features, onFeatureClick }: KanbanColumnComponentProps) {
+  const columnLabel = getKanbanColumnLabel(column);
+
   return (
-    <div className="flex flex-col flex-1 min-w-[300px] max-w-[400px]">
+    <div
+      className="flex flex-col flex-1 min-w-[300px] max-w-[400px]"
+      role="region"
+      aria-label={`${columnLabel} column`}
+    >
       {/* Column header - Linear style: minimal, no colored background */}
       <div className="flex items-center justify-between px-1 py-3 border-b border-[var(--border)]">
-        <h3 className="font-medium text-sm text-[var(--foreground)]">
-          {getKanbanColumnLabel(column)}
+        <h3 className="font-medium text-sm text-[var(--foreground)]" id={`column-${column}-heading`}>
+          {columnLabel}
         </h3>
-        <span className="text-xs text-[var(--muted-foreground)] tabular-nums">
+        <span
+          className="text-xs text-[var(--muted-foreground)] tabular-nums"
+          aria-label={`${features.length} features`}
+        >
           {features.length}
         </span>
       </div>
 
       {/* Column content */}
-      <div className="flex-1 pt-3 space-y-2 min-h-[200px]">
+      <div
+        className="flex-1 pt-3 space-y-2 min-h-[200px]"
+        role="list"
+        aria-labelledby={`column-${column}-heading`}
+        aria-label={`${columnLabel} features, ${features.length} items`}
+      >
         {features.length === 0 ? (
           <EmptyColumn column={column} />
         ) : (
-          features.map((feature) => (
-            <FeatureCard
-              key={feature.id}
-              feature={feature}
-              onClick={() => onFeatureClick(feature)}
-            />
+          features.map((feature, index) => (
+            <div key={feature.id} role="listitem">
+              <FeatureCard
+                feature={feature}
+                onClick={() => {
+                  announce(`Opening ${feature.name} details`);
+                  onFeatureClick(feature);
+                }}
+              />
+            </div>
           ))
         )}
       </div>
@@ -155,8 +200,22 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
     return acc;
   }, {} as Record<KanbanColumn, Feature[]>);
 
+  // Calculate totals for screen reader summary
+  const totalFeatures = features.length;
+  const inProgressCount = featuresByColumn['in_progress'].length;
+  const doneCount = featuresByColumn['done'].length;
+
   return (
-    <div className="flex gap-6 overflow-x-auto pb-4">
+    <section
+      aria-label="Feature board"
+      className="flex gap-6 overflow-x-auto pb-4"
+    >
+      {/* Screen reader summary */}
+      <div className="sr-only" aria-live="polite">
+        {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog,
+        {inProgressCount} in progress, {doneCount} done
+      </div>
+
       {COLUMNS.map((column) => (
         <KanbanColumnComponent
           key={column}
@@ -165,6 +224,6 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
           onFeatureClick={onFeatureClick}
         />
       ))}
-    </div>
+    </section>
   );
 }

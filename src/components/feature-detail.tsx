@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback, KeyboardEvent } from 'react';
 import { X, CheckCircle2, Circle, FileText, ExternalLink, Zap } from 'lucide-react';
 import type { Feature, Task, TaskPhase } from '@/types';
 import { cn, getStageColor, getStageLabel } from '@/lib/utils';
@@ -13,6 +13,8 @@ import { ResearchViewer } from '@/components/research-viewer';
 import { DataModelViewer } from '@/components/data-model-viewer';
 import { QuickstartViewer } from '@/components/quickstart-viewer';
 import { ContractsViewer } from '@/components/contracts-viewer';
+import { Tooltip } from '@/components/tooltip';
+import { useFocusTrap, announce } from '@/lib/accessibility';
 
 type TabId = 'overview' | 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contracts';
 
@@ -263,6 +265,11 @@ function TasksTab({ feature }: { feature: Feature }) {
 
 export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Focus trap for modal
+  useFocusTrap(modalRef, true, { initialFocusRef: closeButtonRef });
 
   const progressPercentage = feature.totalTasks > 0
     ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
@@ -297,20 +304,80 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
   // Get contract files
   const contractFiles = feature.additionalFiles?.filter(f => f.type === 'contract') ?? [];
 
-  const tabs: { id: TabId; label: string; show: boolean; status: TabStatus }[] = [
-    { id: 'overview', label: 'Overview', show: true, status: 'none' },
-    { id: 'spec', label: 'Spec', show: true, status: getTabStatus('spec', feature) },
-    { id: 'plan', label: 'Plan', show: true, status: getTabStatus('plan', feature) },
-    { id: 'tasks', label: 'Tasks', show: true, status: getTabStatus('tasks', feature) },
-    { id: 'research', label: 'Research', show: hasAdditionalFile('research'), status: 'none' },
-    { id: 'data-model', label: 'Data Model', show: hasAdditionalFile('data-model'), status: 'none' },
-    { id: 'quickstart', label: 'Quickstart', show: hasAdditionalFile('quickstart'), status: 'none' },
-    { id: 'contracts', label: 'Contracts', show: contractFiles.length > 0, status: 'none' },
+  const tabs: { id: TabId; label: string; show: boolean; status: TabStatus; shortcut: number }[] = [
+    { id: 'overview', label: 'Overview', show: true, status: 'none', shortcut: 1 },
+    { id: 'spec', label: 'Spec', show: true, status: getTabStatus('spec', feature), shortcut: 2 },
+    { id: 'plan', label: 'Plan', show: true, status: getTabStatus('plan', feature), shortcut: 3 },
+    { id: 'tasks', label: 'Tasks', show: true, status: getTabStatus('tasks', feature), shortcut: 4 },
+    { id: 'research', label: 'Research', show: hasAdditionalFile('research'), status: 'none', shortcut: 5 },
+    { id: 'data-model', label: 'Data Model', show: hasAdditionalFile('data-model'), status: 'none', shortcut: 6 },
+    { id: 'quickstart', label: 'Quickstart', show: hasAdditionalFile('quickstart'), status: 'none', shortcut: 7 },
+    { id: 'contracts', label: 'Contracts', show: contractFiles.length > 0, status: 'none', shortcut: 8 },
   ];
 
+  const visibleTabs = tabs.filter(t => t.show);
+
+  // Handle keyboard navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    // Escape to close
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      announce('Closing feature details');
+      onClose();
+      return;
+    }
+
+    // Number keys 1-8 to switch tabs
+    const num = parseInt(e.key);
+    if (num >= 1 && num <= 8) {
+      const targetTab = visibleTabs[num - 1];
+      if (targetTab) {
+        e.preventDefault();
+        setActiveTab(targetTab.id);
+        announce(`Switched to ${targetTab.label} tab`);
+      }
+    }
+
+    // Arrow keys for tab navigation
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      const currentIndex = visibleTabs.findIndex(t => t.id === activeTab);
+      let newIndex: number;
+
+      if (e.key === 'ArrowLeft') {
+        newIndex = currentIndex > 0 ? currentIndex - 1 : visibleTabs.length - 1;
+      } else {
+        newIndex = currentIndex < visibleTabs.length - 1 ? currentIndex + 1 : 0;
+      }
+
+      const newTab = visibleTabs[newIndex];
+      if (newTab) {
+        e.preventDefault();
+        setActiveTab(newTab.id);
+        announce(`Switched to ${newTab.label} tab`);
+      }
+    }
+  }, [activeTab, visibleTabs, onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] w-full max-w-3xl max-h-[90vh] flex flex-col">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      role="presentation"
+      onClick={(e) => {
+        // Close when clicking backdrop
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onKeyDown={handleKeyDown}
+        className="bg-[var(--card)] rounded-lg border border-[var(--border)] w-full max-w-3xl max-h-[90vh] flex flex-col focus-ring"
+        tabIndex={-1}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
           <div>
@@ -328,40 +395,63 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
                 {feature.id}
               </span>
             </div>
-            <h2 className="text-lg font-semibold capitalize">{feature.name}</h2>
+            <h2 id="modal-title" className="text-lg font-semibold capitalize">{feature.name}</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <Tooltip content="Close [Esc]">
+            <button
+              ref={closeButtonRef}
+              onClick={onClose}
+              aria-label="Close dialog"
+              className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors focus-ring"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </Tooltip>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-[var(--border)]">
-          {tabs.filter(t => t.show).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-1.5',
-                activeTab === tab.id
-                  ? 'text-[var(--foreground)]'
-                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-              )}
-            >
-              <TabStatusIcon status={tab.status} />
-              {tab.label}
-              {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
-              )}
-            </button>
+        <div
+          className="flex border-b border-[var(--border)]"
+          role="tablist"
+          aria-label="Feature details"
+        >
+          {visibleTabs.map((tab, index) => (
+            <Tooltip key={tab.id} content={`${tab.label} [${index + 1}]`}>
+              <button
+                role="tab"
+                id={`tab-${tab.id}`}
+                aria-selected={activeTab === tab.id}
+                aria-controls={`panel-${tab.id}`}
+                tabIndex={activeTab === tab.id ? 0 : -1}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  announce(`Switched to ${tab.label} tab`);
+                }}
+                className={cn(
+                  'px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-1.5 focus-ring',
+                  activeTab === tab.id
+                    ? 'text-[var(--foreground)]'
+                    : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                )}
+              >
+                <TabStatusIcon status={tab.status} />
+                {tab.label}
+                {activeTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+                )}
+              </button>
+            </Tooltip>
           ))}
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-4">
+        <div
+          className="flex-1 overflow-auto p-4"
+          role="tabpanel"
+          id={`panel-${activeTab}`}
+          aria-labelledby={`tab-${activeTab}`}
+          tabIndex={0}
+        >
           {activeTab === 'overview' && (
             <OverviewTab
               feature={feature}
