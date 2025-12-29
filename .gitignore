@@ -88,6 +88,5 @@ jspm_packages/
 .yarn-integrity
 .claude
 CLAUDE.md
-PROJECT_INDEX.md
 agent-includes
 .playwright-mcp
