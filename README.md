@@ -86,6 +86,40 @@ http://your-domain.com/projects/my-project/features/feature-name
 - **State**: Zustand
 - **Charts**: Recharts
 - **Icons**: Lucide React
+- **Accessibility**: WCAG 2.2 AA compliant
+
+## Accessibility
+
+SpecBoard is built with WCAG 2.2 AA compliance in mind:
+
+### Keyboard Navigation
+- **Kanban Board**: Tab through cards, Enter to open details
+- **Feature Modal**: Escape to close, 1-8 for tabs, Arrow keys for tab navigation
+- **Project Selector**: Arrow keys to navigate directories, Enter to select
+
+### Screen Reader Support
+- ARIA roles and labels on all interactive elements
+- Live regions for dynamic content announcements
+- Semantic HTML structure with proper headings
+
+### Visual Accessibility
+- Focus indicators on all interactive elements
+- Sufficient color contrast ratios
+- No reliance on color alone for information
+
+### Accessibility Utilities
+
+Located in `src/lib/accessibility/`:
+
+```typescript
+// Focus trapping for modals
+import { useFocusTrap } from '@/lib/accessibility';
+useFocusTrap(modalRef, isOpen, { initialFocusRef });
+
+// Screen reader announcements
+import { announce } from '@/lib/accessibility';
+announce('Item selected', 'polite');
+```
 
 ## Project Structure
 
@@ -177,7 +211,3 @@ pnpm prisma generate  # Regenerate client
 2. Configure `DATABASE_URL` environment variable
 3. Run `pnpm prisma migrate deploy`
 4. Deploy to Vercel, Railway, or your preferred platform
-
-## License
-
-MIT
