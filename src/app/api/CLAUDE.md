@@ -1,0 +1,107 @@
+# API Directory
+
+## Purpose
+RESTful API routes for project management and spec data.
+
+## Overview
+This directory contains all Next.js API routes using the App Router convention. Each folder represents an endpoint, with `route.ts` files containing HTTP method handlers. Routes handle project CRUD, filesystem browsing, spec data loading, and real-time updates.
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `projects/route.ts` | List and create projects |
+| `projects/[name]/route.ts` | Get, update, delete specific project |
+| `project/route.ts` | Load spec data from filesystem path |
+| `browse/route.ts` | Directory browser with autocomplete |
+| `watch/route.ts` | Server-Sent Events for real-time updates |
+
+## Endpoints
+
+### Projects CRUD (`/api/projects`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/projects` | List all projects from database |
+| `POST` | `/api/projects` | Create new project |
+| `GET` | `/api/projects/:name` | Get project by slug |
+| `PUT` | `/api/projects/:name` | Update project |
+| `DELETE` | `/api/projects/:name` | Delete project |
+
+**Request/Response:**
+```typescript
+// POST /api/projects
+{ name: string, displayName: string, filePath: string }
+
+// Response
+{ id, name, displayName, filePath, createdAt, updatedAt }
+```
+
+### Spec Data (`/api/project`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/project?path=...` | Load and parse spec-kit project |
+
+**Response:** Full `Project` object with features, tasks, constitution, etc.
+
+### File Browser (`/api/browse`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/browse?path=...` | List directory contents |
+
+**Response:**
+```typescript
+{
+  path: string,
+  entries: Array<{
+    name: string,
+    path: string,
+    isDirectory: boolean,
+    isSpecKit: boolean  // Has specs/ or .specify/
+  }>
+}
+```
+
+### Real-time Updates (`/api/watch`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/watch?path=...` | SSE stream for file changes |
+
+**Events:** `update` (project data), `error`, `connected`
+
+## Patterns & Conventions
+
+- **Route Handlers**: Export `GET`, `POST`, `PUT`, `DELETE` functions
+- **Error Handling**: Return `NextResponse.json({ error }, { status })`
+- **Path Validation**: Use `path-utils.ts` for security
+- **Database**: Use Prisma client from `@/lib/prisma`
+
+## Security Features
+
+| Feature | Implementation |
+|---------|----------------|
+| Path Traversal Protection | `isPathSafe()` validates paths |
+| Input Validation | Slug pattern for project names |
+| Directory Restriction | Browse limited to user directories |
+| XSS Prevention | Content sanitized on client |
+
+## Dependencies
+
+- **Internal**: `@/lib/parser`, `@/lib/path-utils`, `@/lib/prisma`
+- **External**: next/server, chokidar (file watching)
+
+## Common Tasks
+
+- **Add new endpoint**: Create `folder/route.ts` with handlers
+- **Add path parameter**: Use `[param]` folder naming
+- **Add validation**: Use `path-utils.ts` functions
+
+## Important Notes
+
+- All routes are server-side (no `'use client'`)
+- Use `NextResponse.json()` for responses
+- Path validation is critical for security
+- SSE uses `ReadableStream` for streaming
