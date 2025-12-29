@@ -53,8 +53,8 @@ spec-board/
 ### Entry Points
 | File | Purpose |
 |------|---------|
-| `src/app/page.tsx` | Home page - project registration and selection |
-| `src/app/projects/[name]/page.tsx` | Project dashboard with Kanban board |
+| `src/app/page.tsx` | Home page - recent projects list and "Open Project" button |
+| `src/app/projects/[name]/page.tsx` | Project dashboard with Kanban board (supports path-based URLs) |
 | `src/app/layout.tsx` | Root layout with metadata |
 
 ### API Routes
@@ -72,14 +72,16 @@ spec-board/
 | `kanban-board.tsx` | 3-column Kanban (Backlog, In Progress, Done) |
 | `feature-detail.tsx` | Feature detail modal with tabs |
 | `dashboard-metrics.tsx` | Project metrics and charts |
-| `project-selector.tsx` | Filesystem browser for project selection |
+| `recent-projects-list.tsx` | Recent projects with full context (stats, completion %) |
+| `open-project-modal.tsx` | Project search modal with autocomplete |
+| `project-selector.tsx` | Legacy filesystem browser (deprecated) |
 | `task-group.tsx` | Task list grouped by user story |
 
 ### Business Logic
 | File | Purpose |
 |------|---------|
 | `lib/parser.ts` | Parse spec.md, plan.md, tasks.md, constitution.md |
-| `lib/store.ts` | Zustand store for project state |
+| `lib/store.ts` | Zustand store for project state and recent projects (localStorage) |
 | `lib/utils.ts` | UI utilities (cn, stage colors, VS Code integration) |
 | `lib/path-utils.ts` | Path validation and security |
 

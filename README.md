@@ -5,7 +5,9 @@ Visual dashboard for spec-kit task management with shareable links and real-time
 ## Features
 
 - **Kanban Board** - Linear-style 3-column board (Backlog, In Progress, Done)
-- **Shareable Links** - Register projects with URL slugs for team sharing
+- **Quick Project Access** - Open any spec-kit project by path with autocomplete
+- **Recent Projects** - Track recently opened projects with full context (stats, completion %)
+- **Shareable Links** - Path-based URLs for easy sharing
 - **Deep Linking** - Link directly to specific features
 - **Real-time Updates** - Live file watching with Server-Sent Events
 - **Unified Dashboard** - ComposedChart with task metrics, stage distribution, and cumulative progress
@@ -49,34 +51,48 @@ DATABASE_URL="postgresql://user:password@localhost:5432/specboard"
 
 ## Usage
 
-### Register a Project
+### Open a Project
 
 1. Open SpecBoard at `http://localhost:3000`
-2. Browse to your spec-kit project folder
-3. Enter a URL slug (e.g., `my-project`)
-4. Click "Register Project"
+2. Click **"Open Project"** button
+3. Type or paste the path to your spec-kit project
+4. Select from autocomplete suggestions (spec-kit projects show a badge)
+5. Review the preview card with project stats
+6. Click **"Open Project"** to view the dashboard
+
+### Recent Projects
+
+Recently opened projects appear on the home page with:
+- Project name and path
+- Last opened time
+- Feature count and completion percentage
+- Stage breakdown (specifying, planning, implementing, etc.)
+
+Click any recent project to open it directly.
 
 ### Share with Teammates
 
-Once registered, share the URL:
+Share the URL directly - paths are encoded in the URL:
 ```
-http://your-domain.com/projects/my-project
+http://your-domain.com/projects/%2Fpath%2Fto%2Fproject
 ```
+
+Or use the **Share** button in the project header to copy the link.
 
 ### Deep Link to Features
 
 Link directly to a specific feature:
 ```
-http://your-domain.com/projects/my-project/features/feature-name
+http://your-domain.com/projects/%2Fpath%2Fto%2Fproject/features/feature-name
 ```
 
 ## URL Structure
 
 | Route | Description |
 |-------|-------------|
-| `/` | Home - project list and registration |
-| `/projects/:name` | Project board view |
-| `/projects/:name/features/:id` | Feature detail view |
+| `/` | Home - recent projects and "Open Project" button |
+| `/projects/:encodedPath` | Project board view (path is URL-encoded) |
+| `/projects/:encodedPath/features/:id` | Feature detail view |
 
 ## Tech Stack
 
@@ -136,12 +152,24 @@ specboard/
 │   │   │   └── watch/     # SSE real-time updates
 │   │   ├── projects/
 │   │   │   └── [name]/    # Dynamic project routes
-│   │   └── page.tsx       # Home page
+│   │   └── page.tsx       # Home page (recent projects + open button)
 │   ├── components/        # React components
-│   ├── lib/               # Utilities, parser, path-utils, and store
+│   │   ├── kanban-board.tsx        # Feature pipeline board
+│   │   ├── feature-detail.tsx      # Feature modal with tabs
+│   │   ├── dashboard-metrics.tsx   # Project metrics panel
+│   │   ├── recent-projects-list.tsx # Recent projects display
+│   │   ├── open-project-modal.tsx  # Project search modal
+│   │   └── ...
+│   ├── lib/               # Utilities and business logic
+│   │   ├── parser.ts      # Markdown file parser
+│   │   ├── store.ts       # Zustand state (with recent projects)
+│   │   ├── path-utils.ts  # Path validation and security
+│   │   └── utils.ts       # General utilities
 │   └── types/             # TypeScript types
 └── docs/
-    └── API.md             # API documentation
+    ├── API.md             # API documentation
+    ├── ACCESSIBILITY.md   # Accessibility guide
+    └── ...
 ```
 
 ## API Reference

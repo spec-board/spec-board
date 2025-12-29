@@ -2,301 +2,49 @@
 
 ## Overview
 
-SpecBoard provides a REST API for managing projects and accessing spec-kit data. All endpoints return JSON responses.
+SpecBoard provides a REST API for managing spec-kit projects. The API enables filesystem browsing, project CRUD operations, real-time file watching via Server-Sent Events (SSE), and project parsing.
 
-## Base URL
+**Base URL:** `http://localhost:3000/api`
 
-```
-http://localhost:3000/api
-```
-
-## Authentication
-
-Currently, the API does not require authentication. All endpoints are publicly accessible.
+**Authentication:** None (local development tool)
 
 ---
 
-## Projects API
+## Endpoints
 
-Manage registered projects with shareable URL slugs.
-
-### List All Projects
-
-```http
-GET /api/projects
-```
-
-Returns all registered projects ordered by last update.
-
-**Response (200 OK)**
-```json
-[
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "name": "my-project",
-    "displayName": "My Project",
-    "filePath": "/path/to/project",
-    "createdAt": "2024-01-15T10:00:00.000Z",
-    "updatedAt": "2024-01-15T10:00:00.000Z"
-  }
-]
-```
-
-**Status Codes**
-
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 500 | Server error |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/browse` | Browse filesystem directories |
+| GET | `/project` | Parse and load a spec-kit project |
+| GET | `/projects` | List all registered projects |
+| POST | `/projects` | Register a new project |
+| GET | `/projects/[name]` | Get a project by slug |
+| PUT | `/projects/[name]` | Update a project |
+| DELETE | `/projects/[name]` | Delete a project |
+| GET | `/watch` | SSE stream for real-time updates |
 
 ---
 
-### Create Project
+## GET /api/browse
 
-```http
-POST /api/projects
-```
+Browse the filesystem to find spec-kit projects. Returns directory listings with spec-kit project detection.
 
-Register a new project with a shareable URL slug.
-
-**Request Body**
-```json
-{
-  "name": "my-project",
-  "displayName": "My Project",
-  "filePath": "/path/to/project"
-}
-```
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | string | Yes | URL-safe slug (lowercase letters, numbers, hyphens) |
-| `displayName` | string | Yes | Human-readable project name |
-| `filePath` | string | Yes | Absolute path to spec-kit project |
-
-**Validation Rules**
-
-- `name` must match pattern: `/^[a-z0-9]+(?:-[a-z0-9]+)*$/`
-- Valid examples: `my-project`, `app123`, `feature-v2`
-- Invalid examples: `My_Project`, `app--name`, `-start`
-
-**Response (201 Created)**
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "my-project",
-  "displayName": "My Project",
-  "filePath": "/path/to/project",
-  "createdAt": "2024-01-15T10:00:00.000Z",
-  "updatedAt": "2024-01-15T10:00:00.000Z"
-}
-```
-
-**Status Codes**
-
-| Code | Description |
-|------|-------------|
-| 201 | Created successfully |
-| 400 | Invalid request (missing fields or invalid slug format) |
-| 409 | Project with this name already exists |
-| 500 | Server error |
-
----
-
-### Get Project by Name
-
-```http
-GET /api/projects/:name
-```
-
-Retrieve a project by its URL slug.
-
-**Parameters**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `name` | string | Project URL slug |
-
-**Response (200 OK)**
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "my-project",
-  "displayName": "My Project",
-  "filePath": "/path/to/project",
-  "createdAt": "2024-01-15T10:00:00.000Z",
-  "updatedAt": "2024-01-15T10:00:00.000Z"
-}
-```
-
-**Status Codes**
-
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 404 | Project not found |
-| 500 | Server error |
-
----
-
-### Update Project
-
-```http
-PUT /api/projects/:name
-```
-
-Update project details. All fields are optional.
-
-**Parameters**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `name` | string | Project URL slug |
-
-**Request Body**
-```json
-{
-  "displayName": "Updated Name",
-  "filePath": "/new/path/to/project"
-}
-```
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `displayName` | string | No | New display name |
-| `filePath` | string | No | New file path (must be valid directory) |
-
-**Response (200 OK)**
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "my-project",
-  "displayName": "Updated Name",
-  "filePath": "/new/path/to/project",
-  "createdAt": "2024-01-15T10:00:00.000Z",
-  "updatedAt": "2024-01-15T12:00:00.000Z"
-}
-```
-
-**Status Codes**
-
-| Code | Description |
-|------|-------------|
-| 200 | Updated successfully |
-| 400 | Invalid file path (directory does not exist) |
-| 404 | Project not found |
-| 500 | Server error |
-
----
-
-### Delete Project
-
-```http
-DELETE /api/projects/:name
-```
-
-Remove a project registration. Does not delete actual files.
-
-**Response (200 OK)**
-```json
-{
-  "success": true
-}
-```
-
-**Status Codes**
-
-| Code | Description |
-|------|-------------|
-| 200 | Deleted successfully |
-| 404 | Project not found |
-| 500 | Server error |
-
----
-
-## Spec Data API
-
-Load and parse spec-kit project data.
-
-### Load Project Data
-
-```http
-GET /api/project?path=:path
-```
-
-Load and parse spec-kit files from a project directory.
-
-**Query Parameters**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path to spec-kit project |
-
-**Response (200 OK)**
-
-Returns a complete `Project` object with all parsed spec data:
-
-```json
-{
-  "path": "/path/to/project",
-  "name": "project-name",
-  "features": [
-    {
-      "id": "feature-id",
-      "name": "Feature Name",
-      "stage": "implement",
-      "specContent": "# Spec content...",
-      "planContent": "# Plan content...",
-      "tasks": [...],
-      "userStories": [...],
-      "clarifications": [...],
-      "additionalFiles": [...]
-    }
-  ],
-  "constitution": {
-    "principles": [...],
-    "sections": [...]
-  }
-}
-```
-
-**Status Codes**
-
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 400 | Missing path parameter |
-| 500 | Failed to parse project |
-
----
-
-### Browse Directories
-
-```http
-GET /api/browse?path=:path
-```
-
-Browse filesystem directories for project selection.
-
-**Query Parameters**
+### Query Parameters
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `path` | string | No | User's home directory | Directory to browse |
+| `path` | string | No | `~` (home) | Directory path to browse |
 
-**Path Shortcuts**
-
-- `~` - User's home directory
-- `~/folder` - Relative to home directory
-
-**Response (200 OK)**
+### Response (200 OK)
 
 ```json
 {
-  "currentPath": "/Users/name/projects",
-  "parentPath": "/Users/name",
+  "currentPath": "/Users/paul/Projects",
+  "parentPath": "/Users/paul",
   "entries": [
     {
-      "name": "my-project",
-      "path": "/Users/name/projects/my-project",
+      "name": "my-app",
+      "path": "/Users/paul/Projects/my-app",
       "isDirectory": true,
       "isSpecKitProject": true
     }
@@ -305,47 +53,285 @@ Browse filesystem directories for project selection.
 }
 ```
 
-**Entry Sorting**
+### DirectoryEntry
 
-Entries are sorted with spec-kit projects first, then alphabetically.
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Directory name |
+| `path` | string | Full absolute path |
+| `isDirectory` | boolean | Always `true` (only directories returned) |
+| `isSpecKitProject` | boolean | Has `specs/` or `.specify/` directory |
 
-**Status Codes**
+### Errors
 
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 400 | Path is not a directory |
-| 403 | Access denied (path outside allowed directories) |
-| 404 | Directory does not exist |
-| 500 | Server error |
+| Status | Error | Description |
+|--------|-------|-------------|
+| 400 | Path is not a directory | Path exists but is a file |
+| 403 | Access denied | Path is outside allowed directories |
+| 404 | Directory does not exist | Path not found |
+| 500 | Failed to browse directory | Server error |
 
-**Security: Path Traversal Protection**
+### Example
 
-The browse API includes protection against path traversal attacks:
-- Paths are resolved to absolute paths (handles `..`, symlinks)
-- Only allows browsing within allowed directories:
-  - User's home directory
-  - `/Users` (macOS)
-  - `/home` (Linux)
-- Attempts to access paths outside these directories return `403 Forbidden`
+```bash
+curl "http://localhost:3000/api/browse?path=~/Projects"
+```
 
 ---
 
-### Watch for Changes (SSE)
+## GET /api/project
 
-```http
-GET /api/watch?path=:path
-```
+Parse a spec-kit project from the filesystem and return structured data.
 
-Establish Server-Sent Events connection for real-time updates.
-
-**Query Parameters**
+### Query Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path to spec-kit project |
+| `path` | string | Yes | Absolute path to the project directory |
 
-**Response Headers**
+### Response (200 OK)
+
+```json
+{
+  "path": "/Users/paul/Projects/my-app",
+  "name": "my-app",
+  "features": [...],
+  "lastUpdated": "2024-01-15T10:30:00.000Z",
+  "constitution": {...},
+  "hasConstitution": true
+}
+```
+
+### Feature Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Feature slug (directory name) |
+| `name` | string | Human-readable name |
+| `stage` | FeatureStage | `specify`, `plan`, `tasks`, `implement`, `complete` |
+| `hasSpec` | boolean | Has `spec.md` file |
+| `hasPlan` | boolean | Has `plan.md` file |
+| `hasTasks` | boolean | Has `tasks.md` file |
+| `tasks` | Task[] | All tasks from `tasks.md` |
+| `totalTasks` | number | Total task count |
+| `completedTasks` | number | Completed task count |
+
+### Errors
+
+| Status | Error | Description |
+|--------|-------|-------------|
+| 400 | Project path is required | Missing `path` parameter |
+| 500 | Failed to parse project | Parser error |
+
+### Example
+
+```bash
+curl "http://localhost:3000/api/project?path=/Users/paul/Projects/my-app"
+```
+
+---
+
+## GET /api/projects
+
+List all registered projects from the database.
+
+### Response (200 OK)
+
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "my-app",
+    "displayName": "My Application",
+    "filePath": "/Users/paul/Projects/my-app",
+    "createdAt": "2024-01-10T08:00:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+]
+```
+
+### Project Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | UUID primary key |
+| `name` | string | URL-safe slug (unique) |
+| `displayName` | string | Human-readable name |
+| `filePath` | string | Absolute path to project |
+| `createdAt` | string | ISO 8601 timestamp |
+| `updatedAt` | string | ISO 8601 timestamp |
+
+### Example
+
+```bash
+curl "http://localhost:3000/api/projects"
+```
+
+---
+
+## POST /api/projects
+
+Register a new project in the database.
+
+### Request Body
+
+```json
+{
+  "name": "my-app",
+  "displayName": "My Application",
+  "filePath": "/Users/paul/Projects/my-app"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | URL-safe slug (lowercase, numbers, hyphens) |
+| `displayName` | string | Yes | Human-readable name |
+| `filePath` | string | Yes | Absolute path to project directory |
+
+### Response (201 Created)
+
+Returns the created project object.
+
+### Errors
+
+| Status | Error | Description |
+|--------|-------|-------------|
+| 400 | Missing required fields | `name`, `displayName`, or `filePath` missing |
+| 400 | Name must be a URL-safe slug | Invalid `name` format |
+| 409 | A project with this name already exists | Duplicate `name` |
+
+### Example
+
+```bash
+curl -X POST "http://localhost:3000/api/projects" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "my-app", "displayName": "My App", "filePath": "/path/to/project"}'
+```
+
+---
+
+## GET /api/projects/[name]
+
+Get a single project by its URL slug.
+
+### Path Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `name` | string | Project URL slug |
+
+### Response (200 OK)
+
+Returns the project object.
+
+### Errors
+
+| Status | Error | Description |
+|--------|-------|-------------|
+| 404 | Project not found | No project with this name |
+| 500 | Failed to fetch project | Database error |
+
+### Example
+
+```bash
+curl "http://localhost:3000/api/projects/my-app"
+```
+
+---
+
+## PUT /api/projects/[name]
+
+Update an existing project.
+
+### Path Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `name` | string | Project URL slug |
+
+### Request Body
+
+```json
+{
+  "displayName": "Updated Name",
+  "filePath": "/new/path/to/project"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `displayName` | string | No | New display name |
+| `filePath` | string | No | New file path (must exist) |
+
+### Response (200 OK)
+
+Returns the updated project object.
+
+### Errors
+
+| Status | Error | Description |
+|--------|-------|-------------|
+| 400 | Invalid file path | Directory does not exist |
+| 404 | Project not found | No project with this name |
+
+### Example
+
+```bash
+curl -X PUT "http://localhost:3000/api/projects/my-app" \
+  -H "Content-Type: application/json" \
+  -d '{"displayName": "My Updated App"}'
+```
+
+---
+
+## DELETE /api/projects/[name]
+
+Delete a project from the database. Does not delete files from the filesystem.
+
+### Path Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `name` | string | Project URL slug |
+
+### Response (200 OK)
+
+```json
+{
+  "success": true
+}
+```
+
+### Errors
+
+| Status | Error | Description |
+|--------|-------|-------------|
+| 404 | Project not found | No project with this name |
+
+### Example
+
+```bash
+curl -X DELETE "http://localhost:3000/api/projects/my-app"
+```
+
+---
+
+## GET /api/watch
+
+Server-Sent Events (SSE) endpoint for real-time project updates. Watches the filesystem for changes and pushes updates when spec-kit files are modified.
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | Yes | Absolute path to project directory |
+
+### Response Headers
 
 ```
 Content-Type: text/event-stream
@@ -353,93 +339,94 @@ Cache-Control: no-cache
 Connection: keep-alive
 ```
 
-**Event Format**
+### Event Format
 
 ```
-data: {"type":"update","data":{...project object...}}
-
-data: {"type":"update","data":{...updated project...}}
+data: {"type": "update", "data": {...project object...}}
 ```
 
-**Message Structure**
+### Event Types
 
-```json
-{
-  "type": "update",
-  "data": { /* Full Project object */ }
-}
-```
+| Type | Description |
+|------|-------------|
+| `update` | Project data changed (includes full project object) |
+| `error` | Error occurred during parsing |
 
-**Behavior**
+### Behavior
 
-- Sends initial project data immediately on connection
-- Watches for file changes with 300ms debounce
-- Monitors up to 3 directory levels deep
-- Ignores dotfiles (`.git`, `.env`, etc.)
-- Automatically cleans up on client disconnect
+1. On connection: Sends initial project state
+2. On file change: Debounces (300ms) and sends updated project
+3. Watches: `*.md` files up to 3 levels deep
+4. Ignores: Dotfiles and hidden directories
+5. Uses polling (300ms interval) for reliable cross-platform detection
 
-**Client Usage Example**
+### Example (JavaScript)
 
 ```javascript
 const eventSource = new EventSource('/api/watch?path=/path/to/project');
 
 eventSource.onmessage = (event) => {
-  try {
-    const { type, data } = JSON.parse(event.data);
-    if (type === 'update') {
-      console.log('Project updated:', data);
-    }
-  } catch (error) {
-    console.error('Failed to parse SSE message:', error);
+  const message = JSON.parse(event.data);
+  if (message.type === 'update') {
+    console.log('Project updated:', message.data);
   }
 };
 
-eventSource.onerror = (error) => {
-  console.error('SSE connection error:', error);
-  eventSource.close();
-};
-
-// Clean up on page unload
-window.addEventListener('beforeunload', () => {
-  eventSource.close();
-});
+// Close connection when done
+eventSource.close();
 ```
 
-**Status Codes**
+### Example (curl)
 
-| Code | Description |
-|------|-------------|
-| 200 | SSE stream established |
-| 400 | Missing path parameter |
+```bash
+curl -N "http://localhost:3000/api/watch?path=/path/to/project"
+```
 
 ---
 
-## URL Routes
+## Type Definitions
 
-### Page Routes
+### FeatureStage
 
-| Route | Description |
-|-------|-------------|
-| `/` | Home page - project list and registration |
-| `/projects/:name` | Project board view |
-| `/projects/:name/features/:featureId` | Feature detail (deep link) |
-| `/projects/:name/features/:featureId/spec` | Spec viewer with SSE updates |
-| `/projects/:name/features/:featureId/plan` | Plan viewer with SSE updates |
-
-### Example URLs
-
+```typescript
+type FeatureStage = 'specify' | 'plan' | 'tasks' | 'implement' | 'complete';
 ```
-# Board view
-https://specboard.example.com/projects/my-project
 
-# Feature deep link
-https://specboard.example.com/projects/my-project/features/cloudflare-early-warning
+### Task
 
-# Spec viewer
-https://specboard.example.com/projects/my-project/features/auth-system/spec
+```typescript
+interface Task {
+  id: string;           // e.g., "T001"
+  description: string;
+  completed: boolean;
+  parallel: boolean;    // Can run in parallel with others
+  userStory?: string;   // e.g., "US1"
+  filePath?: string;    // Source file path
+}
+```
 
-# Share with teammates
-https://specboard.example.com/projects/my-project
+### UserStory
+
+```typescript
+interface UserStory {
+  id: string;           // e.g., "US1"
+  title: string;
+  priority: 'P1' | 'P2' | 'P3';
+  description: string;
+  acceptanceCriteria: string[];
+}
+```
+
+### TechnicalContext
+
+```typescript
+interface TechnicalContext {
+  language: string;
+  dependencies: string[];
+  storage: string;
+  testing: string;
+  platform: string;
+}
 ```
 
 ---
@@ -456,157 +443,10 @@ All error responses follow this format:
 
 ---
 
-## Type Definitions
+## Notes
 
-### Project
-
-```typescript
-interface Project {
-  name: string;
-  path: string;
-  features: Feature[];
-  constitution: Constitution | null;
-}
-```
-
-### Feature
-
-```typescript
-interface Feature {
-  id: string;
-  name: string;
-  stage: 'specify' | 'plan' | 'tasks' | 'implement' | 'complete';
-  specContent: string | null;
-  specPath: string | null;
-  planContent: string | null;
-  planPath: string | null;
-  tasks: Task[];
-  phases: Phase[];
-  userStories: UserStory[];
-  clarifications: ClarificationSession[];
-  additionalFiles: SpecKitFile[];
-}
-```
-
-### Task
-
-```typescript
-interface Task {
-  id: string;
-  description: string;
-  completed: boolean;
-  parallel: boolean;
-  userStoryId: string | null;
-  filePath: string | null;
-}
-```
-
-### UserStory
-
-```typescript
-interface UserStory {
-  id: string;
-  title: string;
-  description: string;
-  priority: 'P1' | 'P2' | 'P3';
-  acceptanceCriteria: AcceptanceCriterion[];
-}
-```
-
-### DirectoryEntry
-
-```typescript
-interface DirectoryEntry {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  isSpecKitProject: boolean;
-}
-```
-
----
-
-## Security Considerations
-
-### Path Traversal Protection
-
-The `/api/browse` endpoint includes protection against path traversal attacks:
-
-- Paths are resolved to absolute paths before validation
-- Only paths within allowed directories are accessible:
-  - User's home directory
-  - `/Users` (macOS)
-  - `/home` (Linux)
-- Attempts to access paths outside these directories return `403 Forbidden`
-
-### File Path Validation
-
-The `/api/projects/:name` PUT endpoint validates that `filePath`:
-- Points to an existing directory
-- Is accessible by the server process
-
-### Input Validation
-
-- Project names are validated against a strict slug pattern
-- All user inputs are validated before database operations
-- Prisma ORM provides SQL injection protection
-
-### XSS Prevention
-
-- Markdown content is sanitized with DOMPurify before rendering
-- All user-generated content is escaped in the UI
-
-### Rate Limiting
-
-Currently, no rate limiting is implemented. For production deployments, consider adding rate limiting middleware.
-
----
-
-## Utility Functions
-
-### Path Utilities
-
-Server-side path safety utilities used by API routes:
-
-```typescript
-import { isPathSafe, isSpecKitProject, normalizePath } from '@/lib/path-utils';
-
-// Validate path is within allowed directories
-const { safe, resolvedPath } = isPathSafe('/some/path');
-
-// Check if directory is a spec-kit project
-const isProject = isSpecKitProject('/path/to/dir');
-
-// Expand ~ to home directory
-const fullPath = normalizePath('~/projects');
-```
-
-### isPrismaError
-
-Type guard for handling Prisma ORM errors:
-
-```typescript
-import { isPrismaError } from '@/lib/utils';
-
-try {
-  await prisma.project.create({ ... });
-} catch (error) {
-  if (isPrismaError(error, 'P2002')) {
-    // Handle unique constraint violation
-  }
-  if (isPrismaError(error, 'P2025')) {
-    // Handle record not found
-  }
-}
-```
-
-### openInEditor
-
-Opens files in VS Code from the browser:
-
-```typescript
-import { openInEditor } from '@/lib/utils';
-
-const result = openInEditor('/path/to/file.ts', 42);
-// result: { success: boolean, message: string }
-```
+- All endpoints use `force-dynamic` to disable Next.js caching
+- Paths support `~` expansion to home directory
+- The `/browse` endpoint validates paths for security (no directory traversal)
+- The `/watch` endpoint uses chokidar with polling for reliable cross-platform file watching
+- Database operations use Prisma with PostgreSQL
