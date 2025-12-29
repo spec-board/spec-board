@@ -87,6 +87,5 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 .claude
-CLAUDE.md
 agent-includes
 .playwright-mcp
