@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, KeyboardEvent } from 'react';
+import { useState, useEffect, useCallback, useRef, KeyboardEvent, FormEvent } from 'react';
 import { Folder, FolderOpen, ChevronRight, Home, ArrowUp, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip } from '@/components/tooltip';
@@ -27,13 +27,24 @@ interface ProjectSelectorProps {
 
 export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorProps) {
   const [currentPath, setCurrentPath] = useState<string>('~');
+  const [pathInput, setPathInput] = useState<string>('~');
   const [entries, setEntries] = useState<DirectoryEntry[]>([]);
   const [parentPath, setParentPath] = useState<string>('');
   const [isSpecKitProject, setIsSpecKitProject] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState<DirectoryEntry[]>([]);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState<number>(-1);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchDirectory = async (path: string) => {
     setIsLoading(true);
@@ -41,10 +52,12 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
     try {
       const response = await fetch(`/api/browse?path=${encodeURIComponent(path)}`);
       if (!response.ok) {
-        throw new Error('Failed to browse directory');
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to browse directory');
       }
       const data: BrowseResponse = await response.json();
       setCurrentPath(data.currentPath);
+      setPathInput(data.currentPath);
       setParentPath(data.parentPath);
       setEntries(data.entries);
       setIsSpecKitProject(data.isSpecKitProject);
@@ -70,6 +83,138 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
     if (isSpecKitProject) {
       announce(`Selected project: ${currentPath}`);
       onSelect(currentPath);
+    }
+  };
+
+  // Fetch suggestions for autocomplete
+  const fetchSuggestions = useCallback(async (inputPath: string) => {
+    if (!inputPath || inputPath.length < 1) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Determine the parent directory and partial name to filter
+    const lastSlashIndex = inputPath.lastIndexOf('/');
+    const parentDir = lastSlashIndex > 0 ? inputPath.substring(0, lastSlashIndex) : (inputPath.startsWith('/') ? '/' : '~');
+    const partialName = lastSlashIndex >= 0 ? inputPath.substring(lastSlashIndex + 1).toLowerCase() : inputPath.toLowerCase();
+
+    setIsFetchingSuggestions(true);
+    try {
+      const response = await fetch(`/api/browse?path=${encodeURIComponent(parentDir)}`);
+      if (!response.ok) {
+        setSuggestions([]);
+        return;
+      }
+      const data: BrowseResponse = await response.json();
+
+      // Filter entries that match the partial name
+      const filtered = data.entries.filter(entry =>
+        entry.name.toLowerCase().startsWith(partialName)
+      ).slice(0, 8); // Limit to 8 suggestions
+
+      setSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+      setSelectedSuggestionIndex(-1);
+    } catch {
+      setSuggestions([]);
+    } finally {
+      setIsFetchingSuggestions(false);
+    }
+  }, []);
+
+  // Debounced suggestion fetching
+  const debouncedFetchSuggestions = useCallback((inputPath: string) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      fetchSuggestions(inputPath);
+    }, 150);
+  }, [fetchSuggestions]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Handle input change with suggestions
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPathInput(value);
+    debouncedFetchSuggestions(value);
+  };
+
+  // Accept the selected suggestion
+  const acceptSuggestion = (suggestion: DirectoryEntry) => {
+    setPathInput(suggestion.path);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
+    // Navigate to the selected path
+    fetchDirectory(suggestion.path);
+  };
+
+  // Handle path input submission
+  const handlePathSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setShowSuggestions(false);
+    const trimmedPath = pathInput.trim();
+    if (trimmedPath && trimmedPath !== currentPath) {
+      fetchDirectory(trimmedPath);
+    }
+  };
+
+  // Handle input key events (including autocomplete navigation)
+  const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (showSuggestions && suggestions.length > 0) {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedSuggestionIndex(prev =>
+            prev < suggestions.length - 1 ? prev + 1 : 0
+          );
+          return;
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedSuggestionIndex(prev =>
+            prev > 0 ? prev - 1 : suggestions.length - 1
+          );
+          return;
+        case 'Tab':
+          e.preventDefault();
+          if (selectedSuggestionIndex >= 0) {
+            acceptSuggestion(suggestions[selectedSuggestionIndex]);
+          } else if (suggestions.length > 0) {
+            acceptSuggestion(suggestions[0]);
+          }
+          return;
+        case 'Escape':
+          e.preventDefault();
+          setShowSuggestions(false);
+          setSelectedSuggestionIndex(-1);
+          return;
+        case 'Enter':
+          if (selectedSuggestionIndex >= 0) {
+            e.preventDefault();
+            acceptSuggestion(suggestions[selectedSuggestionIndex]);
+            return;
+          }
+          // Let form submission handle Enter when no suggestion selected
+          setShowSuggestions(false);
+          return;
+      }
+    }
+
+    if (e.key === 'Escape') {
+      // Reset to current path on escape
+      setPathInput(currentPath);
+      setShowSuggestions(false);
+      inputRef.current?.blur();
     }
   };
 
@@ -121,13 +266,85 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
       {/* Header */}
       <div className="p-4 border-b border-[var(--border)]">
         <h2 className="text-lg font-semibold mb-2" id="project-selector-heading">Select Project</h2>
-        <div
-          className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] bg-[var(--secondary)] rounded px-3 py-2"
-          aria-live="polite"
-        >
-          <Folder className="w-4 h-4" aria-hidden="true" />
-          <span className="truncate">{currentPath}</span>
-        </div>
+        <form onSubmit={handlePathSubmit} className="relative">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-2 text-sm bg-[var(--secondary)] rounded px-3 py-2">
+              <Folder className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" aria-hidden="true" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={pathInput}
+                onChange={handleInputChange}
+                onKeyDown={handleInputKeyDown}
+                onFocus={() => pathInput && debouncedFetchSuggestions(pathInput)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                className="flex-1 bg-transparent outline-none text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]"
+                placeholder="Enter path (e.g., ~/Projects or /Users/...)"
+                aria-label="Directory path input"
+                aria-autocomplete="list"
+                aria-expanded={showSuggestions}
+                aria-controls="path-suggestions"
+                spellCheck={false}
+                autoComplete="off"
+              />
+              {isFetchingSuggestions && (
+                <span className="text-xs text-[var(--muted-foreground)]">...</span>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="px-3 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded text-sm font-medium hover:opacity-90 transition-opacity focus-ring"
+              aria-label="Go to path"
+            >
+              Go
+            </button>
+          </div>
+
+          {/* Suggestions dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div
+              ref={suggestionsRef}
+              id="path-suggestions"
+              role="listbox"
+              className="absolute left-0 right-12 mt-1 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-lg z-50 max-h-64 overflow-auto"
+            >
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={suggestion.path}
+                  type="button"
+                  role="option"
+                  aria-selected={selectedSuggestionIndex === index}
+                  onClick={() => acceptSuggestion(suggestion)}
+                  className={cn(
+                    'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors',
+                    selectedSuggestionIndex === index
+                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
+                      : 'hover:bg-[var(--secondary)]',
+                    suggestion.isSpecKitProject && selectedSuggestionIndex !== index && 'text-green-400'
+                  )}
+                >
+                  {suggestion.isSpecKitProject ? (
+                    <FolderOpen className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                  ) : (
+                    <Folder className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                  )}
+                  <span className="flex-1 truncate">{suggestion.name}</span>
+                  {suggestion.isSpecKitProject && (
+                    <span className="text-xs bg-green-500/20 px-1.5 py-0.5 rounded" aria-hidden="true">
+                      spec-kit
+                    </span>
+                  )}
+                </button>
+              ))}
+              <div className="px-3 py-1.5 text-xs text-[var(--muted-foreground)] border-t border-[var(--border)]">
+                ↑↓ to navigate • Tab to accept • Esc to close
+              </div>
+            </div>
+          )}
+        </form>
+        <p className="text-xs text-[var(--muted-foreground)] mt-1.5">
+          Type a path and press Enter or click Go to navigate
+        </p>
       </div>
 
       {/* Navigation buttons */}

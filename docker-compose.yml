@@ -3,6 +3,8 @@ services:
     image: postgres:16-alpine
     container_name: specboard-db
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-specboard}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-specboard}
