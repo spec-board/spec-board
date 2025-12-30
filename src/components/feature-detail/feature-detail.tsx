@@ -118,6 +118,7 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
   const [activeSection, setActiveSection] = useState<SectionId>('overview');
   const [selectedNavIndex, setSelectedNavIndex] = useState(0);
   const [draggedSection, setDraggedSection] = useState<SectionId | null>(null);
+  const [dropSide, setDropSide] = useState<'left' | 'right' | null>(null);
   const [splitView, setSplitView] = useState<SplitViewState>({
     isActive: false,
     leftPane: 'overview',
@@ -163,25 +164,86 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const sectionId = e.dataTransfer.getData('text/plain') as SectionId;
-    if (sectionId && sectionId !== activeSection) {
-      // Open in split view
-      setSplitView(prev => ({
-        ...prev,
-        isActive: true,
-        leftPane: activeSection,
-        rightPane: sectionId,
-        focusedPane: 'right',
-      }));
-      const section = sections.find(s => s.id === sectionId);
-      announce(`Opened ${section?.label ?? sectionId} in split view`);
+    if (!sectionId) {
+      setDraggedSection(null);
+      setDropSide(null);
+      return;
     }
+
+    // Determine which side the user dropped on
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const dropX = e.clientX - rect.left;
+    const isLeftSide = dropX < rect.width / 2;
+
+    if (splitView.isActive) {
+      // Split view is already active - replace the appropriate pane only
+      if (isLeftSide) {
+        // Replace left pane, keep right pane as is
+        setSplitView(prev => ({
+          ...prev,
+          leftPane: sectionId,
+          focusedPane: 'left',
+        }));
+      } else {
+        // Keep left pane as is, replace right pane
+        setSplitView(prev => ({
+          ...prev,
+          rightPane: sectionId,
+          focusedPane: 'right',
+        }));
+      }
+    } else {
+      // Split view not active - activate it
+      if (sectionId === activeSection) {
+        setDraggedSection(null);
+        setDropSide(null);
+        return;
+      }
+
+      if (isLeftSide) {
+        // Dropped on left side: dragged section goes left, current goes right
+        setSplitView(prev => ({
+          ...prev,
+          isActive: true,
+          leftPane: sectionId,
+          rightPane: activeSection,
+          focusedPane: 'left',
+        }));
+      } else {
+        // Dropped on right side: current stays left, dragged goes right
+        setSplitView(prev => ({
+          ...prev,
+          isActive: true,
+          leftPane: activeSection,
+          rightPane: sectionId,
+          focusedPane: 'right',
+        }));
+      }
+    }
+
+    const section = sections.find(s => s.id === sectionId);
+    announce(`Opened ${section?.label ?? sectionId} in split view`);
     setDraggedSection(null);
-  }, [activeSection, sections]);
+    setDropSide(null);
+  }, [activeSection, splitView.isActive, sections]);
 
   // Handle drag over
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
+
+    // Track which side the user is hovering over
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const dropX = e.clientX - rect.left;
+    const isLeftSide = dropX < rect.width / 2;
+    setDropSide(isLeftSide ? 'left' : 'right');
+  }, []);
+
+  // Handle drag leave
+  const handleDragLeave = useCallback(() => {
+    setDropSide(null);
   }, []);
 
   // Toggle split view
@@ -360,8 +422,6 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
         aria-modal="true"
         aria-labelledby="modal-title"
         onKeyDown={handleKeyDown}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
         className={cn(
           'fixed inset-0 bg-[var(--background)] flex flex-col focus-ring',
           'animate-in fade-in zoom-in-95 duration-200'
@@ -392,15 +452,43 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
 
           {/* Content area with optional split */}
           <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
             className={cn(
-              'flex-1 flex flex-col overflow-hidden',
+              'flex-1 flex flex-col overflow-hidden relative',
               draggedSection && 'ring-2 ring-blue-500/50 ring-inset'
             )}
           >
             {draggedSection && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <div className="bg-blue-500/20 border-2 border-dashed border-blue-500 rounded-lg px-6 py-4 text-blue-400 font-medium">
-                  Drop to open in split view
+              <div className="absolute inset-0 flex pointer-events-none z-10">
+                {/* Left drop zone indicator */}
+                <div className={cn(
+                  'flex-1 flex items-center justify-center border-r border-dashed border-blue-500/50 transition-colors',
+                  dropSide === 'left' && 'bg-blue-500/20'
+                )}>
+                  <div className={cn(
+                    'px-4 py-2 rounded-lg font-medium transition-colors',
+                    dropSide === 'left'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-blue-500/10 text-blue-400 border border-dashed border-blue-500'
+                  )}>
+                    Drop here for left
+                  </div>
+                </div>
+                {/* Right drop zone indicator */}
+                <div className={cn(
+                  'flex-1 flex items-center justify-center transition-colors',
+                  dropSide === 'right' && 'bg-blue-500/20'
+                )}>
+                  <div className={cn(
+                    'px-4 py-2 rounded-lg font-medium transition-colors',
+                    dropSide === 'right'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-blue-500/10 text-blue-400 border border-dashed border-blue-500'
+                  )}>
+                    Drop here for right
+                  </div>
                 </div>
               </div>
             )}
