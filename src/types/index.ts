@@ -124,6 +124,8 @@ export interface Feature {
   totalTasks: number;
   completedTasks: number;
   inProgressTasks: number;
+  // Feature branch name from spec.md or plan.md
+  branch: string | null;
   // Clarification history from spec.md
   clarificationSessions: ClarificationSession[];
   totalClarifications: number;

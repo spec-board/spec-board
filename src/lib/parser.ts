@@ -70,6 +70,15 @@ export function parseTaskLine(line: string): Task | null {
 }
 
 /**
+ * Extract user story ID from phase name if present
+ * Matches patterns like "US1 – Create/Complete" or "US2 - Edit Tasks"
+ */
+function extractUserStoryFromPhaseName(phaseName: string): string | undefined {
+  const match = phaseName.match(/^(US\d+)\s*[–\-]/i);
+  return match ? match[1].toUpperCase() : undefined;
+}
+
+/**
  * Parse tasks.md file and extract tasks organized by phases
  */
 export function parseTasksFile(content: string): { tasks: Task[]; phases: TaskPhase[] } {
@@ -78,6 +87,7 @@ export function parseTasksFile(content: string): { tasks: Task[]; phases: TaskPh
   const phases: TaskPhase[] = [];
 
   let currentPhase: TaskPhase | null = null;
+  let currentPhaseUserStory: string | undefined = undefined;
 
   for (const line of lines) {
     // Check for phase headers (## Phase N: Name or ## Phase N - Name)
@@ -86,16 +96,23 @@ export function parseTasksFile(content: string): { tasks: Task[]; phases: TaskPh
       if (currentPhase && currentPhase.tasks.length > 0) {
         phases.push(currentPhase);
       }
+      const phaseName = phaseMatch[1].trim();
       currentPhase = {
-        name: phaseMatch[1].trim(),
+        name: phaseName,
         tasks: [],
       };
+      // Extract user story from phase name for tasks that don't have explicit [USx] markers
+      currentPhaseUserStory = extractUserStoryFromPhaseName(phaseName);
       continue;
     }
 
     // Parse task lines
     const task = parseTaskLine(line);
     if (task) {
+      // If task doesn't have explicit userStory marker, inherit from phase name
+      if (!task.userStory && currentPhaseUserStory) {
+        task.userStory = currentPhaseUserStory;
+      }
       tasks.push(task);
       if (currentPhase) {
         currentPhase.tasks.push(task);
@@ -218,6 +235,18 @@ export function parseTechnicalContext(content: string): TechnicalContext | null 
     testing: testingMatch ? testingMatch[1].trim() : '',
     platform: platformMatch ? platformMatch[1].trim() : '',
   };
+}
+
+/**
+ * Parse feature branch name from spec.md or plan.md content
+ * Looks for patterns like:
+ * - **Feature Branch**: `1-todo-app`
+ * - **Branch**: `1-todo-app`
+ */
+export function parseBranchName(content: string): string | null {
+  // Match **Feature Branch**: `branch-name` or **Branch**: `branch-name`
+  const branchMatch = content.match(/\*\*(?:Feature\s+)?Branch\*\*:\s*`([^`]+)`/i);
+  return branchMatch ? branchMatch[1].trim() : null;
 }
 
 /**
@@ -539,6 +568,9 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
       technicalContext = parseTechnicalContext(planContent);
     }
 
+    // Parse branch name from spec.md or plan.md
+    const branch = parseBranchName(specContent || '') || parseBranchName(planContent || '');
+
     // Group tasks by user story
     const taskGroups = groupTasksByUserStory(tasks, userStories);
 
@@ -571,6 +603,7 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
       totalTasks,
       completedTasks,
       inProgressTasks,
+      branch,
       clarificationSessions,
       totalClarifications,
       // Extended fields for full spec-kit integration

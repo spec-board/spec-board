@@ -104,10 +104,31 @@ spec-board/
 | Route | Description |
 |-------|-------------|
 | `/` | Home - recent projects and "Open Project" button |
-| `/projects/:encodedPath` | Project board view (path is URL-encoded) |
-| `/projects/:encodedPath/features/:id` | Feature detail view |
+| `/projects/:slug` | Project board view (slug from database) |
+| `/projects/:slug/features/:id` | Feature detail view |
+| `/projects/:slug/features/:id/spec` | Spec viewer |
+| `/projects/:slug/features/:id}/plan` | Plan viewer |
+
+**Note:** URLs use clean database slugs (e.g., `todolist`) generated from folder names when projects are auto-registered.
 
 ## API Reference
+
+### Project Auto-Registration
+
+```bash
+# Auto-register project from filesystem path
+POST /api/projects/register
+Content-Type: application/json
+{ "filePath": "/path/to/project" }
+
+# Response (existing or newly created)
+{ "id": "...", "name": "my-project", "displayName": "My Project", "filePath": "/path/to/project" }
+```
+
+**Behavior:**
+- Returns existing project if path already registered
+- Generates unique slug from folder name (e.g., `/Users/paul/my-todolist` → `my-todolist`)
+- Handles slug conflicts by appending numbers (`my-todolist-2`, `my-todolist-3`)
 
 ### Projects CRUD
 
