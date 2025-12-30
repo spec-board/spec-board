@@ -14,7 +14,7 @@
 | **Framework** | Next.js 15 (App Router) |
 | **Language** | TypeScript (strict mode) |
 | **UI** | React 18, Tailwind CSS, Lucide Icons |
-| **Database** | SQLite via Prisma ORM |
+| **Database** | PostgreSQL via Prisma ORM |
 | **State** | Zustand (client), localStorage persistence |
 | **Charts** | Recharts |
 | **Markdown** | remark, remark-html, DOMPurify |
@@ -309,7 +309,18 @@ model Project {
 
 ## Recent Changes
 
+- **Feature Detail Modal Redesign**: Full-screen modal with split-view, grouped navigation by workflow phase (DEFINE/PLAN/EXECUTE), drag-to-split functionality, and comprehensive keyboard shortcuts
 - **Database slug routing**: URLs now use clean slugs (`/projects/todolist`) instead of encoded paths
 - **Auto-registration**: Projects auto-register when opened, generating unique slugs
 - **Analysis viewer**: New tab for spec alignment tracking with JSON/markdown support
 - **Checklist viewer**: Support for checklist files in feature directories
+
+## Generated CLAUDE.md Files
+
+The following directories have CLAUDE.md files for context:
+- `src/app/CLAUDE.md` - App Router pages and API routes
+- `src/app/api/CLAUDE.md` - API routes documentation
+- `src/components/CLAUDE.md` - UI components
+- `src/components/feature-detail/CLAUDE.md` - Feature modal components (NEW)
+- `src/lib/CLAUDE.md` - Utilities and helpers
+- `src/types/CLAUDE.md` - Type definitions

@@ -7,12 +7,14 @@ import { FeatureDetail } from '@/components/feature-detail';
 import { ConstitutionPanel } from '@/components/constitution-panel';
 import { ClarityHistoryPanel } from '@/components/clarity-history';
 import { FolderOpen, RefreshCw, Wifi, Home, Link as LinkIcon } from 'lucide-react';
+import { useProjectStore } from '@/lib/store';
 import type { Project, Feature } from '@/types';
 
 export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
   const projectSlug = params.name as string;
+  const { addRecentProject } = useProjectStore();
 
   const [project, setProject] = useState<Project | null>(null);
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
@@ -45,12 +47,15 @@ export default function ProjectPage() {
       }
       const data: Project = await response.json();
       setProject(data);
+
+      // Update recent projects cache with fresh data
+      addRecentProject(data, projectSlug);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
-  }, [projectSlug]);
+  }, [projectSlug, addRecentProject]);
 
   // Load project on mount
   useEffect(() => {
@@ -147,8 +152,15 @@ export default function ProjectPage() {
               </button>
               <h1 className="text-xl font-bold">SpecBoard</h1>
               <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-                <FolderOpen className="w-4 h-4" />
-                <span>{project.name}</span>
+                <FolderOpen className="w-4 h-4 flex-shrink-0" />
+                <div className="flex flex-col">
+                  <span>{project.name}</span>
+                  {projectPath && (
+                    <span className="text-xs opacity-60 truncate max-w-md">
+                      {projectPath}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">

@@ -68,8 +68,13 @@ spec-board/
 │   │   │   └── [name]/    # Dynamic project routes
 │   │   └── page.tsx       # Home page
 │   ├── components/        # React components
+│   │   ├── feature-detail/  # Feature modal (split-view, navigation)
+│   │   │   ├── feature-detail.tsx  # Main modal component
+│   │   │   ├── split-view.tsx      # Resizable split panes
+│   │   │   ├── nav-sidebar.tsx     # Left navigation
+│   │   │   ├── content-pane.tsx    # Section content renderer
+│   │   │   └── types.ts            # Types and constants
 │   │   ├── kanban-board.tsx
-│   │   ├── feature-detail.tsx
 │   │   ├── dashboard-metrics.tsx
 │   │   └── ...
 │   ├── lib/               # Utilities and business logic
@@ -210,9 +215,14 @@ SpecBoard is built with WCAG 2.2 AA compliance.
 |---------|-----|--------|
 | Kanban Board | `Tab` | Navigate cards |
 | Kanban Board | `Enter` | Open feature detail |
-| Feature Modal | `Escape` | Close modal |
-| Feature Modal | `1-8` | Switch tabs |
-| Feature Modal | `Arrow keys` | Navigate tabs |
+| Feature Modal | `Escape` | Close split view, or close modal |
+| Feature Modal | `1-9` | Jump to section by number |
+| Feature Modal | `Shift+1-9` | Open section in right pane (split view) |
+| Feature Modal | `Ctrl+\` | Toggle split view |
+| Feature Modal | `Tab` | Switch focus between panes (split mode) |
+| Feature Modal | `↑/↓` | Navigate sections |
+| Feature Modal | `Enter` | Open selected section |
+| Feature Modal | `Shift+Enter` | Open in split view |
 | Project Selector | `Arrow keys` | Navigate directories |
 | Project Selector | `Enter` | Select directory |
 
