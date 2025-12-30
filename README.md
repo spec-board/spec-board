@@ -11,8 +11,8 @@
 │                                                                             │
 │   📋 KANBAN BOARD          🔗 SHAREABLE LINKS       ⚡ REAL-TIME UPDATES    │
 │   ─────────────────        ─────────────────        ──────────────────      │
-│   3-column pipeline        Path-based URLs          Live file watching      │
-│   Backlog → Done           for team sharing         via SSE                 │
+│   3-column pipeline        Clean slug-based         Live file watching      │
+│   Backlog → Done           URLs for sharing         via SSE                 │
 │                                                                             │
 │   📊 DASHBOARD METRICS     🎯 DEEP LINKING          ♿ ACCESSIBLE           │
 │   ─────────────────        ─────────────────        ──────────────────      │
@@ -61,9 +61,13 @@ pnpm dev
 
 ```
 /                                          → Home (recent projects)
-/projects/{encoded-path}                   → Project board
-/projects/{encoded-path}/features/{id}     → Feature detail
+/projects/{slug}                           → Project board
+/projects/{slug}/features/{id}             → Feature detail
+/projects/{slug}/features/{id}/spec        → Spec viewer
+/projects/{slug}/features/{id}/plan        → Plan viewer
 ```
+
+**Note:** URLs use clean database slugs (e.g., `todolist`) generated from folder names, not encoded filesystem paths.
 
 ## Tech Stack
 

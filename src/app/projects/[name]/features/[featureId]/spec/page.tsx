@@ -11,7 +11,7 @@ import type { Project, Feature } from '@/types';
 export default function SpecPage() {
   const params = useParams();
   const router = useRouter();
-  const projectName = params.name as string;
+  const projectSlug = params.name as string;
   const featureId = params.featureId as string;
 
   const [feature, setFeature] = useState<Feature | null>(null);
@@ -23,17 +23,20 @@ export default function SpecPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const projectRes = await fetch(`/api/projects/${projectName}`, { cache: 'no-store' });
+      // Always lookup by slug from database
+      const projectRes = await fetch('/api/projects/' + projectSlug, { cache: 'no-store' });
       if (!projectRes.ok) {
         if (projectRes.status === 404) {
-          throw new Error(`Project "${projectName}" not found`);
+          throw new Error('Project "' + projectSlug + '" not found. Please open it from the home page first.');
         }
         throw new Error('Failed to load project');
       }
       const projectData = await projectRes.json();
-      setProjectPath(projectData.filePath);
+      const filePath = projectData.filePath;
 
-      const response = await fetch(`/api/project?path=${encodeURIComponent(projectData.filePath)}`, { cache: 'no-store' });
+      setProjectPath(filePath);
+
+      const response = await fetch('/api/project?path=' + encodeURIComponent(filePath), { cache: 'no-store' });
       if (!response.ok) {
         throw new Error('Failed to load project files');
       }
@@ -41,7 +44,7 @@ export default function SpecPage() {
 
       const foundFeature = data.features.find(f => f.id === featureId);
       if (!foundFeature) {
-        throw new Error(`Feature "${featureId}" not found`);
+        throw new Error('Feature "' + featureId + '" not found');
       }
       setFeature(foundFeature);
     } catch (err) {
@@ -49,7 +52,7 @@ export default function SpecPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [projectName, featureId]);
+  }, [projectSlug, featureId]);
 
   useEffect(() => {
     loadFeature();
@@ -119,7 +122,7 @@ export default function SpecPage() {
         <div className="text-center">
           <div className="text-red-400 mb-4">{error}</div>
           <button
-            onClick={() => router.push(`/projects/${projectName}`)}
+            onClick={() => router.push('/projects/' + projectSlug)}
             className="flex items-center gap-2 px-4 py-2 bg-[var(--secondary)] rounded-lg hover:bg-[var(--secondary)]/80 transition-colors mx-auto"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -138,7 +141,7 @@ export default function SpecPage() {
       <div className="border-b border-[var(--border)] bg-[var(--card)]">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <button
-            onClick={() => router.push(`/projects/${projectName}/features/${featureId}`)}
+            onClick={() => router.push('/projects/' + projectSlug + '/features/' + featureId)}
             className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />

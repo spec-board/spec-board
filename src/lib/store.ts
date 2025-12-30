@@ -5,6 +5,7 @@ import type { Project, Feature, DashboardMetrics, FeatureStage } from '@/types';
 export interface RecentProject {
   path: string;
   name: string;
+  slug?: string; // URL-safe slug for routing (from database)
   lastOpened: string; // ISO date string
   summary: string | null; // From constitution.md or README
   featureCount: number;
@@ -27,7 +28,7 @@ interface ProjectStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setProjectPath: (path: string | null) => void;
-  addRecentProject: (project: Project) => void;
+  addRecentProject: (project: Project, slug?: string) => void;
   loadRecentProjects: () => void;
   getMetrics: () => DashboardMetrics;
 }
@@ -82,7 +83,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   setProjectPath: (projectPath) => set({ projectPath }),
 
-  addRecentProject: (project: Project) => {
+  addRecentProject: (project: Project, slug?: string) => {
     const { recentProjects } = get();
 
     // Calculate stage breakdown
@@ -106,6 +107,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const newRecentProject: RecentProject = {
       path: project.path,
       name: project.name,
+      slug, // Store the database slug for URL routing
       lastOpened: new Date().toISOString(),
       summary: extractSummary(project),
       featureCount: project.features.length,

@@ -58,7 +58,7 @@ function calculateMetrics(project: Project): DashboardMetrics {
 export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
-  const projectNameOrPath = params.name as string;
+  const projectSlug = params.name as string;
 
   const [project, setProject] = useState<Project | null>(null);
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
@@ -71,31 +71,20 @@ export default function ProjectPage() {
     setIsLoading(true);
     setError(null);
     try {
-      // Check if this is a path (contains /) or a project name
-      const decodedParam = decodeURIComponent(projectNameOrPath);
-      const isPath = decodedParam.includes('/');
-
-      let filePath: string;
-
-      if (isPath) {
-        // Direct path-based access (new flow)
-        filePath = decodedParam;
-      } else {
-        // Legacy: lookup by project name from database
-        const projectRes = await fetch('/api/projects/' + projectNameOrPath, { cache: 'no-store' });
-        if (!projectRes.ok) {
-          if (projectRes.status === 404) {
-            throw new Error('Project "' + projectNameOrPath + '" not found');
-          }
-          throw new Error('Failed to load project');
+      // Always lookup by slug from database
+      const projectRes = await fetch('/api/projects/' + projectSlug, { cache: 'no-store' });
+      if (!projectRes.ok) {
+        if (projectRes.status === 404) {
+          throw new Error('Project "' + projectSlug + '" not found. Please open it from the home page first.');
         }
-        const projectData = await projectRes.json();
-        filePath = projectData.filePath;
+        throw new Error('Failed to load project');
       }
+      const projectData = await projectRes.json();
+      const filePath = projectData.filePath;
 
       setProjectPath(filePath);
 
-      // Load the actual project data
+      // Load the actual project data from filesystem
       const response = await fetch('/api/project?path=' + encodeURIComponent(filePath), { cache: 'no-store' });
       if (!response.ok) {
         throw new Error('Failed to load project files');
@@ -107,7 +96,7 @@ export default function ProjectPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [projectNameOrPath]);
+  }, [projectSlug]);
 
   // Load project on mount
   useEffect(() => {
@@ -144,13 +133,14 @@ export default function ProjectPage() {
 
   const handleFeatureClick = (feature: Feature) => {
     setSelectedFeature(feature);
-    // Update URL without full navigation
-    window.history.pushState({}, '', '/projects/' + encodeURIComponent(projectNameOrPath) + '/features/' + feature.id);
+    // Update URL with clean slug-based path
+    window.history.pushState({}, '', '/projects/' + projectSlug + '/features/' + feature.id);
   };
 
   const handleCloseFeature = () => {
     setSelectedFeature(null);
-    window.history.pushState({}, '', '/projects/' + encodeURIComponent(projectNameOrPath));
+    // Update URL with clean slug-based path
+    window.history.pushState({}, '', '/projects/' + projectSlug);
   };
 
   const copyLink = () => {

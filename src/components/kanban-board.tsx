@@ -3,7 +3,7 @@
 import { useCallback, useRef, KeyboardEvent } from 'react';
 import { cn, getKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature } from '@/types';
-import { FileText, ListTodo, Plus } from 'lucide-react';
+import { FileText, ListTodo, Plus, GitBranch } from 'lucide-react';
 import { PriorityBadge } from '@/components/priority-badge';
 import { Tooltip } from '@/components/tooltip';
 import { announce } from '@/lib/accessibility';
@@ -48,7 +48,7 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
   };
 
   return (
-    <Tooltip content="View details [Enter]">
+    <Tooltip content="View details [Enter]" className="w-full">
       <button
         onClick={onClick}
         onKeyDown={handleKeyDown}
@@ -67,6 +67,16 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
           {feature.name}
         </h4>
       </div>
+
+      {/* Branch name */}
+      {feature.branch && (
+        <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)] mb-2">
+          <GitBranch className="w-3 h-3" />
+          <code className="bg-[var(--secondary)] px-1.5 py-0.5 rounded text-[10px]">
+            {feature.branch}
+          </code>
+        </div>
+      )}
 
       {/* Badges and task count */}
       <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
@@ -172,7 +182,7 @@ function KanbanColumnComponent({ column, features, onFeatureClick }: KanbanColum
           <EmptyColumn column={column} />
         ) : (
           features.map((feature, index) => (
-            <div key={feature.id} role="listitem">
+            <div key={feature.id} role="listitem" className="w-full">
               <FeatureCard
                 feature={feature}
                 onClick={() => {

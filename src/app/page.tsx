@@ -8,6 +8,14 @@ import { RecentProjectsList } from '@/components/recent-projects-list';
 import { OpenProjectModal } from '@/components/open-project-modal';
 import type { Project } from '@/types';
 
+// Database project type returned from registration API
+interface DbProject {
+  id: string;
+  name: string; // This is the slug used in URLs
+  displayName: string;
+  filePath: string;
+}
+
 export default function Home() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,27 +26,63 @@ export default function Home() {
     loadRecentProjects();
   }, [loadRecentProjects]);
 
+  // Register project in database and get slug for URL
+  const registerProject = useCallback(async (filePath: string): Promise<DbProject | null> => {
+    try {
+      const response = await fetch('/api/projects/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath }),
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+      console.error('Failed to register project:', await response.text());
+      return null;
+    } catch (error) {
+      console.error('Error registering project:', error);
+      return null;
+    }
+  }, []);
+
   // Handle opening a project from the modal
-  const handleOpenProject = useCallback((project: Project) => {
-    addRecentProject(project);
-    router.push(`/projects/${encodeURIComponent(project.path)}`);
-  }, [addRecentProject, router]);
+  const handleOpenProject = useCallback(async (project: Project) => {
+    // Register project to get slug
+    const dbProject = await registerProject(project.path);
+    if (dbProject) {
+      addRecentProject(project, dbProject.name);
+      router.push(`/projects/${dbProject.name}`);
+    } else {
+      // Fallback to path-based URL if registration fails
+      addRecentProject(project);
+      router.push(`/projects/${encodeURIComponent(project.path)}`);
+    }
+  }, [addRecentProject, registerProject, router]);
 
   // Handle selecting a recent project
   const handleSelectRecent = useCallback(async (recentProject: RecentProject) => {
-    // Fetch fresh project data before navigating
-    try {
-      const url = '/api/project?path=' + encodeURIComponent(recentProject.path);
-      const response = await fetch(url);
-      if (response.ok) {
-        const project: Project = await response.json();
-        addRecentProject(project);
-      }
-    } catch {
-      // Continue even if refresh fails
+    // If we have a slug, use it directly
+    if (recentProject.slug) {
+      router.push(`/projects/${recentProject.slug}`);
+      return;
     }
-    router.push(`/projects/${encodeURIComponent(recentProject.path)}`);
-  }, [addRecentProject, router]);
+
+    // Otherwise, register to get slug
+    const dbProject = await registerProject(recentProject.path);
+    if (dbProject) {
+      // Update recent project with slug
+      const { recentProjects } = useProjectStore.getState();
+      const updated = recentProjects.map(p =>
+        p.path === recentProject.path ? { ...p, slug: dbProject.name } : p
+      );
+      localStorage.setItem('specboard-recent-projects', JSON.stringify(updated));
+      useProjectStore.setState({ recentProjects: updated });
+      router.push(`/projects/${dbProject.name}`);
+    } else {
+      // Fallback to path-based URL
+      router.push(`/projects/${encodeURIComponent(recentProject.path)}`);
+    }
+  }, [registerProject, router]);
 
   // Handle removing a recent project
   const handleRemoveRecent = useCallback((path: string) => {

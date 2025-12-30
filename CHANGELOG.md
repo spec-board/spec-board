@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Database Slug Routing** - Clean, shareable URLs using database slugs:
+  - New `/api/projects/register` endpoint for auto-registration
+  - Generates URL-safe slugs from folder names (e.g., `my-todolist`)
+  - Handles slug conflicts with numeric suffixes (`my-todolist-2`)
+  - Returns existing project if path already registered
+- **Analysis Viewer Tab** - View spec alignment tracking data:
+  - Displays analysis.json and analysis.md from feature's analysis/ directory
+  - Shows spec alignment score and requirement status
+- **Checklist Viewer Tab** - Display checklist files from feature directories
 - **Docker Support** - Full containerization for production deployment:
   - Multi-stage Dockerfile with pnpm and Prisma support
   - `docker-compose.yml` for full stack (app + PostgreSQL)
@@ -25,22 +34,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Feature count and completion percentage
   - Stage breakdown (specifying, planning, implementing, complete)
   - Auto-generated summary from constitution.md
+  - Cached slug for faster navigation
 - **Open Project Modal** - Streamlined project search experience:
   - Searchbox with path autocomplete
   - Keyboard navigation (↑↓ navigate, Tab accept, Esc close)
   - Spec-kit project detection with visual badge
   - Preview card showing project stats before opening
-- **Path-based URL Routing** - Projects accessible via encoded filesystem paths
 - **Share Button** - Copy project URL to clipboard from header
 
 ### Changed
-- Home page redesigned from project registration to quick-access interface
-- Project URLs now use encoded paths instead of database slugs
-- Recent projects stored in localStorage with rich metadata
+- **URL Structure** - Projects now use clean slugs instead of encoded paths:
+  - Old: `/projects/%2FUsers%2Fpaul%2Fmy-project`
+  - New: `/projects/my-project`
+- Home page auto-registers projects via `/api/projects/register` before navigation
+- All project pages lookup filesystem path from database using slug
+- Recent projects stored in localStorage with rich metadata including slug
 - Next.js config updated with `output: "standalone"` for Docker
 
 ### Fixed
 - HTML validation error: nested `<button>` elements in recent projects list
+- URL double encoding issue (`%252F`) with filesystem paths
 
 ## [0.2.0] - 2024-12-28
 

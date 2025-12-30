@@ -14,6 +14,8 @@ interface TooltipProps {
   delay?: number;
   /** Whether the tooltip is disabled */
   disabled?: boolean;
+  /** Additional classes for the wrapper element */
+  className?: string;
 }
 
 /**
@@ -26,6 +28,7 @@ export function Tooltip({
   side = 'top',
   delay = 300,
   disabled = false,
+  className,
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -72,7 +75,7 @@ export function Tooltip({
   return (
     <div
       ref={triggerRef}
-      className="relative inline-flex"
+      className={cn("relative inline-flex", className)}
       onMouseEnter={showTooltip}
       onMouseLeave={hideTooltip}
       onFocus={showTooltip}

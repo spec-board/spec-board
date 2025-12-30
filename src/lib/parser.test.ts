@@ -226,6 +226,46 @@ Some planning notes here.
     expect(result.phases).toHaveLength(1);
     expect(result.phases[0].name).toBe('Has Tasks');
   });
+
+  it('should extract user story from phase name and assign to tasks', () => {
+    const content = `## Phase 1: Setup
+- [ ] T001 Initialize project
+- [x] T002 Configure tools
+
+## Phase 2: US1 – Create Tasks
+- [ ] T003 Create task model
+- [x] T004 Implement task service
+
+## Phase 3: US2 - Edit Tasks
+- [ ] T005 Add edit functionality
+`;
+    const result = parseTasksFile(content);
+
+    expect(result.tasks).toHaveLength(5);
+    // Setup phase tasks should not have userStory
+    expect(result.tasks[0].userStory).toBeUndefined();
+    expect(result.tasks[1].userStory).toBeUndefined();
+    // US1 phase tasks should inherit US1
+    expect(result.tasks[2].userStory).toBe('US1');
+    expect(result.tasks[3].userStory).toBe('US1');
+    expect(result.tasks[3].completed).toBe(true);
+    // US2 phase tasks should inherit US2
+    expect(result.tasks[4].userStory).toBe('US2');
+  });
+
+  it('should not override explicit [USx] markers with phase name', () => {
+    const content = `## Phase 1: US1 – Create Tasks
+- [ ] T001 [US2] Task with explicit marker
+- [ ] T002 Task without marker
+`;
+    const result = parseTasksFile(content);
+
+    expect(result.tasks).toHaveLength(2);
+    // Explicit marker should be preserved
+    expect(result.tasks[0].userStory).toBe('US2');
+    // Task without marker should inherit from phase
+    expect(result.tasks[1].userStory).toBe('US1');
+  });
 });
 
 describe('determineFeatureStage', () => {

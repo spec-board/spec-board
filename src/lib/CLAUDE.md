@@ -61,6 +61,7 @@ Zustand store for client-side state:
 interface RecentProject {
   path: string;           // Filesystem path
   name: string;           // Project name
+  slug?: string;          // URL-safe slug from database (for routing)
   lastOpened: string;     // ISO date string
   summary: string | null; // From constitution.md
   featureCount: number;
@@ -72,9 +73,11 @@ interface RecentProject {
 **Key Actions:**
 | Action | Purpose |
 |--------|---------|
-| `addRecentProject(project)` | Add/update project in recent list with metadata |
+| `addRecentProject(project, slug?)` | Add/update project in recent list with metadata and optional slug |
 | `loadRecentProjects()` | Load recent projects from localStorage |
 | `getMetrics()` | Calculate dashboard metrics from current project |
+
+**Note:** The `slug` field is cached from the database when a project is opened. This allows the home page to navigate directly using the slug without re-registering the project.
 
 ### utils.ts (Both)
 General utilities:

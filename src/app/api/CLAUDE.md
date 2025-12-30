@@ -4,13 +4,14 @@
 RESTful API routes for project management and spec data.
 
 ## Overview
-This directory contains all Next.js API routes using the App Router convention. Each folder represents an endpoint, with `route.ts` files containing HTTP method handlers. Routes handle project CRUD, filesystem browsing, spec data loading, and real-time updates.
+This directory contains all Next.js API routes using the App Router convention. Each folder represents an endpoint, with `route.ts` files containing HTTP method handlers. Routes handle project CRUD, auto-registration, filesystem browsing, spec data loading, and real-time updates.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
 | `projects/route.ts` | List and create projects |
+| `projects/register/route.ts` | Auto-register project from filesystem path |
 | `projects/[name]/route.ts` | Get, update, delete specific project |
 | `project/route.ts` | Load spec data from filesystem path |
 | `browse/route.ts` | Directory browser with autocomplete |
@@ -36,6 +37,28 @@ This directory contains all Next.js API routes using the App Router convention. 
 // Response
 { id, name, displayName, filePath, createdAt, updatedAt }
 ```
+
+### Project Auto-Registration (`/api/projects/register`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/projects/register` | Auto-register project from filesystem path |
+
+**Request/Response:**
+```typescript
+// POST /api/projects/register
+{ filePath: string }
+
+// Response (existing or newly created)
+{ id, name, displayName, filePath, createdAt, updatedAt }
+```
+
+**Behavior:**
+- Validates path exists and is a spec-kit project (has `specs/` or `.specify/`)
+- Returns existing project if path already registered
+- Generates unique slug from folder name (e.g., `/Users/paul/my-todolist` → `my-todolist`)
+- Handles slug conflicts by appending numbers (`my-todolist-2`, `my-todolist-3`)
+- Used by home page to auto-register projects when opened
 
 ### Spec Data (`/api/project`)
 
