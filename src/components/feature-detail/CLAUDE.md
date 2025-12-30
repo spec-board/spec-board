@@ -40,9 +40,11 @@ Sections are grouped by workflow phase:
 
 | Phase | Sections |
 |-------|----------|
-| **DEFINE** | Overview, Spec, Research, Data Model |
-| **PLAN** | Plan, Contracts, Quickstart |
-| **EXECUTE** | Tasks, Checklists, Analysis |
+| **OVERVIEW** | Overview, Spec |
+| **PLANNING** | Plan, Research, Data Model |
+| **CODING** | Tasks |
+| **QA** | Analysis |
+| **QC** | Checklists |
 
 ## State Management
 

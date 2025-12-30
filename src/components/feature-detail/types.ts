@@ -17,7 +17,7 @@ export type SectionId =
 export type SectionStatus = 'complete' | 'in-progress' | 'pending' | 'none';
 
 // Workflow phase groupings
-export type WorkflowPhase = 'define' | 'plan' | 'execute';
+export type WorkflowPhase = 'overview' | 'planning' | 'coding' | 'qa' | 'qc';
 
 // Section configuration
 export interface SectionConfig {
@@ -110,17 +110,25 @@ export const STAGE_ORDER = ['specify', 'plan', 'tasks', 'implement', 'complete']
 
 // Phase configuration
 export const PHASE_CONFIG: Record<WorkflowPhase, { label: string; sections: SectionId[] }> = {
-  define: {
-    label: 'DEFINE',
-    sections: ['spec', 'research', 'data-model'],
+  overview: {
+    label: 'OVERVIEW',
+    sections: ['overview', 'spec'],
   },
-  plan: {
-    label: 'PLAN',
-    sections: ['plan', 'contracts', 'quickstart'],
+  planning: {
+    label: 'PLANNING',
+    sections: ['plan', 'research', 'data-model'],
   },
-  execute: {
-    label: 'EXECUTE',
-    sections: ['tasks', 'checklists', 'analysis'],
+  coding: {
+    label: 'CODING',
+    sections: ['tasks'],
+  },
+  qa: {
+    label: 'QA',
+    sections: ['analysis'],
+  },
+  qc: {
+    label: 'QC',
+    sections: ['checklists'],
   },
 };
 

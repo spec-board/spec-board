@@ -28,87 +28,77 @@ function buildSectionConfigs(feature: Feature): SectionConfig[] {
     return feature.additionalFiles?.some(f => f.type === type && f.exists) ?? false;
   };
 
-  // Get contract and checklist files
-  const contractFiles = feature.additionalFiles?.filter(f => f.type === 'contract') ?? [];
+  // Get checklist files
   const checklistFiles = feature.additionalFiles?.filter(f => f.type === 'checklist') ?? [];
 
   return [
+    // OVERVIEW phase
     {
       id: 'overview' as SectionId,
       label: 'Overview',
-      phase: 'define' as const,
+      phase: 'overview' as const,
       show: true,
       status: 'none',
     },
     {
       id: 'spec' as SectionId,
       label: 'Spec',
-      phase: 'define' as const,
+      phase: 'overview' as const,
       show: true,
       status: getSectionStatus('spec', feature),
       filePath: feature.path ? `${feature.path}/spec.md` : undefined,
     },
+    // PLANNING phase
+    {
+      id: 'plan' as SectionId,
+      label: 'Plan',
+      phase: 'planning' as const,
+      show: true,
+      status: getSectionStatus('plan', feature),
+      filePath: feature.path ? `${feature.path}/plan.md` : undefined,
+    },
     {
       id: 'research' as SectionId,
       label: 'Research',
-      phase: 'define' as const,
+      phase: 'planning' as const,
       show: hasAdditionalFile('research'),
       status: 'none',
     },
     {
       id: 'data-model' as SectionId,
       label: 'Data Model',
-      phase: 'define' as const,
+      phase: 'planning' as const,
       show: hasAdditionalFile('data-model'),
       status: 'none',
     },
-    {
-      id: 'plan' as SectionId,
-      label: 'Plan',
-      phase: 'plan' as const,
-      show: true,
-      status: getSectionStatus('plan', feature),
-      filePath: feature.path ? `${feature.path}/plan.md` : undefined,
-    },
-    {
-      id: 'contracts' as SectionId,
-      label: 'Contracts',
-      phase: 'plan' as const,
-      show: contractFiles.length > 0,
-      status: 'none',
-    },
-    {
-      id: 'quickstart' as SectionId,
-      label: 'Quickstart',
-      phase: 'plan' as const,
-      show: hasAdditionalFile('quickstart'),
-      status: 'none',
-    },
+    // CODING phase
     {
       id: 'tasks' as SectionId,
       label: 'Tasks',
-      phase: 'execute' as const,
+      phase: 'coding' as const,
       show: true,
       status: getSectionStatus('tasks', feature),
       taskCount: { completed: feature.completedTasks, total: feature.totalTasks },
       filePath: feature.path ? `${feature.path}/tasks.md` : undefined,
     },
+    // QA phase
+    {
+      id: 'analysis' as SectionId,
+      label: 'Analysis',
+      phase: 'qa' as const,
+      show: true,
+      status: 'none',
+    },
+    // QC phase
     {
       id: 'checklists' as SectionId,
       label: 'Checklists',
-      phase: 'execute' as const,
+      phase: 'qc' as const,
       show: checklistFiles.length > 0,
       status: 'none',
       taskCount: feature.hasChecklists
         ? { completed: feature.completedChecklistItems, total: feature.totalChecklistItems }
         : undefined,
-    },
-    {
-      id: 'analysis' as SectionId,
-      label: 'Analysis',
-      phase: 'execute' as const,
-      show: true,
-      status: 'none',
     },
   ];
 }
