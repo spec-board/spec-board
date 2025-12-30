@@ -3,7 +3,7 @@
 import { KeyboardEvent } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature } from '@/types';
-import { Plus, GitBranch } from 'lucide-react';
+import { GitBranch } from 'lucide-react';
 import { PriorityBadge } from '@/components/priority-badge';
 import { Tooltip } from '@/components/tooltip';
 import { announce } from '@/lib/accessibility';
@@ -113,11 +113,7 @@ function EmptyColumn({ column }: EmptyColumnProps) {
 
   return (
     <div className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-[var(--border)] rounded-lg text-[var(--muted-foreground)]">
-      <span className="text-xs mb-2">{hints[column]}</span>
-      <span className="flex items-center gap-1 text-xs opacity-60">
-        <Plus className="w-3 h-3" />
-        Add new
-      </span>
+      <span className="text-xs">{hints[column]}</span>
     </div>
   );
 }

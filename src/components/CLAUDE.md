@@ -4,7 +4,13 @@
 React UI components for the SpecBoard dashboard.
 
 ## Overview
-This directory contains all React components used throughout the application. Components follow a flat structure (no nested folders) and use Tailwind CSS with CSS variables for styling. All components are client-side (`'use client'`) for interactivity.
+This directory contains all React components used throughout the application. Most components follow a flat structure, with the exception of `feature-detail/` which contains the redesigned Feature Detail Modal. All components use Tailwind CSS with CSS variables for styling and are client-side (`'use client'`) for interactivity.
+
+## Subdirectories
+
+| Directory | Purpose |
+|-----------|---------|
+| `feature-detail/` | Full-screen modal with split-view for feature details (see `feature-detail/CLAUDE.md`) |
 
 ## Key Files
 

@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Feature Detail Modal Redesign** - Full-screen modal with enhanced navigation:
+  - Split-view support with drag-to-split and resizable divider
+  - Left navigation sidebar grouped by workflow phase (DEFINE/PLAN/EXECUTE)
+  - Status header with progress bar and "Next Action" display
+  - Comprehensive keyboard shortcuts (1-9 for sections, Ctrl+\ for split, Tab to switch panes)
+  - Drag navigation items to content area to open in split view
+  - Memoized section configs for performance optimization
+  - Full accessibility support with focus trap and screen reader announcements
 - **Database Slug Routing** - Clean, shareable URLs using database slugs:
   - New `/api/projects/register` endpoint for auto-registration
   - Generates URL-safe slugs from folder names (e.g., `my-todolist`)

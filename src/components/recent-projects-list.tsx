@@ -1,8 +1,25 @@
 'use client';
 
-import { FolderOpen, Clock, Trash2 } from 'lucide-react';
+import { FolderOpen, Clock, Trash2, Rocket, FileText, ListTodo, Hammer, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RecentProject } from '@/lib/store';
+import type { FeatureStage } from '@/types';
+
+// Get icon and label for active feature stage
+function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; color: string } {
+  switch (stage) {
+    case 'implement':
+      return { icon: <Hammer className="w-3.5 h-3.5" />, label: 'Implementing', color: 'text-blue-400' };
+    case 'tasks':
+      return { icon: <ListTodo className="w-3.5 h-3.5" />, label: 'Tasks ready', color: 'text-purple-400' };
+    case 'plan':
+      return { icon: <FileText className="w-3.5 h-3.5" />, label: 'Planning', color: 'text-yellow-400' };
+    case 'specify':
+      return { icon: <Rocket className="w-3.5 h-3.5" />, label: 'Specifying', color: 'text-orange-400' };
+    case 'complete':
+      return { icon: <CheckCircle className="w-3.5 h-3.5" />, label: 'Complete', color: 'text-green-400' };
+  }
+}
 
 interface RecentProjectsListProps {
   projects: RecentProject[];
@@ -78,8 +95,25 @@ export function RecentProjectsList({ projects, onSelect, onRemove }: RecentProje
                 {project.path}
               </div>
               
-              {/* Summary */}
-              {project.summary && (
+              {/* Dynamic Status - shows current focus */}
+              {project.activeFeature && (() => {
+                const stageInfo = getStageDisplay(project.activeFeature.stage);
+                return (
+                  <div className={cn('flex items-center gap-1.5 mt-2 text-sm', stageInfo.color)}>
+                    {stageInfo.icon}
+                    <span>
+                      {stageInfo.label}
+                      {project.activeFeature.stage !== 'complete' && ': '}
+                      {project.activeFeature.stage !== 'complete' && (
+                        <span className="text-[var(--foreground)]">{project.activeFeature.featureName}</span>
+                      )}
+                    </span>
+                  </div>
+                );
+              })()}
+
+              {/* Fallback to summary if no active feature (and summary is clean) */}
+              {!project.activeFeature && project.summary && !project.summary.startsWith('<!--') && (
                 <div className="text-sm text-[var(--muted-foreground)] mt-2 line-clamp-2">
                   {project.summary}
                 </div>

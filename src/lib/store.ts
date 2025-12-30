@@ -1,13 +1,20 @@
 import { create } from 'zustand';
 import type { Project, Feature, FeatureStage } from '@/types';
 
+// Active feature status for dynamic project description
+export interface ActiveFeatureStatus {
+  stage: FeatureStage;
+  featureName: string;
+}
+
 // Recent project with full metadata for the new UI
 export interface RecentProject {
   path: string;
   name: string;
   slug?: string; // URL-safe slug for routing (from database)
   lastOpened: string; // ISO date string
-  summary: string | null; // From constitution.md or README
+  summary: string | null; // From constitution.md or README (cleaned)
+  activeFeature: ActiveFeatureStatus | null; // Current focus feature
   featureCount: number;
   completionPercentage: number;
   stageBreakdown: Record<FeatureStage, number>;
@@ -49,18 +56,107 @@ function saveRecentProjectsToStorage(projects: RecentProject[]) {
   localStorage.setItem(RECENT_PROJECTS_KEY, JSON.stringify(projects));
 }
 
-// Extract summary from constitution or first feature's spec
+// Check if a line is meaningful content (not markdown artifacts)
+function isMeaningfulLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+
+  // Skip headings
+  if (trimmed.startsWith('#')) return false;
+
+  // Skip HTML comments (<!-- ... -->)
+  if (trimmed.startsWith('<!--') || trimmed.startsWith('-->')) return false;
+  if (trimmed.includes('<!--') && !trimmed.includes('-->')) return false;
+
+  // Skip frontmatter markers
+  if (trimmed === '---') return false;
+
+  // Skip code fence markers
+  if (trimmed.startsWith('```')) return false;
+
+  // Skip horizontal rules
+  if (/^[-*_]{3,}$/.test(trimmed)) return false;
+
+  // Skip lines that are just markdown syntax
+  if (/^[>\-*+\d.]+$/.test(trimmed)) return false;
+
+  // Must have at least some alphabetic content
+  if (!/[a-zA-Z]{3,}/.test(trimmed)) return false;
+
+  return true;
+}
+
+// Extract summary from constitution (with proper filtering)
 function extractSummary(project: Project): string | null {
   if (project.constitution?.rawContent) {
-    // Get first non-empty line after title
     const lines = project.constitution.rawContent.split('\n');
+    let inComment = false;
+    let inFrontmatter = false;
+    let frontmatterCount = 0;
+
     for (const line of lines) {
       const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith('#')) {
-        return trimmed.slice(0, 100) + (trimmed.length > 100 ? '...' : '');
+
+      // Track frontmatter (between --- markers)
+      if (trimmed === '---') {
+        frontmatterCount++;
+        inFrontmatter = frontmatterCount === 1;
+        if (frontmatterCount === 2) inFrontmatter = false;
+        continue;
+      }
+      if (inFrontmatter) continue;
+
+      // Track multi-line HTML comments
+      if (trimmed.includes('<!--') && !trimmed.includes('-->')) {
+        inComment = true;
+        continue;
+      }
+      if (inComment) {
+        if (trimmed.includes('-->')) inComment = false;
+        continue;
+      }
+
+      // Check if this is meaningful content
+      if (isMeaningfulLine(trimmed)) {
+        // Clean up the line (remove leading list markers, etc.)
+        const cleaned = trimmed
+          .replace(/^[>\-*+]\s*/, '')  // Remove blockquote/list markers
+          .replace(/^\d+\.\s*/, '')     // Remove numbered list markers
+          .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold
+          .replace(/\*([^*]+)\*/g, '$1')      // Remove italic
+          .trim();
+
+        if (cleaned.length > 10) {
+          return cleaned.slice(0, 100) + (cleaned.length > 100 ? '...' : '');
+        }
       }
     }
   }
+  return null;
+}
+
+// Get the most relevant active feature (prioritize implement > tasks > plan > specify)
+function getActiveFeature(project: Project): ActiveFeatureStatus | null {
+  const stagePriority: FeatureStage[] = ['implement', 'tasks', 'plan', 'specify'];
+
+  for (const stage of stagePriority) {
+    const feature = project.features.find(f => f.stage === stage);
+    if (feature) {
+      return {
+        stage: feature.stage,
+        featureName: feature.name,
+      };
+    }
+  }
+
+  // All complete
+  if (project.features.length > 0 && project.features.every(f => f.stage === 'complete')) {
+    return {
+      stage: 'complete',
+      featureName: `${project.features.length} feature${project.features.length > 1 ? 's' : ''}`,
+    };
+  }
+
   return null;
 }
 
@@ -109,6 +205,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       slug, // Store the database slug for URL routing
       lastOpened: new Date().toISOString(),
       summary: extractSummary(project),
+      activeFeature: getActiveFeature(project),
       featureCount: project.features.length,
       completionPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
       stageBreakdown,
