@@ -92,7 +92,7 @@ export function NavSidebar({
                       key={section.id}
                       id={section.id}
                       label={section.label}
-                      status={section.status}
+                      feature={feature}
                       isActive={activeSection === section.id}
                       isSelected={selectedIndex === visibleIndex}
                       taskCount={section.taskCount}

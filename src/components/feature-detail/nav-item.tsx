@@ -1,13 +1,15 @@
 'use client';
 
-import { CheckCircle2, Circle, GripVertical, Minus } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { SectionStatus, SectionId } from './types';
+import type { SectionId } from './types';
+import type { Feature } from '@/types';
+import { SectionIcon } from './section-icon';
 
 interface NavItemProps {
   id: SectionId;
   label: string;
-  status: SectionStatus;
+  feature: Feature;
   isActive: boolean;
   isSelected: boolean;
   taskCount?: { completed: number; total: number };
@@ -17,29 +19,10 @@ interface NavItemProps {
   shortcutKey?: number;
 }
 
-// Status indicator component
-function StatusIcon({ status }: { status: SectionStatus }) {
-  if (status === 'complete') {
-    return <CheckCircle2 className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />;
-  }
-  if (status === 'in-progress') {
-    return (
-      <div className="w-3.5 h-3.5 rounded-full border-2 border-yellow-400 border-t-transparent animate-spin flex-shrink-0" />
-    );
-  }
-  if (status === 'pending') {
-    return <Circle className="w-3.5 h-3.5 text-[var(--muted-foreground)] flex-shrink-0" />;
-  }
-  if (status === 'none') {
-    return <Minus className="w-3.5 h-3.5 text-[var(--muted-foreground)]/50 flex-shrink-0" />;
-  }
-  return null;
-}
-
 export function NavItem({
   id,
   label,
-  status,
+  feature,
   isActive,
   isSelected,
   taskCount,
@@ -77,8 +60,8 @@ export function NavItem({
       {/* Drag handle - visible on hover */}
       <GripVertical className="w-3.5 h-3.5 text-[var(--muted-foreground)]/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab flex-shrink-0" />
 
-      {/* Status icon */}
-      <StatusIcon status={status} />
+      {/* Semantic section icon */}
+      <SectionIcon sectionId={id} feature={feature} />
 
       {/* Label */}
       <span className="flex-1 text-left truncate">{label}</span>
