@@ -285,7 +285,7 @@ function WorkflowSubItemComponent({ item, onSectionClick }: SubItemProps) {
       {isMultiLineAction ? (
         <div className="flex-1 text-left">
           <div className="font-semibold">{actionTitle}</div>
-          <div className="text-[10px] opacity-80 truncate">{actionDetail}</div>
+          <div className="text-[10px] opacity-80 line-clamp-2">{actionDetail}</div>
         </div>
       ) : (
         <span className="flex-1 text-left truncate">{item.label}</span>
