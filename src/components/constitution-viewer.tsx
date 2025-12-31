@@ -329,12 +329,18 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
             </div>
           )}
 
-          {/* Other Sections */}
+          {/* Guidelines */}
           {constitution.sections.length > 0 && (
-            <div className="space-y-3">
-              {constitution.sections.map((section, index) => (
-                <SectionCard key={index} section={section} />
-              ))}
+            <div>
+              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Guidelines ({constitution.sections.length})
+              </h2>
+              <div className="space-y-3">
+                {constitution.sections.map((section, index) => (
+                  <SectionCard key={index} section={section} />
+                ))}
+              </div>
             </div>
           )}
         </div>
