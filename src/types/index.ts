@@ -177,3 +177,170 @@ export interface WebSocketMessage {
   data?: Project;
   error?: string;
 }
+
+// ============================================
+// Parsed Markdown Types for Structured Viewers
+// ============================================
+
+// Plan.md parsed types
+export interface PlanMetadata {
+  branch?: string;
+  date?: string;
+  specLink?: string;
+  input?: string;
+}
+
+export interface ConstitutionCheckItem {
+  principle: string;
+  requirement: string;
+  status: string;
+}
+
+export interface ConstitutionCheckData {
+  items: ConstitutionCheckItem[];
+  note?: string;
+}
+
+export interface ComplexityItem {
+  aspect: string;
+  decision: string;
+  rationale: string;
+}
+
+export interface ProjectStructureItem {
+  title: string;
+  codeBlock: string;
+  description?: string;
+}
+
+export interface ComplexityTrackingData {
+  items: ComplexityItem[];
+  note?: string;
+}
+
+export interface PlanSection {
+  title: string;
+  content: string;
+}
+
+export interface ParsedPlan {
+  rawContent: string;
+  metadata: PlanMetadata;
+  summary?: string;
+  technicalContext: Record<string, string>;
+  constitutionCheck: ConstitutionCheckData;
+  qualityGates: string[];
+  projectStructure: ProjectStructureItem[];
+  complexityTracking: ComplexityTrackingData;
+  otherSections: PlanSection[];
+}
+
+// Research.md parsed types
+export interface TechnologyDecision {
+  id: number;
+  title: string;
+  decision: string;
+  rationale: string[];
+  alternatives: { name: string; reason: string }[];
+}
+
+export interface ResearchSection {
+  title: string;
+  content: string;
+}
+
+export interface ParsedResearch {
+  rawContent: string;
+  feature?: string;
+  date?: string;
+  technologyDecisions: TechnologyDecision[];
+  otherSections: ResearchSection[];
+}
+
+// Quickstart.md parsed types
+export interface SetupStep {
+  id: number;
+  title: string;
+  commands: { description?: string; code: string; language?: string }[];
+}
+
+export interface VerificationItem {
+  text: string;
+  checked: boolean;
+}
+
+export interface QuickstartSection {
+  title: string;
+  content: string;
+}
+
+export interface ParsedQuickstart {
+  rawContent: string;
+  feature?: string;
+  date?: string;
+  prerequisites: string[];
+  setupSteps: SetupStep[];
+  developmentCommands: { title: string; command: string; description?: string }[];
+  projectScripts?: string;
+  verificationChecklist: VerificationItem[];
+  keyFilesToCreate: string[];
+  browserSupport: string[];
+  otherSections: QuickstartSection[];
+}
+
+// Data-model.md parsed types
+export interface EntityProperty {
+  name: string;
+  type: string;
+  description?: string;
+}
+
+export interface DataEntity {
+  name: string;
+  description?: string;
+  properties: EntityProperty[];
+  codeBlock?: string;
+}
+
+export interface DataEnum {
+  name: string;
+  values: { name: string; value: string; description?: string }[];
+  codeBlock?: string;
+}
+
+export interface ValidationRule {
+  field: string;
+  rules: string[];
+}
+
+export interface StateTransition {
+  state: string;
+  condition: string;
+  transitionsTo: string[];
+}
+
+export interface StorageSchema {
+  key: string;
+  type: string;
+  description: string;
+}
+
+export interface DataIntegrityRule {
+  title: string;
+  items: string[];
+}
+
+export interface ParsedDataModel {
+  rawContent: string;
+  feature?: string;
+  date?: string;
+  entities: DataEntity[];
+  enums: DataEnum[];
+  validationRules: ValidationRule[];
+  stateTransitions: StateTransition[];
+  storageSchema: StorageSchema[];
+  sortingBehavior: { option: string; description: string }[];
+  filteringBehavior: { filter: string; condition: string }[];
+  searchBehavior: string[];
+  dataIntegrity: DataIntegrityRule[];
+}
