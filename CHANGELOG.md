@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Constitution Viewer Enhancements** - Structured display with collapsible sections:
+  - Display actual constitution title from `# Heading` in constitution.md
+  - Parse and display Sync Impact Report from HTML comments
+  - Sections (Quality Standards, Development Workflow, Governance) displayed as headers with subsection cards
+  - Core Principles displayed as expandable cards
+  - Structured/Markdown toggle (Markdown tab shows raw source)
+  - Version metadata (version, ratified date, last amended date) in header
+- **New Constitution Types** - Extended type system for constitution parsing:
+  - `ConstitutionSubsection` for `###` headings within sections
+  - `SyncImpactReport` for sync impact metadata from HTML comments
+  - `title` field on `Constitution` interface
+
 ### Fixed
 - **Spec Viewer Parser** - Aligned client-side parser with actual spec.md markdown format:
   - Fixed section splitting to only match `## ` headers (not arbitrary patterns)
