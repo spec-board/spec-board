@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { KeyboardEvent } from 'react';
-import type { Feature } from '@/types';
+import type { Feature, Constitution } from '@/types';
 import { cn } from '@/lib/utils';
 import { useFocusTrap, announce } from '@/lib/accessibility';
 import { HeaderBar } from './header-bar';
@@ -20,6 +20,7 @@ interface FeatureDetailProps {
   feature: Feature;
   onClose: () => void;
   hasConstitution?: boolean;
+  constitution?: Constitution | null;
 }
 
 // Build section configurations from feature
@@ -33,23 +34,15 @@ function buildSectionConfigs(feature: Feature): SectionConfig[] {
   const checklistFiles = feature.additionalFiles?.filter(f => f.type === 'checklist') ?? [];
 
   return [
-    // OVERVIEW phase
-    {
-      id: 'overview' as SectionId,
-      label: 'Overview',
-      phase: 'overview' as const,
-      show: true,
-      status: 'none',
-    },
+    // PLANNING phase
     {
       id: 'spec' as SectionId,
       label: 'Spec',
-      phase: 'overview' as const,
+      phase: 'planning' as const,
       show: true,
       status: getSectionStatus('spec', feature),
       filePath: feature.path ? `${feature.path}/spec.md` : undefined,
     },
-    // PLANNING phase
     {
       id: 'plan' as SectionId,
       label: 'Plan',
@@ -110,15 +103,15 @@ function buildSectionConfigs(feature: Feature): SectionConfig[] {
   ];
 }
 
-export function FeatureDetail({ feature, onClose, hasConstitution = false }: FeatureDetailProps) {
+export function FeatureDetail({ feature, onClose, hasConstitution = false, constitution = null }: FeatureDetailProps) {
   const modalRef = useRef<HTMLDivElement>(null);
-  const [activeSection, setActiveSection] = useState<SectionId>('overview');
+  const [activeSection, setActiveSection] = useState<SectionId>('spec');
   const [selectedNavIndex, setSelectedNavIndex] = useState(0);
   const [draggedSection, setDraggedSection] = useState<SectionId | null>(null);
   const [dropSide, setDropSide] = useState<'left' | 'right' | null>(null);
   const [splitView, setSplitView] = useState<SplitViewState>({
     isActive: false,
-    leftPane: 'overview',
+    leftPane: 'spec',
     rightPane: null,
     splitRatio: 0.5,
     focusedPane: 'left',
@@ -444,10 +437,8 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false }: Fea
           {/* Left sidebar */}
           <NavSidebar
             feature={feature}
-            sections={sections}
+            hasConstitution={hasConstitution}
             activeSection={splitView.isActive ? splitView.leftPane : activeSection}
-            rightPaneSection={splitView.isActive ? splitView.rightPane : null}
-            selectedIndex={selectedNavIndex}
             onSectionClick={handleSectionClick}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
@@ -500,6 +491,7 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false }: Fea
               rightSection={splitView.isActive ? splitView.rightPane : null}
               feature={feature}
               hasConstitution={hasConstitution}
+              constitution={constitution}
               splitRatio={splitView.splitRatio}
               onRatioChange={handleRatioChange}
               onCloseRight={handleCloseRight}

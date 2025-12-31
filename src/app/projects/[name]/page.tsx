@@ -221,6 +221,7 @@ export default function ProjectPage() {
           feature={selectedFeature}
           onClose={handleCloseFeature}
           hasConstitution={project.hasConstitution}
+          constitution={project.constitution}
         />
       )}
     </div>
