@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Spec Viewer Parser** - Aligned client-side parser with actual spec.md markdown format:
+  - Fixed section splitting to only match `## ` headers (not arbitrary patterns)
+  - Updated metadata parsing to handle `**Field**: value` format with backticks
+  - Fixed user story parsing to match `### User Story N - Title (Priority: PN)` format
+  - Updated acceptance scenarios to parse bold `**Given**/**When**/**Then**` markers
+  - Fixed Edge Cases parsing to find `### Edge Cases` subsection within User Scenarios
+  - Fixed Key Entities parsing to find `### Key Entities` subsection within Requirements
+  - Fixed Success Criteria parsing to find `### Measurable Outcomes` subsection
+  - Disabled clarifications parsing (handled separately)
+
 ### Added
 - **Semantic Section Icons** - Navigation icons that convey document meaning:
   - Icons indicate document existence via color (green if exists, muted otherwise)
