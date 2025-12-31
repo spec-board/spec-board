@@ -33,7 +33,7 @@ interface AcceptanceScenario {
 interface UserStory {
   id: string;
   title: string;
-  priority: 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6';
+  priority: string; // P1, P2, P3, etc.
   description: string;
   whyPriority?: string;
   independentTest?: string;
@@ -216,7 +216,7 @@ function parseUserStories(section: string): UserStory[] {
     const line = lines[i];
 
     // New User Story - match various formats
-    const storyMatch = line.match(/^(?:###?\s*)?User Story (\d+)\s*[-–]\s*(.+?)\s*\(Priority:\s*(P[1-6])\)/i);
+    const storyMatch = line.match(/^(?:###?\s*)?User Story (\d+)\s*[-–]\s*(.+?)\s*\(Priority:\s*(P\d+)\)/i);
     if (storyMatch) {
       if (currentStory) {
         stories.push(currentStory);
@@ -224,7 +224,7 @@ function parseUserStories(section: string): UserStory[] {
       currentStory = {
         id: `US${storyMatch[1]}`,
         title: storyMatch[2].trim(),
-        priority: storyMatch[3] as 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6',
+        priority: storyMatch[3].toUpperCase(),
         description: '',
         acceptanceScenarios: []
       };
@@ -462,32 +462,39 @@ function formatUserStoryDescription(description: string): string {
     .replace(/,?\s*(and mark\s)/i, ',\nand mark ');
 }
 
-// Priority badge component
-function PriorityBadge({ priority }: { priority: 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' }) {
-  const colors: Record<string, string> = {
-    P1: 'bg-red-500/20 text-red-400 border-red-500/30',
-    P2: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    P3: 'bg-green-500/20 text-green-400 border-green-500/30',
-    P4: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    P5: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    P6: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
+// Priority badge component - supports any priority level (P1, P2, ... P20, etc.)
+function PriorityBadge({ priority }: { priority: string }) {
+  // Extract priority number for dynamic styling
+  const priorityNum = parseInt(priority.replace(/\D/g, ''), 10) || 1;
+
+  // Predefined colors for common priorities, fallback for higher numbers
+  const colorMap: Record<number, string> = {
+    1: 'bg-red-500/20 text-red-400 border-red-500/30',
+    2: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    3: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    4: 'bg-green-500/20 text-green-400 border-green-500/30',
+    5: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    6: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
   };
 
-  const labels: Record<string, string> = {
-    P1: 'Critical',
-    P2: 'Important',
-    P3: 'Nice to Have',
-    P4: 'Low',
-    P5: 'Minor',
-    P6: 'Trivial',
+  // Fallback color for P7+
+  const color = colorMap[priorityNum] || 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+
+  // Dynamic labels based on priority number
+  const getLabel = (num: number): string => {
+    if (num === 1) return 'Critical';
+    if (num === 2) return 'Important';
+    if (num === 3) return 'Medium';
+    if (num <= 5) return 'Low';
+    return 'Minor';
   };
 
   return (
     <span className={cn(
       'px-2 py-0.5 text-xs font-medium rounded-full border',
-      colors[priority]
+      color
     )}>
-      {priority} · {labels[priority]}
+      {priority} · {getLabel(priorityNum)}
     </span>
   );
 }
