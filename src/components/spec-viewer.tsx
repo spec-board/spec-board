@@ -796,7 +796,9 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
 
       {/* Content */}
       {showRawMarkdown || !hasStructuredContent ? (
-        <MarkdownRenderer content={content} />
+        <pre className="text-sm font-mono whitespace-pre-wrap bg-[var(--secondary)]/30 p-4 rounded-lg overflow-auto">
+          {content}
+        </pre>
       ) : (
         <div className="space-y-6">
           {/* Metadata Header */}
