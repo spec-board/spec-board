@@ -1,9 +1,9 @@
 'use client';
 
-import { X, ExternalLink } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { Feature, Constitution } from '@/types';
 import type { SectionId } from './types';
-import { cn, openInEditor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { SpecViewer } from '@/components/spec-viewer';
 import { PlanViewer } from '@/components/plan-viewer';
 import { ResearchViewer } from '@/components/research-viewer';
@@ -29,7 +29,6 @@ interface ContentPaneProps {
   className?: string;
 }
 
-// Section label mapping
 const SECTION_LABELS: Record<SectionId, string> = {
   constitution: 'Project Constitution',
   spec: 'Specification',
@@ -43,33 +42,6 @@ const SECTION_LABELS: Record<SectionId, string> = {
   analysis: 'Analysis',
   clarifications: 'Clarification History',
 };
-
-// Get file path for a section
-function getSectionFilePath(sectionId: SectionId, feature: Feature): string | undefined {
-  if (!feature.path) return undefined;
-
-  // Derive project path from feature path (feature.path is like /path/to/project/specs/feature-name)
-  const projectPath = feature.path.split('/').slice(0, -2).join('/');
-
-  switch (sectionId) {
-    case 'constitution':
-      return `${projectPath}/.specify/memory/constitution.md`;
-    case 'spec':
-      return `${feature.path}/spec.md`;
-    case 'plan':
-      return `${feature.path}/plan.md`;
-    case 'tasks':
-      return `${feature.path}/tasks.md`;
-    case 'research':
-      return feature.additionalFiles?.find(f => f.type === 'research')?.path;
-    case 'data-model':
-      return feature.additionalFiles?.find(f => f.type === 'data-model')?.path;
-    case 'quickstart':
-      return feature.additionalFiles?.find(f => f.type === 'quickstart')?.path;
-    default:
-      return undefined;
-  }
-}
 
 // Task item component (reused from old implementation)
 function TaskItem({ task }: { task: Task }) {
@@ -192,7 +164,6 @@ export function ContentPane({
   showCloseButton = false,
   className,
 }: ContentPaneProps) {
-  const filePath = getSectionFilePath(sectionId, feature);
   const label = SECTION_LABELS[sectionId];
 
   // Helper to get additional file content
@@ -210,24 +181,8 @@ export function ContentPane({
       <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--secondary)]/30 flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{label}</span>
-          {filePath && (
-            <span className="text-xs text-[var(--muted-foreground)] font-mono truncate max-w-[200px]">
-              {filePath.split('/').pop()}
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-1">
-          {filePath && (
-            <Tooltip content="Open in editor [Ctrl+E]">
-              <button
-                onClick={() => openInEditor(filePath)}
-                className="p-1.5 hover:bg-[var(--secondary)] rounded transition-colors"
-                aria-label="Open in editor"
-              >
-                <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)]" />
-              </button>
-            </Tooltip>
-          )}
           {showCloseButton && onClose && (
             <Tooltip content="Close pane">
               <button
@@ -248,28 +203,25 @@ export function ContentPane({
           <ConstitutionViewer content={constitution?.rawContent ?? null} />
         )}
         {sectionId === 'spec' && (
-          <SpecViewer content={feature.specContent} filePath={filePath} />
+          <SpecViewer content={feature.specContent} />
         )}
         {sectionId === 'plan' && (
-          <PlanViewer content={feature.planContent} filePath={filePath} />
+          <PlanViewer content={feature.planContent} />
         )}
         {sectionId === 'tasks' && <TasksContent feature={feature} />}
         {sectionId === 'research' && (
           <ResearchViewer
             content={getAdditionalFileContent('research')}
-            filePath={filePath}
           />
         )}
         {sectionId === 'data-model' && (
           <DataModelViewer
             content={getAdditionalFileContent('data-model')}
-            filePath={filePath}
           />
         )}
         {sectionId === 'quickstart' && (
           <QuickstartViewer
             content={getAdditionalFileContent('quickstart')}
-            filePath={filePath}
           />
         )}
         {sectionId === 'contracts' && <ContractsViewer contracts={contractFiles} />}

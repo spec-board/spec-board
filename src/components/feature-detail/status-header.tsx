@@ -11,9 +11,9 @@ export function StatusHeader({ feature, progressPercentage, nextTask }: StatusHe
   // Get highest priority from user stories
   const highestPriority: Priority | null = feature.userStories.length > 0
     ? feature.userStories.reduce<Priority>((highest, story) => {
-        const priorityOrder: Record<Priority, number> = { P1: 1, P2: 2, P3: 3 };
-        return priorityOrder[story.priority] < priorityOrder[highest] ? story.priority : highest;
-      }, feature.userStories[0].priority)
+      const priorityOrder: Record<Priority, number> = { P1: 1, P2: 2, P3: 3 };
+      return priorityOrder[story.priority] < priorityOrder[highest] ? story.priority : highest;
+    }, feature.userStories[0].priority)
     : null;
 
   return (

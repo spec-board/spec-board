@@ -95,11 +95,6 @@ export function getKanbanColumnLabel(column: KanbanColumn): string {
   return labels[column];
 }
 
-export interface OpenInEditorResult {
-  success: boolean;
-  message: string;
-}
-
 /**
  * Type guard for Prisma errors with error codes.
  * Common codes: P2002 (unique constraint), P2025 (record not found)
@@ -112,46 +107,6 @@ export function isPrismaError(error: unknown, code?: string): error is { code: s
     return (error as { code: string }).code === code;
   }
   return typeof (error as { code: string }).code === 'string';
-}
-
-/**
- * Opens a file in the user's default editor (VS Code by default).
- * Uses the vscode:// URI scheme which works when VS Code is installed.
- *
- * @param filePath - Absolute path to the file to open
- * @param lineNumber - Optional line number to jump to
- * @returns Result object with success status and user-friendly message
- */
-export function openInEditor(filePath: string | undefined, lineNumber?: number): OpenInEditorResult {
-  if (!filePath) {
-    return {
-      success: false,
-      message: 'No file path provided',
-    };
-  }
-
-  try {
-    // Build VS Code URI with optional line number
-    let uri = `vscode://file/${encodeURIComponent(filePath)}`;
-    if (lineNumber !== undefined && lineNumber > 0) {
-      uri += `:${lineNumber}`;
-    }
-
-    window.open(uri, '_blank');
-
-    // Note: window.open with custom URI schemes doesn't throw on failure,
-    // so we can only confirm the attempt was made, not that VS Code opened.
-    return {
-      success: true,
-      message: 'Opening in VS Code... (ensure VS Code is installed)',
-    };
-  } catch (error) {
-    console.error('Failed to open file in editor:', error);
-    return {
-      success: false,
-      message: 'Failed to open file. Is VS Code installed?',
-    };
-  }
 }
 
 /**

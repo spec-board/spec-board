@@ -7,18 +7,21 @@
 
 **SpecBoard** is a real-time dashboard for visualizing spec-kit projects. It provides a Kanban-style interface for tracking feature development through stages (specify → plan → tasks → implement → complete), with live updates via Server-Sent Events (SSE).
 
+**Version:** 1.0.2
+**Package Manager:** pnpm 10.26.0
+
 ## Tech Stack
 
 | Category | Technology |
 |----------|------------|
-| **Framework** | Next.js 15 (App Router) |
-| **Language** | TypeScript (strict mode) |
-| **UI** | React 18, Tailwind CSS, Lucide Icons |
-| **Database** | PostgreSQL via Prisma ORM |
-| **State** | Zustand (client), localStorage persistence |
-| **Charts** | Recharts |
-| **Markdown** | remark, remark-html, DOMPurify |
-| **File Watching** | chokidar |
+| **Framework** | Next.js 16.1.1 (App Router) |
+| **Language** | TypeScript 5.9.3 (strict mode) |
+| **UI** | React 19.2.3, Tailwind CSS v4.1.18, Lucide Icons |
+| **Database** | PostgreSQL via Prisma ORM 5.22.0 |
+| **State** | Zustand 5.0.9 (client), localStorage persistence |
+| **Charts** | Recharts 3.6.0 |
+| **Markdown** | remark 15, remark-html 16, DOMPurify 3.3.1 |
+| **File Watching** | chokidar 5.0.0 |
 
 ## Architecture
 
@@ -40,7 +43,8 @@ spec-board/
 │   │           ├── page.tsx    # Feature detail
 │   │           ├── spec/       # Spec viewer
 │   │           └── plan/       # Plan viewer
-│   ├── components/             # React UI components (20 files)
+│   ├── components/             # React UI components (20+ files)
+│   │   └── feature-detail/     # Feature detail modal components
 │   ├── lib/                    # Utilities and business logic
 │   │   ├── parser.ts           # Markdown parsing (core logic)
 │   │   ├── path-utils.ts       # Path validation/security
@@ -51,7 +55,7 @@ spec-board/
 │   └── types/                  # TypeScript definitions
 │       └── index.ts            # All shared types
 ├── prisma/
-│   └── schema.prisma           # Database schema
+│   └── schema.prisma           # Database schema (PostgreSQL)
 └── .claude/                    # SoupSpec configuration
 ```
 
@@ -202,13 +206,13 @@ App
 
 | File | Purpose | Lines |
 |------|---------|-------|
-| `src/lib/parser.ts` | Core markdown parsing logic | ~690 |
+| `src/lib/parser.ts` | Core markdown parsing logic | ~720 |
 | `src/app/projects/[name]/page.tsx` | Project dashboard | ~265 |
 | `src/components/feature-detail/feature-detail.tsx` | Feature modal with split-view | ~510 |
 | `src/components/feature-detail/types.ts` | Feature detail types and constants | ~190 |
 | `src/components/kanban-board.tsx` | Kanban board UI | ~240 |
-| `src/types/index.ts` | All TypeScript types | ~170 |
-| `src/lib/store.ts` | Zustand state management | ~150 |
+| `src/types/index.ts` | All TypeScript types | ~160 |
+| `src/lib/store.ts` | Zustand state management | ~225 |
 | `src/app/api/projects/register/route.ts` | Auto-registration API | ~125 |
 
 ## Spec-Kit File Structure
@@ -284,8 +288,8 @@ pnpm dev
 # Run tests
 pnpm test
 
-# Type check
-pnpm type-check
+# Run tests once
+pnpm test:run
 
 # Build for production
 pnpm build
@@ -293,14 +297,14 @@ pnpm build
 
 ## Database
 
-SQLite database managed by Prisma:
+PostgreSQL database managed by Prisma:
 
 ```prisma
 model Project {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   name        String   @unique  // URL slug
   displayName String
-  filePath    String   @unique  // Filesystem path
+  filePath    String              // Filesystem path
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -323,6 +327,7 @@ The following directories have CLAUDE.md files for context:
 - `src/app/CLAUDE.md` - App Router pages and API routes
 - `src/app/api/CLAUDE.md` - API routes documentation
 - `src/components/CLAUDE.md` - UI components
-- `src/components/feature-detail/CLAUDE.md` - Feature modal components (NEW)
+- `src/components/feature-detail/CLAUDE.md` - Feature modal components
 - `src/lib/CLAUDE.md` - Utilities and helpers
+- `src/lib/accessibility/CLAUDE.md` - Accessibility utilities
 - `src/types/CLAUDE.md` - Type definitions

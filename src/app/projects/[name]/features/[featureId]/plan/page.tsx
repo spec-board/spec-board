@@ -165,7 +165,7 @@ export default function PlanPage() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <PlanViewer content={feature.planContent} filePath={planFilePath} />
+        <PlanViewer content={feature.planContent} />
       </div>
     </div>
   );

@@ -199,7 +199,7 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
       subItems: [
         ...(feature.totalTasks > 0 ? [{
           id: 'impl-progress',
-          label: `${feature.completedTasks}/${feature.totalTasks} tasks done`,
+          label: `${feature.completedTasks}/${feature.totalTasks} tasks done (${Math.round((feature.completedTasks / feature.totalTasks) * 100)}%)`,
           type: 'progress' as const,
           sectionId: 'tasks' as SectionId,
         }] : []),
