@@ -99,25 +99,31 @@ function parseSpecContent(content: string): ParsedSpec {
   // Parse metadata from header
   result.metadata = parseMetadata(sections.header || '');
 
-  // Parse each section type
+  // Parse User Stories and Edge Cases from User Scenarios section
   if (sections.userScenarios) {
     result.userStories = parseUserStories(sections.userScenarios);
+    // Edge Cases is a ### subsection within User Scenarios
+    result.edgeCases = parseEdgeCases(sections.userScenarios);
   }
-  if (sections.edgeCases) {
-    result.edgeCases = parseEdgeCases(sections.edgeCases);
-  }
+
+  // Parse Requirements and Key Entities from Requirements section
   if (sections.requirements) {
     result.requirements = parseRequirements(sections.requirements);
+    // Key Entities is a ### subsection within Requirements
+    result.entities = parseEntities(sections.requirements);
   }
-  if (sections.keyEntities) {
-    result.entities = parseEntities(sections.keyEntities);
-  }
+
+  // Parse Success Criteria
   if (sections.successCriteria) {
     result.successCriteria = parseSuccessCriteria(sections.successCriteria);
   }
-  if (sections.clarifications) {
-    result.clarifications = parseClarifications(sections.clarifications);
-  }
+
+  // Note: Clarifications are handled separately per user request
+  // if (sections.clarifications) {
+  //   result.clarifications = parseClarifications(sections.clarifications);
+  // }
+
+  // Parse Assumptions
   if (sections.assumptions) {
     result.assumptions = parseAssumptions(sections.assumptions);
   }
@@ -134,29 +140,31 @@ function splitIntoSections(content: string): Record<string, string> {
   let currentContent: string[] = [];
 
   for (const line of lines) {
-    // Check for ## section headers
-    if (line.startsWith('## ') || line.match(/^[A-Z][a-z]+ [A-Z]/)) {
+    // Only match actual ## headers (not ### or other patterns)
+    // Handle headers with optional *(mandatory)* suffix
+    const isH2Header = line.match(/^## .+/);
+
+    if (isH2Header) {
       // Save previous section
       if (currentContent.length > 0) {
         sections[currentSection] = currentContent.join('\n');
       }
 
-      // Determine new section type
+      // Determine new section type from ## header
       const headerLower = line.toLowerCase();
       if (headerLower.includes('user scenario') || headerLower.includes('user stories')) {
         currentSection = 'userScenarios';
-      } else if (headerLower.includes('edge case')) {
-        currentSection = 'edgeCases';
-      } else if (headerLower.includes('requirement') && !headerLower.includes('non-functional')) {
+      } else if (headerLower.includes('requirement')) {
         currentSection = 'requirements';
-      } else if (headerLower.includes('key entit') || headerLower.includes('entities')) {
-        currentSection = 'keyEntities';
       } else if (headerLower.includes('success criteria')) {
         currentSection = 'successCriteria';
       } else if (headerLower.includes('clarification')) {
         currentSection = 'clarifications';
       } else if (headerLower.includes('assumption')) {
         currentSection = 'assumptions';
+      } else {
+        // Unknown section - keep as generic
+        currentSection = 'other_' + headerLower.replace(/[^a-z0-9]/g, '_').slice(0, 30);
       }
 
       currentContent = [line];
@@ -179,25 +187,45 @@ function parseMetadata(header: string): SpecMetadata {
   const lines = header.split('\n');
 
   for (const line of lines) {
-    if (line.startsWith('Feature Specification:')) {
-      metadata.title = line.replace('Feature Specification:', '').trim();
+    // Parse title from "# Feature Specification: Title"
+    const titleMatch = line.match(/^#\s*Feature Specification:\s*(.+)/i);
+    if (titleMatch) {
+      metadata.title = titleMatch[1].trim();
+      continue;
     }
-    // Parse metadata line with Feature Branch, Created, Status, Input
-    const metaMatch = line.match(/Feature Branch:\s*`?([^`\s]+)`?/i);
-    if (metaMatch) {
-      metadata.branch = metaMatch[1];
+
+    // Parse **Feature Branch**: `branch-name`
+    const branchMatch = line.match(/\*\*Feature Branch\*\*:\s*`([^`]+)`/i);
+    if (branchMatch) {
+      metadata.branch = branchMatch[1].trim();
+      continue;
     }
-    const createdMatch = line.match(/Created:\s*(\S+)/i);
+
+    // Parse **Created**: date
+    const createdMatch = line.match(/\*\*Created\*\*:\s*(\S+)/i);
     if (createdMatch) {
-      metadata.created = createdMatch[1];
+      metadata.created = createdMatch[1].trim();
+      continue;
     }
-    const statusMatch = line.match(/Status:\s*(\S+)/i);
+
+    // Parse **Status**: status
+    const statusMatch = line.match(/\*\*Status\*\*:\s*(\S+)/i);
     if (statusMatch) {
-      metadata.status = statusMatch[1];
+      metadata.status = statusMatch[1].trim();
+      continue;
     }
-    const inputMatch = line.match(/Input:\s*(.+)/i);
+
+    // Parse **Input**: User description: "..."
+    const inputMatch = line.match(/\*\*Input\*\*:\s*(.+)/i);
     if (inputMatch) {
-      metadata.input = inputMatch[1];
+      // Extract the description, removing "User description:" prefix and quotes if present
+      let input = inputMatch[1].trim();
+      const descMatch = input.match(/User description:\s*"?([^"]+)"?/i);
+      if (descMatch) {
+        input = descMatch[1].trim();
+      }
+      metadata.input = input;
+      continue;
     }
   }
 
@@ -215,8 +243,8 @@ function parseUserStories(section: string): UserStory[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // New User Story - match various formats
-    const storyMatch = line.match(/^(?:###?\s*)?User Story (\d+)\s*[-–]\s*(.+?)\s*\(Priority:\s*(P\d+)\)/i);
+    // New User Story - match "### User Story N - Title (Priority: PN)"
+    const storyMatch = line.match(/^###\s*User Story (\d+)\s*[-–]\s*(.+?)\s*\(Priority:\s*(P\d+)\)/i);
     if (storyMatch) {
       if (currentStory) {
         stories.push(currentStory);
@@ -232,32 +260,46 @@ function parseUserStories(section: string): UserStory[] {
       continue;
     }
 
+    // Edge Cases header within User Scenarios section - stop parsing user stories
+    if (line.match(/^###\s*Edge Cases/i)) {
+      if (currentStory) {
+        stories.push(currentStory);
+        currentStory = null;
+      }
+      break;
+    }
+
     if (currentStory) {
       // Description line (starts with "As a user..." or "As a...")
       if (line.match(/^As a\s/i)) {
         currentStory.description = line;
       }
-      // Why this priority
-      else if (line.match(/^(?:\*\*)?Why this priority(?:\*\*)?:/i)) {
-        currentStory.whyPriority = line.replace(/^(?:\*\*)?Why this priority(?:\*\*)?:\s*/i, '').trim();
+      // Why this priority - handle **Why this priority**:
+      else if (line.match(/^\*\*Why this priority\*\*:/i)) {
+        currentStory.whyPriority = line.replace(/^\*\*Why this priority\*\*:\s*/i, '').trim();
       }
-      // Independent Test
-      else if (line.match(/^(?:\*\*)?Independent Test(?:\*\*)?:/i)) {
-        currentStory.independentTest = line.replace(/^(?:\*\*)?Independent Test(?:\*\*)?:\s*/i, '').trim();
+      // Independent Test - handle **Independent Test**:
+      else if (line.match(/^\*\*Independent Test\*\*:/i)) {
+        currentStory.independentTest = line.replace(/^\*\*Independent Test\*\*:\s*/i, '').trim();
       }
-      // Acceptance Scenarios header
-      else if (line.match(/Acceptance Scenarios/i)) {
+      // Acceptance Scenarios header - handle **Acceptance Scenarios**:
+      else if (line.match(/^\*\*Acceptance Scenarios\*\*:/i)) {
         inAcceptanceScenarios = true;
       }
-      // Given/When/Then scenarios
-      else if (inAcceptanceScenarios && line.match(/^(?:\*\*)?Given/i)) {
-        // Try inline format: Given X, When Y, Then Z
-        const inlineMatch = line.match(/Given\s+(.+?),\s*When\s+(.+?),\s*Then\s+(.+)/i);
-        if (inlineMatch) {
+      // Horizontal rule or next story - reset acceptance scenarios flag
+      else if (line.match(/^---\s*$/)) {
+        inAcceptanceScenarios = false;
+      }
+      // Given/When/Then scenarios - handle numbered format with bold markers:
+      // "1. **Given** X, **When** Y, **Then** Z"
+      else if (inAcceptanceScenarios && line.match(/^\d+\.\s*\*\*Given\*\*/i)) {
+        // Parse format: N. **Given** X, **When** Y, **Then** Z
+        const scenarioMatch = line.match(/^\d+\.\s*\*\*Given\*\*\s+(.+?),\s*\*\*When\*\*\s+(.+?),\s*\*\*Then\*\*\s+(.+)/i);
+        if (scenarioMatch) {
           currentStory.acceptanceScenarios.push({
-            given: inlineMatch[1].replace(/\*\*/g, '').trim(),
-            when: inlineMatch[2].replace(/\*\*/g, '').trim(),
-            then: inlineMatch[3].replace(/\*\*/g, '').trim()
+            given: scenarioMatch[1].trim(),
+            when: scenarioMatch[2].trim(),
+            then: scenarioMatch[3].trim()
           });
         }
       }
@@ -272,19 +314,37 @@ function parseUserStories(section: string): UserStory[] {
   return stories;
 }
 
-// Parse Edge Cases section
+// Parse Edge Cases section (handles ### Edge Cases within User Scenarios or standalone)
 function parseEdgeCases(section: string): EdgeCase[] {
   const edgeCases: EdgeCase[] = [];
   const lines = section.split('\n');
 
+  // Find the Edge Cases subsection if it exists
+  let inEdgeCases = section.toLowerCase().includes('edge case');
+  let foundEdgeCasesHeader = false;
+
   for (const line of lines) {
-    // Match "What happens when...? Answer." format
-    const match = line.match(/^(?:[-*]\s*)?What happens (?:when|if)\s+(.+?\?)\s*(.+)$/i);
-    if (match) {
-      edgeCases.push({
-        question: `What happens ${match[1]}`,
-        answer: match[2].trim()
-      });
+    // Check for ### Edge Cases header
+    if (line.match(/^###\s*Edge Cases/i)) {
+      foundEdgeCasesHeader = true;
+      inEdgeCases = true;
+      continue;
+    }
+
+    // Stop at next ### header after Edge Cases
+    if (foundEdgeCasesHeader && line.match(/^###\s+/)) {
+      break;
+    }
+
+    if (inEdgeCases) {
+      // Match "- What happens when/if X? Answer." format
+      const match = line.match(/^[-*]\s*What happens (?:when|if)\s+(.+?\?)\s*(.+)$/i);
+      if (match) {
+        edgeCases.push({
+          question: `What happens ${match[1]}`,
+          answer: match[2].trim()
+        });
+      }
     }
   }
 
@@ -292,36 +352,51 @@ function parseEdgeCases(section: string): EdgeCase[] {
 }
 
 // Parse Requirements section (grouped by category)
+// Handles format: **Category** followed by - **FR-XXX**: text
 function parseRequirements(section: string): RequirementGroup[] {
   const groups: RequirementGroup[] = [];
   const lines = section.split('\n');
 
   let currentGroup: RequirementGroup | null = null;
+  let inFunctionalRequirements = false;
 
   for (const line of lines) {
-    // Category header (e.g., "Task Management", "Due Dates & Priorities")
-    const categoryMatch = line.match(/^(?:###?\s*)?([A-Z][A-Za-z\s&]+)$/);
-    if (categoryMatch && !line.match(/^(?:FR|SC|NFR)-\d+/)) {
-      if (currentGroup && currentGroup.items.length > 0) {
-        groups.push(currentGroup);
-      }
-      currentGroup = {
-        category: categoryMatch[1].trim(),
-        items: []
-      };
+    // Check for ### Functional Requirements header
+    if (line.match(/^###\s*Functional Requirements/i)) {
+      inFunctionalRequirements = true;
       continue;
     }
 
-    // Requirement item (FR-XXX: text)
-    const reqMatch = line.match(/^(?:[-*]\s*)?(FR-\d+):\s*(.+)$/);
-    if (reqMatch) {
-      if (!currentGroup) {
-        currentGroup = { category: 'General', items: [] };
+    // Stop at next ### header (like Key Entities)
+    if (inFunctionalRequirements && line.match(/^###\s+/) && !line.match(/^###\s*Functional Requirements/i)) {
+      break;
+    }
+
+    if (inFunctionalRequirements || !section.includes('### Functional Requirements')) {
+      // Category header - bold format: **Task Management**
+      const categoryMatch = line.match(/^\*\*([^*]+)\*\*\s*$/);
+      if (categoryMatch) {
+        if (currentGroup && currentGroup.items.length > 0) {
+          groups.push(currentGroup);
+        }
+        currentGroup = {
+          category: categoryMatch[1].trim(),
+          items: []
+        };
+        continue;
       }
-      currentGroup.items.push({
-        id: reqMatch[1],
-        text: reqMatch[2].trim()
-      });
+
+      // Requirement item - format: - **FR-XXX**: text
+      const reqMatch = line.match(/^[-*]\s*\*\*(FR-\d+)\*\*:\s*(.+)$/);
+      if (reqMatch) {
+        if (!currentGroup) {
+          currentGroup = { category: 'General', items: [] };
+        }
+        currentGroup.items.push({
+          id: reqMatch[1],
+          text: reqMatch[2].trim()
+        });
+      }
     }
   }
 
@@ -333,33 +408,48 @@ function parseRequirements(section: string): RequirementGroup[] {
   return groups;
 }
 
-// Parse Key Entities section
+// Parse Key Entities section (within Requirements section as ### Key Entities)
+// Handles format: - **Entity**: Description followed by indented properties
 function parseEntities(section: string): Entity[] {
   const entities: Entity[] = [];
   const lines = section.split('\n');
 
   let currentEntity: Entity | null = null;
+  let inKeyEntities = false;
 
   for (const line of lines) {
-    // Entity header (e.g., "Task: Represents a single todo item")
-    const entityMatch = line.match(/^(?:\*\*)?([A-Z][A-Za-z\s]+)(?:\*\*)?:\s*(.+)$/);
-    if (entityMatch && !line.match(/^[-*]\s/)) {
-      if (currentEntity) {
-        entities.push(currentEntity);
-      }
-      currentEntity = {
-        name: entityMatch[1].trim(),
-        description: entityMatch[2].trim(),
-        properties: []
-      };
+    // Check for ### Key Entities header
+    if (line.match(/^###\s*Key Entities/i)) {
+      inKeyEntities = true;
       continue;
     }
 
-    // Property line (bullet point under entity)
-    if (currentEntity && line.match(/^[-*]\s+/)) {
-      const property = line.replace(/^[-*]\s+/, '').trim();
-      if (property) {
-        currentEntity.properties.push(property);
+    // Stop at next ## header
+    if (inKeyEntities && line.match(/^##\s+/)) {
+      break;
+    }
+
+    if (inKeyEntities || !section.includes('### Key Entities')) {
+      // Entity header - format: - **Entity**: Description
+      const entityMatch = line.match(/^[-*]\s*\*\*([^*]+)\*\*:\s*(.+)$/);
+      if (entityMatch) {
+        if (currentEntity) {
+          entities.push(currentEntity);
+        }
+        currentEntity = {
+          name: entityMatch[1].trim(),
+          description: entityMatch[2].trim(),
+          properties: []
+        };
+        continue;
+      }
+
+      // Property line - indented bullet point under entity (2+ spaces before -)
+      if (currentEntity && line.match(/^\s{2,}[-*]\s+/)) {
+        const property = line.replace(/^\s+[-*]\s+/, '').trim();
+        if (property) {
+          currentEntity.properties.push(property);
+        }
       }
     }
   }
@@ -373,18 +463,34 @@ function parseEntities(section: string): Entity[] {
 }
 
 // Parse Success Criteria section
+// Handles format: - **SC-XXX**: text
 function parseSuccessCriteria(section: string): Requirement[] {
   const criteria: Requirement[] = [];
   const lines = section.split('\n');
 
+  let inMeasurableOutcomes = false;
+
   for (const line of lines) {
-    // Success Criteria item (SC-XXX: text)
-    const match = line.match(/^(?:[-*]\s*)?(SC-\d+):\s*(.+)$/);
-    if (match) {
-      criteria.push({
-        id: match[1],
-        text: match[2].trim()
-      });
+    // Check for ### Measurable Outcomes header
+    if (line.match(/^###\s*Measurable Outcomes/i)) {
+      inMeasurableOutcomes = true;
+      continue;
+    }
+
+    // Stop at next ## header
+    if (inMeasurableOutcomes && line.match(/^##\s+/)) {
+      break;
+    }
+
+    if (inMeasurableOutcomes || !section.includes('### Measurable Outcomes')) {
+      // Success Criteria item - format: - **SC-XXX**: text
+      const match = line.match(/^[-*]\s*\*\*(SC-\d+)\*\*:\s*(.+)$/);
+      if (match) {
+        criteria.push({
+          id: match[1],
+          text: match[2].trim()
+        });
+      }
     }
   }
 
