@@ -506,6 +506,114 @@ Simple description.
 
     expect(result.rawContent).toBe(content);
   });
+
+  it('should parse full constitution with multiple principles and sections', () => {
+    const content = `<!--
+Sync Impact Report
+==================
+Version change: 0.0.0 → 1.0.0 (Initial ratification)
+-->
+
+# TodoList App Constitution
+
+## Core Principles
+
+### I. Component-First Architecture
+
+All UI elements MUST be built as clean, reusable components following these rules:
+- Components MUST be self-contained with clear props/interfaces
+- Components MUST have a single responsibility
+
+**Rationale**: Reusable components reduce code duplication.
+
+### II. Test-Driven Business Logic
+
+All business logic MUST have corresponding unit tests:
+- Core functions MUST have unit tests
+- Test coverage MUST be maintained above 80%
+
+**Rationale**: Unit tests catch regressions early.
+
+### III. User Experience First
+
+The interface MUST prioritize simplicity and responsiveness.
+
+### IV. Performance-Optimized Storage
+
+Local storage operations MUST be optimized.
+
+### V. Keyboard-Accessible Interface
+
+All functionality MUST be accessible via keyboard navigation.
+
+## Quality Standards
+
+### Code Quality Gates
+
+All code contributions MUST pass these quality gates before merge:
+- TypeScript strict mode enabled
+- ESLint/Prettier formatting with zero warnings
+
+### Performance Budgets
+
+- Initial bundle size: <100KB gzipped
+- Time to Interactive: <2 seconds
+
+## Development Workflow
+
+### Code Review Requirements
+
+- All changes MUST be reviewed before merge
+
+### Testing Requirements
+
+- Unit tests for all utility functions
+
+## Governance
+
+This constitution supersedes all other development practices.
+
+### Amendment Process
+
+1. Propose amendment with rationale
+2. Document impact on existing code
+
+### Versioning Policy
+
+- MAJOR: Backward-incompatible changes
+- MINOR: New principles added
+
+**Version**: 1.0.0 | **Ratified**: 2025-12-29 | **Last Amended**: 2025-12-29
+`;
+    const result = parseConstitution(content);
+
+    // Should parse all 5 principles
+    expect(result.principles).toHaveLength(5);
+    expect(result.principles[0].name).toBe('I. Component-First Architecture');
+    expect(result.principles[1].name).toBe('II. Test-Driven Business Logic');
+    expect(result.principles[2].name).toBe('III. User Experience First');
+    expect(result.principles[3].name).toBe('IV. Performance-Optimized Storage');
+    expect(result.principles[4].name).toBe('V. Keyboard-Accessible Interface');
+
+    // Should strip HTML comments from principle descriptions
+    expect(result.principles[0].description).not.toContain('<!--');
+    expect(result.principles[0].description).toContain('All UI elements MUST be built');
+    expect(result.principles[0].description).toContain('**Rationale**');
+
+    // Should parse all sections (Quality Standards, Development Workflow, Governance)
+    expect(result.sections.length).toBeGreaterThanOrEqual(3);
+    expect(result.sections.map(s => s.name)).toContain('Quality Standards');
+    expect(result.sections.map(s => s.name)).toContain('Development Workflow');
+    expect(result.sections.map(s => s.name)).toContain('Governance');
+
+    // Should parse version metadata
+    expect(result.version).toBe('1.0.0');
+    expect(result.ratifiedDate).toBe('2025-12-29');
+    expect(result.lastAmendedDate).toBe('2025-12-29');
+
+    // Should strip HTML comments from raw content header
+    expect(result.rawContent).toContain('Sync Impact Report');
+  });
 });
 
 describe('parseUserStories (T007)', () => {
