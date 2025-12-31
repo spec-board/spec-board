@@ -184,9 +184,7 @@ function PrincipleCard({ principle, index }: { principle: ConstitutionPrinciple;
 
       {isExpanded && (
         <div className="px-4 pb-4 pl-11">
-          <div className="text-sm text-[var(--muted-foreground)] prose prose-invert prose-sm max-w-none">
-            <MarkdownRenderer content={principle.description} />
-          </div>
+          <MarkdownRenderer content={principle.description} />
         </div>
       )}
     </div>
@@ -215,9 +213,7 @@ function SectionCard({ section }: { section: ConstitutionSection }) {
 
       {isExpanded && (
         <div className="px-4 pb-4 pl-11">
-          <div className="text-sm text-[var(--muted-foreground)] prose prose-invert prose-sm max-w-none">
-            <MarkdownRenderer content={section.content} />
-          </div>
+          <MarkdownRenderer content={section.content} />
         </div>
       )}
     </div>
