@@ -16,7 +16,6 @@ This directory contains the redesigned Feature Detail Modal - a full-screen moda
 | `nav-sidebar.tsx` | Left navigation with phase groupings | ~115 |
 | `content-pane.tsx` | Content renderer for each section type | ~varies |
 | `header-bar.tsx` | Top bar with title and action buttons | ~70 |
-| `status-header.tsx` | Progress bar and next action display | ~80 |
 | `nav-item.tsx` | Individual navigation item with drag support | ~100 |
 | `section-icon.tsx` | Semantic icons for each section type | ~75 |
 | `index.tsx` | Public export | ~5 |
@@ -27,7 +26,6 @@ This directory contains the redesigned Feature Detail Modal - a full-screen moda
 FeatureDetail (modal container)
 ├── HeaderBar (title, split toggle, close)
 ├── NavSidebar
-│   ├── StatusHeader (progress, next task)
 │   └── NavItem[] (grouped by phase)
 │       └── SectionIcon (semantic icon per section)
 └── SplitView
