@@ -103,12 +103,6 @@ export interface HeaderBarProps {
   isSplitActive: boolean;
 }
 
-export interface StatusHeaderProps {
-  feature: Feature;
-  progressPercentage: number;
-  nextTask: Task | null;
-}
-
 export interface NavSidebarProps {
   sections: SectionConfig[];
   activeSection: SectionId;

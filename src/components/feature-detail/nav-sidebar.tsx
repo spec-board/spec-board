@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip } from '@/components/tooltip';
-import { StatusHeader } from './status-header';
 import type { Feature } from '@/types';
 import type {
   SectionId,
@@ -448,10 +447,6 @@ export function NavSidebar({
       }, feature.userStories[0].priority)
     : null;
 
-  // Progress calculation
-  const progressPercentage = feature.totalTasks > 0
-    ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
-    : 0;
   const nextTask = getNextTask(feature);
 
   // Expanded state - default: expand current step, collapse completed
@@ -481,13 +476,6 @@ export function NavSidebar({
 
   return (
     <div className="w-72 flex-shrink-0 border-r border-[var(--border)] bg-[var(--card)] flex flex-col overflow-hidden">
-      {/* Status Header */}
-      <StatusHeader
-        feature={feature}
-        progressPercentage={progressPercentage}
-        nextTask={nextTask}
-      />
-
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-2" aria-label="Workflow navigation">
         {phaseOrder.map((phase) => {
