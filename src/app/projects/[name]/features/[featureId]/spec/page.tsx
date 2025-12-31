@@ -165,7 +165,7 @@ export default function SpecPage() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <SpecViewer content={feature.specContent} filePath={specFilePath} />
+        <SpecViewer content={feature.specContent} />
       </div>
     </div>
   );

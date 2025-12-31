@@ -2,16 +2,15 @@
 
 import { useState, useMemo } from 'react';
 import {
-  FileText, ExternalLink, Check, AlertCircle,
+  FileText,
   GitBranch, Calendar, FileCheck, MessageSquare,
   Target, CheckCircle2, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { MarkdownRenderer } from './markdown-renderer';
-import { cn, openInEditor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface SpecViewerProps {
   content: string | null;
-  filePath?: string;
   className?: string;
 }
 
@@ -323,8 +322,7 @@ function UserStoryCard({ story }: { story: UserStory }) {
 }
 
 // Main SpecViewer component
-export function SpecViewer({ content, filePath, className }: SpecViewerProps) {
-  const [feedback, setFeedback] = useState<{ message: string; success: boolean } | null>(null);
+export function SpecViewer({ content, className }: SpecViewerProps) {
   const [showRawMarkdown, setShowRawMarkdown] = useState(false);
 
   // Parse spec content
@@ -344,12 +342,6 @@ export function SpecViewer({ content, filePath, className }: SpecViewerProps) {
       return null;
     }
   }, [content]);
-
-  const handleOpenInEditor = () => {
-    const result = openInEditor(filePath);
-    setFeedback({ message: result.message, success: result.success });
-    setTimeout(() => setFeedback(null), 3000);
-  };
 
   // Check if we have structured content to display
   const hasStructuredContent = parsedSpec && (
@@ -371,63 +363,38 @@ export function SpecViewer({ content, filePath, className }: SpecViewerProps) {
   return (
     <div className={cn('flex flex-col', className)}>
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3 mb-4">
-        {/* View toggle */}
-        {hasStructuredContent && (
-          <div className="flex items-center gap-1 bg-[var(--secondary)] rounded-lg p-1" role="tablist" aria-label="View mode">
-            <button
-              onClick={() => setShowRawMarkdown(false)}
-              role="tab"
-              aria-selected={!showRawMarkdown}
-              aria-controls="spec-content"
-              className={cn(
-                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
-                !showRawMarkdown
-                  ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
-                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-              )}
-            >
-              Structured
-            </button>
-            <button
-              onClick={() => setShowRawMarkdown(true)}
-              role="tab"
-              aria-selected={showRawMarkdown}
-              aria-controls="spec-content"
-              className={cn(
-                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
-                showRawMarkdown
-                  ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
-                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-              )}
-            >
-              Markdown
-            </button>
-          </div>
-        )}
-
-        <div className="flex items-center gap-3 ml-auto">
-          {feedback && (
-            <div className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-opacity',
-              feedback.success ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'
-            )}>
-              {feedback.success ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-              {feedback.message}
-            </div>
-          )}
-          {filePath && (
-            <button
-              onClick={handleOpenInEditor}
-              title={filePath}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] bg-[var(--secondary)] hover:bg-[var(--secondary)]/80 rounded-md transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Open in Editor
-            </button>
-          )}
+      {hasStructuredContent && (
+        <div className="flex items-center gap-1 bg-[var(--secondary)] rounded-lg p-1 mb-4" role="tablist" aria-label="View mode">
+          <button
+            onClick={() => setShowRawMarkdown(false)}
+            role="tab"
+            aria-selected={!showRawMarkdown}
+            aria-controls="spec-content"
+            className={cn(
+              'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+              !showRawMarkdown
+                ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
+                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+            )}
+          >
+            Structured
+          </button>
+          <button
+            onClick={() => setShowRawMarkdown(true)}
+            role="tab"
+            aria-selected={showRawMarkdown}
+            aria-controls="spec-content"
+            className={cn(
+              'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+              showRawMarkdown
+                ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
+                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+            )}
+          >
+            Markdown
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Content */}
       {showRawMarkdown || !hasStructuredContent ? (

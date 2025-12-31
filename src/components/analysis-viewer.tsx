@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ExternalLink, Check, AlertCircle, CircleDashed, TrendingUp, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, AlertCircle, CircleDashed, TrendingUp, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { MarkdownRenderer } from './markdown-renderer';
-import { cn, openInEditor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import type { FeatureAnalysis, AnalysisItem } from '@/types';
 
 interface ScoreGaugeProps {
@@ -100,14 +100,6 @@ interface AnalysisViewerProps {
 
 export function AnalysisViewer({ analysis, className }: AnalysisViewerProps) {
   const [showMarkdown, setShowMarkdown] = useState(false);
-  const [feedback, setFeedback] = useState<{ message: string; success: boolean } | null>(null);
-
-  const handleOpenInEditor = (path: string | null) => {
-    if (!path) return;
-    const result = openInEditor(path);
-    setFeedback({ message: result.message, success: result.success });
-    setTimeout(() => setFeedback(null), 3000);
-  };
 
   // No analysis data available - show documentation
   if (!analysis.jsonData && !analysis.markdownContent) {
@@ -171,21 +163,11 @@ export function AnalysisViewer({ analysis, className }: AnalysisViewerProps) {
     );
   }
 
-  const { jsonData, markdownContent, jsonPath, markdownPath } = analysis;
+  const { jsonData, markdownContent } = analysis;
   const specAlignment = jsonData?.specAlignment;
 
   return (
     <div className={cn('flex flex-col gap-6', className)}>
-      {/* Feedback toast */}
-      {feedback && (
-        <div className={cn(
-          'fixed top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg z-50',
-          feedback.success ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-        )}>
-          {feedback.success ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-          <span className="text-sm">{feedback.message}</span>
-        </div>
-      )}
 
       {/* Score Overview */}
       {specAlignment && (
@@ -251,37 +233,12 @@ export function AnalysisViewer({ analysis, className }: AnalysisViewerProps) {
             )}
             <FileText className="w-4 h-4 text-blue-400" />
             <span className="font-medium text-sm flex-1 text-left">Analysis Summary</span>
-            {markdownPath && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOpenInEditor(markdownPath);
-                }}
-                className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
-              >
-                <ExternalLink className="w-3 h-3" />
-                Open
-              </button>
-            )}
           </div>
           {showMarkdown && (
             <div className="p-4 border-t border-[var(--border)]">
               <MarkdownRenderer content={markdownContent} />
             </div>
           )}
-        </div>
-      )}
-
-      {/* Open JSON in editor */}
-      {jsonPath && (
-        <div className="flex justify-end">
-          <button
-            onClick={() => handleOpenInEditor(jsonPath)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
-          >
-            <ExternalLink className="w-3 h-3" />
-            Open analysis.json
-          </button>
         </div>
       )}
     </div>

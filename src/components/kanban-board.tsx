@@ -81,7 +81,7 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
       {/* Task count */}
       {feature.totalTasks > 0 && (
         <div className="text-xs text-[var(--muted-foreground)] tabular-nums">
-          {feature.completedTasks}/{feature.totalTasks}
+          {feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)
         </div>
       )}
 
