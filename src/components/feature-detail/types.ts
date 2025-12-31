@@ -2,7 +2,7 @@ import type { Feature, Task } from '@/types';
 
 // Section IDs for navigation
 export type SectionId =
-  | 'overview'
+  | 'constitution'
   | 'spec'
   | 'plan'
   | 'tasks'
@@ -11,13 +11,50 @@ export type SectionId =
   | 'quickstart'
   | 'contracts'
   | 'checklists'
-  | 'analysis';
+  | 'analysis'
+  | 'clarifications';
 
 // Section status indicators
 export type SectionStatus = 'complete' | 'in-progress' | 'pending' | 'none';
 
 // Workflow phase groupings
-export type WorkflowPhase = 'overview' | 'planning' | 'coding' | 'qa' | 'qc';
+export type WorkflowPhase = 'planning' | 'coding' | 'qa' | 'qc';
+
+// Nav workflow phases (includes overview for the new nav design)
+export type NavWorkflowPhase = 'overview' | 'planning' | 'qc' | 'wbs' | 'qa' | 'coding';
+
+// Workflow sub-item types for hierarchical nav
+export type WorkflowSubItemType = 'file' | 'clarification' | 'checklist' | 'user-story' | 'analysis' | 'action' | 'progress';
+
+// Sub-item in workflow step
+export interface WorkflowSubItem {
+  id: string;
+  label: string;           // "spec.md", "US1 19/19", "checklist 1 16/36"
+  type: WorkflowSubItemType;
+  sectionId?: SectionId;   // For opening in content pane
+  filePath?: string;       // For file items
+  progress?: { completed: number; total: number };
+  command?: string;        // For action items (slash command to copy)
+}
+
+// Workflow step for nav
+export interface WorkflowNavStep {
+  id: string;
+  command: string;         // "/speckit.constitution"
+  label: string;           // "Constitution"
+  description: string;     // "Establish project principles"
+  isOptional: boolean;
+  isComplete: boolean;
+  isCurrent: boolean;
+  phase: NavWorkflowPhase;
+  subItems: WorkflowSubItem[];
+}
+
+// Nav workflow phase config
+export interface NavPhaseConfig {
+  label: string;
+  color: string;
+}
 
 // Section configuration
 export interface SectionConfig {
@@ -111,13 +148,9 @@ export const STAGE_ORDER = ['specify', 'plan', 'tasks', 'implement', 'complete']
 
 // Phase configuration
 export const PHASE_CONFIG: Record<WorkflowPhase, { label: string; sections: SectionId[] }> = {
-  overview: {
-    label: 'OVERVIEW',
-    sections: ['overview', 'spec'],
-  },
   planning: {
     label: 'PLANNING',
-    sections: ['plan', 'research', 'data-model'],
+    sections: ['spec', 'plan', 'research', 'data-model'],
   },
   coding: {
     label: 'CODING',
@@ -185,3 +218,13 @@ export function getNextTask(feature: Feature): Task | null {
   // Fallback to flat tasks
   return feature.tasks.find(t => !t.completed) || null;
 }
+
+// Nav workflow phase configuration
+export const NAV_PHASE_CONFIG: Record<NavWorkflowPhase, NavPhaseConfig> = {
+  overview: { label: 'OVERVIEW', color: 'text-blue-400' },
+  planning: { label: 'PLANNING', color: 'text-purple-400' },
+  qc: { label: 'QUALITY CONTROL', color: 'text-orange-400' },
+  wbs: { label: 'WORK BREAKDOWN', color: 'text-cyan-400' },
+  qa: { label: 'QUALITY ASSURANCE', color: 'text-yellow-400' },
+  coding: { label: 'CODING', color: 'text-green-400' },
+};

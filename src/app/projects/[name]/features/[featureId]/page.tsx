@@ -4,7 +4,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FeatureDetail } from '@/components/feature-detail';
 import { ArrowLeft } from 'lucide-react';
-import type { Project, Feature } from '@/types';
+import type { Project, Feature, Constitution } from '@/types';
 
 export default function FeaturePage() {
   const params = useParams();
@@ -17,6 +17,7 @@ export default function FeaturePage() {
   const [error, setError] = useState<string | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [hasConstitution, setHasConstitution] = useState(false);
+  const [constitution, setConstitution] = useState<Constitution | null>(null);
 
   const loadFeature = useCallback(async () => {
     setIsLoading(true);
@@ -49,6 +50,7 @@ export default function FeaturePage() {
       }
       setFeature(foundFeature);
       setHasConstitution(data.hasConstitution);
+      setConstitution(data.constitution);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -134,6 +136,7 @@ export default function FeaturePage() {
         feature={feature}
         onClose={handleClose}
         hasConstitution={hasConstitution}
+        constitution={constitution}
       />
     </div>
   );

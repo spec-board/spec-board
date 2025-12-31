@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { Check, Sparkles, FileText, MessageSquare, Map as MapIcon, ClipboardList, ListTodo, Search, Rocket, ChevronRight, Calendar } from 'lucide-react';
+import { Check, Sparkles, FileText, MessageSquare, Map as MapIcon, ClipboardList, ListTodo, Search, Rocket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip } from '@/components/tooltip';
-import type { Feature, ClarificationSession } from '@/types';
+import type { Feature } from '@/types';
 
 // Phase definitions
-type WorkflowPhase = 'overview' | 'planning' | 'qc' | 'wbs' | 'qa' | 'coding';
+type WorkflowPhase = 'planning' | 'qc' | 'wbs' | 'qa' | 'coding';
 
 interface PhaseConfig {
   label: string;
@@ -15,7 +14,6 @@ interface PhaseConfig {
 }
 
 const PHASE_CONFIG: Record<WorkflowPhase, PhaseConfig> = {
-  overview: { label: 'OVERVIEW', color: 'text-blue-400' },
   planning: { label: 'PLANNING', color: 'text-purple-400' },
   qc: { label: 'QUALITY CONTROL', color: 'text-orange-400' },
   wbs: { label: 'WORK BREAKDOWN', color: 'text-cyan-400' },
@@ -25,19 +23,15 @@ const PHASE_CONFIG: Record<WorkflowPhase, PhaseConfig> = {
 
 interface WorkflowStep {
   id: string;
-  command: string;
   label: string;
   description: string;
-  outputs: string[];
   icon: React.ReactNode;
   isOptional: boolean;
   isComplete: boolean;
   isCurrent: boolean;
   phase: WorkflowPhase;
-  // Special data for specific steps
-  clarificationSessions?: ClarificationSession[];
-  taskProgress?: { completed: number; total: number };
-  nextTask?: string;
+  // Inline count display (e.g., "7 US 49/69")
+  inlineCount?: string;
 }
 
 interface WorkflowDiagramProps {
@@ -56,165 +50,120 @@ function getWorkflowSteps(feature: Feature, hasConstitution: boolean): WorkflowS
   else if (!allTasksComplete) currentStep = 'implement';
   else if (!feature.analysis) currentStep = 'analyze';
 
-  // Find next incomplete task
-  const nextTask = feature.tasks.find(t => !t.completed);
-
-  const createStep = (
-    id: string,
-    command: string,
-    label: string,
-    description: string,
-    outputs: string[],
-    icon: React.ReactNode,
-    isOptional: boolean,
-    isComplete: boolean,
-    phase: WorkflowPhase,
-    extra?: Partial<WorkflowStep>
-  ): WorkflowStep => ({
-    id,
-    command,
-    label,
-    description,
-    outputs,
-    icon,
-    isOptional,
-    isComplete,
-    isCurrent: currentStep === id,
-    phase,
-    ...extra,
-  });
+  // Build inline counts
+  const clarificationCount = feature.clarificationSessions?.reduce(
+    (sum, s) => sum + s.clarifications.length, 0
+  ) ?? 0;
+  const checklistFiles = feature.additionalFiles?.filter(f => f.type === 'checklist') ?? [];
 
   return [
-    // OVERVIEW phase
-    createStep('constitution', '/speckit.constitution', 'Constitution', 'Establish project principles', ['constitution.md'], <Sparkles className="w-4 h-4" />, false, hasConstitution, 'overview'),
-    createStep('specify', '/speckit.specify', 'Specify', 'Create baseline specification', ['spec.md'], <FileText className="w-4 h-4" />, false, feature.hasSpec, 'overview'),
-    createStep('clarify', '/speckit.clarify', 'Clarify', 'De-risk ambiguous areas', [], <MessageSquare className="w-4 h-4" />, true, feature.totalClarifications > 0, 'overview', {
-      clarificationSessions: feature.clarificationSessions,
-    }),
     // PLANNING phase
-    createStep('plan', '/speckit.plan', 'Plan', 'Create implementation plan', ['plan.md', 'research.md', 'data-model.md', 'quickstart.md'], <MapIcon className="w-4 h-4" />, false, feature.hasPlan, 'planning'),
+    {
+      id: 'constitution',
+      label: 'Constitution',
+      description: 'Establish project principles',
+      icon: <Sparkles className="w-4 h-4" />,
+      isOptional: false,
+      isComplete: hasConstitution,
+      isCurrent: currentStep === 'constitution',
+      phase: 'planning',
+    },
+    {
+      id: 'specify',
+      label: 'Specify',
+      description: 'Create baseline specification',
+      icon: <FileText className="w-4 h-4" />,
+      isOptional: false,
+      isComplete: feature.hasSpec,
+      isCurrent: currentStep === 'specify',
+      phase: 'planning',
+    },
+    {
+      id: 'clarify',
+      label: 'Clarify',
+      description: 'De-risk ambiguous areas',
+      icon: <MessageSquare className="w-4 h-4" />,
+      isOptional: true,
+      isComplete: clarificationCount > 0,
+      isCurrent: currentStep === 'clarify',
+      phase: 'planning',
+      inlineCount: clarificationCount > 0 ? `${clarificationCount} Q&A` : undefined,
+    },
+    {
+      id: 'plan',
+      label: 'Plan',
+      description: 'Create implementation plan',
+      icon: <MapIcon className="w-4 h-4" />,
+      isOptional: false,
+      isComplete: feature.hasPlan,
+      isCurrent: currentStep === 'plan',
+      phase: 'planning',
+    },
     // QUALITY CONTROL phase
-    createStep('checklist', '/speckit.checklist', 'Checklist', 'Validate requirements', ['checklist-*.md'], <ClipboardList className="w-4 h-4" />, true, feature.hasChecklists, 'qc'),
+    {
+      id: 'checklist',
+      label: 'Checklist',
+      description: 'Validate requirements',
+      icon: <ClipboardList className="w-4 h-4" />,
+      isOptional: true,
+      isComplete: feature.hasChecklists,
+      isCurrent: currentStep === 'checklist',
+      phase: 'qc',
+      inlineCount: checklistFiles.length > 0
+        ? `${checklistFiles.length} ${checklistFiles.length === 1 ? 'checklist' : 'checklists'} ${feature.completedChecklistItems}/${feature.totalChecklistItems}`
+        : undefined,
+    },
     // WORK BREAKDOWN STRUCTURE phase
-    createStep('tasks', '/speckit.tasks', 'Tasks', 'Generate actionable tasks', ['tasks.md'], <ListTodo className="w-4 h-4" />, false, feature.hasTasks, 'wbs'),
+    {
+      id: 'tasks',
+      label: 'Tasks',
+      description: 'Generate actionable tasks',
+      icon: <ListTodo className="w-4 h-4" />,
+      isOptional: false,
+      isComplete: feature.hasTasks,
+      isCurrent: currentStep === 'tasks',
+      phase: 'wbs',
+      inlineCount: feature.taskGroups.length > 0
+        ? `${feature.taskGroups.length} US ${feature.completedTasks}/${feature.totalTasks}`
+        : feature.totalTasks > 0
+          ? `${feature.completedTasks}/${feature.totalTasks}`
+          : undefined,
+    },
     // QUALITY ASSURANCE phase
-    createStep('analyze', '/speckit.analyze', 'Analyze', 'Cross-artifact consistency', ['analysis.json', 'analysis.md'], <Search className="w-4 h-4" />, true, !!feature.analysis, 'qa'),
+    {
+      id: 'analyze',
+      label: 'Analyze',
+      description: 'Cross-artifact consistency',
+      icon: <Search className="w-4 h-4" />,
+      isOptional: true,
+      isComplete: !!feature.analysis,
+      isCurrent: currentStep === 'analyze',
+      phase: 'qa',
+    },
     // CODING phase
-    createStep('implement', '/speckit.implement', 'Implement', 'Execute implementation', [], <Rocket className="w-4 h-4" />, false, allTasksComplete, 'coding', {
-      taskProgress: { completed: feature.completedTasks, total: feature.totalTasks },
-      nextTask: nextTask?.description,
-    }),
+    {
+      id: 'implement',
+      label: 'Implement',
+      description: 'Execute implementation',
+      icon: <Rocket className="w-4 h-4" />,
+      isOptional: false,
+      isComplete: allTasksComplete,
+      isCurrent: currentStep === 'implement',
+      phase: 'coding',
+      inlineCount: feature.totalTasks > 0 ? `${feature.completedTasks}/${feature.totalTasks}` : undefined,
+    },
   ];
 }
 
-// File item in hierarchical tree
-function FileItem({ file, isComplete }: { file: string; isComplete: boolean }) {
-  return (
-    <div className="flex items-center gap-2 pl-8 py-0.5">
-      <ChevronRight className="w-3 h-3 text-[var(--muted-foreground)]" />
-      <span className={cn(
-        'text-xs font-mono',
-        isComplete ? 'text-emerald-400' : 'text-[var(--muted-foreground)]'
-      )}>
-        {file}
-      </span>
-    </div>
-  );
-}
-
-// Clarification session with Q&A history
-function ClarificationHistory({ sessions }: { sessions: ClarificationSession[] }) {
-  if (!sessions || sessions.length === 0) {
-    return (
-      <div className="pl-8 py-1 text-xs text-[var(--muted-foreground)] italic">
-        No clarifications yet
-      </div>
-    );
-  }
-
-  return (
-    <div className="pl-6 space-y-2 mt-1">
-      {sessions.map((session, sIdx) => (
-        <div key={sIdx} className="space-y-1">
-          <div className="flex items-center gap-2 text-xs text-purple-400">
-            <Calendar className="w-3 h-3" />
-            <span>Session {session.date}</span>
-          </div>
-          {session.clarifications.map((c, cIdx) => (
-            <div key={cIdx} className="pl-5 space-y-0.5">
-              <div className="flex items-start gap-2 text-xs">
-                <span className="text-blue-400 font-medium flex-shrink-0">Q{cIdx + 1}:</span>
-                <span className="text-[var(--muted-foreground)] line-clamp-2">{c.question}</span>
-              </div>
-              <div className="flex items-start gap-2 text-xs">
-                <span className="text-emerald-400 font-medium flex-shrink-0">A{cIdx + 1}:</span>
-                <span className="text-[var(--muted-foreground)] line-clamp-2">{c.answer}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Task progress display for implement step
-function TaskProgress({ progress, nextTask }: { progress: { completed: number; total: number }; nextTask?: string }) {
-  const percentage = progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0;
-
-  return (
-    <div className="pl-6 space-y-2 mt-1">
-      <div className="flex items-center gap-3">
-        <div className="flex-1 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden">
-          <div
-            className="h-full bg-emerald-500 transition-all duration-300"
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-        <span className="text-xs font-mono text-emerald-400">
-          {progress.completed}/{progress.total}
-        </span>
-      </div>
-      {nextTask && (
-        <div className="flex items-start gap-2 text-xs">
-          <span className="text-amber-400 font-medium flex-shrink-0">Next:</span>
-          <span className="text-[var(--muted-foreground)] line-clamp-2">{nextTask}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Single workflow step item
+// Simple menu item - no expansion, just inline display
 function WorkflowItem({ step }: { step: WorkflowStep }) {
-  const [expanded, setExpanded] = useState(step.isCurrent || step.isComplete);
-
-  const hasExpandableContent = step.outputs.length > 0 ||
-    (step.clarificationSessions && step.clarificationSessions.length > 0) ||
-    step.taskProgress;
-
   return (
-    <div className="space-y-0.5">
-      <Tooltip content={step.description} side="right" delay={200}>
-        <button
-          onClick={() => hasExpandableContent && setExpanded(!expanded)}
-          className={cn(
-            'w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-all',
-            'hover:bg-[var(--secondary)]',
-            step.isComplete && 'text-emerald-400',
-            step.isCurrent && 'bg-amber-500/15 ring-1 ring-amber-500/40'
-          )}
-        >
-        {/* Expand/collapse indicator */}
-        {hasExpandableContent ? (
-          <ChevronRight className={cn(
-            'w-3 h-3 transition-transform flex-shrink-0',
-            expanded && 'rotate-90'
-          )} />
-        ) : (
-          <div className="w-3" />
-        )}
-
+    <Tooltip content={step.description} side="right" delay={200}>
+      <div className={cn(
+        'flex items-center gap-2 px-3 py-2 rounded-lg transition-all',
+        step.isCurrent && 'bg-amber-500/10 ring-1 ring-amber-500/30',
+        !step.isCurrent && 'hover:bg-[var(--secondary)]/50'
+      )}>
         {/* Status indicator */}
         <div className={cn(
           'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',
@@ -229,47 +178,41 @@ function WorkflowItem({ step }: { step: WorkflowStep }) {
 
         {/* Label */}
         <span className={cn(
-          'font-medium flex-1 text-left',
+          'text-sm font-medium',
           step.isComplete && 'text-emerald-400',
           step.isCurrent && 'text-amber-400'
         )}>
           {step.label}
         </span>
 
-        {/* Badges */}
+        {/* Optional badge */}
         {step.isOptional && (
-          <span className="text-[9px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-400">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
             opt
           </span>
         )}
+
+        {/* Current step badge */}
         {step.isCurrent && (
-          <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500 text-white font-bold">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500 text-white font-bold">
             NEXT
           </span>
         )}
-        </button>
-      </Tooltip>
 
-      {/* Expanded content */}
-      {expanded && hasExpandableContent && (
-        <div className="pb-1">
-          {/* File outputs */}
-          {step.outputs.length > 0 && step.outputs.map((file, i) => (
-            <FileItem key={i} file={file} isComplete={step.isComplete} />
-          ))}
+        {/* Spacer */}
+        <div className="flex-1" />
 
-          {/* Clarification history */}
-          {step.clarificationSessions && (
-            <ClarificationHistory sessions={step.clarificationSessions} />
-          )}
-
-          {/* Task progress */}
-          {step.taskProgress && (
-            <TaskProgress progress={step.taskProgress} nextTask={step.nextTask} />
-          )}
-        </div>
-      )}
-    </div>
+        {/* Inline count */}
+        {step.inlineCount && (
+          <span className={cn(
+            'text-xs font-mono',
+            step.isComplete ? 'text-emerald-400' : 'text-[var(--muted-foreground)]'
+          )}>
+            {step.inlineCount}
+          </span>
+        )}
+      </div>
+    </Tooltip>
   );
 }
 

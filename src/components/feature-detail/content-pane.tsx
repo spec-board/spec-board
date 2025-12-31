@@ -1,7 +1,7 @@
 'use client';
 
 import { X, ExternalLink } from 'lucide-react';
-import type { Feature } from '@/types';
+import type { Feature, Constitution } from '@/types';
 import type { SectionId } from './types';
 import { cn, openInEditor } from '@/lib/utils';
 import { SpecViewer } from '@/components/spec-viewer';
@@ -12,9 +12,10 @@ import { QuickstartViewer } from '@/components/quickstart-viewer';
 import { ContractsViewer } from '@/components/contracts-viewer';
 import { ChecklistViewer } from '@/components/checklist-viewer';
 import { AnalysisViewer } from '@/components/analysis-viewer';
+import { ConstitutionViewer } from '@/components/constitution-viewer';
+import { FeatureClarity } from '@/components/clarity-history';
 import { TaskGroupList } from '@/components/task-group';
 import { Tooltip } from '@/components/tooltip';
-import { WorkflowDiagram } from './workflow-diagram';
 import { FileText, CheckCircle2, Circle, Zap } from 'lucide-react';
 import type { Task, TaskPhase } from '@/types';
 
@@ -22,6 +23,7 @@ interface ContentPaneProps {
   sectionId: SectionId;
   feature: Feature;
   hasConstitution: boolean;
+  constitution: Constitution | null;
   onClose?: () => void;
   showCloseButton?: boolean;
   className?: string;
@@ -29,7 +31,7 @@ interface ContentPaneProps {
 
 // Section label mapping
 const SECTION_LABELS: Record<SectionId, string> = {
-  overview: 'Overview',
+  constitution: 'Project Constitution',
   spec: 'Specification',
   plan: 'Implementation Plan',
   tasks: 'Tasks',
@@ -39,13 +41,19 @@ const SECTION_LABELS: Record<SectionId, string> = {
   contracts: 'API Contracts',
   checklists: 'Checklists',
   analysis: 'Analysis',
+  clarifications: 'Clarification History',
 };
 
 // Get file path for a section
 function getSectionFilePath(sectionId: SectionId, feature: Feature): string | undefined {
   if (!feature.path) return undefined;
 
+  // Derive project path from feature path (feature.path is like /path/to/project/specs/feature-name)
+  const projectPath = feature.path.split('/').slice(0, -2).join('/');
+
   switch (sectionId) {
+    case 'constitution':
+      return `${projectPath}/.specify/memory/constitution.md`;
     case 'spec':
       return `${feature.path}/spec.md`;
     case 'plan':
@@ -139,16 +147,6 @@ function PhaseProgress({ phase }: { phase: TaskPhase }) {
   );
 }
 
-// Overview content with charts
-function OverviewContent({ feature, hasConstitution }: { feature: Feature; hasConstitution: boolean }) {
-  return (
-    <div className="space-y-6">
-      {/* Spec-Kit Workflow Diagram */}
-      <WorkflowDiagram feature={feature} hasConstitution={hasConstitution} />
-    </div>
-  );
-}
-
 // Tasks content
 function TasksContent({ feature }: { feature: Feature }) {
   const hasTaskGroups = feature.taskGroups && feature.taskGroups.length > 0;
@@ -189,6 +187,7 @@ export function ContentPane({
   sectionId,
   feature,
   hasConstitution,
+  constitution,
   onClose,
   showCloseButton = false,
   className,
@@ -245,7 +244,9 @@ export function ContentPane({
 
       {/* Pane content */}
       <div className="flex-1 overflow-auto p-4">
-        {sectionId === 'overview' && <OverviewContent feature={feature} hasConstitution={hasConstitution} />}
+        {sectionId === 'constitution' && (
+          <ConstitutionViewer content={constitution?.rawContent ?? null} />
+        )}
         {sectionId === 'spec' && (
           <SpecViewer content={feature.specContent} filePath={filePath} />
         )}
@@ -276,6 +277,12 @@ export function ContentPane({
         {sectionId === 'analysis' && (
           <AnalysisViewer
             analysis={feature.analysis ?? { jsonData: null, markdownContent: null, jsonPath: null, markdownPath: null }}
+          />
+        )}
+        {sectionId === 'clarifications' && (
+          <FeatureClarity
+            sessions={feature.clarificationSessions ?? []}
+            totalClarifications={feature.totalClarifications}
           />
         )}
       </div>

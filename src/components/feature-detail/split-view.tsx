@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ContentPane } from './content-pane';
-import type { Feature } from '@/types';
+import type { Feature, Constitution } from '@/types';
 import type { SectionId } from './types';
 
 // Split ratio bounds - minimum and maximum pane sizes
@@ -16,6 +16,7 @@ interface SplitViewProps {
   rightSection: SectionId | null;
   feature: Feature;
   hasConstitution: boolean;
+  constitution: Constitution | null;
   splitRatio: number;
   onRatioChange: (ratio: number) => void;
   onCloseRight: () => void;
@@ -28,6 +29,7 @@ export function SplitView({
   rightSection,
   feature,
   hasConstitution,
+  constitution,
   splitRatio,
   onRatioChange,
   onCloseRight,
@@ -79,6 +81,7 @@ export function SplitView({
           sectionId={leftSection}
           feature={feature}
           hasConstitution={hasConstitution}
+          constitution={constitution}
           showCloseButton={false}
         />
       </div>
@@ -110,6 +113,7 @@ export function SplitView({
           sectionId={leftSection}
           feature={feature}
           hasConstitution={hasConstitution}
+          constitution={constitution}
           showCloseButton={false}
         />
       </div>
@@ -152,6 +156,7 @@ export function SplitView({
           sectionId={rightSection}
           feature={feature}
           hasConstitution={hasConstitution}
+          constitution={constitution}
           showCloseButton={true}
           onClose={onCloseRight}
         />

@@ -39,10 +39,6 @@ export function SectionIcon({ sectionId, feature, className }: SectionIconProps)
   const baseClass = cn('w-4 h-4 flex-shrink-0', className);
 
   switch (sectionId) {
-    case 'overview':
-      // No icon for overview
-      return null;
-
     case 'plan':
       return (
         <FileText
