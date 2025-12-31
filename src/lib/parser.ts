@@ -625,6 +625,7 @@ export function parseConstitution(content: string): Constitution {
           const cleanedSubContent = subsectionMatch[2]
             .trim()
             .replace(/<!--[\s\S]*?-->/g, '')
+            .replace(/^\*\*Version\*\*:.+$/gm, '')
             .trim();
           subsections.push({
             name: subsectionName,
