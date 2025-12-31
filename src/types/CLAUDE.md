@@ -45,9 +45,11 @@ This directory contains all shared TypeScript interfaces and types used througho
 
 | Type | Purpose |
 |------|---------|
-| `Constitution` | Full constitution with principles, sections |
+| `Constitution` | Full constitution with title, principles, sections, version metadata |
 | `ConstitutionPrinciple` | Named principle with description |
-| `ConstitutionSection` | Named section with content |
+| `ConstitutionSection` | Named section with content and subsections |
+| `ConstitutionSubsection` | Named subsection within a section |
+| `SyncImpactReport` | Sync impact report from HTML comment in constitution.md |
 
 ### Dashboard Types
 

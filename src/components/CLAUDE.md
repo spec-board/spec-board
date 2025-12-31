@@ -23,6 +23,7 @@ This directory contains all React components used throughout the application. Mo
 | `task-group.tsx` | Task list grouped by user story |
 | `markdown-renderer.tsx` | Safe markdown-to-HTML rendering |
 | `spec-viewer.tsx` | Spec.md content with user stories and clarifications |
+| `constitution-viewer.tsx` | Structured constitution display with principles, sections, subsections |
 | `analysis-viewer.tsx` | Analysis results with spec alignment |
 | `checklist-viewer.tsx` | Checklist items display |
 | `tooltip.tsx` | Reusable tooltip component |
