@@ -200,7 +200,7 @@ export function ContentPane({
       {/* Pane content */}
       <div className="flex-1 overflow-auto p-4">
         {sectionId === 'constitution' && (
-          <ConstitutionViewer content={constitution?.rawContent ?? null} />
+          <ConstitutionViewer constitution={constitution} />
         )}
         {sectionId === 'spec' && (
           <SpecViewer content={feature.specContent} />
