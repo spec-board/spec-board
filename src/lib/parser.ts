@@ -606,9 +606,15 @@ export function parseConstitution(content: string): Constitution {
     const sectionName = sectionMatch[1].trim();
     // Skip Core Principles (already parsed) and template placeholders
     if (sectionName !== 'Core Principles' && !sectionName.startsWith('[')) {
+      // Strip HTML comments and version metadata line from content
+      const cleanedContent = sectionMatch[2]
+        .trim()
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/^\*\*Version\*\*:.+$/gm, '')
+        .trim();
       sections.push({
         name: sectionName,
-        content: sectionMatch[2].trim().replace(/<!--[\s\S]*?-->/g, '').trim(),
+        content: cleanedContent,
       });
     }
   }
