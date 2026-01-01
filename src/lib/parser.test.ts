@@ -206,7 +206,11 @@ Some planning notes here.
 `;
     const result = parseTasksFile(content);
     expect(result.tasks).toHaveLength(0);
-    expect(result.phases).toHaveLength(0);
+    // Non-phase sections like "## Notes" are now captured as phases
+    // so they can be displayed in the UI (e.g., Dependencies & Execution Order)
+    expect(result.phases).toHaveLength(1);
+    expect(result.phases[0].name).toBe('Notes');
+    expect(result.phases[0].tasks).toHaveLength(0);
   });
 
   it('should handle phase with colon separator', () => {

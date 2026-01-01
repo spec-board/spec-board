@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { remark } from 'remark';
+import remarkGfm from 'remark-gfm';
 import html from 'remark-html';
 import DOMPurify from 'dompurify';
 import { AlertTriangle } from 'lucide-react';
@@ -22,7 +23,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
       setIsLoading(true);
       setRenderError(null);
       try {
-        const result = await remark().use(html).process(content);
+        const result = await remark().use(remarkGfm).use(html).process(content);
         // Sanitize HTML to prevent XSS attacks
         const sanitizedHtml = DOMPurify.sanitize(result.toString(), {
           ALLOWED_TAGS: [
@@ -76,12 +77,15 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           'prose-strong:text-zinc-200',
           'prose-code:text-pink-400 prose-code:bg-zinc-800 prose-code:px-1 prose-code:rounded',
           'prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-700',
-          'prose-ul:text-zinc-300 prose-ol:text-zinc-300',
-          'prose-li:marker:text-zinc-500',
+          '[&_ul]:text-zinc-300 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2',
+          '[&_ol]:text-zinc-300 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2',
+          '[&_li]:my-1 [&_li]:pl-1',
           'prose-blockquote:border-l-zinc-600 prose-blockquote:text-zinc-400',
-          'prose-table:text-sm',
-          'prose-th:text-zinc-200 prose-th:bg-zinc-800 prose-th:px-3 prose-th:py-2',
-          'prose-td:px-3 prose-td:py-2 prose-td:border-zinc-700',
+          '[&_table]:text-sm [&_table]:border [&_table]:border-zinc-600 [&_table]:border-collapse [&_table]:w-full',
+          '[&_thead]:bg-zinc-800',
+          '[&_th]:text-zinc-200 [&_th]:px-3 [&_th]:py-2 [&_th]:border [&_th]:border-zinc-600 [&_th]:text-left [&_th]:font-semibold',
+          '[&_td]:px-3 [&_td]:py-2 [&_td]:border [&_td]:border-zinc-600',
+          '[&_tr]:border-b [&_tr]:border-zinc-600',
           className
         )}
         dangerouslySetInnerHTML={{ __html: htmlContent }}

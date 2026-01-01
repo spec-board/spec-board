@@ -110,9 +110,9 @@ export function parseTasksFile(content: string): { tasks: Task[]; phases: TaskPh
   };
 
   for (const line of lines) {
-    // Check for phase headers (## Phase N: Name or ## Phase N - Name)
-    // Capture the full phase identifier including "Phase N"
-    const phaseMatch = line.match(/^##\s*(Phase\s*\d*:?\s*.+)/i);
+    // Check for any ## headers (phases, dependencies, summary, etc.)
+    // This captures both "## Phase N: Name" and "## Dependencies & Execution Order"
+    const phaseMatch = line.match(/^##\s+(.+)/);
     if (phaseMatch) {
       // Flush any pending markdown before saving phase
       flushMarkdown();
