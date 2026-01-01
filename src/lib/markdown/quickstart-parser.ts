@@ -13,6 +13,7 @@ import {
   extractSimpleList,
   extractListItems,
   extractText,
+  extractFullText,
   extractIntroText,
   extractMetadataValue,
   type Section,
@@ -331,6 +332,6 @@ function parseOtherSections(sections: Section[]): QuickstartSection[] {
     ))
     .map(s => ({
       title: s.title,
-      content: extractText(s.children),
+      content: extractFullText(s.children),
     }))
 }

@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Database, ChevronDown, ChevronRight, Calendar, Box, List, ShieldCheck, ArrowRightLeft, HardDrive, ArrowUpDown, Filter, Search, Fingerprint, Clock, GitBranch } from 'lucide-react';
+import { Database, ChevronDown, ChevronRight, Calendar, Box, List, ShieldCheck, ArrowRightLeft, HardDrive, ArrowUpDown, Filter, Search, Fingerprint, Clock, GitBranch, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseDataModelAST } from '@/lib/markdown';
 import { MarkdownRenderer } from './markdown-renderer';
-import type { ParsedDataModel, DataEntity, DataEnum, ValidationRule, StateTransition, StateTransitionsData, StorageSchemaData, DataIntegrityRule } from '@/types';
+import type { ParsedDataModel, DataEntity, DataEnum, ValidationRule, StateTransition, StateTransitionsData, StorageSchemaData, DataIntegrityRule, DataModelSection } from '@/types';
 
 interface DataModelViewerProps {
   content: string | null;
@@ -468,6 +468,36 @@ function DataIntegritySection({ rules }: { rules: DataIntegrityRule[] }) {
   );
 }
 
+function OtherSectionsSection({ sections }: { sections: DataModelSection[] }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  if (sections.length === 0) return null;
+
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
+      >
+        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        <FileText className="w-4 h-4 text-gray-500" />
+        <h3 className="font-semibold">Additional Sections</h3>
+        <span className="text-xs text-[var(--muted-foreground)] ml-auto">{sections.length} sections</span>
+      </button>
+      {isExpanded && (
+        <div className="space-y-4">
+          {sections.map((section, idx) => (
+            <div key={idx} className="p-3 bg-[var(--secondary)]/30 rounded-lg">
+              <h4 className="text-sm font-medium mb-2">{section.title}</h4>
+              <MarkdownRenderer content={section.content} className="text-sm" />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StructuredDataModelView({ parsed }: { parsed: ParsedDataModel }) {
   return (
     <div className="space-y-2">
@@ -498,6 +528,7 @@ function StructuredDataModelView({ parsed }: { parsed: ParsedDataModel }) {
       <FilteringBehaviorSection filters={parsed.filteringBehavior} />
       <SearchBehaviorSection behaviors={parsed.searchBehavior} />
       <DataIntegritySection rules={parsed.dataIntegrity} />
+      <OtherSectionsSection sections={parsed.otherSections} />
     </div>
   );
 }

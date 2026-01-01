@@ -425,6 +425,11 @@ export interface DataIntegrityRule {
   items: string[];
 }
 
+export interface DataModelSection {
+  title: string;
+  content: string;
+}
+
 export interface ParsedDataModel {
   rawContent: string;
   feature?: string;
@@ -438,4 +443,5 @@ export interface ParsedDataModel {
   filteringBehavior: { filter: string; condition: string }[];
   searchBehavior: string[];
   dataIntegrity: DataIntegrityRule[];
+  otherSections: DataModelSection[];
 }
