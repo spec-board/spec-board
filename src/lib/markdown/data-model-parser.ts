@@ -10,6 +10,7 @@ import {
   extractSimpleList,
   extractTables,
   extractText,
+  extractFullText,
   extractMetadataValue,
   type Section,
 } from './ast-utils'
@@ -26,6 +27,7 @@ import type {
   StorageSchemaSubsection,
   StorageSchemaKey,
   DataIntegrityRule,
+  DataModelSection,
 } from '@/types'
 
 // ============================================
@@ -51,6 +53,7 @@ export function parseDataModelAST(content: string): ParsedDataModel {
     filteringBehavior: parseFilteringBehavior(sections),
     searchBehavior: parseSearchBehavior(sections),
     dataIntegrity: parseDataIntegrity(sections),
+    otherSections: parseOtherSections(sections),
   }
 }
 
@@ -257,4 +260,30 @@ function parseDataIntegrity(sections: Section[]): DataIntegrityRule[] {
     title: sub.title,
     items: extractSimpleList(sub.children),
   }))
+}
+
+// Known sections that have dedicated parsers
+const KNOWN_SECTIONS = [
+  'entities',
+  'enums',
+  'validation rules',
+  'state transitions',
+  'localstorage schema',
+  'storage schema',
+  'sorting behavior',
+  'filtering behavior',
+  'search behavior',
+  'data integrity',
+]
+
+function parseOtherSections(sections: Section[]): DataModelSection[] {
+  return sections
+    .filter(s => s.depth === 2)
+    .filter(s => !KNOWN_SECTIONS.some(known =>
+      s.title.toLowerCase().includes(known)
+    ))
+    .map(s => ({
+      title: s.title,
+      content: extractFullText(s.children),
+    }))
 }

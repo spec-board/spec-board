@@ -9,6 +9,7 @@ import {
   extractCodeBlocks,
   extractTables,
   extractText,
+  extractFullText,
   extractBlockquote,
   extractMetadataValue,
   type Section,
@@ -212,6 +213,6 @@ function parseOtherSections(sections: Section[]): PlanSection[] {
     ))
     .map(s => ({
       title: s.title,
-      content: extractText(s.children),
+      content: extractFullText(s.children),
     }))
 }
