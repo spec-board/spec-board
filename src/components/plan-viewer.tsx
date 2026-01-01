@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { FileText, GitBranch, Calendar, CheckCircle2, XCircle, AlertCircle, ChevronDown, ChevronRight, FolderTree } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parsePlanContent } from '@/lib/markdown-parsers';
+import { parsePlanAST } from '@/lib/markdown';
 import { MarkdownRenderer } from './markdown-renderer';
 import type { ParsedPlan, ConstitutionCheckData, ComplexityTrackingData, ProjectStructureItem, PlanSection } from '@/types';
 
@@ -310,7 +310,7 @@ export function PlanViewer({ content, filePath, className }: PlanViewerProps) {
 
   const parsed = useMemo(() => {
     if (!content) return null;
-    return parsePlanContent(content);
+    return parsePlanAST(content);
   }, [content]);
 
   if (!content) {

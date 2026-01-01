@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Rocket, ChevronDown, ChevronRight, Terminal, CheckCircle2, Circle, FileCode, Globe, Calendar, Play, ScrollText } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Rocket, ChevronDown, ChevronRight, Terminal, CheckCircle2, Circle, FileCode, Globe, Calendar, Play, ScrollText, Code2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseQuickstartContent } from '@/lib/markdown-parsers';
-import type { ParsedQuickstart, SetupStep, VerificationItem, QuickstartSection } from '@/types';
+import { parseQuickstartAST } from '@/lib/markdown';
+import type { ParsedQuickstart, SetupStep, VerificationItem, VerificationData, KeyFilesData, BrowserSupportData, QuickstartSection, DevelopmentSection, QuickstartSectionOrder } from '@/types';
 
 interface QuickstartViewerProps {
   content: string | null;
@@ -12,7 +12,7 @@ interface QuickstartViewerProps {
   className?: string;
 }
 
-function PrerequisitesSection({ prerequisites }: { prerequisites: string[] }) {
+function PrerequisitesSection({ prerequisites, title }: { prerequisites: string[]; title?: string }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (prerequisites.length === 0) return null;
@@ -24,7 +24,7 @@ function PrerequisitesSection({ prerequisites }: { prerequisites: string[] }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <h3 className="font-semibold">Prerequisites</h3>
+        <h3 className="font-semibold">{title ?? 'Prerequisites'}</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{prerequisites.length} items</span>
       </button>
       {isExpanded && (
@@ -80,7 +80,7 @@ function SetupStepCard({ step }: { step: SetupStep }) {
   );
 }
 
-function SetupStepsSection({ steps }: { steps: SetupStep[] }) {
+function SetupStepsSection({ steps, title }: { steps: SetupStep[]; title?: string }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (steps.length === 0) return null;
@@ -93,7 +93,7 @@ function SetupStepsSection({ steps }: { steps: SetupStep[] }) {
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         <Terminal className="w-4 h-4 text-green-500" />
-        <h3 className="font-semibold">Setup Steps</h3>
+        <h3 className="font-semibold">{title ?? 'Setup Steps'}</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{steps.length} steps</span>
       </button>
       {isExpanded && (
@@ -107,12 +107,12 @@ function SetupStepsSection({ steps }: { steps: SetupStep[] }) {
   );
 }
 
-function VerificationChecklistSection({ items }: { items: VerificationItem[] }) {
+function VerificationChecklistSection({ data, title }: { data: VerificationData; title?: string }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  if (items.length === 0) return null;
+  if (data.items.length === 0) return null;
 
-  const checkedCount = items.filter(i => i.checked).length;
+  const checkedCount = data.items.filter(i => i.checked).length;
 
   return (
     <div className="mb-4">
@@ -122,33 +122,38 @@ function VerificationChecklistSection({ items }: { items: VerificationItem[] }) 
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         <CheckCircle2 className="w-4 h-4 text-green-500" />
-        <h3 className="font-semibold">Verification Checklist</h3>
+        <h3 className="font-semibold">{title ?? 'Verification Checklist'}</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">
-          {checkedCount}/{items.length} complete
+          {checkedCount}/{data.items.length} complete
         </span>
       </button>
       {isExpanded && (
-        <ul className="space-y-1 p-3 bg-[var(--secondary)]/30 rounded-lg">
-          {items.map((item, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-sm">
-              {item.checked ? (
-                <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-              ) : (
-                <Circle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
-              )}
-              <span className={item.checked ? 'text-[var(--muted-foreground)]' : ''}>{item.text}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="p-3 bg-[var(--secondary)]/30 rounded-lg">
+          {data.intro && (
+            <p className="text-sm text-[var(--muted-foreground)] mb-2">{data.intro}</p>
+          )}
+          <ul className="space-y-1">
+            {data.items.map((item, idx) => (
+              <li key={idx} className="flex items-start gap-2 text-sm">
+                {item.checked ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <Circle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
+                )}
+                <span className={item.checked ? 'text-[var(--muted-foreground)]' : ''}>{item.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
 }
 
-function KeyFilesSection({ files }: { files: string[] }) {
+function KeyFilesSection({ data, title }: { data: KeyFilesData; title?: string }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  if (files.length === 0) return null;
+  if (data.files.length === 0) return null;
 
   return (
     <div className="mb-4">
@@ -158,26 +163,32 @@ function KeyFilesSection({ files }: { files: string[] }) {
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         <FileCode className="w-4 h-4 text-purple-500" />
-        <h3 className="font-semibold">Key Files to Create</h3>
-        <span className="text-xs text-[var(--muted-foreground)] ml-auto">{files.length} files</span>
+        <h3 className="font-semibold">{title ?? 'Key Files to Create'}</h3>
+        <span className="text-xs text-[var(--muted-foreground)] ml-auto">{data.files.length} files</span>
       </button>
       {isExpanded && (
-        <ol className="space-y-1 p-3 bg-[var(--secondary)]/30 rounded-lg list-decimal list-inside">
-          {files.map((file, idx) => (
-            <li key={idx} className="text-sm">
-              <code className="px-1.5 py-0.5 bg-[var(--secondary)] rounded text-xs font-mono">{file}</code>
-            </li>
-          ))}
-        </ol>
+        <div className="p-3 bg-[var(--secondary)]/30 rounded-lg">
+          {data.intro && (
+            <p className="text-sm text-[var(--muted-foreground)] mb-2">{data.intro}</p>
+          )}
+          <ol className="space-y-1 list-decimal list-inside">
+            {data.files.map((file, idx) => (
+              <li key={idx} className="text-sm">
+                <code className="px-1.5 py-0.5 bg-[var(--secondary)] rounded text-xs font-mono">{file}</code>
+              </li>
+            ))}
+          </ol>
+        </div>
       )}
     </div>
   );
 }
 
-function BrowserSupportSection({ browsers }: { browsers: string[] }) {
+function BrowserSupportSection({ data, title }: { data: BrowserSupportData; title?: string }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  if (browsers.length === 0) return null;
+  const totalItems = data.subsections.reduce((sum, sub) => sum + sub.items.length, 0);
+  if (totalItems === 0) return null;
 
   return (
     <div className="mb-4">
@@ -187,23 +198,32 @@ function BrowserSupportSection({ browsers }: { browsers: string[] }) {
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         <Globe className="w-4 h-4 text-cyan-500" />
-        <h3 className="font-semibold">Browser Support</h3>
+        <h3 className="font-semibold">{title ?? 'Browser Support'}</h3>
       </button>
       {isExpanded && (
-        <ul className="space-y-1 p-3 bg-[var(--secondary)]/30 rounded-lg">
-          {browsers.map((browser, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="w-4 h-4 text-cyan-500 mt-0.5 flex-shrink-0" />
-              <span>{browser}</span>
-            </li>
+        <div className="p-3 bg-[var(--secondary)]/30 rounded-lg space-y-4">
+          {data.subsections.map((subsection, idx) => (
+            <div key={idx}>
+              {subsection.intro && (
+                <p className="text-sm text-[var(--muted-foreground)] mb-2">{subsection.intro}</p>
+              )}
+              <ul className="space-y-1">
+                {subsection.items.map((item, itemIdx) => (
+                  <li key={itemIdx} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-500 mt-0.5 flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
 }
 
-function DevelopmentCommandsSection({ commands }: { commands: { title: string; command: string; description?: string }[] }) {
+function DevelopmentCommandsSection({ commands, title }: { commands: { title: string; command: string; description?: string }[]; title?: string }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (commands.length === 0) return null;
@@ -216,7 +236,7 @@ function DevelopmentCommandsSection({ commands }: { commands: { title: string; c
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         <Play className="w-4 h-4 text-orange-500" />
-        <h3 className="font-semibold">Development Commands</h3>
+        <h3 className="font-semibold">{title ?? 'Development Commands'}</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{commands.length} commands</span>
       </button>
       {isExpanded && (
@@ -237,7 +257,7 @@ function DevelopmentCommandsSection({ commands }: { commands: { title: string; c
   );
 }
 
-function ProjectScriptsSection({ scripts }: { scripts?: string }) {
+function ProjectScriptsSection({ scripts }: { scripts?: { title: string; content: string } }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (!scripts) return null;
@@ -250,12 +270,79 @@ function ProjectScriptsSection({ scripts }: { scripts?: string }) {
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         <ScrollText className="w-4 h-4 text-yellow-500" />
-        <h3 className="font-semibold">Project Scripts</h3>
+        <h3 className="font-semibold">{scripts.title}</h3>
       </button>
       {isExpanded && (
         <pre className="text-xs font-mono bg-zinc-900 text-zinc-100 p-3 rounded-lg overflow-x-auto">
-          {scripts}
+          {scripts.content}
         </pre>
+      )}
+    </div>
+  );
+}
+
+function DevelopmentSectionComponent({ development, title }: { development?: DevelopmentSection; title?: string }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  if (!development) return null;
+
+  const hasContent = development.intro || development.subsections.length > 0 || development.codeBlocks.length > 0;
+  if (!hasContent) return null;
+
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
+      >
+        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        <Code2 className="w-4 h-4 text-emerald-500" />
+        <h3 className="font-semibold">{title ?? 'Development'}</h3>
+        {development.subsections.length > 0 && (
+          <span className="text-xs text-[var(--muted-foreground)] ml-auto">
+            {development.subsections.length} subsection{development.subsections.length !== 1 ? 's' : ''}
+          </span>
+        )}
+      </button>
+      {isExpanded && (
+        <div className="space-y-3 p-3 bg-[var(--secondary)]/30 rounded-lg">
+          {/* Intro text */}
+          {development.intro && (
+            <p className="text-sm whitespace-pre-wrap">{development.intro}</p>
+          )}
+
+          {/* Top-level code blocks */}
+          {development.codeBlocks.map((block, idx) => (
+            <div key={`top-${idx}`} className="relative">
+              <pre className="text-xs font-mono bg-zinc-900 text-zinc-100 p-3 rounded-lg overflow-x-auto">
+                {block.language && (
+                  <span className="absolute top-1 right-2 text-xs text-zinc-500">{block.language}</span>
+                )}
+                {block.code}
+              </pre>
+            </div>
+          ))}
+
+          {/* Subsections */}
+          {development.subsections.map((subsection, idx) => (
+            <div key={idx} className="border-l-2 border-emerald-500/30 pl-3">
+              <h4 className="font-medium text-sm mb-2">{subsection.title}</h4>
+              {subsection.content && (
+                <p className="text-sm text-[var(--muted-foreground)] mb-2 whitespace-pre-wrap">{subsection.content}</p>
+              )}
+              {subsection.codeBlocks.map((block, blockIdx) => (
+                <div key={blockIdx} className="relative mt-2">
+                  <pre className="text-xs font-mono bg-zinc-900 text-zinc-100 p-3 rounded-lg overflow-x-auto">
+                    {block.language && (
+                      <span className="absolute top-1 right-2 text-xs text-zinc-500">{block.language}</span>
+                    )}
+                    {block.code}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -283,6 +370,46 @@ function OtherSectionCard({ section }: { section: QuickstartSection }) {
 }
 
 function StructuredQuickstartView({ parsed }: { parsed: ParsedQuickstart }) {
+  const { sectionTitles, sectionOrder } = parsed;
+
+  // Render a section by its type
+  const renderSection = (item: { type: string; title: string; otherIndex?: number }) => {
+    switch (item.type) {
+      case 'prerequisites':
+        if (parsed.prerequisites.length === 0) return null;
+        return <PrerequisitesSection key={item.type} prerequisites={parsed.prerequisites} title={sectionTitles.prerequisites} />;
+      case 'setupSteps':
+        if (parsed.setupSteps.length === 0) return null;
+        return <SetupStepsSection key={item.type} steps={parsed.setupSteps} title={sectionTitles.setupSteps} />;
+      case 'development':
+        if (!parsed.development) return null;
+        return <DevelopmentSectionComponent key={item.type} development={parsed.development} title={sectionTitles.development} />;
+      case 'developmentCommands':
+        if (parsed.developmentCommands.length === 0) return null;
+        return <DevelopmentCommandsSection key={item.type} commands={parsed.developmentCommands} title={sectionTitles.developmentCommands} />;
+      case 'projectScripts':
+        if (!parsed.projectScripts) return null;
+        return <ProjectScriptsSection key={item.type} scripts={parsed.projectScripts} />;
+      case 'verification':
+        if (parsed.verificationChecklist.items.length === 0) return null;
+        return <VerificationChecklistSection key={item.type} data={parsed.verificationChecklist} title={sectionTitles.verification} />;
+      case 'keyFiles':
+        if (parsed.keyFilesToCreate.files.length === 0) return null;
+        return <KeyFilesSection key={item.type} data={parsed.keyFilesToCreate} title={sectionTitles.keyFiles} />;
+      case 'browserSupport':
+        const totalItems = parsed.browserSupport.subsections.reduce((sum, sub) => sum + sub.items.length, 0);
+        if (totalItems === 0) return null;
+        return <BrowserSupportSection key={item.type} data={parsed.browserSupport} title={sectionTitles.browserSupport} />;
+      case 'other':
+        if (item.otherIndex === undefined) return null;
+        const section = parsed.otherSections[item.otherIndex];
+        if (!section) return null;
+        return <OtherSectionCard key={`other-${item.otherIndex}`} section={section} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-2">
       {/* Metadata */}
@@ -303,17 +430,11 @@ function StructuredQuickstartView({ parsed }: { parsed: ParsedQuickstart }) {
         </div>
       )}
 
-      <PrerequisitesSection prerequisites={parsed.prerequisites} />
-      <SetupStepsSection steps={parsed.setupSteps} />
-      <DevelopmentCommandsSection commands={parsed.developmentCommands} />
-      <ProjectScriptsSection scripts={parsed.projectScripts} />
-      <VerificationChecklistSection items={parsed.verificationChecklist} />
-      <KeyFilesSection files={parsed.keyFilesToCreate} />
-      <BrowserSupportSection browsers={parsed.browserSupport} />
-
-      {/* Other sections not specifically parsed */}
-      {parsed.otherSections.map((section, idx) => (
-        <OtherSectionCard key={idx} section={section} />
+      {/* Render sections in order from markdown */}
+      {sectionOrder.map((item, idx) => (
+        <React.Fragment key={`${item.type}-${idx}`}>
+          {renderSection(item)}
+        </React.Fragment>
       ))}
     </div>
   );
@@ -324,7 +445,7 @@ export function QuickstartViewer({ content, filePath, className }: QuickstartVie
 
   const parsed = useMemo(() => {
     if (!content) return null;
-    return parseQuickstartContent(content);
+    return parseQuickstartAST(content);
   }, [content]);
 
   if (!content) {

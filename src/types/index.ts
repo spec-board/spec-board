@@ -35,6 +35,8 @@ export interface SpecKitFile {
   path: string;
   content: string;
   exists: boolean;
+  // Per-file checklist progress (only for type='checklist')
+  checklistProgress?: { completed: number; total: number };
 }
 
 // Analysis types for spec alignment tracking
@@ -124,9 +126,16 @@ export interface Task {
   filePath?: string;
 }
 
+// Content block types for preserving interleaved order in phases
+export type PhaseContentBlock =
+  | { type: 'markdown'; content: string }
+  | { type: 'task'; task: Task };
+
 export interface TaskPhase {
   name: string;
-  tasks: Task[];
+  description?: string;  // Phase description (e.g., **Purpose**: ...) - kept for backwards compat
+  tasks: Task[];         // All tasks in phase - kept for backwards compat
+  contentBlocks: PhaseContentBlock[];  // Ordered content blocks preserving interleaved structure
 }
 
 export interface Feature {
@@ -153,6 +162,7 @@ export interface Feature {
   taskGroups: TaskGroup[];
   specContent: string | null;
   planContent: string | null;
+  tasksContent: string | null;
   additionalFiles: SpecKitFile[];
   // Analysis data for spec alignment tracking
   analysis: FeatureAnalysis | null;
@@ -269,22 +279,84 @@ export interface VerificationItem {
   checked: boolean;
 }
 
+export interface VerificationData {
+  intro?: string;
+  items: VerificationItem[];
+}
+
+export interface KeyFilesData {
+  intro?: string;
+  files: string[];
+}
+
+export interface BrowserSupportSubsection {
+  intro: string;
+  items: string[];
+}
+
+export interface BrowserSupportData {
+  subsections: BrowserSupportSubsection[];
+}
+
 export interface QuickstartSection {
   title: string;
   content: string;
+}
+
+// Development section with subsections and code blocks
+export interface DevelopmentSubsection {
+  title: string;
+  content: string;
+  codeBlocks: { language?: string; code: string }[];
+}
+
+export interface DevelopmentSection {
+  intro?: string;
+  subsections: DevelopmentSubsection[];
+  codeBlocks: { language?: string; code: string }[];
+}
+
+// Section types for ordering
+export type QuickstartSectionType =
+  | 'prerequisites'
+  | 'setupSteps'
+  | 'development'
+  | 'developmentCommands'
+  | 'projectScripts'
+  | 'verification'
+  | 'keyFiles'
+  | 'browserSupport'
+  | 'other';
+
+export interface QuickstartSectionOrder {
+  type: QuickstartSectionType;
+  title: string;
+  otherIndex?: number; // Index into otherSections array for 'other' type
 }
 
 export interface ParsedQuickstart {
   rawContent: string;
   feature?: string;
   date?: string;
+  sectionOrder: QuickstartSectionOrder[]; // Order of sections as they appear in markdown
+  sectionTitles: {
+    prerequisites?: string;
+    setupSteps?: string;
+    verification?: string;
+    keyFiles?: string;
+    browserSupport?: string;
+    developmentCommands?: string;
+    development?: string;
+    projectScripts?: string;
+  };
   prerequisites: string[];
   setupSteps: SetupStep[];
+  development?: DevelopmentSection;
   developmentCommands: { title: string; command: string; description?: string }[];
-  projectScripts?: string;
-  verificationChecklist: VerificationItem[];
-  keyFilesToCreate: string[];
-  browserSupport: string[];
+  projectScripts?: { title: string; content: string };
+  verificationChecklist: VerificationData;
+  keyFilesToCreate: KeyFilesData;
+  browserSupport: BrowserSupportData;
   otherSections: QuickstartSection[];
 }
 
@@ -319,10 +391,33 @@ export interface StateTransition {
   transitionsTo: string[];
 }
 
-export interface StorageSchema {
+export interface StateTransitionSubsection {
+  title: string;
+  codeBlock?: string;
+  description?: string;
+  transitions?: StateTransition[];
+}
+
+export interface StateTransitionsData {
+  subsections: StateTransitionSubsection[];
+}
+
+export interface StorageSchemaKey {
   key: string;
   type: string;
   description: string;
+}
+
+export interface StorageSchemaSubsection {
+  title: string;
+  keys?: StorageSchemaKey[];
+  codeBlock?: string;
+  description?: string;
+}
+
+export interface StorageSchemaData {
+  subsections: StorageSchemaSubsection[];
+  note?: string;
 }
 
 export interface DataIntegrityRule {
@@ -337,8 +432,8 @@ export interface ParsedDataModel {
   entities: DataEntity[];
   enums: DataEnum[];
   validationRules: ValidationRule[];
-  stateTransitions: StateTransition[];
-  storageSchema: StorageSchema[];
+  stateTransitions: StateTransitionsData;
+  storageSchema: StorageSchemaData;
   sortingBehavior: { option: string; description: string }[];
   filteringBehavior: { filter: string; condition: string }[];
   searchBehavior: string[];

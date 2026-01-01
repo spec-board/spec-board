@@ -35,6 +35,8 @@ export interface WorkflowSubItem {
   filePath?: string;       // For file items
   progress?: { completed: number; total: number };
   command?: string;        // For action items (slash command to copy)
+  checklistIndex?: number; // For checklist items - index into checklistFiles array
+  userStoryId?: string;    // For user-story items - filter tasks by this story
 }
 
 // Workflow step for nav

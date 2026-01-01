@@ -3,8 +3,9 @@
 import { useState, useMemo } from 'react';
 import { Database, ChevronDown, ChevronRight, Calendar, Box, List, ShieldCheck, ArrowRightLeft, HardDrive, ArrowUpDown, Filter, Search, Fingerprint, Clock, GitBranch } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseDataModelContent } from '@/lib/markdown-parsers';
-import type { ParsedDataModel, DataEntity, DataEnum, ValidationRule, StateTransition, StorageSchema, DataIntegrityRule } from '@/types';
+import { parseDataModelAST } from '@/lib/markdown';
+import { MarkdownRenderer } from './markdown-renderer';
+import type { ParsedDataModel, DataEntity, DataEnum, ValidationRule, StateTransition, StateTransitionsData, StorageSchemaData, DataIntegrityRule } from '@/types';
 
 interface DataModelViewerProps {
   content: string | null;
@@ -158,10 +159,10 @@ function ValidationRulesSection({ rules }: { rules: ValidationRule[] }) {
   );
 }
 
-function StateTransitionsSection({ transitions }: { transitions: StateTransition[] }) {
+function StateTransitionsSection({ data }: { data: StateTransitionsData }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  if (transitions.length === 0) return null;
+  if (data.subsections.length === 0) return null;
 
   return (
     <div className="mb-4">
@@ -174,41 +175,59 @@ function StateTransitionsSection({ transitions }: { transitions: StateTransition
         <h3 className="font-semibold">State Transitions</h3>
       </button>
       {isExpanded && (
-        <div className="border border-[var(--border)] rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--secondary)]/50">
-              <tr>
-                <th className="text-left p-2 font-medium">State</th>
-                <th className="text-left p-2 font-medium">Condition</th>
-                <th className="text-left p-2 font-medium">Transitions To</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transitions.map((t, idx) => (
-                <tr key={idx} className="border-t border-[var(--border)]">
-                  <td className="p-2 font-medium">{t.state}</td>
-                  <td className="p-2 text-[var(--muted-foreground)]">{t.condition}</td>
-                  <td className="p-2">
-                    {t.transitionsTo.map((to, toIdx) => (
-                      <span key={toIdx} className="inline-block px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs mr-1">
-                        {to}
-                      </span>
-                    ))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {data.subsections.map((sub, idx) => (
+            <div key={idx} className="p-3 bg-[var(--secondary)]/30 rounded-lg">
+              <h4 className="text-sm font-medium mb-2 text-[var(--muted-foreground)]">{sub.title}</h4>
+              {sub.codeBlock && (
+                <pre className="text-xs font-mono bg-zinc-900 text-zinc-100 p-3 rounded-lg overflow-x-auto mb-2">
+                  {sub.codeBlock}
+                </pre>
+              )}
+              {/* Transitions table within subsection */}
+              {sub.transitions && sub.transitions.length > 0 && (
+                <div className="border border-[var(--border)] rounded-lg overflow-hidden mb-2">
+                  <table className="w-full text-sm">
+                    <thead className="bg-[var(--secondary)]/50">
+                      <tr>
+                        <th className="text-left p-2 font-medium">State</th>
+                        <th className="text-left p-2 font-medium">Condition</th>
+                        <th className="text-left p-2 font-medium">Transitions To</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sub.transitions.map((t, tIdx) => (
+                        <tr key={tIdx} className="border-t border-[var(--border)]">
+                          <td className="p-2 font-medium">{t.state}</td>
+                          <td className="p-2 text-[var(--muted-foreground)]">{t.condition}</td>
+                          <td className="p-2">
+                            {t.transitionsTo.map((to, toIdx) => (
+                              <span key={toIdx} className="inline-block px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs mr-1">
+                                {to}
+                              </span>
+                            ))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {sub.description && (
+                <MarkdownRenderer content={sub.description} className="text-sm" />
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-function StorageSchemaSection({ schema }: { schema: StorageSchema[] }) {
+function StorageSchemaSection({ data }: { data: StorageSchemaData }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  if (schema.length === 0) return null;
+  if (data.subsections.length === 0 && !data.note) return null;
 
   return (
     <div className="mb-4">
@@ -221,29 +240,51 @@ function StorageSchemaSection({ schema }: { schema: StorageSchema[] }) {
         <h3 className="font-semibold">localStorage Schema</h3>
       </button>
       {isExpanded && (
-        <div className="border border-[var(--border)] rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--secondary)]/50">
-              <tr>
-                <th className="text-left p-2 font-medium">Key</th>
-                <th className="text-left p-2 font-medium">Type</th>
-                <th className="text-left p-2 font-medium">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schema.map((s, idx) => (
-                <tr key={idx} className="border-t border-[var(--border)]">
-                  <td className="p-2">
-                    <code className="px-1.5 py-0.5 bg-[var(--secondary)] rounded text-xs">{s.key}</code>
-                  </td>
-                  <td className="p-2">
-                    <code className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded text-xs">{s.type}</code>
-                  </td>
-                  <td className="p-2 text-[var(--muted-foreground)]">{s.description}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {data.subsections.map((sub, idx) => (
+            <div key={idx} className="p-3 bg-[var(--secondary)]/30 rounded-lg">
+              <h4 className="text-sm font-medium mb-2 text-[var(--muted-foreground)]">{sub.title}</h4>
+              {/* Keys table */}
+              {sub.keys && sub.keys.length > 0 && (
+                <div className="border border-[var(--border)] rounded-lg overflow-hidden mb-2">
+                  <table className="w-full text-sm">
+                    <thead className="bg-[var(--secondary)]/50">
+                      <tr>
+                        <th className="text-left p-2 font-medium">Key</th>
+                        <th className="text-left p-2 font-medium">Type</th>
+                        <th className="text-left p-2 font-medium">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sub.keys.map((k, kIdx) => (
+                        <tr key={kIdx} className="border-t border-[var(--border)]">
+                          <td className="p-2">
+                            <code className="px-1.5 py-0.5 bg-[var(--secondary)] rounded text-xs">{k.key}</code>
+                          </td>
+                          <td className="p-2">
+                            <code className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded text-xs">{k.type}</code>
+                          </td>
+                          <td className="p-2 text-[var(--muted-foreground)]">{k.description}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {/* Code block */}
+              {sub.codeBlock && (
+                <pre className="text-xs font-mono bg-zinc-900 text-zinc-100 p-3 rounded-lg overflow-x-auto">
+                  {sub.codeBlock}
+                </pre>
+              )}
+            </div>
+          ))}
+          {/* Note */}
+          {data.note && (
+            <p className="text-sm text-[var(--muted-foreground)] italic px-3">
+              <strong>Note:</strong> {data.note}
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -270,7 +311,7 @@ function SortingBehaviorSection({ behaviors }: { behaviors: { option: string; de
           {behaviors.map((b, idx) => (
             <div key={idx}>
               <h4 className="text-sm font-medium">By {b.option}</h4>
-              <p className="text-xs text-[var(--muted-foreground)]">{b.description}</p>
+              <MarkdownRenderer content={b.description} className="text-xs text-[var(--muted-foreground)]" />
             </div>
           ))}
         </div>
@@ -451,8 +492,8 @@ function StructuredDataModelView({ parsed }: { parsed: ParsedDataModel }) {
       <EntitiesSection entities={parsed.entities} />
       <EnumsSection enums={parsed.enums} />
       <ValidationRulesSection rules={parsed.validationRules} />
-      <StateTransitionsSection transitions={parsed.stateTransitions} />
-      <StorageSchemaSection schema={parsed.storageSchema} />
+      <StateTransitionsSection data={parsed.stateTransitions} />
+      <StorageSchemaSection data={parsed.storageSchema} />
       <SortingBehaviorSection behaviors={parsed.sortingBehavior} />
       <FilteringBehaviorSection filters={parsed.filteringBehavior} />
       <SearchBehaviorSection behaviors={parsed.searchBehavior} />
@@ -466,7 +507,7 @@ export function DataModelViewer({ content, filePath, className }: DataModelViewe
 
   const parsed = useMemo(() => {
     if (!content) return null;
-    return parseDataModelContent(content);
+    return parseDataModelAST(content);
   }, [content]);
 
   if (!content) {

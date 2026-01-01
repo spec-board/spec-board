@@ -31,7 +31,7 @@ interface NavSidebarProps {
   feature: Feature;
   hasConstitution: boolean;
   activeSection: SectionId;
-  onSectionClick: (sectionId: SectionId) => void;
+  onSectionClick: (sectionId: SectionId, options?: { checklistIndex?: number; userStoryId?: string; showRawMarkdown?: boolean }) => void;
   onDragStart: (sectionId: SectionId) => void;
   onDragEnd: () => void;
 }
@@ -138,16 +138,23 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
       isComplete: feature.hasChecklists,
       isCurrent: currentStep === 'checklist',
       phase: 'qc' as NavWorkflowPhase,
-      subItems: checklistFiles.map((file, index) => ({
-        id: `checklist-${index}`,
-        label: `checklist ${index + 1}`,
-        type: 'checklist' as const,
-        sectionId: 'checklists' as SectionId,
-        progress: feature.hasChecklists ? {
-          completed: feature.completedChecklistItems,
-          total: feature.totalChecklistItems,
-        } : undefined,
-      })),
+      subItems: checklistFiles.map((file, index) => {
+        // Use actual filename (e.g., "requirements.md")
+        const fileName = file.path.split('/').pop() || `checklist-${index + 1}.md`;
+
+        return {
+          id: `checklist-${index}`,
+          label: fileName,
+          type: 'checklist' as const,
+          sectionId: 'checklists' as SectionId,
+          checklistIndex: index, // Track which checklist this is
+          // Use per-file progress instead of aggregate
+          progress: file.checklistProgress ? {
+            completed: file.checklistProgress.completed,
+            total: file.checklistProgress.total,
+          } : undefined,
+        };
+      }),
     },
     // WORK BREAKDOWN phase
     {
@@ -159,17 +166,17 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
       isComplete: feature.hasTasks && allTasksComplete,
       isCurrent: currentStep === 'tasks',
       phase: 'wbs' as NavWorkflowPhase,
-      subItems: feature.taskGroups.length > 0
-        ? feature.taskGroups.map((group) => ({
-            id: `us-${group.storyId || 'other'}`,
-            label: group.storyId || 'Other',
-            type: 'user-story' as const,
-            sectionId: 'tasks' as SectionId,
-            progress: { completed: group.completedCount, total: group.totalCount },
-          }))
-        : feature.hasTasks
-          ? [{ id: 'tasks-all', label: 'All Tasks', type: 'progress' as const, sectionId: 'tasks' as SectionId, progress: { completed: feature.completedTasks, total: feature.totalTasks } }]
-          : [],
+      subItems: [
+        // Only show tasks.md file item if tasks exist
+        ...(feature.hasTasks ? [{
+          id: 'tasks-file',
+          label: 'tasks.md',
+          type: 'file' as const,
+          sectionId: 'tasks' as SectionId,
+          filePath: `${feature.path}/tasks.md`,
+          progress: { completed: feature.completedTasks, total: feature.totalTasks },
+        }] : []),
+      ],
     },
     // QUALITY ASSURANCE phase
     {
@@ -232,7 +239,7 @@ function getStepIcon(stepId: string): React.ReactNode {
 // Sub-item component
 interface SubItemProps {
   item: WorkflowSubItem;
-  onSectionClick: (sectionId: SectionId) => void;
+  onSectionClick: (sectionId: SectionId, options?: { checklistIndex?: number; userStoryId?: string; showRawMarkdown?: boolean }) => void;
 }
 
 function WorkflowSubItemComponent({ item, onSectionClick }: SubItemProps) {
@@ -263,7 +270,13 @@ function WorkflowSubItemComponent({ item, onSectionClick }: SubItemProps) {
         document.body.removeChild(textArea);
       }
     } else if (item.sectionId) {
-      onSectionClick(item.sectionId);
+      // Pass checklistIndex for checklist items, userStoryId for user story items
+      // Pass showRawMarkdown for file items (like tasks.md)
+      onSectionClick(item.sectionId, {
+        checklistIndex: item.checklistIndex,
+        userStoryId: item.userStoryId,
+        showRawMarkdown: item.type === 'file',
+      });
     }
   }, [item, onSectionClick]);
 
@@ -322,7 +335,7 @@ interface WorkflowNavItemProps {
   step: WorkflowNavStep;
   isExpanded: boolean;
   onToggle: () => void;
-  onSectionClick: (sectionId: SectionId) => void;
+  onSectionClick: (sectionId: SectionId, options?: { checklistIndex?: number; userStoryId?: string; showRawMarkdown?: boolean }) => void;
 }
 
 function WorkflowNavItem({ step, isExpanded, onToggle, onSectionClick }: WorkflowNavItemProps) {

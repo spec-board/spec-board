@@ -109,6 +109,7 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
   const [selectedNavIndex, setSelectedNavIndex] = useState(0);
   const [draggedSection, setDraggedSection] = useState<SectionId | null>(null);
   const [dropSide, setDropSide] = useState<'left' | 'right' | null>(null);
+  const [selectedChecklistIndex, setSelectedChecklistIndex] = useState<number | undefined>(undefined);
   const [splitView, setSplitView] = useState<SplitViewState>({
     isActive: false,
     leftPane: 'spec',
@@ -125,7 +126,14 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
   useFocusTrap(modalRef, true);
 
   // Handle section click
-  const handleSectionClick = useCallback((sectionId: SectionId) => {
+  const handleSectionClick = useCallback((sectionId: SectionId, options?: { checklistIndex?: number }) => {
+    // Track selected checklist index
+    if (sectionId === 'checklists') {
+      setSelectedChecklistIndex(options?.checklistIndex);
+    } else {
+      setSelectedChecklistIndex(undefined);
+    }
+
     if (splitView.isActive && splitView.focusedPane === 'right') {
       // If split view is active and right pane is focused, update right pane
       setSplitView(prev => ({ ...prev, rightPane: sectionId }));
@@ -497,6 +505,7 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
               onCloseRight={handleCloseRight}
               focusedPane={splitView.focusedPane}
               onFocusChange={handleFocusChange}
+              selectedChecklistIndex={selectedChecklistIndex}
             />
           </div>
         </div>
