@@ -73,15 +73,21 @@ export function parseTaskLine(line: string): Task | null {
 
 /**
  * Extract user story ID from phase name if present
- * Matches patterns like "US1 – Create/Complete" or "US2 - Edit Tasks"
+ * Matches patterns like "Phase 2: US1 – Create/Complete" or "US2 - Edit Tasks"
  */
 function extractUserStoryFromPhaseName(phaseName: string): string | undefined {
-  const match = phaseName.match(/^(US\d+)\s*[–\-]/i);
+  // Look for US pattern anywhere in the phase name (after "Phase N:" prefix)
+  const match = phaseName.match(/(US\d+)\s*[–\-]/i);
   return match ? match[1].toUpperCase() : undefined;
 }
 
 /**
  * Parse tasks.md file and extract tasks organized by phases
+ *
+ * This parser captures ALL content within a phase:
+ * - Phase name from ## Phase header
+ * - Description: all non-task content (Purpose, subsections, checkpoints, etc.)
+ * - Tasks: all checkbox items (- [ ] or - [x])
  */
 export function parseTasksFile(content: string): { tasks: Task[]; phases: TaskPhase[] } {
   const lines = content.split('\n');
@@ -90,27 +96,59 @@ export function parseTasksFile(content: string): { tasks: Task[]; phases: TaskPh
 
   let currentPhase: TaskPhase | null = null;
   let currentPhaseUserStory: string | undefined = undefined;
+  let pendingMarkdownLines: string[] = [];
+
+  // Helper to flush pending markdown lines as a content block
+  const flushMarkdown = () => {
+    if (currentPhase && pendingMarkdownLines.length > 0) {
+      const content = pendingMarkdownLines.join('\n').trim();
+      if (content) {
+        currentPhase.contentBlocks.push({ type: 'markdown', content });
+      }
+      pendingMarkdownLines = [];
+    }
+  };
 
   for (const line of lines) {
     // Check for phase headers (## Phase N: Name or ## Phase N - Name)
-    const phaseMatch = line.match(/^##\s*Phase\s*\d*:?\s*(.+)/i);
+    // Capture the full phase identifier including "Phase N"
+    const phaseMatch = line.match(/^##\s*(Phase\s*\d*:?\s*.+)/i);
     if (phaseMatch) {
-      if (currentPhase && currentPhase.tasks.length > 0) {
-        phases.push(currentPhase);
+      // Flush any pending markdown before saving phase
+      flushMarkdown();
+
+      // Save previous phase
+      if (currentPhase) {
+        // Build description from all markdown blocks for backwards compat
+        const allMarkdown = currentPhase.contentBlocks
+          .filter((b): b is { type: 'markdown'; content: string } => b.type === 'markdown')
+          .map(b => b.content)
+          .join('\n\n');
+        if (allMarkdown) {
+          currentPhase.description = allMarkdown;
+        }
+        if (currentPhase.tasks.length > 0 || currentPhase.description || currentPhase.contentBlocks.length > 0) {
+          phases.push(currentPhase);
+        }
       }
       const phaseName = phaseMatch[1].trim();
       currentPhase = {
         name: phaseName,
         tasks: [],
+        contentBlocks: [],
       };
       // Extract user story from phase name for tasks that don't have explicit [USx] markers
       currentPhaseUserStory = extractUserStoryFromPhaseName(phaseName);
+      pendingMarkdownLines = [];
       continue;
     }
 
     // Parse task lines
     const task = parseTaskLine(line);
     if (task) {
+      // Flush any pending markdown before adding task
+      flushMarkdown();
+
       // If task doesn't have explicit userStory marker, inherit from phase name
       if (!task.userStory && currentPhaseUserStory) {
         task.userStory = currentPhaseUserStory;
@@ -118,13 +156,31 @@ export function parseTasksFile(content: string): { tasks: Task[]; phases: TaskPh
       tasks.push(task);
       if (currentPhase) {
         currentPhase.tasks.push(task);
+        currentPhase.contentBlocks.push({ type: 'task', task });
+      }
+    } else if (currentPhase) {
+      // Collect non-task content - will be flushed as markdown block before next task or phase
+      // Skip empty lines at the start, but include them in the middle
+      if (line.trim() || pendingMarkdownLines.length > 0) {
+        pendingMarkdownLines.push(line);
       }
     }
   }
 
-  // Push the last phase
-  if (currentPhase && currentPhase.tasks.length > 0) {
-    phases.push(currentPhase);
+  // Flush any remaining markdown and push the last phase
+  flushMarkdown();
+  if (currentPhase) {
+    // Build description from all markdown blocks for backwards compat
+    const allMarkdown = currentPhase.contentBlocks
+      .filter((b): b is { type: 'markdown'; content: string } => b.type === 'markdown')
+      .map(b => b.content)
+      .join('\n\n');
+    if (allMarkdown) {
+      currentPhase.description = allMarkdown;
+    }
+    if (currentPhase.tasks.length > 0 || currentPhase.description || currentPhase.contentBlocks.length > 0) {
+      phases.push(currentPhase);
+    }
   }
 
   return { tasks, phases };
@@ -397,11 +453,15 @@ export function parseAdditionalFiles(featurePath: string): SpecKitFile[] {
       for (const f of checklistFiles) {
         const checklistPath = path.join(checklistsDir, f);
         try {
+          const content = fs.readFileSync(checklistPath, 'utf-8');
+          // Parse per-file checklist progress
+          const checklistProgress = parseChecklistCompletion(content);
           additionalFiles.push({
             type: 'checklist',
             path: checklistPath,
-            content: fs.readFileSync(checklistPath, 'utf-8'),
+            content,
             exists: true,
+            checklistProgress,
           });
         } catch (error) {
           console.error(`Failed to read checklist file ${checklistPath}:`, error);
@@ -701,10 +761,11 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
     let technicalContext: TechnicalContext | null = null;
     let specContent: string | null = null;
     let planContent: string | null = null;
+    let tasksContent: string | null = null;
 
     if (hasTasks) {
-      const tasksFileContent = fs.readFileSync(tasksPath, 'utf-8');
-      const parsed = parseTasksFile(tasksFileContent);
+      tasksContent = fs.readFileSync(tasksPath, 'utf-8');
+      const parsed = parseTasksFile(tasksContent);
       tasks = parsed.tasks;
       phases = parsed.phases;
     }
@@ -777,6 +838,7 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
       taskGroups,
       specContent,
       planContent,
+      tasksContent,
       additionalFiles,
       // Analysis data for spec alignment
       analysis: (analysis.jsonData || analysis.markdownContent) ? analysis : null,

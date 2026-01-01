@@ -184,9 +184,9 @@ describe('parseTasksFile', () => {
 
     expect(result.tasks).toHaveLength(4);
     expect(result.phases).toHaveLength(2);
-    expect(result.phases[0].name).toBe('Setup');
+    expect(result.phases[0].name).toBe('Phase 1: Setup');
     expect(result.phases[0].tasks).toHaveLength(2);
-    expect(result.phases[1].name).toBe('Implementation');
+    expect(result.phases[1].name).toBe('Phase 2: Implementation');
     expect(result.phases[1].tasks).toHaveLength(2);
   });
 
@@ -214,7 +214,7 @@ Some planning notes here.
 - [ ] T001 Task one
 `;
     const result = parseTasksFile(content);
-    expect(result.phases[0].name).toBe('Core Features');
+    expect(result.phases[0].name).toBe('Phase 1: Core Features');
   });
 
   it('should skip empty phases', () => {
@@ -225,7 +225,7 @@ Some planning notes here.
 `;
     const result = parseTasksFile(content);
     expect(result.phases).toHaveLength(1);
-    expect(result.phases[0].name).toBe('Has Tasks');
+    expect(result.phases[0].name).toBe('Phase 2: Has Tasks');
   });
 
   it('should extract user story from phase name and assign to tasks', () => {

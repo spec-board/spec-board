@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { BookOpen, ChevronDown, ChevronRight, Lightbulb, Calendar, XCircle, Zap, Accessibility, Keyboard, Tag, Focus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseResearchContent } from '@/lib/markdown-parsers';
+import { parseResearchAST } from '@/lib/markdown';
 import type { ParsedResearch, TechnologyDecision, ResearchSection } from '@/types';
 
 interface ResearchViewerProps {
@@ -219,11 +219,12 @@ function AccessibilitySection({ section }: { section: ResearchSection }) {
             {subsections.map((sub, idx) => {
               const style = getSubsectionStyle(sub.title);
               const Icon = style.icon;
-              const colorClasses = {
+              const colorMap = {
                 blue: { text: 'text-blue-400', bullet: 'text-blue-500', code: 'bg-blue-500/20 text-blue-300' },
                 purple: { text: 'text-purple-400', bullet: 'text-purple-500', code: 'bg-purple-500/20 text-purple-300' },
                 cyan: { text: 'text-cyan-400', bullet: 'text-cyan-500', code: 'bg-cyan-500/20 text-cyan-300' },
-              }[style.color];
+              } as const;
+              const colorClasses = colorMap[style.color as keyof typeof colorMap] ?? colorMap.blue;
               return (
                 <div key={idx} className="bg-[var(--background)]/50 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
@@ -296,7 +297,7 @@ export function ResearchViewer({ content, filePath, className }: ResearchViewerP
 
   const parsed = useMemo(() => {
     if (!content) return null;
-    return parseResearchContent(content);
+    return parseResearchAST(content);
   }, [content]);
 
   if (!content) {
