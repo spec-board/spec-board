@@ -6,6 +6,8 @@ import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History } fr
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/lib/settings-store';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { ReadmeViewer } from '@/components/readme-viewer';
+import { ChangelogViewer } from '@/components/changelog-viewer';
 
 interface AppInfo {
   name: string;
@@ -293,14 +295,14 @@ function AboutContent() {
       )}
 
       {activeTab === 'readme' && (
-        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] max-h-[500px] overflow-y-auto">
-          <MarkdownRenderer content={appInfo.readme} />
+        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] max-h-[600px] overflow-y-auto">
+          <ReadmeViewer content={appInfo.readme} />
         </div>
       )}
 
       {activeTab === 'changelog' && (
-        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] max-h-[500px] overflow-y-auto">
-          <MarkdownRenderer content={appInfo.changelog} />
+        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] max-h-[600px] overflow-y-auto">
+          <ChangelogViewer content={appInfo.changelog} />
         </div>
       )}
     </div>

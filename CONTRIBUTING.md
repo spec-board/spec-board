@@ -2,6 +2,18 @@
 
 This guide covers development setup, architecture, and contribution guidelines.
 
+## Contributor License Agreement (CLA)
+
+**Before contributing, you must agree to our [Contributor License Agreement (CLA)](CLA.md).**
+
+By submitting a pull request, you confirm that:
+1. You have read and agree to the CLA
+2. Your contribution is your original work
+3. You grant the project owner the rights described in the CLA
+4. Your contribution will be licensed under AGPL-3.0
+
+For your first contribution, please comment "I agree to the CLA" on your pull request.
+
 ## Table of Contents
 
 - [Development Setup](#development-setup)
