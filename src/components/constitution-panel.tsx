@@ -9,7 +9,8 @@ import {
   ChevronRight,
   Shield,
   Calendar,
-  Tag
+  Tag,
+  FileText
 } from 'lucide-react';
 
 interface ConstitutionPanelProps {
@@ -20,6 +21,7 @@ interface ConstitutionPanelProps {
 export function ConstitutionPanel({ constitution, hasConstitution }: ConstitutionPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedPrinciples, setExpandedPrinciples] = useState<Set<number>>(new Set());
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
 
   if (!hasConstitution || !constitution) {
     return (
@@ -42,6 +44,16 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
     setExpandedPrinciples(newExpanded);
   };
 
+  const toggleSection = (index: number) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedSections(newExpanded);
+  };
+
   return (
     <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] overflow-hidden">
       {/* Header */}
@@ -50,8 +62,8 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
         className="w-full flex items-center justify-between p-4 hover:bg-[var(--secondary)] transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-purple-500/10">
-            <ScrollText className="w-5 h-5 text-purple-400" />
+          <div className="p-2 rounded-lg bg-[var(--secondary)]">
+            <ScrollText className="w-5 h-5 text-[var(--foreground)]" />
           </div>
           <div className="text-left">
             <h3 className="font-semibold">Project Constitution</h3>
@@ -62,7 +74,7 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
         </div>
         <div className="flex items-center gap-3">
           {constitution.version && (
-            <span className="text-xs px-2 py-1 rounded-full bg-purple-500/10 text-purple-400">
+            <span className="text-xs px-2 py-1 rounded-full bg-[var(--secondary)] text-[var(--foreground)]">
               v{constitution.version}
             </span>
           )}
@@ -99,7 +111,7 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
           {constitution.principles.length > 0 && (
             <div className="p-4">
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-purple-400" />
+                <Shield className="w-4 h-4 text-[var(--muted-foreground)]" />
                 Core Principles
               </h4>
               <div className="space-y-2">
@@ -133,17 +145,31 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
           {/* Other Sections */}
           {constitution.sections.length > 0 && (
             <div className="p-4 border-t border-[var(--border)]">
-              <h4 className="text-sm font-medium mb-3">Additional Sections</h4>
-              <div className="space-y-3">
+              <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[var(--muted-foreground)]" />
+                Additional Sections
+              </h4>
+              <div className="space-y-2">
                 {constitution.sections.map((section, index) => (
-                  <div key={index} className="text-sm">
-                    <h5 className="font-medium text-[var(--muted-foreground)]">
-                      {section.name}
-                    </h5>
-                    {section.content && (
-                      <p className="mt-1 text-xs text-[var(--muted-foreground)]/70 line-clamp-2">
+                  <div
+                    key={index}
+                    className="rounded-lg border border-[var(--border)] overflow-hidden"
+                  >
+                    <button
+                      onClick={() => toggleSection(index)}
+                      className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left"
+                    >
+                      <span className="font-medium text-sm">{section.name}</span>
+                      {expandedSections.has(index) ? (
+                        <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)]" />
+                      )}
+                    </button>
+                    {expandedSections.has(index) && section.content && (
+                      <div className="px-3 pb-3 text-sm text-[var(--muted-foreground)] whitespace-pre-wrap">
                         {section.content}
-                      </p>
+                      </div>
                     )}
                   </div>
                 ))}
