@@ -1,13 +1,14 @@
 # PROJECT_INDEX.md
 
 > Auto-generated codebase index for SpecBoard
-> Last updated: 2025-12-31
+> Last updated: 2026-01-02
 
 ## Overview
 
 **SpecBoard** is a real-time dashboard for visualizing spec-kit projects. It provides a Kanban-style interface for tracking feature development through stages (specify → plan → tasks → implement → complete), with live updates via Server-Sent Events (SSE).
 
-**Version:** 1.0.2
+**Version:** 1.0.3
+**License:** AGPL-3.0 (with commercial licensing available)
 **Package Manager:** pnpm 10.26.0
 
 ## Tech Stack
@@ -32,7 +33,10 @@ spec-board/
 │   │   ├── page.tsx            # Home - recent projects + open modal
 │   │   ├── layout.tsx          # Root layout
 │   │   ├── globals.css         # Tailwind + CSS variables
+│   │   ├── settings/           # Settings page
+│   │   │   └── page.tsx        # Shortcuts + About (README/Changelog)
 │   │   ├── api/                # API routes
+│   │   │   ├── app-info/       # App metadata (version, readme, changelog)
 │   │   │   ├── projects/       # Project CRUD + registration
 │   │   │   ├── project/        # Load spec data from filesystem
 │   │   │   ├── browse/         # Directory browser
@@ -43,19 +47,29 @@ spec-board/
 │   │           ├── page.tsx    # Feature detail
 │   │           ├── spec/       # Spec viewer
 │   │           └── plan/       # Plan viewer
-│   ├── components/             # React UI components (20+ files)
-│   │   └── feature-detail/     # Feature detail modal components
+│   ├── components/             # React UI components (25+ files)
+│   │   ├── feature-detail/     # Feature detail modal components
+│   │   ├── readme-viewer.tsx   # Beautified README with custom diagrams
+│   │   ├── changelog-viewer.tsx # Version timeline with badges
+│   │   └── ...
 │   ├── lib/                    # Utilities and business logic
 │   │   ├── parser.ts           # Markdown parsing (core logic)
+│   │   ├── markdown/           # Specialized markdown parsers
 │   │   ├── path-utils.ts       # Path validation/security
 │   │   ├── prisma.ts           # Database client
 │   │   ├── store.ts            # Zustand state management
+│   │   ├── settings-store.ts   # Settings persistence
 │   │   ├── utils.ts            # General utilities
 │   │   └── accessibility/      # A11y utilities
 │   └── types/                  # TypeScript definitions
 │       └── index.ts            # All shared types
 ├── prisma/
 │   └── schema.prisma           # Database schema (PostgreSQL)
+├── .github/
+│   └── PULL_REQUEST_TEMPLATE.md # PR template with CLA
+├── CLA.md                      # Contributor License Agreement
+├── CONTRIBUTING.md             # Development guide
+├── LICENSE                     # AGPL-3.0
 └── .claude/                    # SoupSpec configuration
 ```
 
@@ -111,6 +125,7 @@ spec-board/
 | Route | Purpose |
 |-------|---------|
 | `/` | Home - recent projects, open project modal |
+| `/settings` | Settings - keyboard shortcuts, about (README/Changelog) |
 | `/projects/{slug}` | Project dashboard with Kanban board |
 | `/projects/{slug}/features/{featureId}` | Feature detail modal |
 | `/projects/{slug}/features/{featureId}/spec` | Full-page spec viewer |
@@ -131,6 +146,7 @@ spec-board/
 | `/api/project?path=...` | GET | Parse spec-kit project from filesystem |
 | `/api/browse?path=...` | GET | List directory contents |
 | `/api/watch?path=...` | GET | SSE stream for file changes |
+| `/api/app-info` | GET | App metadata (version, readme, changelog) |
 
 ## Core Types
 
@@ -211,9 +227,14 @@ App
 | `src/components/feature-detail/feature-detail.tsx` | Feature modal with split-view | ~510 |
 | `src/components/feature-detail/types.ts` | Feature detail types and constants | ~190 |
 | `src/components/kanban-board.tsx` | Kanban board UI | ~240 |
+| `src/components/readme-viewer.tsx` | Beautified README with custom diagrams | ~420 |
+| `src/components/changelog-viewer.tsx` | Version timeline with badges | ~180 |
+| `src/app/settings/page.tsx` | Settings page (shortcuts + about) | ~400 |
 | `src/types/index.ts` | All TypeScript types | ~160 |
 | `src/lib/store.ts` | Zustand state management | ~225 |
 | `src/app/api/projects/register/route.ts` | Auto-registration API | ~125 |
+| `CLA.md` | Contributor License Agreement | ~70 |
+| `CONTRIBUTING.md` | Development guide and PR guidelines | ~400 |
 
 ## Spec-Kit File Structure
 
@@ -312,6 +333,10 @@ model Project {
 
 ## Recent Changes
 
+- **Settings Page Redesign**: Merged Overview into README tab, removed scroll limits for full content display
+- **Beautified README Viewer**: ASCII diagrams replaced with styled React components (FeaturesGrid, HowItWorksFlow, TechStackDisplay)
+- **Changelog Viewer**: Version timeline with color-coded badges for change types
+- **AGPL-3.0 + CLA**: Added dual-license notice, Contributor License Agreement, and PR template with CLA requirements
 - **Feature Detail Modal Redesign**: Full-screen modal with split-view, 5-phase navigation (OVERVIEW, PLANNING, CODING, QA, QC), drag-to-split functionality, and comprehensive keyboard shortcuts
 - **Semantic Icons**: Section icons that convey document meaning (existence, clarifications count, analysis severity)
 - **Group Counts**: Tasks show User Story count, Checklists show checklist file count
@@ -320,6 +345,12 @@ model Project {
 - **Auto-registration**: Projects auto-register when opened, generating unique slugs
 - **Analysis viewer**: Tab for spec alignment tracking with JSON/markdown support
 - **Checklist viewer**: Support for checklist files in feature directories
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, architecture, and contribution guidelines.
+
+**License:** Available under [AGPL-3.0](LICENSE) or commercial license. Contributors must agree to the [CLA](CLA.md).
 
 ## Generated CLAUDE.md Files
 
