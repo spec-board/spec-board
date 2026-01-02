@@ -3,7 +3,7 @@
 import { KeyboardEvent } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature } from '@/types';
-import { GitBranch, Zap, ClipboardCheck } from 'lucide-react';
+import { GitBranch, Zap, ClipboardCheck, ListTodo } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { getNextTask } from '@/components/feature-detail/types';
 
@@ -101,12 +101,14 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
       {/* Task count */}
       {feature.totalTasks > 0 && (
         <div className={cn(
-          'text-xs tabular-nums',
+          'flex items-center gap-1.5 text-xs tabular-nums',
           progressPercentage === 100
             ? 'text-green-400'
             : 'text-[var(--muted-foreground)]'
         )}>
-          {feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)
+          <ListTodo className="w-3 h-3" />
+          <span>Tasks</span>
+          <span>{feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)</span>
         </div>
       )}
 
@@ -128,19 +130,13 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
       {/* Checklist progress */}
       {feature.hasChecklists && feature.totalChecklistItems > 0 && (
         <div className="mt-3">
-          <div className="flex items-center gap-1.5">
-            <ClipboardCheck className={cn(
-              'w-3 h-3',
-              checklistPercentage === 100 ? 'text-green-400' : 'text-purple-400'
-            )} />
-            <span className={cn(
-              'text-xs tabular-nums',
-              checklistPercentage === 100
-                ? 'text-green-400'
-                : 'text-purple-400'
-            )}>
-              {feature.completedChecklistItems}/{feature.totalChecklistItems} ({checklistPercentage}%)
-            </span>
+          <div className={cn(
+            'flex items-center gap-1.5 text-xs tabular-nums',
+            checklistPercentage === 100 ? 'text-green-400' : 'text-purple-400'
+          )}>
+            <ClipboardCheck className="w-3 h-3" />
+            <span>Checklists</span>
+            <span>{feature.completedChecklistItems}/{feature.totalChecklistItems} ({checklistPercentage}%)</span>
           </div>
           {/* Checklist progress bar */}
           <div className="mt-1.5 h-1 bg-[var(--secondary)] rounded-full overflow-hidden">
