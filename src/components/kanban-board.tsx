@@ -8,20 +8,20 @@ import { announce } from '@/lib/accessibility';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'planning', 'in_progress', 'done'];
 
-// Get color class based on progress percentage
-// gray (0%) -> red (1-33%) -> yellow (34-66%) -> green (67-100%)
-function getProgressColor(percentage: number, hasItems: boolean): string {
-  if (!hasItems || percentage === 0) return 'text-gray-400';
-  if (percentage < 34) return 'text-red-400';
-  if (percentage < 67) return 'text-yellow-400';
-  return 'text-green-400';
+// Get color style based on progress percentage
+// gray (0%) -> yellow (1-79%) -> neon (80-99%) -> green (100%)
+function getProgressColorStyle(percentage: number, hasItems: boolean): React.CSSProperties {
+  if (!hasItems || percentage === 0) return { color: 'var(--muted-foreground)' };
+  if (percentage < 80) return { color: 'var(--color-warning)' };
+  if (percentage < 100) return { color: '#22d3ee' }; // neon cyan
+  return { color: 'var(--color-success)' };
 }
 
-function getProgressBarColor(percentage: number, hasItems: boolean): string {
-  if (!hasItems || percentage === 0) return 'bg-gray-500';
-  if (percentage < 34) return 'bg-red-500';
-  if (percentage < 67) return 'bg-yellow-500';
-  return 'bg-green-500';
+function getProgressBarColorStyle(percentage: number, hasItems: boolean): React.CSSProperties {
+  if (!hasItems || percentage === 0) return { backgroundColor: 'var(--muted-foreground)' };
+  if (percentage < 80) return { backgroundColor: 'var(--color-warning)' };
+  if (percentage < 100) return { backgroundColor: '#22d3ee' }; // neon cyan
+  return { backgroundColor: 'var(--color-success)' };
 }
 
 interface FeatureCardProps {
@@ -87,35 +87,33 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
       )}
 
       {/* Task count - always show */}
-      <div className={cn(
-        'flex items-center gap-1.5 text-xs tabular-nums',
-        getProgressColor(progressPercentage, feature.totalTasks > 0)
-      )}>
+      <div
+        className="flex items-center gap-1.5 text-xs tabular-nums"
+        style={getProgressColorStyle(progressPercentage, feature.totalTasks > 0)}
+      >
         <ListTodo className="w-3 h-3" />
         <span>Tasks</span>
         <span>{feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)</span>
       </div>
 
-      {/* Thin progress bar */}
-      {feature.totalTasks > 0 && (
-        <div className="mt-3 h-1 bg-[var(--secondary)] rounded-full overflow-hidden">
-          <div
-            className={cn(
-              'h-full transition-all duration-300',
-              getProgressBarColor(progressPercentage, feature.totalTasks > 0)
-            )}
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-      )}
+      {/* Thin progress bar - always show */}
+      <div className="mt-3 h-1 bg-[var(--secondary)] rounded-full overflow-hidden">
+        <div
+          className="h-full transition-all duration-300"
+          style={{
+            width: progressPercentage === 0 ? '100%' : `${progressPercentage}%`,
+            ...getProgressBarColorStyle(progressPercentage, feature.totalTasks > 0)
+          }}
+        />
+      </div>
 
       {/* Checklist progress */}
       {feature.hasChecklists && feature.totalChecklistItems > 0 && (
         <div className="mt-3">
-          <div className={cn(
-            'flex items-center gap-1.5 text-xs tabular-nums',
-            getProgressColor(checklistPercentage, feature.totalChecklistItems > 0)
-          )}>
+          <div
+            className="flex items-center gap-1.5 text-xs tabular-nums"
+            style={getProgressColorStyle(checklistPercentage, feature.totalChecklistItems > 0)}
+          >
             <Circle className="w-3 h-3" />
             <span>Checklists</span>
             <span>{feature.completedChecklistItems}/{feature.totalChecklistItems} ({checklistPercentage}%)</span>
@@ -123,11 +121,8 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
           {/* Checklist progress bar */}
           <div className="mt-1.5 h-1 bg-[var(--secondary)] rounded-full overflow-hidden">
             <div
-              className={cn(
-                'h-full transition-all duration-300',
-                getProgressBarColor(checklistPercentage, feature.totalChecklistItems > 0)
-              )}
-              style={{ width: `${checklistPercentage}%` }}
+              className="h-full transition-all duration-300"
+              style={{ width: `${checklistPercentage}%`, ...getProgressBarColorStyle(checklistPercentage, feature.totalChecklistItems > 0) }}
             />
           </div>
         </div>
