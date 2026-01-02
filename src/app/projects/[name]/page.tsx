@@ -4,7 +4,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { KanbanBoard } from '@/components/kanban-board';
 import { ProjectInfoBubble } from '@/components/project-info-bubble';
-import { FolderOpen, Home, Settings } from 'lucide-react';
+import { FolderOpen, Home, Settings, Github } from 'lucide-react';
 import { useProjectStore } from '@/lib/store';
 import type { Project, Feature } from '@/types';
 
@@ -152,6 +152,15 @@ export default function ProjectPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <a
+                href="https://github.com/paulpham157/spec-board"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+                title="GitHub Repository"
+              >
+                <Github className="w-4 h-4" />
+              </a>
               <button
                 onClick={() => router.push('/settings')}
                 className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"

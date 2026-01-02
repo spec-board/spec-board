@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FolderOpen, Plus } from 'lucide-react';
+import { FolderOpen, Plus, Settings, Github } from 'lucide-react';
 import { useProjectStore, type RecentProject } from '@/lib/store';
 import { RecentProjectsList } from '@/components/recent-projects-list';
 import { OpenProjectModal } from '@/components/open-project-modal';
@@ -98,13 +98,33 @@ export default function Home() {
       {/* Header */}
       <header className="border-b border-[var(--border)] bg-[var(--card)]">
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-3">
-            <FolderOpen className="w-8 h-8 text-green-400" />
-            <div>
-              <h1 className="text-xl font-bold">SpecBoard</h1>
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Visual dashboard for spec-kit projects
-              </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FolderOpen className="w-8 h-8 text-green-400" />
+              <div>
+                <h1 className="text-xl font-bold">SpecBoard</h1>
+                <p className="text-sm text-[var(--muted-foreground)]">
+                  Visual dashboard for spec-kit projects
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href="https://github.com/paulpham157/spec-board"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+                title="GitHub Repository"
+              >
+                <Github className="w-5 h-5" />
+              </a>
+              <button
+                onClick={() => router.push('/settings')}
+                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+                title="Settings"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>

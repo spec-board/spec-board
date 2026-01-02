@@ -2,11 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Keyboard, Info } from 'lucide-react';
+import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/lib/settings-store';
+import { MarkdownRenderer } from '@/components/markdown-renderer';
 
-const APP_VERSION = '1.0.2';
+interface AppInfo {
+  name: string;
+  version: string;
+  description: string;
+  license: string;
+  licenseUrl: string;
+  repository: string;
+  readme: string;
+  changelog: string;
+}
 
 type MenuSection = 'shortcuts' | 'about';
 
@@ -153,40 +163,169 @@ function ShortcutsContent() {
 }
 
 function AboutContent() {
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'readme' | 'changelog'>('overview');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadAppInfo() {
+      try {
+        const response = await fetch('/api/app-info');
+        if (response.ok) {
+          const data = await response.json();
+          setAppInfo(data);
+        }
+      } catch (error) {
+        console.error('Failed to load app info:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadAppInfo();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-[var(--muted-foreground)]">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!appInfo) {
+    return (
+      <div className="text-red-400">Failed to load app information</div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold mb-1">About</h2>
         <p className="text-sm text-[var(--muted-foreground)]">
-          Application information
+          Application information and documentation
         </p>
       </div>
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-[var(--muted-foreground)]">Application</span>
-          <span className="text-sm font-medium">SpecBoard</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-[var(--muted-foreground)]">Version</span>
-          <span className="font-mono text-xs px-2 py-0.5 bg-[var(--secondary)] rounded border border-[var(--border)]">
-            v{APP_VERSION}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-[var(--muted-foreground)]">Description</span>
-          <span className="text-sm">Visual dashboard for spec-kit</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-[var(--muted-foreground)]">License</span>
-          <span className="text-sm">GPL (Copyleft)</span>
-        </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-1 border-b border-[var(--border)]">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={cn(
+            'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
+            activeTab === 'overview'
+              ? 'border-blue-500 text-[var(--foreground)]'
+              : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+          )}
+        >
+          <Info className="w-4 h-4 inline-block mr-2" />
+          Overview
+        </button>
+        <button
+          onClick={() => setActiveTab('readme')}
+          className={cn(
+            'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
+            activeTab === 'readme'
+              ? 'border-blue-500 text-[var(--foreground)]'
+              : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+          )}
+        >
+          <FileText className="w-4 h-4 inline-block mr-2" />
+          README
+        </button>
+        <button
+          onClick={() => setActiveTab('changelog')}
+          className={cn(
+            'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
+            activeTab === 'changelog'
+              ? 'border-blue-500 text-[var(--foreground)]'
+              : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+          )}
+        >
+          <History className="w-4 h-4 inline-block mr-2" />
+          Changelog
+        </button>
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[var(--muted-foreground)]">Application</span>
+            <span className="text-sm font-medium">{appInfo.name}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[var(--muted-foreground)]">Version</span>
+            <span className="font-mono text-xs px-2 py-0.5 bg-[var(--secondary)] rounded border border-[var(--border)]">
+              v{appInfo.version}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[var(--muted-foreground)]">Description</span>
+            <span className="text-sm">{appInfo.description}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[var(--muted-foreground)]">License</span>
+            <a
+              href={appInfo.licenseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+            >
+              {appInfo.license}
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[var(--muted-foreground)]">Repository</span>
+            <a
+              href={appInfo.repository}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+            >
+              <Github className="w-4 h-4" />
+              GitHub
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'readme' && (
+        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] max-h-[500px] overflow-y-auto">
+          <MarkdownRenderer content={appInfo.readme} />
+        </div>
+      )}
+
+      {activeTab === 'changelog' && (
+        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] max-h-[500px] overflow-y-auto">
+          <MarkdownRenderer content={appInfo.changelog} />
+        </div>
+      )}
     </div>
   );
 }
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<MenuSection>('shortcuts');
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
+
+  // Fetch app info for footer
+  useEffect(() => {
+    async function loadAppInfo() {
+      try {
+        const response = await fetch('/api/app-info');
+        if (response.ok) {
+          const data = await response.json();
+          setAppInfo(data);
+        }
+      } catch (error) {
+        console.error('Failed to load app info:', error);
+      }
+    }
+    loadAppInfo();
+  }, []);
 
   const menuItems: { id: MenuSection; label: string; icon: React.ReactNode }[] = [
     { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
@@ -243,9 +382,21 @@ export default function SettingsPage() {
 
       {/* Footer */}
       <footer className="border-t border-[var(--border)] bg-[var(--card)] px-6 py-3">
-        <div className="text-center text-xs text-[var(--muted-foreground)]">
-          <span className="font-medium">SpecBoard</span>
-          {' '}v{APP_VERSION} — Visual dashboard for spec-kit — GPL Copyleft
+        <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted-foreground)]">
+          <span className="font-medium">{appInfo?.name || 'SpecBoard'}</span>
+          <span>v{appInfo?.version || '...'}</span>
+          <span>—</span>
+          <span>{appInfo?.description || 'Visual dashboard for spec-kit'}</span>
+          <span>—</span>
+          <a
+            href={appInfo?.licenseUrl || 'https://github.com/paulpham157/spec-board/blob/main/LICENSE'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+          >
+            {appInfo?.license || 'AGPL-3.0'} Copyleft
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       </footer>
     </div>
