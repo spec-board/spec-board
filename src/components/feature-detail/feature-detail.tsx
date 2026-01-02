@@ -447,6 +447,7 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
             feature={feature}
             hasConstitution={hasConstitution}
             activeSection={splitView.isActive ? splitView.leftPane : activeSection}
+            activeChecklistIndex={selectedChecklistIndex}
             onSectionClick={handleSectionClick}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}

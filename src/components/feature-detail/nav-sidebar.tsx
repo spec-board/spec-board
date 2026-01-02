@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo } from 'react';
 import {
   ChevronRight,
   ChevronDown,
-  Check,
   Sparkles,
   FileText,
   MessageSquare,
@@ -31,6 +30,7 @@ interface NavSidebarProps {
   feature: Feature;
   hasConstitution: boolean;
   activeSection: SectionId;
+  activeChecklistIndex?: number;  // Track which specific checklist is selected
   onSectionClick: (sectionId: SectionId, options?: { checklistIndex?: number; userStoryId?: string; showRawMarkdown?: boolean }) => void;
   onDragStart: (sectionId: SectionId) => void;
   onDragEnd: () => void;
@@ -202,13 +202,8 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
       isComplete: allTasksComplete,
       isCurrent: currentStep === 'implement',
       phase: 'coding' as NavWorkflowPhase,
+      progress: feature.totalTasks > 0 ? { completed: feature.completedTasks, total: feature.totalTasks } : undefined,
       subItems: [
-        ...(feature.totalTasks > 0 ? [{
-          id: 'impl-progress',
-          label: `${feature.completedTasks}/${feature.totalTasks} tasks done (${Math.round((feature.completedTasks / feature.totalTasks) * 100)}%)`,
-          type: 'progress' as const,
-          sectionId: 'tasks' as SectionId,
-        }] : []),
         ...(nextTask && !allTasksComplete ? [{
           id: 'next-action',
           label: `Next Action\n${nextTask.id} ${nextTask.description}`,
@@ -239,10 +234,11 @@ function getStepIcon(stepId: string): React.ReactNode {
 // Sub-item component
 interface SubItemProps {
   item: WorkflowSubItem;
+  isActive: boolean;  // Currently selected file
   onSectionClick: (sectionId: SectionId, options?: { checklistIndex?: number; userStoryId?: string; showRawMarkdown?: boolean }) => void;
 }
 
-function WorkflowSubItemComponent({ item, onSectionClick }: SubItemProps) {
+function WorkflowSubItemComponent({ item, isActive, onSectionClick }: SubItemProps) {
   const [copied, setCopied] = useState(false);
 
   const handleClick = useCallback(async () => {
@@ -291,8 +287,10 @@ function WorkflowSubItemComponent({ item, onSectionClick }: SubItemProps) {
       onClick={handleClick}
       className={cn(
         'w-full flex items-start gap-2 pl-8 pr-3 py-1.5 text-xs rounded transition-colors',
-        'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)]/50',
-        item.type === 'action' && 'text-blue-400 hover:text-blue-300'
+        isActive
+          ? 'bg-blue-500/20 text-blue-400'
+          : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)]/50',
+        item.type === 'action' && !isActive && 'text-blue-400 hover:text-blue-300'
       )}
     >
       {isMultiLineAction ? (
@@ -334,11 +332,14 @@ function WorkflowSubItemComponent({ item, onSectionClick }: SubItemProps) {
 interface WorkflowNavItemProps {
   step: WorkflowNavStep;
   isExpanded: boolean;
+  isActive: boolean;  // Currently viewed section
+  activeSection: SectionId;  // For sub-item highlighting
+  activeChecklistIndex?: number;  // For checklist sub-item highlighting
   onToggle: () => void;
   onSectionClick: (sectionId: SectionId, options?: { checklistIndex?: number; userStoryId?: string; showRawMarkdown?: boolean }) => void;
 }
 
-function WorkflowNavItem({ step, isExpanded, onToggle, onSectionClick }: WorkflowNavItemProps) {
+function WorkflowNavItem({ step, isExpanded, isActive, activeSection, activeChecklistIndex, onToggle, onSectionClick }: WorkflowNavItemProps) {
   const hasSubItems = step.subItems.length > 0;
 
   return (
@@ -349,8 +350,9 @@ function WorkflowNavItem({ step, isExpanded, onToggle, onSectionClick }: Workflo
           onClick={onToggle}
           className={cn(
             'w-full flex items-center gap-2 px-2 py-1.5 rounded-md transition-all text-sm',
-            step.isCurrent && 'bg-amber-500/10 ring-1 ring-amber-500/30',
-            !step.isCurrent && 'hover:bg-[var(--secondary)]/50'
+            isActive && 'bg-blue-500/10 ring-1 ring-blue-500/30',
+            step.isCurrent && !isActive && 'bg-amber-500/10 ring-1 ring-amber-500/30',
+            !step.isCurrent && !isActive && 'hover:bg-[var(--secondary)]/50'
           )}
         >
           {/* Expand/collapse chevron */}
@@ -365,26 +367,31 @@ function WorkflowNavItem({ step, isExpanded, onToggle, onSectionClick }: Workflo
             )}
           </span>
 
-          {/* Status indicator */}
+          {/* Semantic icon - always show icon, color based on state */}
           <div className={cn(
             'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',
-            step.isComplete
-              ? 'bg-emerald-500 text-white'
+            isActive
+              ? 'bg-blue-500 text-white'
               : step.isCurrent
                 ? 'bg-amber-500 text-white'
                 : 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
           )}>
-            {step.isComplete ? <Check className="w-3 h-3" /> : getStepIcon(step.id)}
+            {getStepIcon(step.id)}
           </div>
 
           {/* Command label */}
           <span className={cn(
             'flex-1 text-left font-mono text-xs truncate',
-            step.isComplete && 'text-emerald-400',
-            step.isCurrent && 'text-amber-400',
-            !step.isComplete && !step.isCurrent && 'text-[var(--muted-foreground)]'
+            isActive && 'text-blue-400',
+            step.isCurrent && !isActive && 'text-amber-400',
+            !step.isCurrent && !isActive && 'text-[var(--muted-foreground)]'
           )}>
             {step.command}
+            {step.progress && (
+              <span className="ml-2 font-mono text-[var(--muted-foreground)]">
+                ({Math.round((step.progress.completed / step.progress.total) * 100)}%)
+              </span>
+            )}
           </span>
 
           {/* Optional badge */}
@@ -406,13 +413,20 @@ function WorkflowNavItem({ step, isExpanded, onToggle, onSectionClick }: Workflo
       {/* Sub-items (when expanded) */}
       {isExpanded && hasSubItems && (
         <div className="mt-0.5">
-          {step.subItems.map((item) => (
-            <WorkflowSubItemComponent
-              key={item.id}
-              item={item}
-              onSectionClick={onSectionClick}
-            />
-          ))}
+          {step.subItems.map((item) => {
+            // For checklist items, check both sectionId AND checklistIndex
+            const isItemActive = item.sectionId === activeSection &&
+              (item.type !== 'checklist' || item.checklistIndex === activeChecklistIndex);
+
+            return (
+              <WorkflowSubItemComponent
+                key={item.id}
+                item={item}
+                isActive={isItemActive}
+                onSectionClick={onSectionClick}
+              />
+            );
+          })}
         </div>
       )}
     </div>
@@ -443,6 +457,7 @@ export function NavSidebar({
   feature,
   hasConstitution,
   activeSection,
+  activeChecklistIndex,
   onSectionClick,
   onDragStart,
   onDragEnd,
@@ -453,11 +468,13 @@ export function NavSidebar({
 
   const nextTask = getNextTask(feature);
 
-  // Expanded state - default: expand current step, collapse completed
+  // Expanded state - default: expand current step and step containing active section
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(() => {
     const initial = new Set<string>();
     for (const step of steps) {
-      if (step.isCurrent || (!step.isComplete && step.subItems.length > 0)) {
+      // Expand if: current step, has incomplete sub-items, or contains the active section
+      const containsActiveSection = step.id === activeSection || step.subItems.some(item => item.sectionId === activeSection);
+      if (step.isCurrent || containsActiveSection || (!step.isComplete && step.subItems.length > 0)) {
         initial.add(step.id);
       }
     }
@@ -479,7 +496,7 @@ export function NavSidebar({
   const phaseOrder: NavWorkflowPhase[] = ['overview', 'planning', 'qc', 'wbs', 'qa', 'coding'];
 
   return (
-    <div className="w-72 flex-shrink-0 border-r border-[var(--border)] bg-[var(--card)] flex flex-col overflow-hidden">
+    <div className="w-80 flex-shrink-0 border-r border-[var(--border)] bg-[var(--card)] flex flex-col overflow-hidden">
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-2" aria-label="Workflow navigation">
         {phaseOrder.map((phase) => {
@@ -505,6 +522,9 @@ export function NavSidebar({
                     key={step.id}
                     step={step}
                     isExpanded={expandedSteps.has(step.id)}
+                    isActive={activeSection === step.id || (step.subItems.some(item => item.sectionId === activeSection))}
+                    activeSection={activeSection}
+                    activeChecklistIndex={activeChecklistIndex}
                     onToggle={() => toggleStep(step.id)}
                     onSectionClick={onSectionClick}
                   />

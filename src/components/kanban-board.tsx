@@ -3,9 +3,10 @@
 import { KeyboardEvent } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature } from '@/types';
-import { GitBranch } from 'lucide-react';
+import { GitBranch, Zap } from 'lucide-react';
 import { Tooltip } from '@/components/tooltip';
 import { announce } from '@/lib/accessibility';
+import { getNextTask } from '@/components/feature-detail/types';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'in_progress', 'review', 'done'];
 
@@ -19,6 +20,33 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
   const progressPercentage = feature.totalTasks > 0
     ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
     : 0;
+
+  // Get next task for suggestion
+  const nextTask = getNextTask(feature);
+  const allTasksComplete = feature.totalTasks > 0 && feature.completedTasks === feature.totalTasks;
+
+  // Determine next action based on feature state
+  const getNextAction = (): { label: string; command: string; description?: string } | null => {
+    if (!feature.hasSpec) {
+      return { label: 'Create Specification', command: '/speckit.specify' };
+    }
+    if (!feature.hasPlan) {
+      return { label: 'Create Plan', command: '/speckit.plan' };
+    }
+    if (!feature.hasTasks) {
+      return { label: 'Generate Tasks', command: '/speckit.tasks' };
+    }
+    if (nextTask && !allTasksComplete) {
+      return {
+        label: 'Next Task',
+        command: `/speckit.implement ${nextTask.id}`,
+        description: `${nextTask.id} ${nextTask.description}`,
+      };
+    }
+    return null;
+  };
+
+  const nextAction = getNextAction();
 
   // Build accessible label
   const ariaLabel = [
@@ -81,6 +109,24 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
             className="h-full bg-[var(--foreground)] opacity-40 transition-all duration-300"
             style={{ width: `${progressPercentage}%` }}
           />
+        </div>
+      )}
+
+      {/* Next action suggestion */}
+      {nextAction && (
+        <div className="mt-3 pt-3 border-t border-[var(--border)]">
+          <div className="flex items-center gap-1.5 text-[10px] text-amber-400 mb-1.5">
+            <Zap className="w-3 h-3" />
+            <span className="font-medium">Suggested next command</span>
+          </div>
+          <code className="text-[10px] bg-[var(--secondary)] px-1.5 py-0.5 rounded text-amber-400/80">
+            {nextAction.command}
+          </code>
+          {nextAction.description && (
+            <div className="text-[10px] text-[var(--muted-foreground)] line-clamp-2 mt-1.5">
+              {nextAction.description}
+            </div>
+          )}
         </div>
       )}
       </button>
