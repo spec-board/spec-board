@@ -3,11 +3,26 @@
 import { KeyboardEvent } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature } from '@/types';
-import { GitBranch, Zap, ClipboardCheck, ListTodo } from 'lucide-react';
+import { GitBranch, ListTodo, Circle } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
-import { getNextTask } from '@/components/feature-detail/types';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'in_progress', 'review', 'done'];
+
+// Get color class based on progress percentage
+// gray (0%) -> red (1-33%) -> yellow (34-66%) -> green (67-100%)
+function getProgressColor(percentage: number, hasItems: boolean): string {
+  if (!hasItems || percentage === 0) return 'text-gray-400';
+  if (percentage < 34) return 'text-red-400';
+  if (percentage < 67) return 'text-yellow-400';
+  return 'text-green-400';
+}
+
+function getProgressBarColor(percentage: number, hasItems: boolean): string {
+  if (!hasItems || percentage === 0) return 'bg-gray-500';
+  if (percentage < 34) return 'bg-red-500';
+  if (percentage < 67) return 'bg-yellow-500';
+  return 'bg-green-500';
+}
 
 interface FeatureCardProps {
   feature: Feature;
@@ -24,33 +39,6 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
   const checklistPercentage = feature.totalChecklistItems > 0
     ? Math.round((feature.completedChecklistItems / feature.totalChecklistItems) * 100)
     : 0;
-
-  // Get next task for suggestion
-  const nextTask = getNextTask(feature);
-  const allTasksComplete = feature.totalTasks > 0 && feature.completedTasks === feature.totalTasks;
-
-  // Determine next action based on feature state
-  const getNextAction = (): { label: string; command: string; description?: string } | null => {
-    if (!feature.hasSpec) {
-      return { label: 'Create Specification', command: '/speckit.specify' };
-    }
-    if (!feature.hasPlan) {
-      return { label: 'Create Plan', command: '/speckit.plan' };
-    }
-    if (!feature.hasTasks) {
-      return { label: 'Generate Tasks', command: '/speckit.tasks' };
-    }
-    if (nextTask && !allTasksComplete) {
-      return {
-        label: 'Next Task',
-        command: `/speckit.implement ${feature.id} ${nextTask.id}`,
-        description: `${nextTask.id} ${nextTask.description}`,
-      };
-    }
-    return null;
-  };
-
-  const nextAction = getNextAction();
 
   // Build accessible label
   const ariaLabel = [
@@ -101,9 +89,7 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
       {/* Task count - always show */}
       <div className={cn(
         'flex items-center gap-1.5 text-xs tabular-nums',
-        progressPercentage === 100 && feature.totalTasks > 0
-          ? 'text-green-400'
-          : 'text-[var(--muted-foreground)]'
+        getProgressColor(progressPercentage, feature.totalTasks > 0)
       )}>
         <ListTodo className="w-3 h-3" />
         <span>Tasks</span>
@@ -116,9 +102,7 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
           <div
             className={cn(
               'h-full transition-all duration-300',
-              progressPercentage === 100
-                ? 'bg-green-500'
-                : 'bg-[var(--foreground)] opacity-40'
+              getProgressBarColor(progressPercentage, feature.totalTasks > 0)
             )}
             style={{ width: `${progressPercentage}%` }}
           />
@@ -130,9 +114,9 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
         <div className="mt-3">
           <div className={cn(
             'flex items-center gap-1.5 text-xs tabular-nums',
-            checklistPercentage === 100 ? 'text-green-400' : 'text-purple-400'
+            getProgressColor(checklistPercentage, feature.totalChecklistItems > 0)
           )}>
-            <ClipboardCheck className="w-3 h-3" />
+            <Circle className="w-3 h-3" />
             <span>Checklists</span>
             <span>{feature.completedChecklistItems}/{feature.totalChecklistItems} ({checklistPercentage}%)</span>
           </div>
@@ -141,31 +125,11 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
             <div
               className={cn(
                 'h-full transition-all duration-300',
-                checklistPercentage === 100
-                  ? 'bg-green-500'
-                  : 'bg-purple-500'
+                getProgressBarColor(checklistPercentage, feature.totalChecklistItems > 0)
               )}
               style={{ width: `${checklistPercentage}%` }}
             />
           </div>
-        </div>
-      )}
-
-      {/* Next action suggestion */}
-      {nextAction && (
-        <div className="mt-3 pt-3 border-t border-[var(--border)]">
-          <div className="flex items-center gap-1.5 text-[10px] text-amber-400 mb-1.5">
-            <Zap className="w-3 h-3" />
-            <span className="font-medium">Suggested next command</span>
-          </div>
-          <code className="text-[10px] bg-[var(--secondary)] px-1.5 py-0.5 rounded text-amber-400/80">
-            {nextAction.command}
-          </code>
-          {nextAction.description && (
-            <div className="text-[10px] text-amber-400/80 line-clamp-2 mt-1.5">
-              {nextAction.description}
-            </div>
-          )}
         </div>
       )}
       </button>
