@@ -50,6 +50,7 @@ export interface WorkflowNavStep {
   isCurrent: boolean;
   phase: NavWorkflowPhase;
   subItems: WorkflowSubItem[];
+  progress?: { completed: number; total: number };  // For steps with progress (e.g., implement)
 }
 
 // Nav workflow phase config
@@ -217,10 +218,10 @@ export function getNextTask(feature: Feature): Task | null {
 
 // Nav workflow phase configuration
 export const NAV_PHASE_CONFIG: Record<NavWorkflowPhase, NavPhaseConfig> = {
-  overview: { label: 'OVERVIEW', color: 'text-blue-400' },
-  planning: { label: 'PLANNING', color: 'text-purple-400' },
-  qc: { label: 'QUALITY CONTROL', color: 'text-orange-400' },
-  wbs: { label: 'WORK BREAKDOWN', color: 'text-cyan-400' },
-  qa: { label: 'QUALITY ASSURANCE', color: 'text-yellow-400' },
-  coding: { label: 'CODING', color: 'text-green-400' },
+  overview: { label: 'OVERVIEW', color: 'text-white' },
+  planning: { label: 'PLANNING', color: 'text-white' },
+  qc: { label: 'QUALITY CONTROL', color: 'text-white' },
+  wbs: { label: 'WORK BREAKDOWN', color: 'text-white' },
+  qa: { label: 'QUALITY ASSURANCE', color: 'text-white' },
+  coding: { label: 'CODING', color: 'text-white' },
 };
