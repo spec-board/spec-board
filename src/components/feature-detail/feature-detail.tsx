@@ -21,6 +21,7 @@ interface FeatureDetailProps {
   onClose: () => void;
   hasConstitution?: boolean;
   constitution?: Constitution | null;
+  initialSection?: SectionId;
 }
 
 // Build section configurations from feature
@@ -103,16 +104,16 @@ function buildSectionConfigs(feature: Feature): SectionConfig[] {
   ];
 }
 
-export function FeatureDetail({ feature, onClose, hasConstitution = false, constitution = null }: FeatureDetailProps) {
+export function FeatureDetail({ feature, onClose, hasConstitution = false, constitution = null, initialSection }: FeatureDetailProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activeSection, setActiveSection] = useState<SectionId>('spec');
+  const [activeSection, setActiveSection] = useState<SectionId>(initialSection || 'spec');
   const [selectedNavIndex, setSelectedNavIndex] = useState(0);
   const [draggedSection, setDraggedSection] = useState<SectionId | null>(null);
   const [dropSide, setDropSide] = useState<'left' | 'right' | null>(null);
   const [selectedChecklistIndex, setSelectedChecklistIndex] = useState<number | undefined>(undefined);
   const [splitView, setSplitView] = useState<SplitViewState>({
     isActive: false,
-    leftPane: 'spec',
+    leftPane: initialSection || 'spec',
     rightPane: null,
     splitRatio: 0.5,
     focusedPane: 'left',

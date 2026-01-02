@@ -93,6 +93,11 @@ export default function ProjectPage() {
     router.push('/projects/' + projectSlug + '/features/' + feature.id);
   };
 
+  // Navigate to feature detail page with clarifications section
+  const handleFeatureClarificationsClick = (feature: Feature) => {
+    router.push('/projects/' + projectSlug + '/features/' + feature.id + '?section=clarifications');
+  };
+
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
@@ -191,7 +196,7 @@ export default function ProjectPage() {
             <ClarityHistoryPanel
               features={project.features}
               totalClarifications={project.features.reduce((sum, f) => sum + f.totalClarifications, 0)}
-              onFeatureClick={handleFeatureClick}
+              onFeatureClick={handleFeatureClarificationsClick}
             />
           </div>
 

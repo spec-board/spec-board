@@ -1,16 +1,19 @@
 'use client';
 
 import { useEffect, useCallback, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { FeatureDetail } from '@/components/feature-detail';
 import { ArrowLeft } from 'lucide-react';
 import type { Project, Feature, Constitution } from '@/types';
+import type { SectionId } from '@/components/feature-detail/types';
 
 export default function FeaturePage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const projectSlug = params.name as string;
   const featureId = params.featureId as string;
+  const initialSection = searchParams.get('section') as SectionId | null;
 
   const [feature, setFeature] = useState<Feature | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -136,6 +139,7 @@ export default function FeaturePage() {
       onClose={handleClose}
       hasConstitution={hasConstitution}
       constitution={constitution}
+      initialSection={initialSection || undefined}
     />
   );
 }
