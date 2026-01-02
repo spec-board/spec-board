@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Keyboard, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSettingsStore } from '@/lib/settings-store';
 
 const APP_VERSION = '1.0.2';
 
@@ -85,6 +86,13 @@ function ShortcutRow({ keys, description }: { keys: string[]; description: strin
 }
 
 function ShortcutsContent() {
+  const { shortcutsEnabled, setShortcutsEnabled, loadSettings } = useSettingsStore();
+
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -93,7 +101,40 @@ function ShortcutsContent() {
           Navigate SpecBoard faster with keyboard shortcuts
         </p>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+      {/* Toggle Switch */}
+      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm font-medium">Enable Keyboard Shortcuts</span>
+            <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+              Turn off to disable all keyboard shortcuts
+            </p>
+          </div>
+          <button
+            onClick={() => setShortcutsEnabled(!shortcutsEnabled)}
+            className={cn(
+              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+              shortcutsEnabled ? 'bg-green-500' : 'bg-[var(--secondary)]'
+            )}
+            role="switch"
+            aria-checked={shortcutsEnabled}
+          >
+            <span
+              className={cn(
+                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                shortcutsEnabled ? 'translate-x-6' : 'translate-x-1'
+              )}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Shortcuts List */}
+      <div className={cn(
+        'grid grid-cols-1 lg:grid-cols-2 gap-4 transition-opacity',
+        !shortcutsEnabled && 'opacity-50 pointer-events-none'
+      )}>
         {SHORTCUT_GROUPS.map((group, index) => (
           <div key={index} className="space-y-1">
             <h3 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">

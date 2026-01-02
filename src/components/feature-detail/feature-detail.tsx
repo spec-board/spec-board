@@ -5,6 +5,7 @@ import type { KeyboardEvent } from 'react';
 import type { Feature, Constitution } from '@/types';
 import { cn } from '@/lib/utils';
 import { announce } from '@/lib/accessibility';
+import { useSettingsStore } from '@/lib/settings-store';
 import { HeaderBar } from './header-bar';
 import { NavSidebar } from './nav-sidebar';
 import { SplitView } from './split-view';
@@ -118,6 +119,14 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
     splitRatio: 0.5,
     focusedPane: 'left',
   });
+
+  // Get shortcuts setting
+  const { shortcutsEnabled, loadSettings } = useSettingsStore();
+
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   // Build section configs - memoized to prevent recalculation on every render
   const sections = useMemo(() => buildSectionConfigs(feature), [feature]);
@@ -295,6 +304,11 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
 
   // Keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    // Skip all shortcuts if disabled (except Escape which is always allowed)
+    if (!shortcutsEnabled && e.key !== 'Escape') {
+      return;
+    }
+
     // Escape to close split view (only when active)
     if (e.key === 'Escape') {
       if (splitView.isActive) {
@@ -386,6 +400,7 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
       }
     }
   }, [
+    shortcutsEnabled,
     splitView,
     activeSection,
     selectedNavIndex,
