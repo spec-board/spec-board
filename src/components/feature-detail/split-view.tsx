@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ContentPane } from './content-pane';
+import { useSettingsStore } from '@/lib/settings-store';
 import type { Feature, Constitution } from '@/types';
 import type { SectionId } from './types';
 
@@ -40,6 +41,7 @@ export function SplitView({
 }: SplitViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const { shortcutsEnabled } = useSettingsStore();
 
   // Handle mouse down on divider
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -136,6 +138,9 @@ export function SplitView({
         aria-valuemax={80}
         tabIndex={0}
         onKeyDown={(e) => {
+          // Skip keyboard shortcuts if disabled
+          if (!shortcutsEnabled) return;
+
           // Allow keyboard adjustment of split ratio
           if (e.key === 'ArrowLeft') {
             e.preventDefault();
