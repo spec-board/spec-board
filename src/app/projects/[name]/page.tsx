@@ -202,7 +202,6 @@ export default function ProjectPage() {
 
           {/* Kanban board */}
           <div>
-            <h2 className="text-lg font-semibold mb-4">Feature Pipeline</h2>
             <KanbanBoard
               features={project.features}
               onFeatureClick={handleFeatureClick}
