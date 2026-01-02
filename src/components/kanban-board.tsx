@@ -98,19 +98,17 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
         </div>
       )}
 
-      {/* Task count */}
-      {feature.totalTasks > 0 && (
-        <div className={cn(
-          'flex items-center gap-1.5 text-xs tabular-nums',
-          progressPercentage === 100
-            ? 'text-green-400'
-            : 'text-[var(--muted-foreground)]'
-        )}>
-          <ListTodo className="w-3 h-3" />
-          <span>Tasks</span>
-          <span>{feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)</span>
-        </div>
-      )}
+      {/* Task count - always show */}
+      <div className={cn(
+        'flex items-center gap-1.5 text-xs tabular-nums',
+        progressPercentage === 100 && feature.totalTasks > 0
+          ? 'text-green-400'
+          : 'text-[var(--muted-foreground)]'
+      )}>
+        <ListTodo className="w-3 h-3" />
+        <span>Tasks</span>
+        <span>{feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)</span>
+      </div>
 
       {/* Thin progress bar */}
       {feature.totalTasks > 0 && (
