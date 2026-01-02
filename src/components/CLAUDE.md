@@ -22,6 +22,8 @@ This directory contains all React components used throughout the application. Mo
 | `project-selector.tsx` | Legacy filesystem browser (deprecated) |
 | `task-group.tsx` | Task list grouped by user story |
 | `markdown-renderer.tsx` | Safe markdown-to-HTML rendering |
+| `readme-viewer.tsx` | Beautified README with custom diagram components |
+| `changelog-viewer.tsx` | Version timeline with color-coded badges |
 | `spec-viewer.tsx` | Spec.md content with user stories and clarifications |
 | `constitution-viewer.tsx` | Structured constitution display with principles, sections, subsections |
 | `analysis-viewer.tsx` | Analysis results with spec alignment |
@@ -62,6 +64,8 @@ This directory contains all React components used throughout the application. Mo
 | Component | Props | Purpose |
 |-----------|-------|---------|
 | `MarkdownRenderer` | content | Safe HTML from markdown |
+| `ReadmeViewer` | content | Beautified README with custom diagram components |
+| `ChangelogViewer` | content | Version timeline with color-coded badges |
 | `ResearchViewer` | content | Research notes display |
 | `QuickstartViewer` | content | Quickstart guide display |
 | `DataModelViewer` | content | Data model documentation |

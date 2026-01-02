@@ -80,10 +80,10 @@ pnpm dev
 │  └─────────┘  └─────────┘  └─────────┘  └─────────┘     │
 ├─────────────────────────────────────────────────────────┤
 │  BACKEND                                                │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐                  │
+│  ┌─────────┐  ┌─────────┐  ┌──────────┐                 │
 │  │ Next.js │  │ Prisma  │  │PostgreSQL│                 │
-│  │   API   │  │   ORM   │  │    DB   │                  │
-│  └─────────┘  └─────────┘  └─────────┘                  │
+│  │   API   │  │   ORM   │  │    DB    │                 │
+│  └─────────┘  └─────────┘  └──────────┘                 │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -91,9 +91,9 @@ pnpm dev
 
 | Document | Description |
 |----------|-------------|
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Development guide, API reference |
-| [CHANGELOG.md](CHANGELOG.md) | Version history |
-| [PROJECT_INDEX.md](PROJECT_INDEX.md) | Codebase structure |
+| [CONTRIBUTING.md](https://github.com/paulpham157/spec-board/blob/main/CONTRIBUTING.md) | Development guide, API reference |
+| [CHANGELOG.md](https://github.com/paulpham157/spec-board/blob/main/CHANGELOG.md) | Version history |
+| [PROJECT_INDEX.md](https://github.com/paulpham157/spec-board/blob/main/PROJECT_INDEX.md) | Codebase structure |
 
 ## License
 
