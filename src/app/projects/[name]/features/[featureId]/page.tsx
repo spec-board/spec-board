@@ -129,15 +129,13 @@ export default function FeaturePage() {
     return null;
   }
 
-  // Render the feature detail as a full page (not modal)
+  // Render the feature detail as a full page
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <FeatureDetail
-        feature={feature}
-        onClose={handleClose}
-        hasConstitution={hasConstitution}
-        constitution={constitution}
-      />
-    </div>
+    <FeatureDetail
+      feature={feature}
+      onClose={handleClose}
+      hasConstitution={hasConstitution}
+      constitution={constitution}
+    />
   );
 }

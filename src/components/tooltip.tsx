@@ -17,6 +17,8 @@ interface TooltipProps {
   disabled?: boolean;
   /** Additional classes for the wrapper element */
   className?: string;
+  /** Max width for text wrapping (default: none for single line) */
+  maxWidth?: number;
 }
 
 interface TooltipPosition {
@@ -37,6 +39,7 @@ export function Tooltip({
   delay = 300,
   disabled = false,
   className,
+  maxWidth,
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
@@ -138,11 +141,13 @@ export function Tooltip({
           position: 'fixed',
           top: position.top,
           left: position.left,
+          ...(maxWidth ? { maxWidth: `${maxWidth}px` } : {}),
         }}
         className={cn(
           'z-[9999] px-2 py-1 text-xs font-medium',
           'bg-gray-900 text-white rounded shadow-lg',
-          'whitespace-nowrap pointer-events-none',
+          maxWidth ? 'whitespace-normal' : 'whitespace-nowrap',
+          'pointer-events-none',
           'animate-in fade-in-0 zoom-in-95 duration-150'
         )}
       >

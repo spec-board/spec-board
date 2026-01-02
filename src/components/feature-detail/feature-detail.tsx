@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { Feature, Constitution } from '@/types';
 import { cn } from '@/lib/utils';
-import { useFocusTrap, announce } from '@/lib/accessibility';
+import { announce } from '@/lib/accessibility';
 import { HeaderBar } from './header-bar';
 import { NavSidebar } from './nav-sidebar';
 import { SplitView } from './split-view';
@@ -104,7 +104,7 @@ function buildSectionConfigs(feature: Feature): SectionConfig[] {
 }
 
 export function FeatureDetail({ feature, onClose, hasConstitution = false, constitution = null }: FeatureDetailProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<SectionId>('spec');
   const [selectedNavIndex, setSelectedNavIndex] = useState(0);
   const [draggedSection, setDraggedSection] = useState<SectionId | null>(null);
@@ -121,9 +121,6 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
   // Build section configs - memoized to prevent recalculation on every render
   const sections = useMemo(() => buildSectionConfigs(feature), [feature]);
   const visibleSections = useMemo(() => sections.filter(s => s.show), [sections]);
-
-  // Focus trap for modal
-  useFocusTrap(modalRef, true);
 
   // Handle section click
   const handleSectionClick = useCallback((sectionId: SectionId, options?: { checklistIndex?: number }) => {
@@ -297,14 +294,11 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
 
   // Keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
-    // Escape to close
+    // Escape to close split view (only when active)
     if (e.key === 'Escape') {
-      e.preventDefault();
       if (splitView.isActive) {
+        e.preventDefault();
         handleCloseRight();
-      } else {
-        announce('Closing feature details');
-        onClose();
       }
       return;
     }
@@ -399,7 +393,6 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
     handleToggleSplit,
     handleCloseRight,
     handleFocusChange,
-    onClose,
   ]);
 
   // Sync activeSection with splitView.leftPane
@@ -411,104 +404,88 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-      role="presentation"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
+      ref={containerRef}
+      onKeyDown={handleKeyDown}
+      className="h-screen flex flex-col bg-[var(--background)]"
+      tabIndex={-1}
     >
-      <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-        onKeyDown={handleKeyDown}
-        className={cn(
-          'fixed inset-0 bg-[var(--background)] flex flex-col focus-ring',
-          'animate-in fade-in zoom-in-95 duration-200'
-        )}
-        tabIndex={-1}
-      >
-        {/* Header */}
-        <HeaderBar
-          featureName={feature.name}
-          featureId={feature.id}
-          onClose={onClose}
-          onToggleSplit={handleToggleSplit}
-          isSplitActive={splitView.isActive}
+      {/* Header */}
+      <HeaderBar
+        featureName={feature.name}
+        featureId={feature.id}
+        onClose={onClose}
+        onToggleSplit={handleToggleSplit}
+        isSplitActive={splitView.isActive}
+      />
+
+      {/* Main content area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left sidebar */}
+        <NavSidebar
+          feature={feature}
+          hasConstitution={hasConstitution}
+          activeSection={splitView.isActive ? splitView.leftPane : activeSection}
+          activeChecklistIndex={selectedChecklistIndex}
+          onSectionClick={handleSectionClick}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         />
 
-        {/* Main content area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left sidebar */}
-          <NavSidebar
-            feature={feature}
-            hasConstitution={hasConstitution}
-            activeSection={splitView.isActive ? splitView.leftPane : activeSection}
-            activeChecklistIndex={selectedChecklistIndex}
-            onSectionClick={handleSectionClick}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          />
-
-          {/* Content area with optional split */}
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            className={cn(
-              'flex-1 flex flex-col overflow-hidden relative',
-              draggedSection && 'ring-2 ring-blue-500/50 ring-inset'
-            )}
-          >
-            {draggedSection && (
-              <div className="absolute inset-0 flex pointer-events-none z-10">
-                {/* Left drop zone indicator */}
+        {/* Content area with optional split */}
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          className={cn(
+            'flex-1 flex flex-col overflow-hidden relative',
+            draggedSection && 'ring-2 ring-blue-500/50 ring-inset'
+          )}
+        >
+          {draggedSection && (
+            <div className="absolute inset-0 flex pointer-events-none z-10">
+              {/* Left drop zone indicator */}
+              <div className={cn(
+                'flex-1 flex items-center justify-center border-r border-dashed border-blue-500/50 transition-colors',
+                dropSide === 'left' && 'bg-blue-500/20'
+              )}>
                 <div className={cn(
-                  'flex-1 flex items-center justify-center border-r border-dashed border-blue-500/50 transition-colors',
-                  dropSide === 'left' && 'bg-blue-500/20'
+                  'px-4 py-2 rounded-lg font-medium transition-colors',
+                  dropSide === 'left'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-blue-500/10 text-blue-400 border border-dashed border-blue-500'
                 )}>
-                  <div className={cn(
-                    'px-4 py-2 rounded-lg font-medium transition-colors',
-                    dropSide === 'left'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-blue-500/10 text-blue-400 border border-dashed border-blue-500'
-                  )}>
-                    Drop here for left
-                  </div>
-                </div>
-                {/* Right drop zone indicator */}
-                <div className={cn(
-                  'flex-1 flex items-center justify-center transition-colors',
-                  dropSide === 'right' && 'bg-blue-500/20'
-                )}>
-                  <div className={cn(
-                    'px-4 py-2 rounded-lg font-medium transition-colors',
-                    dropSide === 'right'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-blue-500/10 text-blue-400 border border-dashed border-blue-500'
-                  )}>
-                    Drop here for right
-                  </div>
+                  Drop here for left
                 </div>
               </div>
-            )}
-            <SplitView
-              leftSection={splitView.isActive ? splitView.leftPane : activeSection}
-              rightSection={splitView.isActive ? splitView.rightPane : null}
-              feature={feature}
-              hasConstitution={hasConstitution}
-              constitution={constitution}
-              splitRatio={splitView.splitRatio}
-              onRatioChange={handleRatioChange}
-              onCloseRight={handleCloseRight}
-              focusedPane={splitView.focusedPane}
-              onFocusChange={handleFocusChange}
-              selectedChecklistIndex={selectedChecklistIndex}
-            />
-          </div>
+              {/* Right drop zone indicator */}
+              <div className={cn(
+                'flex-1 flex items-center justify-center transition-colors',
+                dropSide === 'right' && 'bg-blue-500/20'
+              )}>
+                <div className={cn(
+                  'px-4 py-2 rounded-lg font-medium transition-colors',
+                  dropSide === 'right'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-blue-500/10 text-blue-400 border border-dashed border-blue-500'
+                )}>
+                  Drop here for right
+                </div>
+              </div>
+            </div>
+          )}
+          <SplitView
+            leftSection={splitView.isActive ? splitView.leftPane : activeSection}
+            rightSection={splitView.isActive ? splitView.rightPane : null}
+            feature={feature}
+            hasConstitution={hasConstitution}
+            constitution={constitution}
+            splitRatio={splitView.splitRatio}
+            onRatioChange={handleRatioChange}
+            onCloseRight={handleCloseRight}
+            focusedPane={splitView.focusedPane}
+            onFocusChange={handleFocusChange}
+            selectedChecklistIndex={selectedChecklistIndex}
+          />
         </div>
       </div>
     </div>
