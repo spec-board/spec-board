@@ -189,7 +189,7 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
       isCurrent: currentStep === 'analyze',
       phase: 'qa' as NavWorkflowPhase,
       subItems: feature.analysis ? [
-        { id: 'analysis-results', label: 'Analysis Results', type: 'analysis' as const, sectionId: 'analysis' as SectionId },
+        { id: 'analysis-results', label: 'analysis.md', type: 'file' as const, sectionId: 'analysis' as SectionId, filePath: `${feature.path}/analysis/analysis.md` },
       ] : [],
     },
     // CODING phase
@@ -206,9 +206,9 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
       subItems: [
         ...(nextTask && !allTasksComplete ? [{
           id: 'next-action',
-          label: `Next Action\n${nextTask.id} ${nextTask.description}`,
+          label: `Suggest Next Action\n${nextTask.id} ${nextTask.description}`,
           type: 'action' as const,
-          command: `/speckit.implement ${nextTask.id}`,
+          command: `/speckit.implement ${feature.id} ${nextTask.id}`,
         }] : []),
       ],
     },
@@ -290,13 +290,13 @@ function WorkflowSubItemComponent({ item, isActive, onSectionClick }: SubItemPro
         isActive
           ? 'bg-blue-500/20 text-blue-400'
           : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)]/50',
-        item.type === 'action' && !isActive && 'text-blue-400 hover:text-blue-300'
+        item.type === 'action' && !isActive && 'text-amber-400 hover:text-amber-300'
       )}
     >
       {isMultiLineAction ? (
         <div className="flex-1 text-left">
           <div className="font-semibold">{actionTitle}</div>
-          <div className="text-[10px] opacity-80 line-clamp-2">{actionDetail}</div>
+          <div className="text-[10px] text-amber-400/80 line-clamp-2">{actionDetail}</div>
         </div>
       ) : (
         <span className="flex-1 text-left truncate">{item.label}</span>
@@ -468,9 +468,12 @@ export function NavSidebar({
 
   const nextTask = getNextTask(feature);
 
-  // Expanded state - default: expand current step and step containing active section
+  // Expanded state - default: expand current step, step containing active section, and always expand checklist/tasks
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(() => {
     const initial = new Set<string>();
+    // Always expand checklist and tasks sections
+    initial.add('checklist');
+    initial.add('tasks');
     for (const step of steps) {
       // Expand if: current step, has incomplete sub-items, or contains the active section
       const containsActiveSection = step.id === activeSection || step.subItems.some(item => item.sectionId === activeSection);

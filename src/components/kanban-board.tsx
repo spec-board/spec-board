@@ -4,7 +4,6 @@ import { KeyboardEvent } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature } from '@/types';
 import { GitBranch, Zap } from 'lucide-react';
-import { Tooltip } from '@/components/tooltip';
 import { announce } from '@/lib/accessibility';
 import { getNextTask } from '@/components/feature-detail/types';
 
@@ -39,7 +38,7 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
     if (nextTask && !allTasksComplete) {
       return {
         label: 'Next Task',
-        command: `/speckit.implement ${nextTask.id}`,
+        command: `/speckit.implement ${feature.id} ${nextTask.id}`,
         description: `${nextTask.id} ${nextTask.description}`,
       };
     }
@@ -66,7 +65,6 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
   };
 
   return (
-    <Tooltip content="View details [Enter]" className="w-full">
       <button
         onClick={onClick}
         onKeyDown={handleKeyDown}
@@ -97,7 +95,12 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
 
       {/* Task count */}
       {feature.totalTasks > 0 && (
-        <div className="text-xs text-[var(--muted-foreground)] tabular-nums">
+        <div className={cn(
+          'text-xs tabular-nums',
+          progressPercentage === 100
+            ? 'text-green-400'
+            : 'text-[var(--muted-foreground)]'
+        )}>
           {feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)
         </div>
       )}
@@ -106,7 +109,12 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
       {feature.totalTasks > 0 && (
         <div className="mt-3 h-1 bg-[var(--secondary)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-[var(--foreground)] opacity-40 transition-all duration-300"
+            className={cn(
+              'h-full transition-all duration-300',
+              progressPercentage === 100
+                ? 'bg-green-500'
+                : 'bg-[var(--foreground)] opacity-40'
+            )}
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
@@ -123,14 +131,13 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
             {nextAction.command}
           </code>
           {nextAction.description && (
-            <div className="text-[10px] text-[var(--muted-foreground)] line-clamp-2 mt-1.5">
+            <div className="text-[10px] text-amber-400/80 line-clamp-2 mt-1.5">
               {nextAction.description}
             </div>
           )}
         </div>
       )}
       </button>
-    </Tooltip>
   );
 }
 

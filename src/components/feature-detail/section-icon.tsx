@@ -7,8 +7,6 @@ import {
   FileCode,
   ListTodo,
   ClipboardCheck,
-  AlertTriangle,
-  CheckCircle2,
   MessageCircle,
   FileSearch,
 } from 'lucide-react';
@@ -27,12 +25,9 @@ function hasAdditionalFile(feature: Feature, type: string): boolean {
   return feature.additionalFiles?.some(f => f.type === type && f.exists) ?? false;
 }
 
-// Get analysis severity
-function getAnalysisSeverity(feature: Feature): 'good' | 'warning' | 'none' {
-  if (!feature.analysis?.jsonData) return 'none';
-  const alignment = feature.analysis.jsonData.specAlignment;
-  if (alignment.missing > 0 || alignment.partial > 0) return 'warning';
-  return 'good';
+// Check if analysis exists (markdown-only now)
+function hasAnalysis(feature: Feature): boolean {
+  return !!feature.analysis?.markdownContent;
 }
 
 export function SectionIcon({ sectionId, feature, className }: SectionIconProps) {
@@ -102,14 +97,14 @@ export function SectionIcon({ sectionId, feature, className }: SectionIconProps)
       );
 
     case 'analysis': {
-      const severity = getAnalysisSeverity(feature);
-      if (severity === 'warning') {
-        return <AlertTriangle className={cn(baseClass, 'text-orange-400')} />;
-      }
-      if (severity === 'good') {
-        return <CheckCircle2 className={cn(baseClass, 'text-green-400')} />;
-      }
-      return <FileSearch className={cn(baseClass, 'text-[var(--muted-foreground)]/50')} />;
+      return (
+        <FileSearch
+          className={cn(
+            baseClass,
+            hasAnalysis(feature) ? 'text-green-400' : 'text-[var(--muted-foreground)]/50'
+          )}
+        />
+      );
     }
 
     case 'checklists':
