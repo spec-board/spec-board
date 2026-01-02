@@ -375,4 +375,25 @@ export function FeatureDetail({ feature, onClose }: Props) {
 3. Write tests for new functionality
 4. Ensure all tests pass
 5. Update documentation if needed
-6. Submit PR with clear description
+6. Submit PR using the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md)
+
+### PR Template Requirements
+
+When you create a pull request, the template will automatically load. You must:
+
+- **Describe your changes** - Provide a clear description of what the PR does
+- **Select change type** - Mark the appropriate type (bug fix, feature, etc.)
+- **Link related issues** - Reference any related GitHub issues
+- **Complete testing checklist** - Confirm you've tested your changes
+- **Agree to the CLA** - Check all CLA confirmation boxes
+
+### CLA in Pull Requests
+
+The PR template includes a CLA section. By submitting a PR, you must confirm:
+
+- [ ] You have read and agree to the [CLA](CLA.md)
+- [ ] Your contribution is your original work
+- [ ] Your contribution will be licensed under AGPL-3.0
+- [ ] You acknowledge the project may be offered under commercial license
+
+**First-time contributors:** Please also comment "I agree to the CLA" on your pull request.
