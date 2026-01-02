@@ -3,7 +3,6 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { KanbanBoard } from '@/components/kanban-board';
-import { FeatureDetail } from '@/components/feature-detail';
 import { ConstitutionPanel } from '@/components/constitution-panel';
 import { ClarityHistoryPanel } from '@/components/clarity-history';
 import { FolderOpen, RefreshCw, Wifi, Home, Link as LinkIcon } from 'lucide-react';
@@ -17,7 +16,6 @@ export default function ProjectPage() {
   const { addRecentProject } = useProjectStore();
 
   const [project, setProject] = useState<Project | null>(null);
-  const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
@@ -90,16 +88,9 @@ export default function ProjectPage() {
     };
   }, [projectPath]);
 
+  // Navigate to feature detail page
   const handleFeatureClick = (feature: Feature) => {
-    setSelectedFeature(feature);
-    // Update URL with clean slug-based path
-    window.history.pushState({}, '', '/projects/' + projectSlug + '/features/' + feature.id);
-  };
-
-  const handleCloseFeature = () => {
-    setSelectedFeature(null);
-    // Update URL with clean slug-based path
-    window.history.pushState({}, '', '/projects/' + projectSlug);
+    router.push('/projects/' + projectSlug + '/features/' + feature.id);
   };
 
   const copyLink = () => {
@@ -214,16 +205,6 @@ export default function ProjectPage() {
           </div>
         </div>
       </main>
-
-      {/* Feature detail modal */}
-      {selectedFeature && project && (
-        <FeatureDetail
-          feature={selectedFeature}
-          onClose={handleCloseFeature}
-          hasConstitution={project.hasConstitution}
-          constitution={project.constitution}
-        />
-      )}
     </div>
   );
 }

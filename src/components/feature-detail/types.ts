@@ -35,6 +35,7 @@ export interface WorkflowSubItem {
   filePath?: string;       // For file items
   progress?: { completed: number; total: number };
   command?: string;        // For action items (slash command to copy)
+  tooltipContent?: string; // Custom tooltip content (overrides default command tooltip)
   checklistIndex?: number; // For checklist items - index into checklistFiles array
   userStoryId?: string;    // For user-story items - filter tasks by this story
 }

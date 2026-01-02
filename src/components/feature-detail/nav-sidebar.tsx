@@ -188,9 +188,19 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
       isComplete: !!feature.analysis,
       isCurrent: currentStep === 'analyze',
       phase: 'qa' as NavWorkflowPhase,
-      subItems: feature.analysis ? [
-        { id: 'analysis-results', label: 'analysis.md', type: 'file' as const, sectionId: 'analysis' as SectionId, filePath: `${feature.path}/analysis/analysis.md` },
-      ] : [],
+      subItems: [
+        // Always show save analysis action before analysis results
+        {
+          id: 'save-analysis',
+          label: 'Save Analysis Report',
+          type: 'action' as const,
+          command: `Save the analysis report above to SpecBoard format:\n\n  1. Create directory: specs/${feature.id}/analysis/\n  2. Save the markdown report to: specs/${feature.id}/analysis/YYYY-MM-DD-HH-ii-analysis.md\n\nExtract data from the Coverage Summary Table and Metrics section above.`,
+          tooltipContent: 'Currently, Spec-kit does not save analysis results to any files. I recommend using this prompt after /speckit.analyze to save your results for analysis purposes. Click to copy!',
+        },
+        ...(feature.analysis ? [
+          { id: 'analysis-results', label: 'analysis.md', type: 'file' as const, sectionId: 'analysis' as SectionId, filePath: `${feature.path}/analysis/analysis.md` },
+        ] : []),
+      ],
     },
     // CODING phase
     {
@@ -236,10 +246,26 @@ interface SubItemProps {
   item: WorkflowSubItem;
   isActive: boolean;  // Currently selected file
   onSectionClick: (sectionId: SectionId, options?: { checklistIndex?: number; userStoryId?: string; showRawMarkdown?: boolean }) => void;
+  onDragStart?: (sectionId: SectionId) => void;
+  onDragEnd?: () => void;
 }
 
-function WorkflowSubItemComponent({ item, isActive, onSectionClick }: SubItemProps) {
+function WorkflowSubItemComponent({ item, isActive, onSectionClick, onDragStart, onDragEnd }: SubItemProps) {
   const [copied, setCopied] = useState(false);
+
+  // Determine if this item is draggable (file items with sectionId)
+  const isDraggable = item.type === 'file' && !!item.sectionId;
+
+  const handleDragStart = useCallback((e: React.DragEvent) => {
+    if (!item.sectionId) return;
+    e.dataTransfer.setData('text/plain', item.sectionId);
+    e.dataTransfer.effectAllowed = 'copy';
+    onDragStart?.(item.sectionId);
+  }, [item.sectionId, onDragStart]);
+
+  const handleDragEnd = useCallback(() => {
+    onDragEnd?.();
+  }, [onDragEnd]);
 
   const handleClick = useCallback(async () => {
     if (item.type === 'action' && item.command) {
@@ -282,15 +308,25 @@ function WorkflowSubItemComponent({ item, isActive, onSectionClick }: SubItemPro
     ? item.label.split('\n')
     : [item.label, null];
 
+  // Check if this is a special "save analysis" action
+  const isSaveAnalysis = item.id === 'save-analysis';
+
   const content = (
     <button
       onClick={handleClick}
+      draggable={isDraggable}
+      onDragStart={isDraggable ? handleDragStart : undefined}
+      onDragEnd={isDraggable ? handleDragEnd : undefined}
       className={cn(
         'w-full flex items-start gap-2 pl-8 pr-3 py-1.5 text-xs rounded transition-colors',
         isActive
           ? 'bg-blue-500/20 text-blue-400'
           : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)]/50',
-        item.type === 'action' && !isActive && 'text-amber-400 hover:text-amber-300'
+        item.type === 'action' && !isActive && !isSaveAnalysis && 'text-amber-400 hover:text-amber-300',
+        // Special shiny yellow styling for save analysis button
+        isSaveAnalysis && !isActive && 'text-yellow-300 hover:text-yellow-200 bg-gradient-to-r from-yellow-500/20 via-yellow-400/30 to-yellow-500/20 hover:from-yellow-500/30 hover:via-yellow-400/40 hover:to-yellow-500/30 border border-yellow-500/40 shadow-[0_0_8px_rgba(234,179,8,0.3)] hover:shadow-[0_0_12px_rgba(234,179,8,0.5)]',
+        // Draggable cursor for file items
+        isDraggable && 'cursor-grab active:cursor-grabbing'
       )}
     >
       {isMultiLineAction ? (
@@ -318,8 +354,12 @@ function WorkflowSubItemComponent({ item, isActive, onSectionClick }: SubItemPro
   );
 
   if (item.type === 'action' && item.command) {
+    // Use custom tooltipContent if provided, otherwise show command
+    const tooltipText = copied ? 'Copied!' : (item.tooltipContent || item.command);
+    // Use maxWidth for text wrapping when there's custom tooltip content
+    const tooltipMaxWidth = item.tooltipContent ? 280 : undefined;
     return (
-      <Tooltip content={copied ? 'Copied!' : item.command} side="right">
+      <Tooltip content={tooltipText} side="right" maxWidth={tooltipMaxWidth}>
         {content}
       </Tooltip>
     );
@@ -337,9 +377,11 @@ interface WorkflowNavItemProps {
   activeChecklistIndex?: number;  // For checklist sub-item highlighting
   onToggle: () => void;
   onSectionClick: (sectionId: SectionId, options?: { checklistIndex?: number; userStoryId?: string; showRawMarkdown?: boolean }) => void;
+  onDragStart?: (sectionId: SectionId) => void;
+  onDragEnd?: () => void;
 }
 
-function WorkflowNavItem({ step, isExpanded, isActive, activeSection, activeChecklistIndex, onToggle, onSectionClick }: WorkflowNavItemProps) {
+function WorkflowNavItem({ step, isExpanded, isActive, activeSection, activeChecklistIndex, onToggle, onSectionClick, onDragStart, onDragEnd }: WorkflowNavItemProps) {
   const hasSubItems = step.subItems.length > 0;
 
   return (
@@ -424,6 +466,8 @@ function WorkflowNavItem({ step, isExpanded, isActive, activeSection, activeChec
                 item={item}
                 isActive={isItemActive}
                 onSectionClick={onSectionClick}
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
               />
             );
           })}
@@ -530,6 +574,8 @@ export function NavSidebar({
                     activeChecklistIndex={activeChecklistIndex}
                     onToggle={() => toggleStep(step.id)}
                     onSectionClick={onSectionClick}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
                   />
                 ))}
               </div>

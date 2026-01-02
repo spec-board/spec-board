@@ -1,8 +1,7 @@
 'use client';
 
-import { ArrowLeft, Columns2, X } from 'lucide-react';
+import { ArrowLeft, Columns2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Tooltip } from '@/components/tooltip';
 import type { HeaderBarProps } from './types';
 
 export function HeaderBar({
@@ -16,15 +15,13 @@ export function HeaderBar({
     <div className="flex items-center justify-between h-14 px-4 border-b border-[var(--border)] bg-[var(--card)] flex-shrink-0">
       {/* Left: Back button + Feature name */}
       <div className="flex items-center gap-3">
-        <Tooltip content="Back to Kanban [Esc]">
-          <button
-            onClick={onClose}
-            className="p-2 -ml-2 hover:bg-[var(--secondary)] rounded-lg transition-colors focus-ring"
-            aria-label="Close and return to Kanban"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        </Tooltip>
+        <button
+          onClick={onClose}
+          className="p-2 -ml-2 hover:bg-[var(--secondary)] rounded-lg transition-colors focus-ring"
+          aria-label="Back to project"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
         <div className="flex items-center gap-2">
           <h1 id="modal-title" className="text-lg font-semibold capitalize truncate max-w-[400px]">
             {featureName}
@@ -37,30 +34,19 @@ export function HeaderBar({
 
       {/* Right: Action buttons */}
       <div className="flex items-center gap-1">
-        <Tooltip content={isSplitActive ? 'Close split view [Ctrl+\\]' : 'Split view [Ctrl+\\]'}>
-          <button
-            onClick={onToggleSplit}
-            className={cn(
-              'p-2 rounded-lg transition-colors focus-ring',
-              isSplitActive
-                ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
-                : 'hover:bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-            )}
-            aria-label={isSplitActive ? 'Close split view' : 'Open split view'}
-            aria-pressed={isSplitActive}
-          >
-            <Columns2 className="w-5 h-5" />
-          </button>
-        </Tooltip>
-        <Tooltip content="Close [Esc]">
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors focus-ring"
-            aria-label="Close dialog"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </Tooltip>
+        <button
+          onClick={onToggleSplit}
+          className={cn(
+            'p-2 rounded-lg transition-colors focus-ring',
+            isSplitActive
+              ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+              : 'hover:bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+          )}
+          aria-label={isSplitActive ? 'Close split view' : 'Open split view'}
+          aria-pressed={isSplitActive}
+        >
+          <Columns2 className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

@@ -349,7 +349,7 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
 
       {/* Navigation buttons */}
       <div className="flex items-center gap-2 p-2 border-b border-[var(--border)]" role="toolbar" aria-label="Navigation">
-        <Tooltip content="Home [H]">
+        <Tooltip content="Home">
           <button
             onClick={() => handleNavigate('~')}
             className="p-2 hover:bg-[var(--secondary)] rounded transition-colors focus-ring"
@@ -358,7 +358,7 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
             <Home className="w-4 h-4" />
           </button>
         </Tooltip>
-        <Tooltip content="Parent directory [Backspace]">
+        <Tooltip content="Parent directory">
           <button
             onClick={() => handleNavigate(parentPath)}
             className="p-2 hover:bg-[var(--secondary)] rounded transition-colors focus-ring"
@@ -369,7 +369,7 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
           </button>
         </Tooltip>
         {isSpecKitProject && (
-          <Tooltip content="Select this project [Enter]">
+          <Tooltip content="Select this project">
             <button
               onClick={handleSelect}
               className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded text-sm font-medium hover:opacity-90 transition-opacity focus-ring"
