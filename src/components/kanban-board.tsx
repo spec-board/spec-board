@@ -13,14 +13,14 @@ const COLUMNS: KanbanColumn[] = ['backlog', 'planning', 'in_progress', 'done'];
 function getProgressColorStyle(percentage: number, hasItems: boolean): React.CSSProperties {
   if (!hasItems || percentage === 0) return { color: 'var(--muted-foreground)' };
   if (percentage < 80) return { color: 'var(--color-warning)' };
-  if (percentage < 100) return { color: '#22d3ee' }; // neon cyan
+  if (percentage < 100) return { color: 'var(--color-neon)' };
   return { color: 'var(--color-success)' };
 }
 
 function getProgressBarColorStyle(percentage: number, hasItems: boolean): React.CSSProperties {
-  if (!hasItems || percentage === 0) return { backgroundColor: 'var(--muted-foreground)' };
+  if (!hasItems || percentage === 0) return { backgroundColor: 'var(--progress-empty)' };
   if (percentage < 80) return { backgroundColor: 'var(--color-warning)' };
-  if (percentage < 100) return { backgroundColor: '#22d3ee' }; // neon cyan
+  if (percentage < 100) return { backgroundColor: 'var(--color-neon)' };
   return { backgroundColor: 'var(--color-success)' };
 }
 

@@ -32,35 +32,35 @@ interface Version {
   rawContent: string;
 }
 
-const CHANGE_TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string; bgColor: string }> = {
+const CHANGE_TYPE_CONFIG: Record<string, { icon: React.ReactNode; colorVar: string; bgColor: string }> = {
   'Added': {
     icon: <Plus className="w-3.5 h-3.5" />,
-    color: 'text-green-400',
+    colorVar: '--tag-text-success',
     bgColor: 'bg-green-500/10 border-green-500/20'
   },
   'Changed': {
     icon: <RefreshCw className="w-3.5 h-3.5" />,
-    color: 'text-blue-400',
+    colorVar: '--tag-text-info',
     bgColor: 'bg-blue-500/10 border-blue-500/20'
   },
   'Fixed': {
     icon: <Wrench className="w-3.5 h-3.5" />,
-    color: 'text-yellow-400',
+    colorVar: '--tag-text-warning',
     bgColor: 'bg-yellow-500/10 border-yellow-500/20'
   },
   'Deprecated': {
     icon: <AlertTriangle className="w-3.5 h-3.5" />,
-    color: 'text-orange-400',
+    colorVar: '--tag-text-orange',
     bgColor: 'bg-orange-500/10 border-orange-500/20'
   },
   'Removed': {
     icon: <AlertTriangle className="w-3.5 h-3.5" />,
-    color: 'text-red-400',
+    colorVar: '--tag-text-error',
     bgColor: 'bg-red-500/10 border-red-500/20'
   },
   'Security': {
     icon: <AlertTriangle className="w-3.5 h-3.5" />,
-    color: 'text-purple-400',
+    colorVar: '--tag-text-purple',
     bgColor: 'bg-purple-500/10 border-purple-500/20'
   },
 };
@@ -150,7 +150,10 @@ function ChangeTypeSection({ type, content }: { type: string; content: string })
 
   return (
     <div className={cn('rounded-lg border p-3', config.bgColor)}>
-      <div className={cn('flex items-center gap-2 mb-2 font-medium text-sm', config.color)}>
+      <div
+        className="flex items-center gap-2 mb-2 font-medium text-sm"
+        style={{ color: `var(${config.colorVar})` }}
+      >
         {config.icon}
         <span>{type}</span>
       </div>
@@ -197,9 +200,10 @@ function VersionCard({ version, defaultExpanded = false }: { version: Version; d
             <div className={cn(
               'flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono',
               version.isUnreleased
-                ? 'bg-blue-500/20 text-blue-400'
+                ? 'bg-blue-500/20'
                 : 'bg-[var(--secondary)] text-[var(--foreground)]'
-            )}>
+            )}
+            style={version.isUnreleased ? { color: 'var(--tag-text-info)' } : undefined}>
               <Tag className="w-3 h-3" />
               {version.isUnreleased ? 'Unreleased' : `v${version.version}`}
             </div>
@@ -219,7 +223,8 @@ function VersionCard({ version, defaultExpanded = false }: { version: Version; d
                 return (
                   <span
                     key={idx}
-                    className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium', config?.color, config?.bgColor)}
+                    className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium', config?.bgColor)}
+                    style={{ color: config ? `var(${config.colorVar})` : undefined }}
                   >
                     {entry.type}
                   </span>

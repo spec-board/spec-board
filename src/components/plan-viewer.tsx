@@ -16,12 +16,12 @@ interface PlanViewerProps {
 function StatusIcon({ status }: { status: string }) {
   const normalizedStatus = status.toLowerCase().trim();
   if (normalizedStatus.includes('✅') || normalizedStatus.includes('yes') || normalizedStatus.includes('pass')) {
-    return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+    return <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--tag-text-success)' }} />;
   }
   if (normalizedStatus.includes('❌') || normalizedStatus.includes('no') || normalizedStatus.includes('fail')) {
-    return <XCircle className="w-4 h-4 text-red-500" />;
+    return <XCircle className="w-4 h-4" style={{ color: 'var(--tag-text-error)' }} />;
   }
-  return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+  return <AlertCircle className="w-4 h-4" style={{ color: 'var(--tag-text-warning)' }} />;
 }
 
 function MetadataSection({ metadata }: { metadata: ParsedPlan['metadata'] }) {
@@ -163,7 +163,7 @@ function QualityGatesSection({ gates }: { gates: string[] }) {
         <ul className="space-y-1 p-3 bg-[var(--secondary)]/30 rounded-lg">
           {gates.map((gate, idx) => (
             <li key={idx} className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
               <span>{gate}</span>
             </li>
           ))}
@@ -286,7 +286,7 @@ function StructuredPlanView({ parsed }: { parsed: ParsedPlan }) {
 
       {parsed.summary && (
         <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-          <h3 className="font-semibold mb-2 text-blue-400">Summary</h3>
+          <h3 className="font-semibold mb-2" style={{ color: 'var(--tag-text-info)' }}>Summary</h3>
           <p className="text-sm">{parsed.summary}</p>
         </div>
       )}
@@ -315,7 +315,7 @@ export function PlanViewer({ content, filePath, className }: PlanViewerProps) {
 
   if (!content) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12 text-zinc-500', className)}>
+      <div className={cn('flex flex-col items-center justify-center py-12 text-[var(--muted-foreground)]', className)}>
         <FileText className="w-12 h-12 mb-4 opacity-50" />
         <p className="text-lg font-medium">No plan yet</p>
         <p className="text-sm mt-2">Create a plan.md file to define implementation details</p>

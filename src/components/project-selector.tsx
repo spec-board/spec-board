@@ -320,7 +320,7 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
                     selectedSuggestionIndex === index
                       ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
                       : 'hover:bg-[var(--secondary)]',
-                    suggestion.isSpecKitProject && selectedSuggestionIndex !== index && 'text-green-400'
+                    suggestion.isSpecKitProject && selectedSuggestionIndex !== index && 'text-[var(--tag-text-success)]'
                   )}
                 >
                   {suggestion.isSpecKitProject ? (
@@ -399,7 +399,7 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
                   className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-[var(--secondary)] rounded transition-colors text-left focus-ring"
                   aria-label={`Open recent project: ${path.split('/').pop()}`}
                 >
-                  <FolderOpen className="w-4 h-4 text-green-400" aria-hidden="true" />
+                  <FolderOpen className="w-4 h-4" style={{ color: 'var(--tag-text-success)' }} aria-hidden="true" />
                   <span className="truncate">{path.split('/').pop()}</span>
                 </button>
               </li>
@@ -415,7 +415,7 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
             Loading...
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center h-32 text-red-400" role="alert">
+          <div className="flex items-center justify-center h-32" style={{ color: 'var(--tag-text-error)' }} role="alert">
             {error}
           </div>
         ) : entries.length === 0 ? (
@@ -442,7 +442,7 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
                 className={cn(
                   'w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded transition-colors text-left focus-ring',
                   entry.isSpecKitProject
-                    ? 'bg-green-500/10 hover:bg-green-500/20 text-green-400'
+                    ? 'bg-green-500/10 hover:bg-green-500/20 text-[var(--tag-text-success)]'
                     : 'hover:bg-[var(--secondary)]',
                   focusedIndex === index && 'ring-2 ring-[var(--ring)] ring-offset-1'
                 )}

@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History } from 'lucide-react';
+import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/lib/settings-store';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
 import { ReadmeViewer } from '@/components/readme-viewer';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { ChangelogViewer } from '@/components/changelog-viewer';
 
 interface AppInfo {
@@ -20,7 +21,7 @@ interface AppInfo {
   changelog: string;
 }
 
-type MenuSection = 'shortcuts' | 'about';
+type MenuSection = 'shortcuts' | 'appearance' | 'about';
 
 interface ShortcutGroup {
   title: string;
@@ -159,6 +160,39 @@ function ShortcutsContent() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function AppearanceContent() {
+  const { loadSettings } = useSettingsStore();
+
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold mb-1">Appearance</h2>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          Customize how SpecBoard looks
+        </p>
+      </div>
+
+      {/* Theme Selection */}
+      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm font-medium">Theme</span>
+            <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+              Choose light, dark, or match your system
+            </p>
+          </div>
+          <ThemeToggle />
+        </div>
       </div>
     </div>
   );
@@ -314,6 +348,7 @@ export default function SettingsPage() {
 
   const menuItems: { id: MenuSection; label: string; icon: React.ReactNode }[] = [
     { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
+    { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
     { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
   ];
 
@@ -361,6 +396,7 @@ export default function SettingsPage() {
         {/* Right content area - 3/4 width */}
         <main className="flex-1 p-6 overflow-y-auto">
           {activeSection === 'shortcuts' && <ShortcutsContent />}
+          {activeSection === 'appearance' && <AppearanceContent />}
           {activeSection === 'about' && <AboutContent />}
         </main>
       </div>

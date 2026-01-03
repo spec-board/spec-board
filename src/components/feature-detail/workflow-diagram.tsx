@@ -14,11 +14,11 @@ interface PhaseConfig {
 }
 
 const PHASE_CONFIG: Record<WorkflowPhase, PhaseConfig> = {
-  planning: { label: 'PLANNING', color: 'text-purple-400' },
-  qc: { label: 'QUALITY CONTROL', color: 'text-orange-400' },
-  wbs: { label: 'WORK BREAKDOWN', color: 'text-cyan-400' },
-  qa: { label: 'QUALITY ASSURANCE', color: 'text-yellow-400' },
-  coding: { label: 'CODING', color: 'text-green-400' },
+  planning: { label: 'PLANNING', color: 'var(--color-phase-purple)' },
+  qc: { label: 'QUALITY CONTROL', color: 'var(--color-phase-orange)' },
+  wbs: { label: 'WORK BREAKDOWN', color: 'var(--color-phase-cyan)' },
+  qa: { label: 'QUALITY ASSURANCE', color: 'var(--color-phase-yellow)' },
+  coding: { label: 'CODING', color: 'var(--color-phase-green)' },
 };
 
 interface WorkflowStep {
@@ -161,40 +161,45 @@ function WorkflowItem({ step }: { step: WorkflowStep }) {
     <Tooltip content={step.description} side="right" delay={200}>
       <div className={cn(
         'flex items-center gap-2 px-3 py-2 rounded-lg transition-all',
-        step.isCurrent && 'bg-amber-500/10 ring-1 ring-amber-500/30',
+        step.isCurrent && 'bg-[var(--color-current-bg)] ring-1 ring-[var(--color-current)]/30',
         !step.isCurrent && 'hover:bg-[var(--secondary)]/50'
       )}>
         {/* Status indicator */}
         <div className={cn(
           'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',
           step.isComplete
-            ? 'bg-emerald-500 text-white'
+            ? 'bg-[var(--color-success)] text-white'
             : step.isCurrent
-              ? 'bg-amber-500 text-white'
+              ? 'bg-[var(--color-current)] text-white'
               : 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
         )}>
           {step.isComplete ? <Check className="w-3 h-3" /> : step.icon}
         </div>
 
         {/* Label */}
-        <span className={cn(
-          'text-sm font-medium',
-          step.isComplete && 'text-emerald-400',
-          step.isCurrent && 'text-amber-400'
-        )}>
+        <span
+          className="text-sm font-medium"
+          style={{
+            color: step.isComplete
+              ? 'var(--color-success)'
+              : step.isCurrent
+                ? 'var(--color-current)'
+                : undefined
+          }}
+        >
           {step.label}
         </span>
 
         {/* Optional badge */}
         {step.isOptional && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--color-active-bg)] text-[var(--color-active)]">
             opt
           </span>
         )}
 
         {/* Current step badge */}
         {step.isCurrent && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500 text-white font-bold">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--color-current)] text-white font-bold">
             NEXT
           </span>
         )}
@@ -204,10 +209,10 @@ function WorkflowItem({ step }: { step: WorkflowStep }) {
 
         {/* Inline count */}
         {step.inlineCount && (
-          <span className={cn(
-            'text-xs font-mono',
-            step.isComplete ? 'text-emerald-400' : 'text-[var(--muted-foreground)]'
-          )}>
+          <span
+            className="text-xs font-mono"
+            style={{ color: step.isComplete ? 'var(--color-success)' : 'var(--muted-foreground)' }}
+          >
             {step.inlineCount}
           </span>
         )}
@@ -258,7 +263,10 @@ export function WorkflowDiagram({ feature, hasConstitution }: WorkflowDiagramPro
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <span className={cn('text-lg font-bold tabular-nums', allComplete ? 'text-emerald-400' : '')}>
+            <span
+              className="text-lg font-bold tabular-nums"
+              style={{ color: allComplete ? 'var(--color-success)' : undefined }}
+            >
               {progressPercent}%
             </span>
             <p className="text-xs text-[var(--muted-foreground)]">
@@ -280,7 +288,7 @@ export function WorkflowDiagram({ feature, hasConstitution }: WorkflowDiagramPro
                 cy="18"
                 r="15"
                 fill="none"
-                stroke={allComplete ? '#22c55e' : '#f59e0b'}
+                stroke={allComplete ? 'var(--color-success)' : 'var(--color-current)'}
                 strokeWidth="3"
                 strokeDasharray={`${progressPercent} 100`}
                 strokeLinecap="round"
@@ -293,9 +301,9 @@ export function WorkflowDiagram({ feature, hasConstitution }: WorkflowDiagramPro
       {/* Workflow phases */}
       <div className="p-3">
         {allComplete ? (
-          <div className="flex items-center justify-center gap-2 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-            <Check className="w-5 h-5 text-emerald-500" />
-            <span className="font-semibold text-emerald-400">Workflow Complete!</span>
+          <div className="flex items-center justify-center gap-2 p-4 bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 rounded-lg">
+            <Check className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+            <span className="font-semibold" style={{ color: 'var(--color-success)' }}>Workflow Complete!</span>
           </div>
         ) : (
           <div className="space-y-4">
@@ -308,7 +316,10 @@ export function WorkflowDiagram({ feature, hasConstitution }: WorkflowDiagramPro
               return (
                 <div key={phase}>
                   {/* Phase header */}
-                  <div className={cn('text-[10px] font-bold tracking-wider mb-1 px-2', config.color)}>
+                  <div
+                    className="text-[10px] font-bold tracking-wider mb-1 px-2"
+                    style={{ color: config.color }}
+                  >
                     {config.label}
                   </div>
 

@@ -39,9 +39,10 @@ export function HeaderBar({
           className={cn(
             'p-2 rounded-lg transition-colors focus-ring',
             isSplitActive
-              ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+              ? 'bg-blue-500/20 hover:bg-blue-500/30'
               : 'hover:bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
+          style={isSplitActive ? { color: 'var(--tag-text-info)' } : undefined}
           aria-label={isSplitActive ? 'Close split view' : 'Open split view'}
           aria-pressed={isSplitActive}
         >

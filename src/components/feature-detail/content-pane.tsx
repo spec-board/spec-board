@@ -113,7 +113,7 @@ function TasksMetadataSection({ metadata }: { metadata: TasksMetadata }) {
         {/* Input */}
         {metadata.input && (
           <div className="flex items-start gap-2 p-3 bg-[var(--secondary)]/30 rounded-lg">
-            <FileInput className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+            <FileInput className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-info)' }} />
             <div>
               <span className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Input</span>
               <p className="text-sm font-mono">{metadata.input}</p>
@@ -124,7 +124,7 @@ function TasksMetadataSection({ metadata }: { metadata: TasksMetadata }) {
         {/* Prerequisites */}
         {metadata.prerequisites.length > 0 && (
           <div className="flex items-start gap-2 p-3 bg-[var(--secondary)]/30 rounded-lg">
-            <CheckSquare className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+            <CheckSquare className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
             <div>
               <span className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Prerequisites</span>
               <div className="flex flex-wrap gap-1 mt-1">
@@ -141,7 +141,7 @@ function TasksMetadataSection({ metadata }: { metadata: TasksMetadata }) {
         {/* Tests */}
         {metadata.tests && (
           <div className="flex items-start gap-2 p-3 bg-[var(--secondary)]/30 rounded-lg">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
             <div>
               <span className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Tests</span>
               <p className="text-sm">{metadata.tests}</p>
@@ -152,7 +152,7 @@ function TasksMetadataSection({ metadata }: { metadata: TasksMetadata }) {
         {/* Path Conventions */}
         {metadata.pathConventions && (
           <div className="flex items-start gap-2 p-3 bg-[var(--secondary)]/30 rounded-lg">
-            <FolderTree className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+            <FolderTree className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
             <div>
               <span className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Path</span>
               <p className="text-sm font-mono">{metadata.pathConventions}</p>
@@ -164,8 +164,8 @@ function TasksMetadataSection({ metadata }: { metadata: TasksMetadata }) {
       {/* Organization note */}
       {metadata.organization && (
         <div className="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-          <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-blue-300">{metadata.organization}</p>
+          <Info className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-info)' }} />
+          <p className="text-sm" style={{ color: 'var(--tag-text-info)' }}>{metadata.organization}</p>
         </div>
       )}
 
@@ -175,9 +175,9 @@ function TasksMetadataSection({ metadata }: { metadata: TasksMetadata }) {
           {metadata.formatLegend.map((item, idx) => (
             <div key={idx} className="flex items-center gap-1.5">
               {item.marker === 'P' ? (
-                <Zap className="w-3 h-3 text-blue-400" />
+                <Zap className="w-3 h-3" style={{ color: 'var(--tag-text-info)' }} />
               ) : (
-                <span className="font-mono text-purple-400">[{item.marker}]</span>
+                <span className="font-mono" style={{ color: 'var(--tag-text-purple)' }}>[{item.marker}]</span>
               )}
               <span className="text-[var(--muted-foreground)]">{item.description}</span>
             </div>
@@ -219,11 +219,11 @@ function TaskItem({ task, hideUserStory = false }: { task: Task; hideUserStory?:
     <div
       className={cn(
         'flex items-start gap-3 p-2 rounded-lg transition-colors',
-        task.completed ? 'bg-green-500/10' : 'hover:bg-[var(--secondary)]'
+        task.completed ? 'bg-[var(--color-success)]/10' : 'hover:bg-[var(--secondary)]'
       )}
     >
       {task.completed ? (
-        <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
       ) : (
         <Circle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
       )}
@@ -233,13 +233,19 @@ function TaskItem({ task, hideUserStory = false }: { task: Task; hideUserStory?:
             {task.id}
           </span>
           {task.parallel && (
-            <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded flex items-center gap-1">
+            <span
+              className="text-xs bg-[var(--color-info)]/20 px-1.5 py-0.5 rounded flex items-center gap-1"
+              style={{ color: 'var(--tag-text-info)' }}
+            >
               <Zap className="w-3 h-3" />
               Parallel
             </span>
           )}
           {!hideUserStory && task.userStory && (
-            <span className="text-xs bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">
+            <span
+              className="text-xs bg-purple-500/20 px-1.5 py-0.5 rounded"
+              style={{ color: 'var(--tag-text-purple)' }}
+            >
               {task.userStory}
             </span>
           )}

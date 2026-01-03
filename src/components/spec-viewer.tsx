@@ -573,18 +573,18 @@ function PriorityBadge({ priority }: { priority: string }) {
   // Extract priority number for dynamic styling
   const priorityNum = parseInt(priority.replace(/\D/g, ''), 10) || 1;
 
-  // Predefined colors for common priorities, fallback for higher numbers
-  const colorMap: Record<number, string> = {
-    1: 'bg-red-500/20 text-red-400 border-red-500/30',
-    2: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    3: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    4: 'bg-green-500/20 text-green-400 border-green-500/30',
-    5: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    6: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  // Predefined colors for common priorities - use CSS variables for text
+  const colorMap: Record<number, { bg: string; border: string; textVar: string }> = {
+    1: { bg: 'bg-red-500/20', border: 'border-red-500/30', textVar: '--tag-text-error' },
+    2: { bg: 'bg-amber-500/20', border: 'border-amber-500/30', textVar: '--tag-text-warning' },
+    3: { bg: 'bg-yellow-500/20', border: 'border-yellow-500/30', textVar: '--tag-text-warning' },
+    4: { bg: 'bg-green-500/20', border: 'border-green-500/30', textVar: '--tag-text-success' },
+    5: { bg: 'bg-blue-500/20', border: 'border-blue-500/30', textVar: '--tag-text-info' },
+    6: { bg: 'bg-purple-500/20', border: 'border-purple-500/30', textVar: '--tag-text-purple' },
   };
 
   // Fallback color for P7+
-  const color = colorMap[priorityNum] || 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+  const colorConfig = colorMap[priorityNum] || { bg: 'bg-zinc-500/20', border: 'border-zinc-500/30', textVar: '--muted-foreground' };
 
   // Dynamic labels based on priority number
   const getLabel = (num: number): string => {
@@ -596,10 +596,14 @@ function PriorityBadge({ priority }: { priority: string }) {
   };
 
   return (
-    <span className={cn(
-      'px-2 py-0.5 text-xs font-medium rounded-full border',
-      color
-    )}>
+    <span
+      className={cn(
+        'px-2 py-0.5 text-xs font-medium rounded-full border',
+        colorConfig.bg,
+        colorConfig.border
+      )}
+      style={{ color: `var(${colorConfig.textVar})` }}
+    >
       {priority} · {getLabel(priorityNum)}
     </span>
   );
@@ -607,18 +611,24 @@ function PriorityBadge({ priority }: { priority: string }) {
 
 // Status badge component
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    Draft: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
-    'In Progress': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    Review: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    Approved: 'bg-green-500/20 text-green-400 border-green-500/30',
+  const colorConfigs: Record<string, { bg: string; border: string; textVar: string }> = {
+    Draft: { bg: 'bg-zinc-500/20', border: 'border-zinc-500/30', textVar: '--muted-foreground' },
+    'In Progress': { bg: 'bg-blue-500/20', border: 'border-blue-500/30', textVar: '--tag-text-info' },
+    Review: { bg: 'bg-purple-500/20', border: 'border-purple-500/30', textVar: '--tag-text-purple' },
+    Approved: { bg: 'bg-green-500/20', border: 'border-green-500/30', textVar: '--tag-text-success' },
   };
 
+  const config = colorConfigs[status] || { bg: 'bg-zinc-500/20', border: 'border-zinc-500/30', textVar: '--muted-foreground' };
+
   return (
-    <span className={cn(
-      'px-2 py-0.5 text-xs font-medium rounded-full border',
-      colors[status] || colors.Draft
-    )}>
+    <span
+      className={cn(
+        'px-2 py-0.5 text-xs font-medium rounded-full border',
+        config.bg,
+        config.border
+      )}
+      style={{ color: `var(${config.textVar})` }}
+    >
       {status}
     </span>
   );
@@ -665,9 +675,9 @@ function UserStoryCard({ story }: { story: UserStory }) {
           {story.whyPriority && (
             <div className="pl-7">
               <div className="flex items-start gap-2">
-                <Target className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                <Target className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
                 <div>
-                  <span className="text-xs font-medium text-amber-400 uppercase tracking-wide">Why this priority</span>
+                  <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-warning)' }}>Why this priority</span>
                   <p className="text-sm text-[var(--foreground)] mt-1">{story.whyPriority}</p>
                 </div>
               </div>
@@ -678,9 +688,9 @@ function UserStoryCard({ story }: { story: UserStory }) {
           {story.independentTest && (
             <div className="pl-7">
               <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
                 <div>
-                  <span className="text-xs font-medium text-green-400 uppercase tracking-wide">Independent Test</span>
+                  <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-success)' }}>Independent Test</span>
                   <p className="text-sm text-[var(--foreground)] mt-1">{story.independentTest}</p>
                 </div>
               </div>
@@ -691,8 +701,8 @@ function UserStoryCard({ story }: { story: UserStory }) {
           {story.acceptanceScenarios.length > 0 && (
             <div className="pl-7">
               <div className="flex items-center gap-2 mb-3">
-                <FileCheck className="w-4 h-4 text-blue-400" />
-                <span className="text-xs font-medium text-blue-400 uppercase tracking-wide">
+                <FileCheck className="w-4 h-4" style={{ color: 'var(--tag-text-info)' }} />
+                <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-info)' }}>
                   Acceptance Scenarios ({story.acceptanceScenarios.length})
                 </span>
               </div>
@@ -703,11 +713,11 @@ function UserStoryCard({ story }: { story: UserStory }) {
                     className="bg-[var(--secondary)]/30 rounded-lg p-3 text-sm border-l-2 border-blue-500/50"
                   >
                     <div className="flex flex-wrap gap-x-1">
-                      <span className="font-semibold text-emerald-400">Given</span>
+                      <span className="font-semibold" style={{ color: 'var(--tag-text-success)' }}>Given</span>
                       <span className="text-[var(--foreground)]">{scenario.given},</span>
-                      <span className="font-semibold text-amber-400">When</span>
+                      <span className="font-semibold" style={{ color: 'var(--tag-text-warning)' }}>When</span>
                       <span className="text-[var(--foreground)]">{scenario.when},</span>
-                      <span className="font-semibold text-blue-400">Then</span>
+                      <span className="font-semibold" style={{ color: 'var(--tag-text-info)' }}>Then</span>
                       <span className="text-[var(--foreground)]">{scenario.then}</span>
                     </div>
                   </div>
@@ -865,7 +875,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
                 {parsedSpec.edgeCases.map((edgeCase, index) => (
                   <div key={index} className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
                     <div className="flex items-start gap-3">
-                      <HelpCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                      <HelpCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-[var(--foreground)]">{edgeCase.question}</p>
                         <p className="text-sm text-[var(--muted-foreground)] mt-1">{edgeCase.answer}</p>
@@ -893,7 +903,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
                     <div className="p-4 space-y-2">
                       {group.items.map((req) => (
                         <div key={req.id} className="flex items-start gap-3 text-sm">
-                          <code className="text-xs font-mono bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded flex-shrink-0">
+                          <code className="text-xs font-mono bg-blue-500/20 px-1.5 py-0.5 rounded flex-shrink-0" style={{ color: 'var(--tag-text-info)' }}>
                             {req.id}
                           </code>
                           <span className="text-[var(--foreground)]">{req.text}</span>
@@ -944,7 +954,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4 space-y-2">
                 {parsedSpec.successCriteria.map((criterion) => (
                   <div key={criterion.id} className="flex items-start gap-3 text-sm">
-                    <code className="text-xs font-mono bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded flex-shrink-0">
+                    <code className="text-xs font-mono bg-green-500/20 px-1.5 py-0.5 rounded flex-shrink-0" style={{ color: 'var(--tag-text-success)' }}>
                       {criterion.id}
                     </code>
                     <span className="text-[var(--foreground)]">{criterion.text}</span>
@@ -968,11 +978,11 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
                       <div className="text-xs text-[var(--muted-foreground)] mb-2">Session {qa.session}</div>
                     )}
                     <div className="flex items-start gap-3 mb-2">
-                      <span className="text-xs font-bold text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded">Q</span>
+                      <span className="text-xs font-bold bg-blue-500/20 px-2 py-0.5 rounded" style={{ color: 'var(--tag-text-info)' }}>Q</span>
                       <p className="text-sm font-medium">{qa.question}</p>
                     </div>
                     <div className="flex items-start gap-3 pl-7">
-                      <span className="text-xs font-bold text-green-400 bg-green-500/20 px-2 py-0.5 rounded">A</span>
+                      <span className="text-xs font-bold bg-green-500/20 px-2 py-0.5 rounded" style={{ color: 'var(--tag-text-success)' }}>A</span>
                       <p className="text-sm text-[var(--muted-foreground)]">{qa.answer}</p>
                     </div>
                   </div>

@@ -6,18 +6,18 @@ import type { RecentProject } from '@/lib/store';
 import type { FeatureStage } from '@/types';
 
 // Get icon and label for active feature stage
-function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; color: string } {
+function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; cssVar: string } {
   switch (stage) {
     case 'implement':
-      return { icon: <Hammer className="w-3.5 h-3.5" />, label: 'Implementing', color: 'text-blue-400' };
+      return { icon: <Hammer className="w-3.5 h-3.5" />, label: 'Implementing', cssVar: 'var(--tag-text-info)' };
     case 'tasks':
-      return { icon: <ListTodo className="w-3.5 h-3.5" />, label: 'Tasks ready', color: 'text-purple-400' };
+      return { icon: <ListTodo className="w-3.5 h-3.5" />, label: 'Tasks ready', cssVar: 'var(--tag-text-purple)' };
     case 'plan':
-      return { icon: <FileText className="w-3.5 h-3.5" />, label: 'Planning', color: 'text-yellow-400' };
+      return { icon: <FileText className="w-3.5 h-3.5" />, label: 'Planning', cssVar: 'var(--tag-text-warning)' };
     case 'specify':
-      return { icon: <Rocket className="w-3.5 h-3.5" />, label: 'Specifying', color: 'text-orange-400' };
+      return { icon: <Rocket className="w-3.5 h-3.5" />, label: 'Specifying', cssVar: 'var(--tag-text-orange)' };
     case 'complete':
-      return { icon: <CheckCircle className="w-3.5 h-3.5" />, label: 'Complete', color: 'text-green-400' };
+      return { icon: <CheckCircle className="w-3.5 h-3.5" />, label: 'Complete', cssVar: 'var(--tag-text-success)' };
   }
 }
 
@@ -85,7 +85,7 @@ export function RecentProjectsList({ projects, onSelect, onRemove }: RecentProje
           )}
         >
           <div className="flex items-start gap-3">
-            <FolderOpen className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+            <FolderOpen className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
             <div className="flex-1 min-w-0">
               {/* Project name */}
               <div className="font-medium truncate">{project.name}</div>
@@ -99,7 +99,7 @@ export function RecentProjectsList({ projects, onSelect, onRemove }: RecentProje
               {project.activeFeature && (() => {
                 const stageInfo = getStageDisplay(project.activeFeature.stage);
                 return (
-                  <div className={cn('flex items-center gap-1.5 mt-2 text-sm', stageInfo.color)}>
+                  <div className="flex items-center gap-1.5 mt-2 text-sm" style={{ color: stageInfo.cssVar }}>
                     {stageInfo.icon}
                     <span>
                       {stageInfo.label}
@@ -152,7 +152,7 @@ export function RecentProjectsList({ projects, onSelect, onRemove }: RecentProje
             className={cn(
               'absolute top-3 right-3 p-1.5 rounded',
               'opacity-0 group-hover:opacity-100 transition-opacity',
-              'hover:bg-red-500/20 text-[var(--muted-foreground)] hover:text-red-400'
+              'hover:bg-red-500/20 text-[var(--muted-foreground)] hover:text-[var(--tag-text-error)]'
             )}
             title="Remove from recent"
           >

@@ -7,33 +7,34 @@ interface PriorityBadgeProps {
   className?: string;
 }
 
-const priorityConfig = {
+const priorityStyles: Record<'P1' | 'P2' | 'P3', React.CSSProperties> = {
   P1: {
-    label: 'P1',
-    className: 'bg-red-500/20 text-red-400 border-red-500/30',
+    backgroundColor: 'color-mix(in srgb, var(--priority-p1) 20%, transparent)',
+    color: 'var(--priority-p1)',
+    borderColor: 'color-mix(in srgb, var(--priority-p1) 30%, transparent)',
   },
   P2: {
-    label: 'P2',
-    className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    backgroundColor: 'color-mix(in srgb, var(--priority-p2) 20%, transparent)',
+    color: 'var(--priority-p2)',
+    borderColor: 'color-mix(in srgb, var(--priority-p2) 30%, transparent)',
   },
   P3: {
-    label: 'P3',
-    className: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    backgroundColor: 'color-mix(in srgb, var(--priority-p3) 20%, transparent)',
+    color: 'var(--priority-p3)',
+    borderColor: 'color-mix(in srgb, var(--priority-p3) 30%, transparent)',
   },
 };
 
 export function PriorityBadge({ priority, className }: PriorityBadgeProps) {
-  const config = priorityConfig[priority];
-
   return (
     <span
       className={cn(
         'inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded border',
-        config.className,
         className
       )}
+      style={priorityStyles[priority]}
     >
-      {config.label}
+      {priority}
     </span>
   );
 }

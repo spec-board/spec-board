@@ -127,7 +127,8 @@ export function ClarityHistoryPanel({ features, totalClarifications, onFeatureCl
                   </span>
                   <button
                     onClick={() => onFeatureClick?.(feature)}
-                    className="p-2 hover:bg-blue-500/20 hover:text-blue-400 rounded-lg transition-colors cursor-pointer"
+                    className="p-2 hover:bg-blue-500/20 rounded-lg transition-colors cursor-pointer"
+                    style={{ color: 'var(--tag-text-info)' }}
                     title="Open feature details"
                   >
                     <ExternalLink className="w-4 h-4" />

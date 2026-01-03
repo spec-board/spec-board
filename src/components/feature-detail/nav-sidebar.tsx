@@ -320,19 +320,28 @@ function WorkflowSubItemComponent({ item, isActive, onSectionClick, onDragStart,
       className={cn(
         'w-full flex items-start gap-2 pl-8 pr-3 py-1.5 text-xs rounded transition-colors',
         isActive
-          ? 'bg-blue-500/20 text-blue-400'
+          ? 'bg-[var(--color-active-bg)]'
           : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)]/50',
-        item.type === 'action' && !isActive && !isSaveAnalysis && 'text-amber-400 hover:text-amber-300',
-        // Special shiny yellow styling for save analysis button
-        isSaveAnalysis && !isActive && 'text-yellow-300 hover:text-yellow-200 bg-gradient-to-r from-yellow-500/20 via-yellow-400/30 to-yellow-500/20 hover:from-yellow-500/30 hover:via-yellow-400/40 hover:to-yellow-500/30 border border-yellow-500/40 shadow-[0_0_8px_rgba(234,179,8,0.3)] hover:shadow-[0_0_12px_rgba(234,179,8,0.5)]',
+        item.type === 'action' && !isActive && !isSaveAnalysis && 'hover:opacity-80',
+        // Special shiny styling for save analysis button
+        isSaveAnalysis && !isActive && 'bg-[var(--color-current-bg)] border border-[var(--color-current)]/40',
         // Draggable cursor for file items
         isDraggable && 'cursor-grab active:cursor-grabbing'
       )}
+      style={{
+        color: isActive
+          ? 'var(--color-active)'
+          : item.type === 'action' && !isSaveAnalysis
+            ? 'var(--color-current)'
+            : isSaveAnalysis
+              ? 'var(--color-current)'
+              : undefined
+      }}
     >
       {isMultiLineAction ? (
         <div className="flex-1 text-left">
           <div className="font-semibold">{actionTitle}</div>
-          <div className="text-[10px] text-amber-400/80 line-clamp-2">{actionDetail}</div>
+          <div className="text-[10px] opacity-80 line-clamp-2">{actionDetail}</div>
         </div>
       ) : (
         <span className="flex-1 text-left truncate">{item.label}</span>
@@ -341,14 +350,14 @@ function WorkflowSubItemComponent({ item, isActive, onSectionClick, onDragStart,
         <span className={cn(
           'text-[10px] font-mono',
           item.progress.completed === item.progress.total
-            ? 'text-green-400'
+            ? 'text-[var(--color-success)]'
             : 'text-[var(--muted-foreground)]'
         )}>
           {item.progress.completed}/{item.progress.total}
         </span>
       )}
       {item.type === 'action' && (
-        <Copy className={cn('w-3 h-3 flex-shrink-0 mt-0.5', copied && 'text-green-400')} />
+        <Copy className={cn('w-3 h-3 flex-shrink-0 mt-0.5', copied && 'text-[var(--color-success)]')} />
       )}
     </button>
   );
@@ -392,8 +401,8 @@ function WorkflowNavItem({ step, isExpanded, isActive, activeSection, activeChec
           onClick={onToggle}
           className={cn(
             'w-full flex items-center gap-2 px-2 py-1.5 rounded-md transition-all text-sm',
-            isActive && 'bg-blue-500/10 ring-1 ring-blue-500/30',
-            step.isCurrent && !isActive && 'bg-amber-500/10 ring-1 ring-amber-500/30',
+            isActive && 'bg-[var(--color-active-bg)] ring-1 ring-[var(--color-active)]/30',
+            step.isCurrent && !isActive && 'bg-[var(--color-current-bg)] ring-1 ring-[var(--color-current)]/30',
             !step.isCurrent && !isActive && 'hover:bg-[var(--secondary)]/50'
           )}
         >
@@ -413,21 +422,25 @@ function WorkflowNavItem({ step, isExpanded, isActive, activeSection, activeChec
           <div className={cn(
             'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',
             isActive
-              ? 'bg-blue-500 text-white'
+              ? 'bg-[var(--color-active)] text-white'
               : step.isCurrent
-                ? 'bg-amber-500 text-white'
+                ? 'bg-[var(--color-current)] text-white'
                 : 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
           )}>
             {getStepIcon(step.id)}
           </div>
 
           {/* Command label */}
-          <span className={cn(
-            'flex-1 text-left font-mono text-xs truncate',
-            isActive && 'text-blue-400',
-            step.isCurrent && !isActive && 'text-amber-400',
-            !step.isCurrent && !isActive && 'text-[var(--muted-foreground)]'
-          )}>
+          <span
+            className="flex-1 text-left font-mono text-xs truncate"
+            style={{
+              color: isActive
+                ? 'var(--color-active)'
+                : step.isCurrent
+                  ? 'var(--color-current)'
+                  : 'var(--muted-foreground)'
+            }}
+          >
             {step.command}
             {step.progress && (
               <span className="ml-2 font-mono text-[var(--muted-foreground)]">
@@ -438,14 +451,14 @@ function WorkflowNavItem({ step, isExpanded, isActive, activeSection, activeChec
 
           {/* Optional badge */}
           {step.isOptional && (
-            <span className="text-[9px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-400">
+            <span className="text-[9px] px-1 py-0.5 rounded bg-[var(--color-active-bg)] text-[var(--color-active)]">
               opt
             </span>
           )}
 
           {/* Current step badge */}
           {step.isCurrent && (
-            <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500 text-white font-bold">
+            <span className="text-[9px] px-1 py-0.5 rounded bg-[var(--color-current)] text-white font-bold">
               NEXT
             </span>
           )}
