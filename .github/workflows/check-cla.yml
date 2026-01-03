@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check CLA checkbox
-        uses: MatiBrond/github-actions-checkbox-check@v0.0.2
+        uses: MatiBrond/github-actions-checkbox-check@431bc68086b573af5536c75b1dfa099cc0d3049f
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           checkbox-text: "I have read and agree to the [Contributor License Agreement (CLA)](https://github.com/paulpham157/spec-board/blob/main/CLA.md)"
