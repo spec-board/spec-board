@@ -4,23 +4,37 @@
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 
+## Screenshots
+
+### Kanban Board
+
+Track features across your development pipeline with a 4-column Kanban board showing progress metrics for tasks and checklists.
+
+![Kanban Board](https://github.com/paulpham157/spec-board/blob/main/public/assests/board.png)
+
+### Feature Detail View
+
+Deep dive into specifications with structured user stories, acceptance scenarios, edge cases, and implementation guidance.
+
+![Feature Detail](https://github.com/paulpham157/spec-board/blob/main/public/assests/spec.png)
+
+### AI-Powered Development Assistance
+
+Get intelligent next action suggestions and save analysis reports for quality assurance.
+
+<p align="center">
+  <img src="https://github.com/paulpham157/spec-board/blob/main/public/assests/suggestion-next-action.png" alt="Next Action Suggestions" width="400" />
+  <img src="https://github.com/paulpham157/spec-board/blob/main/public/assests/save-the-analysis.png" alt="Save Analysis Report" width="300" />
+</p>
+
 ## Features
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│   KANBAN BOARD             SHAREABLE LINKS          REAL-TIME UPDATES       │
-│   ─────────────────        ─────────────────        ──────────────────      │
-│   4-column pipeline        Clean slug-based         Live file watching      │
-│   Backlog → Done           URLs for sharing         via SSE                 │
-│                                                                             │
-│   DASHBOARD METRICS        DEEP LINKING             ACCESSIBLE              │
-│   ─────────────────        ─────────────────        ──────────────────      │
-│   Progress charts          Link to specific         WCAG 2.2 AA             │
-│   Stage distribution       features directly        Keyboard nav            │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+- **Kanban Board** — 4-column pipeline (Backlog → Planning → In Progress → Done)
+- **Real-Time Updates** — Live file watching via SSE
+- **Deep Linking** — Shareable URLs for projects and features
+- **Progress Tracking** — Visual metrics for tasks and checklists
+- **Accessible** — WCAG 2.2 AA compliant with keyboard navigation
+- **AI Integration** — Next action suggestions and analysis reports
 
 ## How It Works
 
@@ -42,22 +56,37 @@ B = Backlog | P = Planning | I = In Progress | D = Done
 
 ## Quick Start
 
-### Option 1: Docker (Recommended)
-
-```bash
-docker compose up -d --build
-```
-
-Open http://localhost:3000
-
-### Option 2: Local Development
-
 ```bash
 pnpm install
-cp .env.example .env          # Add DATABASE_URL
-pnpm prisma migrate dev
+cp .env.example .env
+```
+
+```.env
+PORT=3000
+DATABASE_URL="postgresql://user1:passwordD@localhost:5432/specboard1"
+POSTGRES_USER="user1"
+POSTGRES_PASSWORD="passwordD"
+POSTGRES_DB="specboard1"
+```
+
+```bash
+docker compose -f docker-compose.db.yml up -d
+pnpm prisma db:setup
+```
+
+Run dev
+
+```bash
 pnpm dev
 ```
+
+Or build for stable production
+
+```bash
+pnpm build
+pnpm start
+```
+
 
 ## URL Structure
 
