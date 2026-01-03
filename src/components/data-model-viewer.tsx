@@ -23,7 +23,7 @@ function EntityCard({ entity }: { entity: DataEntity }) {
         className="flex items-center gap-2 w-full text-left p-3 bg-[var(--secondary)]/30 hover:bg-[var(--secondary)]/50 transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Box className="w-4 h-4 text-blue-500" />
+        <Box className="w-4 h-4" style={{ color: 'var(--tag-text-info)' }} />
         <h4 className="font-medium flex-1">{entity.name}</h4>
       </button>
 
@@ -55,7 +55,7 @@ function EntitiesSection({ entities }: { entities: DataEntity[] }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Box className="w-4 h-4 text-blue-500" />
+        <Box className="w-4 h-4" style={{ color: 'var(--tag-text-info)' }} />
         <h3 className="font-semibold">Entities</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{entities.length} entities</span>
       </button>
@@ -80,7 +80,7 @@ function EnumCard({ dataEnum }: { dataEnum: DataEnum }) {
         className="flex items-center gap-2 w-full text-left p-3 bg-[var(--secondary)]/30 hover:bg-[var(--secondary)]/50 transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <List className="w-4 h-4 text-purple-500" />
+        <List className="w-4 h-4" style={{ color: 'var(--tag-text-purple)' }} />
         <h4 className="font-medium flex-1">{dataEnum.name}</h4>
       </button>
 
@@ -107,7 +107,7 @@ function EnumsSection({ enums }: { enums: DataEnum[] }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <List className="w-4 h-4 text-purple-500" />
+        <List className="w-4 h-4" style={{ color: 'var(--tag-text-purple)' }} />
         <h3 className="font-semibold">Enums</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{enums.length} enums</span>
       </button>
@@ -134,7 +134,7 @@ function ValidationRulesSection({ rules }: { rules: ValidationRule[] }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <ShieldCheck className="w-4 h-4 text-green-500" />
+        <ShieldCheck className="w-4 h-4" style={{ color: 'var(--tag-text-success)' }} />
         <h3 className="font-semibold">Validation Rules</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{rules.length} fields</span>
       </button>
@@ -146,7 +146,7 @@ function ValidationRulesSection({ rules }: { rules: ValidationRule[] }) {
               <ul className="space-y-1">
                 {rule.rules.map((r, rIdx) => (
                   <li key={rIdx} className="text-xs text-[var(--muted-foreground)] flex items-start gap-2">
-                    <span className="text-green-500">•</span>
+                    <span style={{ color: 'var(--tag-text-success)' }}>•</span>
                     <span>{r}</span>
                   </li>
                 ))}
@@ -171,7 +171,7 @@ function StateTransitionsSection({ data }: { data: StateTransitionsData }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <ArrowRightLeft className="w-4 h-4 text-orange-500" />
+        <ArrowRightLeft className="w-4 h-4" style={{ color: 'var(--tag-text-orange)' }} />
         <h3 className="font-semibold">State Transitions</h3>
       </button>
       {isExpanded && (
@@ -202,7 +202,7 @@ function StateTransitionsSection({ data }: { data: StateTransitionsData }) {
                           <td className="p-2 text-[var(--muted-foreground)]">{t.condition}</td>
                           <td className="p-2">
                             {t.transitionsTo.map((to, toIdx) => (
-                              <span key={toIdx} className="inline-block px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs mr-1">
+                              <span key={toIdx} className="inline-block px-1.5 py-0.5 bg-orange-500/20 rounded text-xs mr-1" style={{ color: 'var(--tag-text-orange)' }}>
                                 {to}
                               </span>
                             ))}
@@ -236,7 +236,7 @@ function StorageSchemaSection({ data }: { data: StorageSchemaData }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <HardDrive className="w-4 h-4 text-cyan-500" />
+        <HardDrive className="w-4 h-4" style={{ color: 'var(--tag-text-cyan)' }} />
         <h3 className="font-semibold">localStorage Schema</h3>
       </button>
       {isExpanded && (
@@ -262,7 +262,7 @@ function StorageSchemaSection({ data }: { data: StorageSchemaData }) {
                             <code className="px-1.5 py-0.5 bg-[var(--secondary)] rounded text-xs">{k.key}</code>
                           </td>
                           <td className="p-2">
-                            <code className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded text-xs">{k.type}</code>
+                            <code className="px-1.5 py-0.5 bg-cyan-500/20 rounded text-xs" style={{ color: 'var(--tag-text-cyan)' }}>{k.type}</code>
                           </td>
                           <td className="p-2 text-[var(--muted-foreground)]">{k.description}</td>
                         </tr>
@@ -303,7 +303,7 @@ function SortingBehaviorSection({ behaviors }: { behaviors: { option: string; de
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <ArrowUpDown className="w-4 h-4 text-yellow-500" />
+        <ArrowUpDown className="w-4 h-4" style={{ color: 'var(--tag-text-warning)' }} />
         <h3 className="font-semibold">Sorting Behavior</h3>
       </button>
       {isExpanded && (
@@ -332,7 +332,7 @@ function FilteringBehaviorSection({ filters }: { filters: { filter: string; cond
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Filter className="w-4 h-4 text-pink-500" />
+        <Filter className="w-4 h-4" style={{ color: 'var(--tag-text-pink)' }} />
         <h3 className="font-semibold">Filtering Behavior</h3>
       </button>
       {isExpanded && (
@@ -371,14 +371,14 @@ function SearchBehaviorSection({ behaviors }: { behaviors: string[] }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Search className="w-4 h-4 text-indigo-500" />
+        <Search className="w-4 h-4" style={{ color: 'var(--tag-text-indigo)' }} />
         <h3 className="font-semibold">Search Behavior</h3>
       </button>
       {isExpanded && (
         <ul className="space-y-1 p-3 bg-[var(--secondary)]/30 rounded-lg">
           {behaviors.map((b, idx) => (
             <li key={idx} className="flex items-start gap-2 text-sm">
-              <span className="text-indigo-500">•</span>
+              <span style={{ color: 'var(--tag-text-indigo)' }}>•</span>
               <span>{b}</span>
             </li>
           ))}
@@ -421,6 +421,16 @@ function DataIntegritySection({ rules }: { rules: DataIntegrityRule[] }) {
 
   if (rules.length === 0) return null;
 
+  // Map color names to CSS variable names
+  const getColorVars = (color: string) => {
+    const colorMap: Record<string, { textVar: string; codeClass: string }> = {
+      emerald: { textVar: '--tag-text-success', codeClass: 'bg-emerald-500/20' },
+      amber: { textVar: '--tag-text-warning', codeClass: 'bg-amber-500/20' },
+      violet: { textVar: '--tag-text-purple', codeClass: 'bg-violet-500/20' },
+    };
+    return colorMap[color] || colorMap.emerald;
+  };
+
   return (
     <div className="mb-4">
       <button
@@ -428,7 +438,7 @@ function DataIntegritySection({ rules }: { rules: DataIntegrityRule[] }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+        <ShieldCheck className="w-4 h-4" style={{ color: 'var(--tag-text-success)' }} />
         <h3 className="font-semibold">Data Integrity</h3>
       </button>
       {isExpanded && (
@@ -437,23 +447,19 @@ function DataIntegritySection({ rules }: { rules: DataIntegrityRule[] }) {
             {rules.map((rule, idx) => {
               const Icon = getIntegrityIcon(rule.title);
               const color = getIntegrityColor(rule.title);
-              const colorClasses = {
-                emerald: { text: 'text-emerald-400', bullet: 'text-emerald-500', code: 'bg-emerald-500/20 text-emerald-300' },
-                amber: { text: 'text-amber-400', bullet: 'text-amber-500', code: 'bg-amber-500/20 text-amber-300' },
-                violet: { text: 'text-violet-400', bullet: 'text-violet-500', code: 'bg-violet-500/20 text-violet-300' },
-              }[color];
+              const colorVars = getColorVars(color);
               return (
                 <div key={idx} className="bg-[var(--background)]/50 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <Icon className={cn('w-4 h-4', colorClasses.text)} />
-                    <h4 className={cn('text-sm font-semibold', colorClasses.text)}>{rule.title}</h4>
+                    <Icon className="w-4 h-4" style={{ color: `var(${colorVars.textVar})` }} />
+                    <h4 className="text-sm font-semibold" style={{ color: `var(${colorVars.textVar})` }}>{rule.title}</h4>
                   </div>
                   <ul className="space-y-1.5">
                     {rule.items.map((item, itemIdx) => (
                       <li key={itemIdx} className="text-xs flex items-start gap-1.5">
-                        <span className={cn('mt-0.5', colorClasses.bullet)}>•</span>
+                        <span className="mt-0.5" style={{ color: `var(${colorVars.textVar})` }}>•</span>
                         <span className="text-[var(--muted-foreground)]">
-                          {renderCodeInText(item, colorClasses.code)}
+                          {renderCodeInText(item, `${colorVars.codeClass}`)}
                         </span>
                       </li>
                     ))}
@@ -480,7 +486,7 @@ function OtherSectionsSection({ sections }: { sections: DataModelSection[] }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <FileText className="w-4 h-4 text-gray-500" />
+        <FileText className="w-4 h-4 text-[var(--muted-foreground)]" />
         <h3 className="font-semibold">Additional Sections</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{sections.length} sections</span>
       </button>
@@ -543,7 +549,7 @@ export function DataModelViewer({ content, filePath, className }: DataModelViewe
 
   if (!content) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12 text-zinc-500', className)}>
+      <div className={cn('flex flex-col items-center justify-center py-12 text-[var(--muted-foreground)]', className)}>
         <Database className="w-12 h-12 mb-4 opacity-50" />
         <p className="text-lg font-medium">No data model yet</p>
         <p className="text-sm mt-2">Create a data-model.md file to define data structures</p>

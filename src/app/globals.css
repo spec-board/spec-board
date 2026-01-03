@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-:root {
+/* Dark theme (default) */
+:root,
+.dark {
   --background: #0a0a0a;
   --foreground: #ededed;
   --card: #141414;
@@ -21,6 +23,34 @@
   --color-warning: #eab308;
   --color-error: #ef4444;
   --color-info: #3b82f6;
+  --color-neon: #22d3ee;
+
+  /* UI state colors */
+  --color-active: #60a5fa;
+  --color-active-bg: rgba(59, 130, 246, 0.2);
+  --color-current: #fbbf24;
+  --color-current-bg: rgba(245, 158, 11, 0.1);
+
+  /* Phase header colors */
+  --color-phase-purple: #c084fc;
+  --color-phase-orange: #fb923c;
+  --color-phase-cyan: #22d3ee;
+  --color-phase-yellow: #facc15;
+  --color-phase-green: #4ade80;
+
+  /* Badge/tag text colors - colored on dark theme */
+  --tag-text-success: #4ade80;
+  --tag-text-info: #60a5fa;
+  --tag-text-warning: #fbbf24;
+  --tag-text-error: #f87171;
+  --tag-text-purple: #c084fc;
+  --tag-text-cyan: #22d3ee;
+  --tag-text-orange: #fb923c;
+  --tag-text-indigo: #818cf8;
+  --tag-text-pink: #f472b6;
+
+  /* Progress bar empty state */
+  --progress-empty: #a1a1aa;
 
   /* Priority colors */
   --priority-p1: #ef4444;
@@ -36,6 +66,63 @@
   --focus-ring-color: var(--color-info);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
+}
+
+/* Light theme */
+.light {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #f5f5f5;
+  --card-foreground: #0a0a0a;
+  --primary: #1d4ed8;
+  --primary-foreground: #ffffff;
+  --secondary: #e5e5e5;
+  --secondary-foreground: #0a0a0a;
+  --muted: #e5e5e5;
+  --muted-foreground: #171717;
+  --accent: #e5e5e5;
+  --accent-foreground: #0a0a0a;
+  --border: #d4d4d4;
+  --ring: #1d4ed8;
+
+  /* Semantic colors - dark saturated colors for light bg */
+  --color-success: #166534;
+  --color-warning: #a16207;
+  --color-error: #b91c1c;
+  --color-info: #1e40af;
+  --color-neon: #0891b2;
+
+  /* UI state colors - darker for light bg */
+  --color-active: #2563eb;
+  --color-active-bg: rgba(37, 99, 235, 0.15);
+  --color-current: #b45309;
+  --color-current-bg: rgba(180, 83, 9, 0.1);
+
+  /* Phase header colors - darker for light bg */
+  --color-phase-purple: #7c3aed;
+  --color-phase-orange: #c2410c;
+  --color-phase-cyan: #0891b2;
+  --color-phase-yellow: #a16207;
+  --color-phase-green: #16a34a;
+
+  /* Badge/tag text colors - dark text on light theme for contrast */
+  --tag-text-success: #14532d;
+  --tag-text-info: #1e3a8a;
+  --tag-text-warning: #713f12;
+  --tag-text-error: #7f1d1d;
+  --tag-text-purple: #581c87;
+  --tag-text-cyan: #164e63;
+  --tag-text-orange: #7c2d12;
+  --tag-text-indigo: #3730a3;
+  --tag-text-pink: #9d174d;
+
+  /* Progress bar empty state - white in light mode */
+  --progress-empty: #ffffff;
+
+  /* Priority colors - dark saturated for light bg */
+  --priority-p1: #b91c1c;
+  --priority-p2: #c2410c;
+  --priority-p3: #4b5563;
 }
 
 body {

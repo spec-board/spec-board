@@ -31,7 +31,7 @@ function PrerequisitesSection({ prerequisites, title }: { prerequisites: string[
         <ul className="space-y-1 p-3 bg-[var(--secondary)]/30 rounded-lg">
           {prerequisites.map((prereq, idx) => (
             <li key={idx} className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-info)' }} />
               <span>{prereq}</span>
             </li>
           ))}
@@ -51,7 +51,7 @@ function SetupStepCard({ step }: { step: SetupStep }) {
         className="flex items-center gap-2 w-full text-left p-3 bg-[var(--secondary)]/30 hover:bg-[var(--secondary)]/50 transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold">
+        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-xs font-bold" style={{ color: 'var(--tag-text-info)' }}>
           {step.id}
         </span>
         <h4 className="font-medium flex-1">{step.title}</h4>
@@ -67,7 +67,7 @@ function SetupStepCard({ step }: { step: SetupStep }) {
               <div className="relative">
                 <pre className="text-xs font-mono bg-zinc-900 text-zinc-100 p-3 rounded-lg overflow-x-auto">
                   {cmd.language && (
-                    <span className="absolute top-1 right-2 text-xs text-zinc-500">{cmd.language}</span>
+                    <span className="absolute top-1 right-2 text-xs text-[var(--muted-foreground)]">{cmd.language}</span>
                   )}
                   {cmd.code}
                 </pre>
@@ -92,7 +92,7 @@ function SetupStepsSection({ steps, title }: { steps: SetupStep[]; title?: strin
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Terminal className="w-4 h-4 text-green-500" />
+        <Terminal className="w-4 h-4" style={{ color: 'var(--tag-text-success)' }} />
         <h3 className="font-semibold">{title ?? 'Setup Steps'}</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{steps.length} steps</span>
       </button>
@@ -121,7 +121,7 @@ function VerificationChecklistSection({ data, title }: { data: VerificationData;
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <CheckCircle2 className="w-4 h-4 text-green-500" />
+        <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--tag-text-success)' }} />
         <h3 className="font-semibold">{title ?? 'Verification Checklist'}</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">
           {checkedCount}/{data.items.length} complete
@@ -136,7 +136,7 @@ function VerificationChecklistSection({ data, title }: { data: VerificationData;
             {data.items.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm">
                 {item.checked ? (
-                  <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
                 ) : (
                   <Circle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
                 )}
@@ -162,7 +162,7 @@ function KeyFilesSection({ data, title }: { data: KeyFilesData; title?: string }
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <FileCode className="w-4 h-4 text-purple-500" />
+        <FileCode className="w-4 h-4" style={{ color: 'var(--tag-text-purple)' }} />
         <h3 className="font-semibold">{title ?? 'Key Files to Create'}</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{data.files.length} files</span>
       </button>
@@ -197,7 +197,7 @@ function BrowserSupportSection({ data, title }: { data: BrowserSupportData; titl
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Globe className="w-4 h-4 text-cyan-500" />
+        <Globe className="w-4 h-4" style={{ color: 'var(--tag-text-cyan)' }} />
         <h3 className="font-semibold">{title ?? 'Browser Support'}</h3>
       </button>
       {isExpanded && (
@@ -210,7 +210,7 @@ function BrowserSupportSection({ data, title }: { data: BrowserSupportData; titl
               <ul className="space-y-1">
                 {subsection.items.map((item, itemIdx) => (
                   <li key={itemIdx} className="flex items-start gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-cyan)' }} />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -235,7 +235,7 @@ function DevelopmentCommandsSection({ commands, title }: { commands: { title: st
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Play className="w-4 h-4 text-orange-500" />
+        <Play className="w-4 h-4" style={{ color: 'var(--tag-text-orange)' }} />
         <h3 className="font-semibold">{title ?? 'Development Commands'}</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{commands.length} commands</span>
       </button>
@@ -269,7 +269,7 @@ function ProjectScriptsSection({ scripts }: { scripts?: { title: string; content
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <ScrollText className="w-4 h-4 text-yellow-500" />
+        <ScrollText className="w-4 h-4" style={{ color: 'var(--tag-text-warning)' }} />
         <h3 className="font-semibold">{scripts.title}</h3>
       </button>
       {isExpanded && (
@@ -296,7 +296,7 @@ function DevelopmentSectionComponent({ development, title }: { development?: Dev
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Code2 className="w-4 h-4 text-emerald-500" />
+        <Code2 className="w-4 h-4" style={{ color: 'var(--tag-text-success)' }} />
         <h3 className="font-semibold">{title ?? 'Development'}</h3>
         {development.subsections.length > 0 && (
           <span className="text-xs text-[var(--muted-foreground)] ml-auto">
@@ -316,7 +316,7 @@ function DevelopmentSectionComponent({ development, title }: { development?: Dev
             <div key={`top-${idx}`} className="relative">
               <pre className="text-xs font-mono bg-zinc-900 text-zinc-100 p-3 rounded-lg overflow-x-auto">
                 {block.language && (
-                  <span className="absolute top-1 right-2 text-xs text-zinc-500">{block.language}</span>
+                  <span className="absolute top-1 right-2 text-xs text-[var(--muted-foreground)]">{block.language}</span>
                 )}
                 {block.code}
               </pre>
@@ -334,7 +334,7 @@ function DevelopmentSectionComponent({ development, title }: { development?: Dev
                 <div key={blockIdx} className="relative mt-2">
                   <pre className="text-xs font-mono bg-zinc-900 text-zinc-100 p-3 rounded-lg overflow-x-auto">
                     {block.language && (
-                      <span className="absolute top-1 right-2 text-xs text-zinc-500">{block.language}</span>
+                      <span className="absolute top-1 right-2 text-xs text-[var(--muted-foreground)]">{block.language}</span>
                     )}
                     {block.code}
                   </pre>
@@ -450,7 +450,7 @@ export function QuickstartViewer({ content, filePath, className }: QuickstartVie
 
   if (!content) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12 text-zinc-500', className)}>
+      <div className={cn('flex flex-col items-center justify-center py-12 text-[var(--muted-foreground)]', className)}>
         <Rocket className="w-12 h-12 mb-4 opacity-50" />
         <p className="text-lg font-medium">No quickstart guide yet</p>
         <p className="text-sm mt-2">Create a quickstart.md file for getting started instructions</p>

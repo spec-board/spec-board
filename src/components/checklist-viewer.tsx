@@ -150,13 +150,21 @@ function parseChecklistContent(content: string): ParsedChecklist {
 
 // Checklist item component
 function ChecklistItemRow({ item }: { item: ChecklistItem }) {
+  // Get tag color config
+  const getTagStyle = (tag: string): { bg: string; textVar: string } => {
+    if (tag === 'Gap') return { bg: 'bg-red-500/20', textVar: '--tag-text-error' };
+    if (tag === 'Clarity') return { bg: 'bg-amber-500/20', textVar: '--tag-text-warning' };
+    if (tag === 'Assumption') return { bg: 'bg-blue-500/20', textVar: '--tag-text-info' };
+    return { bg: 'bg-[var(--secondary)]', textVar: '--muted-foreground' };
+  };
+
   return (
     <div className={cn(
       'flex items-start gap-3 py-2 px-3 rounded-lg transition-colors',
-      item.checked ? 'bg-emerald-500/5' : 'hover:bg-[var(--secondary)]/30'
+      item.checked ? 'bg-[var(--color-success)]/5' : 'hover:bg-[var(--secondary)]/30'
     )}>
       {item.checked ? (
-        <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
       ) : (
         <Circle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
       )}
@@ -167,13 +175,10 @@ function ChecklistItemRow({ item }: { item: ChecklistItem }) {
         {item.text}
       </span>
       {item.tag && (
-        <span className={cn(
-          'text-[10px] px-1.5 py-0.5 rounded font-medium',
-          item.tag === 'Gap' && 'bg-red-500/20 text-red-400',
-          item.tag === 'Clarity' && 'bg-amber-500/20 text-amber-400',
-          item.tag === 'Assumption' && 'bg-blue-500/20 text-blue-400',
-          !['Gap', 'Clarity', 'Assumption'].includes(item.tag) && 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
-        )}>
+        <span
+          className={cn('text-[10px] px-1.5 py-0.5 rounded font-medium', getTagStyle(item.tag).bg)}
+          style={{ color: `var(${getTagStyle(item.tag).textVar})` }}
+        >
           {item.tag}
         </span>
       )}
@@ -192,20 +197,20 @@ function ChecklistSectionView({ section }: { section: ChecklistSection }) {
     <div className="mb-6">
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-medium text-sm">{section.title}</h3>
-        <span className={cn(
-          'text-xs font-mono',
-          isComplete ? 'text-emerald-400' : 'text-[var(--muted-foreground)]'
-        )}>
+        <span
+          className="text-xs font-mono"
+          style={{ color: isComplete ? 'var(--tag-text-success)' : 'var(--muted-foreground)' }}
+        >
           {completed}/{total}
         </span>
       </div>
       <div className="h-1 bg-[var(--secondary)] rounded-full overflow-hidden mb-3">
         <div
-          className={cn(
-            'h-full transition-all duration-300',
-            isComplete ? 'bg-emerald-500' : 'bg-blue-500'
-          )}
-          style={{ width: `${percentage}%` }}
+          className="h-full transition-all duration-300"
+          style={{
+            width: `${percentage}%`,
+            backgroundColor: isComplete ? 'var(--color-success)' : 'var(--color-info)'
+          }}
         />
       </div>
       <div className="space-y-1">
@@ -214,6 +219,29 @@ function ChecklistSectionView({ section }: { section: ChecklistSection }) {
         ))}
       </div>
     </div>
+  );
+}
+
+// Status badge component for summary table
+function StatusBadge({ status }: { status: string }) {
+  const statusLower = status.toLowerCase();
+
+  const getStatusStyle = (): { bg: string; textVar: string } => {
+    if (statusLower === 'pending') return { bg: 'bg-amber-500/20', textVar: '--tag-text-warning' };
+    if (statusLower === 'complete') return { bg: 'bg-emerald-500/20', textVar: '--tag-text-success' };
+    if (statusLower === 'in progress') return { bg: 'bg-blue-500/20', textVar: '--tag-text-info' };
+    return { bg: 'bg-[var(--secondary)]', textVar: '--muted-foreground' };
+  };
+
+  const style = getStatusStyle();
+
+  return (
+    <span
+      className={cn('text-xs px-2 py-0.5 rounded', style.bg)}
+      style={{ color: `var(${style.textVar})` }}
+    >
+      {status}
+    </span>
   );
 }
 
@@ -242,15 +270,7 @@ function SummaryTableView({ rows }: { rows: SummaryTableRow[] }) {
                 <td className="p-2">{row.dimension}</td>
                 <td className="p-2 text-center font-mono text-xs">{row.items}</td>
                 <td className="p-2 text-center">
-                  <span className={cn(
-                    'text-xs px-2 py-0.5 rounded',
-                    row.status.toLowerCase() === 'pending' && 'bg-amber-500/20 text-amber-400',
-                    row.status.toLowerCase() === 'complete' && 'bg-emerald-500/20 text-emerald-400',
-                    row.status.toLowerCase() === 'in progress' && 'bg-blue-500/20 text-blue-400',
-                    !['pending', 'complete', 'in progress'].includes(row.status.toLowerCase()) && 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
-                  )}>
-                    {row.status}
-                  </span>
+                  <StatusBadge status={row.status} />
                 </td>
               </tr>
             ))}
@@ -305,10 +325,13 @@ function StructuredChecklistView({ parsed, totalItems, completedItems }: {
               style={{ width: `${totalItems > 0 ? (completedItems / totalItems) * 100 : 0}%` }}
             />
           </div>
-          <span className={cn(
-            'text-sm font-mono',
-            completedItems === totalItems ? 'text-emerald-400' : 'text-[var(--muted-foreground)]'
-          )}>
+          <span
+            className={cn(
+              'text-sm font-mono',
+              completedItems === totalItems ? '' : 'text-[var(--muted-foreground)]'
+            )}
+            style={completedItems === totalItems ? { color: 'var(--tag-text-success)' } : undefined}
+          >
             {completedItems}/{totalItems}
           </span>
         </div>
@@ -323,8 +346,8 @@ function StructuredChecklistView({ parsed, totalItems, completedItems }: {
       {parsed.notes.length > 0 && (
         <div className="mt-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
           <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-4 h-4 text-blue-400" />
-            <span className="font-medium text-sm text-blue-400">Notes</span>
+            <AlertCircle className="w-4 h-4" style={{ color: 'var(--tag-text-info)' }} />
+            <span className="font-medium text-sm" style={{ color: 'var(--tag-text-info)' }}>Notes</span>
           </div>
           <ul className="space-y-1">
             {parsed.notes.map((note, index) => (
@@ -404,7 +427,7 @@ interface ChecklistViewerProps {
 export function ChecklistViewer({ checklists, className }: ChecklistViewerProps) {
   if (!checklists || checklists.length === 0) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12 text-zinc-500', className)}>
+      <div className={cn('flex flex-col items-center justify-center py-12 text-[var(--muted-foreground)]', className)}>
         <FolderOpen className="w-12 h-12 mb-4 opacity-50" />
         <p className="text-lg font-medium">No checklists yet</p>
         <p className="text-sm mt-2 text-center">

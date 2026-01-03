@@ -30,7 +30,7 @@ function TechnologyDecisionCard({ decision }: { decision: TechnologyDecision }) 
         <div className="p-3 space-y-3">
           {/* Decision */}
           <div className="flex items-start gap-2">
-            <Lightbulb className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+            <Lightbulb className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
             <div>
               <span className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Decision</span>
               <p className="text-sm font-medium">{decision.decision}</p>
@@ -44,7 +44,7 @@ function TechnologyDecisionCard({ decision }: { decision: TechnologyDecision }) 
               <ul className="mt-1 space-y-1">
                 {decision.rationale.map((item, idx) => (
                   <li key={idx} className="text-sm flex items-start gap-2">
-                    <span className="text-green-500 mt-1">•</span>
+                    <span className="mt-1" style={{ color: 'var(--tag-text-success)' }}>•</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -59,7 +59,7 @@ function TechnologyDecisionCard({ decision }: { decision: TechnologyDecision }) 
               <ul className="mt-1 space-y-1">
                 {decision.alternatives.map((alt, idx) => (
                   <li key={idx} className="text-sm flex items-start gap-2">
-                    <XCircle className="w-3 h-3 text-red-400 mt-1 flex-shrink-0" />
+                    <XCircle className="w-3 h-3 mt-1 flex-shrink-0" style={{ color: 'var(--tag-text-error)' }} />
                     <span>
                       <span className="font-medium">{alt.name}:</span>{' '}
                       <span className="text-[var(--muted-foreground)]">{alt.reason}</span>
@@ -87,7 +87,7 @@ function TechnologyDecisionsSection({ decisions }: { decisions: TechnologyDecisi
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Lightbulb className="w-4 h-4 text-yellow-500" />
+        <Lightbulb className="w-4 h-4" style={{ color: 'var(--tag-text-warning)' }} />
         <h3 className="font-semibold">Technology Decisions</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{decisions.length} decisions</span>
       </button>
@@ -164,7 +164,7 @@ function PerformanceSection({ section }: { section: ResearchSection }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Zap className="w-4 h-4 text-orange-500" />
+        <Zap className="w-4 h-4" style={{ color: 'var(--tag-text-orange)' }} />
         <h3 className="font-semibold">{section.title}</h3>
       </button>
       {isExpanded && (
@@ -172,14 +172,14 @@ function PerformanceSection({ section }: { section: ResearchSection }) {
           {subsections.map((sub, idx) => (
             <div key={idx} className="bg-[var(--background)]/50 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-3 h-3 text-orange-400" />
-                <h4 className="text-sm font-semibold text-orange-400">{sub.title}</h4>
+                <Zap className="w-3 h-3" style={{ color: 'var(--tag-text-orange)' }} />
+                <h4 className="text-sm font-semibold" style={{ color: 'var(--tag-text-orange)' }}>{sub.title}</h4>
               </div>
               <ul className="space-y-1.5">
                 {sub.items.map((item, itemIdx) => (
                   <li key={itemIdx} className="text-sm flex items-start gap-2">
-                    <span className="text-orange-500 mt-1">▸</span>
-                    <span>{renderCodeInText(item, 'bg-orange-500/20 text-orange-300')}</span>
+                    <span style={{ color: 'var(--tag-text-orange)' }} className="mt-1">▸</span>
+                    <span>{renderCodeInText(item, 'bg-orange-500/20')}</span>
                   </li>
                 ))}
               </ul>
@@ -197,10 +197,10 @@ function AccessibilitySection({ section }: { section: ResearchSection }) {
 
   const getSubsectionStyle = (title: string) => {
     const t = title.toLowerCase();
-    if (t.includes('keyboard')) return { icon: Keyboard, color: 'blue' };
-    if (t.includes('aria')) return { icon: Tag, color: 'purple' };
-    if (t.includes('focus')) return { icon: Focus, color: 'cyan' };
-    return { icon: Accessibility, color: 'blue' };
+    if (t.includes('keyboard')) return { icon: Keyboard, colorVar: '--tag-text-info', codeClass: 'bg-blue-500/20' };
+    if (t.includes('aria')) return { icon: Tag, colorVar: '--tag-text-purple', codeClass: 'bg-purple-500/20' };
+    if (t.includes('focus')) return { icon: Focus, colorVar: '--tag-text-cyan', codeClass: 'bg-cyan-500/20' };
+    return { icon: Accessibility, colorVar: '--tag-text-info', codeClass: 'bg-blue-500/20' };
   };
 
   return (
@@ -210,7 +210,7 @@ function AccessibilitySection({ section }: { section: ResearchSection }) {
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Accessibility className="w-4 h-4 text-blue-500" />
+        <Accessibility className="w-4 h-4" style={{ color: 'var(--tag-text-info)' }} />
         <h3 className="font-semibold">{section.title}</h3>
       </button>
       {isExpanded && (
@@ -219,24 +219,18 @@ function AccessibilitySection({ section }: { section: ResearchSection }) {
             {subsections.map((sub, idx) => {
               const style = getSubsectionStyle(sub.title);
               const Icon = style.icon;
-              const colorMap = {
-                blue: { text: 'text-blue-400', bullet: 'text-blue-500', code: 'bg-blue-500/20 text-blue-300' },
-                purple: { text: 'text-purple-400', bullet: 'text-purple-500', code: 'bg-purple-500/20 text-purple-300' },
-                cyan: { text: 'text-cyan-400', bullet: 'text-cyan-500', code: 'bg-cyan-500/20 text-cyan-300' },
-              } as const;
-              const colorClasses = colorMap[style.color as keyof typeof colorMap] ?? colorMap.blue;
               return (
                 <div key={idx} className="bg-[var(--background)]/50 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <Icon className={cn('w-3 h-3', colorClasses.text)} />
-                    <h4 className={cn('text-sm font-semibold', colorClasses.text)}>{sub.title}</h4>
+                    <Icon className="w-3 h-3" style={{ color: `var(${style.colorVar})` }} />
+                    <h4 className="text-sm font-semibold" style={{ color: `var(${style.colorVar})` }}>{sub.title}</h4>
                   </div>
                   <ul className="space-y-1.5">
                     {sub.items.map((item, itemIdx) => (
                       <li key={itemIdx} className="text-xs flex items-start gap-1.5">
-                        <span className={cn('mt-0.5', colorClasses.bullet)}>•</span>
+                        <span className="mt-0.5" style={{ color: `var(${style.colorVar})` }}>•</span>
                         <span className="text-[var(--muted-foreground)]">
-                          {renderCodeInText(item, colorClasses.code)}
+                          {renderCodeInText(item, style.codeClass)}
                         </span>
                       </li>
                     ))}
@@ -302,7 +296,7 @@ export function ResearchViewer({ content, filePath, className }: ResearchViewerP
 
   if (!content) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12 text-zinc-500', className)}>
+      <div className={cn('flex flex-col items-center justify-center py-12 text-[var(--muted-foreground)]', className)}>
         <BookOpen className="w-12 h-12 mb-4 opacity-50" />
         <p className="text-lg font-medium">No research notes yet</p>
         <p className="text-sm mt-2">Create a research.md file to document technical research</p>

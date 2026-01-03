@@ -26,7 +26,7 @@ function ContractFile({ file, defaultExpanded = false }: ContractFileProps) {
         ) : (
           <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
         )}
-        <FileCode className="w-4 h-4 text-blue-400 flex-shrink-0" />
+        <FileCode className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--tag-text-info)' }} />
         <span className="font-mono text-sm flex-1 text-left truncate">{fileName}</span>
       </button>
 
@@ -47,7 +47,7 @@ interface ContractsViewerProps {
 export function ContractsViewer({ contracts, className }: ContractsViewerProps) {
   if (!contracts || contracts.length === 0) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12 text-zinc-500', className)}>
+      <div className={cn('flex flex-col items-center justify-center py-12 text-[var(--muted-foreground)]', className)}>
         <FolderOpen className="w-12 h-12 mb-4 opacity-50" />
         <p className="text-lg font-medium">No contracts yet</p>
         <p className="text-sm mt-2">Create files in the contracts/ directory to define API contracts</p>

@@ -464,12 +464,15 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
                 'flex-1 flex items-center justify-center border-r border-dashed border-blue-500/50 transition-colors',
                 dropSide === 'left' && 'bg-blue-500/20'
               )}>
-                <div className={cn(
-                  'px-4 py-2 rounded-lg font-medium transition-colors',
-                  dropSide === 'left'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-blue-500/10 text-blue-400 border border-dashed border-blue-500'
-                )}>
+                <div
+                  className={cn(
+                    'px-4 py-2 rounded-lg font-medium transition-colors',
+                    dropSide === 'left'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-blue-500/10 border border-dashed border-blue-500'
+                  )}
+                  style={dropSide !== 'left' ? { color: 'var(--tag-text-info)' } : undefined}
+                >
                   Drop here for left
                 </div>
               </div>
@@ -478,12 +481,15 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
                 'flex-1 flex items-center justify-center transition-colors',
                 dropSide === 'right' && 'bg-blue-500/20'
               )}>
-                <div className={cn(
-                  'px-4 py-2 rounded-lg font-medium transition-colors',
-                  dropSide === 'right'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-blue-500/10 text-blue-400 border border-dashed border-blue-500'
-                )}>
+                <div
+                  className={cn(
+                    'px-4 py-2 rounded-lg font-medium transition-colors',
+                    dropSide === 'right'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-blue-500/10 border border-dashed border-blue-500'
+                  )}
+                  style={dropSide !== 'right' ? { color: 'var(--tag-text-info)' } : undefined}
+                >
                   Drop here for right
                 </div>
               </div>

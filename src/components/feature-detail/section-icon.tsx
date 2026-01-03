@@ -37,34 +37,24 @@ export function SectionIcon({ sectionId, feature, className }: SectionIconProps)
     case 'plan':
       return (
         <FileText
-          className={cn(
-            baseClass,
-            feature.hasPlan ? 'text-green-400' : 'text-[var(--muted-foreground)]/50'
-          )}
+          className={baseClass}
+          style={{ color: feature.hasPlan ? 'var(--tag-text-success)' : 'var(--muted-foreground)' }}
         />
       );
 
     case 'research':
       return (
         <BookOpen
-          className={cn(
-            baseClass,
-            hasAdditionalFile(feature, 'research')
-              ? 'text-green-400'
-              : 'text-[var(--muted-foreground)]/50'
-          )}
+          className={baseClass}
+          style={{ color: hasAdditionalFile(feature, 'research') ? 'var(--tag-text-success)' : 'var(--muted-foreground)' }}
         />
       );
 
     case 'data-model':
       return (
         <Database
-          className={cn(
-            baseClass,
-            hasAdditionalFile(feature, 'data-model')
-              ? 'text-green-400'
-              : 'text-[var(--muted-foreground)]/50'
-          )}
+          className={baseClass}
+          style={{ color: hasAdditionalFile(feature, 'data-model') ? 'var(--tag-text-success)' : 'var(--muted-foreground)' }}
         />
       );
 
@@ -72,13 +62,11 @@ export function SectionIcon({ sectionId, feature, className }: SectionIconProps)
       return (
         <div className="flex items-center gap-1">
           <FileCode
-            className={cn(
-              baseClass,
-              feature.hasSpec ? 'text-green-400' : 'text-[var(--muted-foreground)]/50'
-            )}
+            className={baseClass}
+            style={{ color: feature.hasSpec ? 'var(--tag-text-success)' : 'var(--muted-foreground)' }}
           />
           {feature.totalClarifications > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-blue-400">
+            <span className="flex items-center gap-0.5 text-xs" style={{ color: 'var(--tag-text-info)' }}>
               <MessageCircle className="w-3 h-3" />
               {feature.totalClarifications}
             </span>
@@ -89,20 +77,16 @@ export function SectionIcon({ sectionId, feature, className }: SectionIconProps)
     case 'tasks':
       return (
         <ListTodo
-          className={cn(
-            baseClass,
-            feature.hasTasks ? 'text-green-400' : 'text-[var(--muted-foreground)]/50'
-          )}
+          className={baseClass}
+          style={{ color: feature.hasTasks ? 'var(--tag-text-success)' : 'var(--muted-foreground)' }}
         />
       );
 
     case 'analysis': {
       return (
         <FileSearch
-          className={cn(
-            baseClass,
-            hasAnalysis(feature) ? 'text-green-400' : 'text-[var(--muted-foreground)]/50'
-          )}
+          className={baseClass}
+          style={{ color: hasAnalysis(feature) ? 'var(--tag-text-success)' : 'var(--muted-foreground)' }}
         />
       );
     }
@@ -110,10 +94,8 @@ export function SectionIcon({ sectionId, feature, className }: SectionIconProps)
     case 'checklists':
       return (
         <ClipboardCheck
-          className={cn(
-            baseClass,
-            feature.hasChecklists ? 'text-green-400' : 'text-[var(--muted-foreground)]/50'
-          )}
+          className={baseClass}
+          style={{ color: feature.hasChecklists ? 'var(--tag-text-success)' : 'var(--muted-foreground)' }}
         />
       );
 

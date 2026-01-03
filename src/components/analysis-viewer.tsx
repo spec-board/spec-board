@@ -17,7 +17,7 @@ export function AnalysisViewer({ analysis, className }: AnalysisViewerProps) {
   if (!markdownContent) {
     return (
       <div className={cn('flex flex-col py-6', className)}>
-        <div className="flex flex-col items-center mb-6 text-zinc-500">
+        <div className="flex flex-col items-center mb-6 text-[var(--muted-foreground)]">
           <TrendingUp className="w-12 h-12 mb-4 opacity-50" />
           <p className="text-lg font-medium">No analysis yet</p>
         </div>

@@ -50,12 +50,14 @@ function CommandCard({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           {!isOptional && (
-            <Lightbulb className="w-4 h-4 text-amber-400" />
+            <Lightbulb className="w-4 h-4" style={{ color: 'var(--tag-text-warning)' }} />
           )}
           <span className={cn(
             'text-xs font-semibold uppercase tracking-wide',
-            isOptional ? 'text-[var(--muted-foreground)]' : 'text-amber-400'
-          )}>
+            isOptional ? 'text-[var(--muted-foreground)]' : ''
+          )}
+          style={!isOptional ? { color: 'var(--tag-text-warning)' } : undefined}
+          >
             {isOptional ? 'Optional' : 'Suggested Command'}
           </span>
         </div>
@@ -64,9 +66,10 @@ function CommandCard({
           className={cn(
             'flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors',
             copied
-              ? 'bg-green-500/20 text-green-400'
+              ? 'bg-green-500/20'
               : 'bg-[var(--secondary)] hover:bg-[var(--secondary)]/80 text-[var(--muted-foreground)]'
           )}
+          style={copied ? { color: 'var(--tag-text-success)' } : undefined}
           aria-label={copied ? 'Copied!' : 'Copy command'}
         >
           {copied ? (
@@ -86,8 +89,10 @@ function CommandCard({
       {/* Command */}
       <div className={cn(
         'font-mono text-sm font-medium mb-2',
-        isOptional ? 'text-[var(--foreground)]' : 'text-amber-300'
-      )}>
+        isOptional ? 'text-[var(--foreground)]' : ''
+      )}
+      style={!isOptional ? { color: 'var(--tag-text-warning)' } : undefined}
+      >
         {command.command}
       </div>
 
@@ -112,8 +117,8 @@ export function SuggestedCommandCard({ suggestion }: SuggestedCommandCardProps) 
     return (
       <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
         <div className="flex items-center gap-2">
-          <Check className="w-4 h-4 text-green-400" />
-          <span className="text-sm font-medium text-green-400">
+          <Check className="w-4 h-4" style={{ color: 'var(--tag-text-success)' }} />
+          <span className="text-sm font-medium" style={{ color: 'var(--tag-text-success)' }}>
             Feature Complete!
           </span>
         </div>

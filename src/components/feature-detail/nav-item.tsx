@@ -52,11 +52,12 @@ export function NavItem({
       className={cn(
         'w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors group focus-ring',
         isActive
-          ? 'bg-blue-500/20 text-blue-400'
+          ? 'bg-blue-500/20'
           : isSelected
           ? 'bg-[var(--secondary)] text-[var(--foreground)]'
           : 'text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]'
       )}
+      style={isActive ? { color: 'var(--tag-text-info)' } : undefined}
       aria-current={isActive ? 'page' : undefined}
     >
       {/* Drag handle - visible on hover */}
@@ -77,12 +78,15 @@ export function NavItem({
 
       {/* Task count badge */}
       {taskCount && taskCount.total > 0 && (
-        <span className={cn(
-          'text-xs px-1.5 py-0.5 rounded',
-          taskCount.completed === taskCount.total
-            ? 'bg-green-500/20 text-green-400'
-            : 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
-        )}>
+        <span
+          className={cn(
+            'text-xs px-1.5 py-0.5 rounded',
+            taskCount.completed === taskCount.total
+              ? 'bg-green-500/20'
+              : 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
+          )}
+          style={taskCount.completed === taskCount.total ? { color: 'var(--tag-text-success)' } : undefined}
+        >
           {taskCount.completed}/{taskCount.total}
         </span>
       )}

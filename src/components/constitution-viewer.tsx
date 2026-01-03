@@ -56,14 +56,14 @@ function SyncImpactReportCard({ report }: { report: SyncImpactReport }) {
         className="w-full flex items-center gap-3 p-4 hover:bg-amber-500/10 transition-colors text-left"
       >
         {isExpanded ? (
-          <ChevronDown className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <ChevronDown className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
         ) : (
-          <ChevronRight className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
         )}
-        <GitCompare className="w-4 h-4 text-amber-400 flex-shrink-0" />
-        <span className="font-medium flex-1 text-amber-400">Sync Impact Report</span>
+        <GitCompare className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
+        <span className="font-medium flex-1" style={{ color: 'var(--tag-text-warning)' }}>Sync Impact Report</span>
         {report.versionChange && (
-          <code className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded">
+          <code className="text-xs bg-amber-500/20 px-2 py-0.5 rounded" style={{ color: 'var(--tag-text-warning)' }}>
             {report.versionChange.split(' ')[0]} → {report.versionChange.split('→')[1]?.trim().split(' ')[0] || ''}
           </code>
         )}
@@ -94,14 +94,14 @@ function SyncImpactReportCard({ report }: { report: SyncImpactReport }) {
           {/* Added Sections */}
           {report.addedSections.length > 0 && (
             <div>
-              <div className="text-xs font-medium text-green-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+              <div className="text-xs font-medium uppercase tracking-wide mb-2 flex items-center gap-1" style={{ color: 'var(--tag-text-success)' }}>
                 <Plus className="w-3 h-3" />
                 Added Sections ({report.addedSections.length})
               </div>
               <ul className="space-y-1">
                 {report.addedSections.map((section, idx) => (
                   <li key={idx} className="text-sm text-[var(--foreground)] flex items-center gap-2">
-                    <span className="text-green-400">+</span>
+                    <span style={{ color: 'var(--tag-text-success)' }}>+</span>
                     {section}
                   </li>
                 ))}
@@ -112,14 +112,14 @@ function SyncImpactReportCard({ report }: { report: SyncImpactReport }) {
           {/* Removed Sections */}
           {report.removedSections.length > 0 && (
             <div>
-              <div className="text-xs font-medium text-red-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+              <div className="text-xs font-medium uppercase tracking-wide mb-2 flex items-center gap-1" style={{ color: 'var(--tag-text-error)' }}>
                 <Minus className="w-3 h-3" />
                 Removed Sections ({report.removedSections.length})
               </div>
               <ul className="space-y-1">
                 {report.removedSections.map((section, idx) => (
                   <li key={idx} className="text-sm text-[var(--foreground)] flex items-center gap-2">
-                    <span className="text-red-400">-</span>
+                    <span style={{ color: 'var(--tag-text-error)' }}>-</span>
                     {section}
                   </li>
                 ))}
@@ -178,7 +178,7 @@ function PrincipleCard({ principle, index }: { principle: ConstitutionPrinciple;
         ) : (
           <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
         )}
-        <Scale className="w-4 h-4 text-blue-400 flex-shrink-0" />
+        <Scale className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--tag-text-info)' }} />
         <span className="font-medium flex-1">{principle.name}</span>
       </button>
 
@@ -234,7 +234,7 @@ function SectionCard({ section }: { section: ConstitutionSection }) {
         ) : (
           <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
         )}
-        <Icon className="w-4 h-4 text-purple-400 flex-shrink-0" />
+        <Icon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--tag-text-purple)' }} />
         <span className="font-medium flex-1">{section.name}</span>
       </button>
 
@@ -307,7 +307,7 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
           {/* Header with version info */}
           <div className="bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-cyan-500/10 border border-[var(--border)] rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Gavel className="w-6 h-6 text-purple-400" />
+              <Gavel className="w-6 h-6" style={{ color: 'var(--tag-text-purple)' }} />
               <h1 className="text-xl font-bold">{constitution.title || 'Project Constitution'}</h1>
             </div>
 

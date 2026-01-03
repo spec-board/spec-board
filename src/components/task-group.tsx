@@ -18,11 +18,11 @@ function TaskItem({ task }: TaskItemProps) {
     <div
       className={cn(
         'flex items-start gap-3 p-2 rounded-lg transition-colors',
-        task.completed ? 'bg-green-500/10' : 'hover:bg-[var(--secondary)]'
+        task.completed ? 'bg-[var(--color-success)]/10' : 'hover:bg-[var(--secondary)]'
       )}
     >
       {task.completed ? (
-        <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
       ) : (
         <Circle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
       )}
@@ -32,7 +32,10 @@ function TaskItem({ task }: TaskItemProps) {
             {task.id}
           </span>
           {task.parallel && (
-            <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded flex items-center gap-1">
+            <span
+              className="text-xs bg-[var(--color-info)]/20 px-1.5 py-0.5 rounded flex items-center gap-1"
+              style={{ color: 'var(--tag-text-info)' }}
+            >
               <Zap className="w-3 h-3" />
               Parallel
             </span>
@@ -89,7 +92,10 @@ function TaskGroupHeader({
       <div className="flex-1 flex items-center gap-2 min-w-0">
         {priority && <PriorityBadge priority={priority} />}
         {storyId && (
-          <span className="text-xs font-mono text-purple-400 bg-purple-500/20 px-1.5 py-0.5 rounded">
+          <span
+            className="text-xs font-mono bg-purple-500/20 px-1.5 py-0.5 rounded"
+            style={{ color: 'var(--tag-text-purple)' }}
+          >
             {storyId}
           </span>
         )}
@@ -99,7 +105,7 @@ function TaskGroupHeader({
       <div className="flex items-center gap-3 flex-shrink-0">
         <div className="w-24 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-green-500 transition-all duration-300"
+            className="h-full bg-[var(--color-success)] transition-all duration-300"
             style={{ width: `${percentage}%` }}
           />
         </div>

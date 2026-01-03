@@ -68,7 +68,7 @@ function FeatureCard({ feature }: { feature: FeatureItem }) {
   return (
     <div className="bg-gradient-to-br from-[var(--secondary)] to-[var(--secondary)]/50 rounded-xl p-4 border border-[var(--border)] hover:border-blue-500/50 transition-all hover:shadow-lg hover:shadow-blue-500/10">
       <div className="flex items-start gap-3">
-        <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+        <div className="p-2 rounded-lg bg-blue-500/20" style={{ color: 'var(--tag-text-info)' }}>
           {feature.icon}
         </div>
         <div className="flex-1">
@@ -139,7 +139,8 @@ function HowItWorksFlow() {
       icon: <FolderTree className="w-6 h-6" />,
       color: 'from-purple-500/20 to-purple-600/10',
       borderColor: 'border-purple-500/30',
-      iconColor: 'text-purple-400 bg-purple-500/20',
+      iconBg: 'bg-purple-500/20',
+      iconColorVar: '--tag-text-purple',
     },
     {
       title: 'SpecBoard parses',
@@ -147,7 +148,8 @@ function HowItWorksFlow() {
       icon: <FileCode className="w-6 h-6" />,
       color: 'from-blue-500/20 to-blue-600/10',
       borderColor: 'border-blue-500/30',
-      iconColor: 'text-blue-400 bg-blue-500/20',
+      iconBg: 'bg-blue-500/20',
+      iconColorVar: '--tag-text-info',
     },
     {
       title: 'Kanban Board',
@@ -155,9 +157,20 @@ function HowItWorksFlow() {
       icon: <Columns3 className="w-6 h-6" />,
       color: 'from-green-500/20 to-green-600/10',
       borderColor: 'border-green-500/30',
-      iconColor: 'text-green-400 bg-green-500/20',
+      iconBg: 'bg-green-500/20',
+      iconColorVar: '--tag-text-success',
     },
   ];
+
+  const getKanbanItemStyle = (i: number) => {
+    const styles = [
+      { bg: 'bg-zinc-600/50', colorVar: '--muted-foreground' },
+      { bg: 'bg-yellow-600/50', colorVar: '--tag-text-warning' },
+      { bg: 'bg-blue-600/50', colorVar: '--tag-text-info' },
+      { bg: 'bg-green-600/50', colorVar: '--tag-text-success' },
+    ];
+    return styles[i] || styles[0];
+  };
 
   return (
     <div className="flex flex-col md:flex-row items-stretch gap-4">
@@ -169,7 +182,7 @@ function HowItWorksFlow() {
             step.borderColor
           )}>
             <div className="flex items-center gap-3 mb-3">
-              <div className={cn('p-2 rounded-lg', step.iconColor)}>
+              <div className={cn('p-2 rounded-lg', step.iconBg)} style={{ color: `var(${step.iconColorVar})` }}>
                 {step.icon}
               </div>
               <h4 className="font-semibold text-sm">{step.title}</h4>
@@ -178,13 +191,10 @@ function HowItWorksFlow() {
               {step.items.map((item, i) => (
                 <div key={i} className="flex items-center gap-2">
                   {index === 2 ? (
-                    <span className={cn(
-                      'px-2 py-0.5 rounded text-[10px] font-medium',
-                      i === 0 ? 'bg-zinc-600/50 text-zinc-300' :
-                      i === 1 ? 'bg-yellow-600/50 text-yellow-300' :
-                      i === 2 ? 'bg-blue-600/50 text-blue-300' :
-                      'bg-green-600/50 text-green-300'
-                    )}>
+                    <span
+                      className={cn('px-2 py-0.5 rounded text-[10px] font-medium', getKanbanItemStyle(i).bg)}
+                      style={{ color: `var(${getKanbanItemStyle(i).colorVar})` }}
+                    >
                       {item}
                     </span>
                   ) : (
@@ -222,7 +232,7 @@ function TechStackDisplay() {
     <div className="space-y-4">
       <div className="rounded-xl border border-[var(--border)] overflow-hidden">
         <div className="px-4 py-2 bg-blue-500/10 border-b border-[var(--border)]">
-          <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Frontend</span>
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--tag-text-info)' }}>Frontend</span>
         </div>
         <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
           {frontend.map((tech, i) => (
@@ -235,7 +245,7 @@ function TechStackDisplay() {
       </div>
       <div className="rounded-xl border border-[var(--border)] overflow-hidden">
         <div className="px-4 py-2 bg-green-500/10 border-b border-[var(--border)]">
-          <span className="text-xs font-semibold text-green-400 uppercase tracking-wider">Backend</span>
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--tag-text-success)' }}>Backend</span>
         </div>
         <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
           {backend.map((tech, i) => (
@@ -377,7 +387,7 @@ function SectionCard({ section, defaultExpanded = true }: { section: Section; de
           isExpanded && 'border-b border-[var(--border)]'
         )}
       >
-        <span className="text-blue-400">
+        <span style={{ color: 'var(--tag-text-info)' }}>
           {section.icon}
         </span>
         <span className="flex-1 font-medium text-sm">{section.title}</span>

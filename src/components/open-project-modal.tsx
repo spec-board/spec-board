@@ -285,7 +285,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
                       selectedIndex === index
                         ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
                         : 'hover:bg-[var(--secondary)]',
-                      suggestion.isSpecKitProject && selectedIndex !== index && 'text-green-400'
+                      suggestion.isSpecKitProject && selectedIndex !== index && 'text-[var(--tag-text-success)]'
                     )}
                   >
                     {suggestion.isSpecKitProject ? (
@@ -317,7 +317,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
           )}
 
           {error && (
-            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400">
+            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-sm" style={{ color: 'var(--tag-text-error)' }}>
               {error}
             </div>
           )}
@@ -325,7 +325,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
           {preview && (
             <div className="mt-4 p-4 bg-[var(--secondary)] rounded-lg border border-green-500/30">
               <div className="flex items-start gap-3">
-                <FolderOpen className="w-6 h-6 text-green-400 mt-0.5" />
+                <FolderOpen className="w-6 h-6 mt-0.5" style={{ color: 'var(--tag-text-success)' }} />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium">{preview.project.name}</div>
                   <div className="text-xs text-[var(--muted-foreground)] truncate mt-0.5">
