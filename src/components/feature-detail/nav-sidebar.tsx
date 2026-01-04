@@ -61,6 +61,8 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
   const hasResearch = feature.additionalFiles?.some(f => f.type === 'research' && f.exists) ?? false;
   const hasDataModel = feature.additionalFiles?.some(f => f.type === 'data-model' && f.exists) ?? false;
   const hasQuickstart = feature.additionalFiles?.some(f => f.type === 'quickstart' && f.exists) ?? false;
+  const hasContracts = feature.additionalFiles?.some(f => f.type === 'contract' && f.exists) ?? false;
+  const contractFiles = feature.additionalFiles?.filter(f => f.type === 'contract' && f.exists) ?? [];
 
   // Get next task for suggested action
   const nextTask = getNextTask(feature);
@@ -126,6 +128,7 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
         ...(hasResearch ? [{ id: 'research-file', label: 'research.md', type: 'file' as const, sectionId: 'research' as SectionId }] : []),
         ...(hasDataModel ? [{ id: 'data-model-file', label: 'data-model.md', type: 'file' as const, sectionId: 'data-model' as SectionId }] : []),
         ...(hasQuickstart ? [{ id: 'quickstart-file', label: 'quickstart.md', type: 'file' as const, sectionId: 'quickstart' as SectionId }] : []),
+        ...(hasContracts ? [{ id: 'contracts-folder', label: `contracts/ (${contractFiles.length})`, type: 'file' as const, sectionId: 'contracts' as SectionId }] : []),
       ],
     },
     // QUALITY CONTROL phase

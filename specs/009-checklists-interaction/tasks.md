@@ -25,8 +25,8 @@
 
 **Purpose**: Add new types and utility module structure
 
-- [ ] T001 [P] Add ChecklistToggleRequest and ChecklistToggleResponse types in src/types/index.ts
-- [ ] T002 [P] Create checklist-utils.ts module skeleton in src/lib/checklist-utils.ts
+- [x] T001 [P] Add ChecklistToggleRequest and ChecklistToggleResponse types in src/types/index.ts
+- [x] T002 [P] Create checklist-utils.ts module skeleton in src/lib/checklist-utils.ts
 
 ---
 
@@ -36,13 +36,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Implement toggleCheckboxLine() function in src/lib/checklist-utils.ts (regex-based line replacement)
-- [ ] T004 Implement getCheckboxState() function in src/lib/checklist-utils.ts (read current state from line)
-- [ ] T005 Implement isValidCheckboxLine() function in src/lib/checklist-utils.ts (validate line format)
-- [ ] T006 [P] Create unit tests for checklist-utils in tests/lib/checklist-utils.test.ts
-- [ ] T007 Create PATCH endpoint skeleton in src/app/api/checklist/route.ts with path validation
-- [ ] T008 Implement file read/write logic in src/app/api/checklist/route.ts with conflict detection
-- [ ] T009 Update parseChecklistContent() in src/components/checklist-viewer.tsx to track lineIndex for each item
+- [x] T003 Implement toggleCheckboxLine() function in src/lib/checklist-utils.ts (regex-based line replacement)
+- [x] T004 Implement getCheckboxState() function in src/lib/checklist-utils.ts (read current state from line)
+- [x] T005 Implement isValidCheckboxLine() function in src/lib/checklist-utils.ts (validate line format)
+- [x] T006 [P] Create unit tests for checklist-utils in tests/lib/checklist-utils.test.ts
+- [x] T007 Create PATCH endpoint skeleton in src/app/api/checklist/route.ts with path validation
+- [x] T008 Implement file read/write logic in src/app/api/checklist/route.ts with conflict detection
+- [x] T009 Update parseChecklistContent() in src/components/checklist-viewer.tsx to track lineIndex for each item
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -56,14 +56,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Add ChecklistItem interface with lineIndex property in src/components/checklist-viewer.tsx
-- [ ] T011 [US1] Add filePath prop to ChecklistViewer component in src/components/checklist-viewer.tsx
-- [ ] T012 [US1] Implement onToggle callback prop in ChecklistItemRow component in src/components/checklist-viewer.tsx
-- [ ] T013 [US1] Add onClick handler to checkbox icon/row in ChecklistItemRow in src/components/checklist-viewer.tsx
-- [ ] T014 [US1] Implement optimistic state update with useState in ChecklistContent component in src/components/checklist-viewer.tsx
-- [ ] T015 [US1] Implement API call to PATCH /api/checklist in src/components/checklist-viewer.tsx
-- [ ] T016 [US1] Implement rollback on API failure with error display in src/components/checklist-viewer.tsx
-- [ ] T017 [US1] Pass filePath from parent component (feature-detail) to ChecklistViewer
+- [x] T010 [US1] Add ChecklistItem interface with lineIndex property in src/components/checklist-viewer.tsx
+- [x] T011 [US1] Add filePath prop to ChecklistViewer component in src/components/checklist-viewer.tsx
+- [x] T012 [US1] Implement onToggle callback prop in ChecklistItemRow component in src/components/checklist-viewer.tsx
+- [x] T013 [US1] Add onClick handler to checkbox icon/row in ChecklistItemRow in src/components/checklist-viewer.tsx
+- [x] T014 [US1] Implement optimistic state update with useState in ChecklistContent component in src/components/checklist-viewer.tsx
+- [x] T015 [US1] Implement API call to PATCH /api/checklist in src/components/checklist-viewer.tsx
+- [x] T016 [US1] Implement rollback on API failure with error display in src/components/checklist-viewer.tsx
+- [x] T017 [US1] Pass filePath from parent component (feature-detail) to ChecklistViewer
 
 **Checkpoint**: User Story 1 complete - users can toggle items with click and changes persist
 
@@ -77,11 +77,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Add tabIndex={0} to ChecklistItemRow in src/components/checklist-viewer.tsx
-- [ ] T019 [US2] Add role="checkbox" and aria-checked attributes in src/components/checklist-viewer.tsx
-- [ ] T020 [US2] Add aria-label with item text and state in src/components/checklist-viewer.tsx
-- [ ] T021 [US2] Implement onKeyDown handler for Space and Enter keys in src/components/checklist-viewer.tsx
-- [ ] T022 [US2] Add focus ring styles (focus:ring-2) to ChecklistItemRow in src/components/checklist-viewer.tsx
+- [x] T018 [US2] Add tabIndex={0} to ChecklistItemRow in src/components/checklist-viewer.tsx
+- [x] T019 [US2] Add role="checkbox" and aria-checked attributes in src/components/checklist-viewer.tsx
+- [x] T020 [US2] Add aria-label with item text and state in src/components/checklist-viewer.tsx
+- [x] T021 [US2] Implement onKeyDown handler for Space and Enter keys in src/components/checklist-viewer.tsx
+- [x] T022 [US2] Add focus ring styles (focus:ring-2) to ChecklistItemRow in src/components/checklist-viewer.tsx
 
 **Checkpoint**: User Story 2 complete - full keyboard accessibility
 
@@ -95,12 +95,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T023 [US3] Add savingItems state (Set<string>) to track items being saved in src/components/checklist-viewer.tsx
-- [ ] T024 [US3] Add Loader2 icon import from lucide-react in src/components/checklist-viewer.tsx
-- [ ] T025 [US3] Show spinning loader icon when item is in savingItems set in src/components/checklist-viewer.tsx
-- [ ] T026 [US3] Add opacity-50 and pointer-events-none styles during save in src/components/checklist-viewer.tsx
-- [ ] T027 [US3] Add error toast/notification component for save failures in src/components/checklist-viewer.tsx
-- [ ] T028 [US3] Clear item from savingItems on success or failure in src/components/checklist-viewer.tsx
+- [x] T023 [US3] Add savingItems state (Set<string>) to track items being saved in src/components/checklist-viewer.tsx
+- [x] T024 [US3] Add Loader2 icon import from lucide-react in src/components/checklist-viewer.tsx
+- [x] T025 [US3] Show spinning loader icon when item is in savingItems set in src/components/checklist-viewer.tsx
+- [x] T026 [US3] Add opacity-50 and pointer-events-none styles during save in src/components/checklist-viewer.tsx
+- [x] T027 [US3] Add error toast/notification component for save failures in src/components/checklist-viewer.tsx
+- [x] T028 [US3] Clear item from savingItems on success or failure in src/components/checklist-viewer.tsx
 
 **Checkpoint**: User Story 3 complete - clear visual feedback during save operations
 
@@ -114,11 +114,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Refactor progress calculation to use local state in ChecklistSectionView in src/components/checklist-viewer.tsx
-- [ ] T030 [US4] Lift checklist items state to ChecklistContent component in src/components/checklist-viewer.tsx
-- [ ] T031 [US4] Update section progress bar when items state changes in src/components/checklist-viewer.tsx
-- [ ] T032 [US4] Update overall progress indicator when items state changes in src/components/checklist-viewer.tsx
-- [ ] T033 [US4] Ensure progress recalculates on optimistic update (before API response) in src/components/checklist-viewer.tsx
+- [x] T029 [US4] Refactor progress calculation to use local state in ChecklistSectionView in src/components/checklist-viewer.tsx
+- [x] T030 [US4] Lift checklist items state to ChecklistContent component in src/components/checklist-viewer.tsx
+- [x] T031 [US4] Update section progress bar when items state changes in src/components/checklist-viewer.tsx
+- [x] T032 [US4] Update overall progress indicator when items state changes in src/components/checklist-viewer.tsx
+- [x] T033 [US4] Ensure progress recalculates on optimistic update (before API response) in src/components/checklist-viewer.tsx
 
 **Checkpoint**: User Story 4 complete - progress indicators update in real-time
 
@@ -128,13 +128,13 @@
 
 **Purpose**: Edge cases, debouncing, and final refinements
 
-- [ ] T034 [P] Implement per-item debouncing (300ms) using useRef Map in src/components/checklist-viewer.tsx
-- [ ] T035 [P] Add cursor-pointer style to interactive checkbox rows in src/components/checklist-viewer.tsx
-- [ ] T036 Handle conflict response (409) by refreshing checklist content in src/components/checklist-viewer.tsx
-- [ ] T037 Add screen reader announcement on toggle using aria-live region in src/components/checklist-viewer.tsx
-- [ ] T038 Run quickstart.md verification checklist manually
-- [ ] T039 Run pnpm lint and fix any linting errors
-- [ ] T040 Run pnpm test and ensure all tests pass
+- [x] T034 [P] Implement per-item debouncing (300ms) using useRef Map in src/components/checklist-viewer.tsx
+- [x] T035 [P] Add cursor-pointer style to interactive checkbox rows in src/components/checklist-viewer.tsx
+- [x] T036 Handle conflict response (409) by refreshing checklist content in src/components/checklist-viewer.tsx
+- [x] T037 Add screen reader announcement on toggle using aria-live region in src/components/checklist-viewer.tsx
+- [x] T038 Run quickstart.md verification checklist manually
+- [x] T039 Run pnpm lint and fix any linting errors
+- [x] T040 Run pnpm test and ensure all tests pass
 
 ---
 
