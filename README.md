@@ -4,7 +4,11 @@
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 
-[work in process]
+🚧 Under Development
+This project is in its early stages. I came up with this idea a few days before the January 1st, 2025 holiday and it's still being refined. Updates may not be frequent as I can't commit to a fixed weekly schedule.
+
+Please use it, report bugs and provide support: software bugs, feature requests, questions, anything helpful.
+
 ## Screenshots
 
 ### Kanban Board
@@ -37,6 +41,8 @@ Get intelligent next action suggestions and save analysis reports for quality as
 - **Progress Tracking** — Visual metrics for tasks and checklists
 - **Accessible** — WCAG 2.2 AA compliant with keyboard navigation
 - **AI Integration** — Next action suggestions and analysis reports
+
+https://youtu.be/WQXb2-dj9zQ
 
 ## How It Works
 
