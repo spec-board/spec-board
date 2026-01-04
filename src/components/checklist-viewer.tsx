@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, KeyboardEvent } from 'react';
 import { CheckCircle2, Circle, FolderOpen, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SpecKitFile, ChecklistToggleResponse } from '@/types';
@@ -174,7 +174,7 @@ function ChecklistItemRow({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if ((e.key === ' ' || e.key === 'Enter') && onToggle && !isSaving) {
       e.preventDefault();
       onToggle(item);
@@ -431,7 +431,7 @@ function ChecklistContent({ file, filePath }: { file: SpecKitFile; filePath: str
   const [localContent, setLocalContent] = useState(file.content);
   const [savingItems, setSavingItems] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
-  const debounceTimers = useRef<Map<number, NodeJS.Timeout>>(new Map());
+  const debounceTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
   // Re-parse when local content changes
   const parsed = useMemo(() => parseChecklistContent(localContent), [localContent]);
@@ -482,8 +482,16 @@ function ChecklistContent({ file, filePath }: { file: SpecKitFile; filePath: str
         const data: ChecklistToggleResponse = await response.json();
 
         if (!data.success) {
-          // Rollback on failure
-          setLocalContent(file.content);
+          // Rollback only the specific failed item, not the entire document
+          setLocalContent(prevContent => {
+            const lines = prevContent.split('\n');
+            if (lineIndex >= 0 && lineIndex < lines.length) {
+              const line = lines[lineIndex];
+              // Revert the checkbox back to its original state
+              lines[lineIndex] = line.replace(/\[([ xX])\]/, checked ? '[x]' : '[ ]');
+            }
+            return lines.join('\n');
+          });
           setError(data.message || 'Failed to save changes');
 
           // If conflict, suggest refresh
@@ -492,8 +500,16 @@ function ChecklistContent({ file, filePath }: { file: SpecKitFile; filePath: str
           }
         }
       } catch (err) {
-        // Rollback on network error
-        setLocalContent(file.content);
+        // Rollback only the specific failed item on network error
+        setLocalContent(prevContent => {
+          const lines = prevContent.split('\n');
+          if (lineIndex >= 0 && lineIndex < lines.length) {
+            const line = lines[lineIndex];
+            // Revert the checkbox back to its original state
+            lines[lineIndex] = line.replace(/\[([ xX])\]/, checked ? '[x]' : '[ ]');
+          }
+          return lines.join('\n');
+        });
         setError('Network error. Please try again.');
       } finally {
         setSavingItems(prev => {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
+import fs from 'fs/promises';
+import path from 'path';
 import { isPathSafe } from '@/lib/path-utils';
 import {
   isValidCheckboxLine,
@@ -71,7 +72,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Check file exists
-    if (!fs.existsSync(resolvedPath)) {
+    try {
+      await fs.access(resolvedPath);
+    } catch {
       const response: ChecklistToggleResponse = {
         success: false,
         error: 'file_not_found',
@@ -81,7 +84,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verify it's a markdown file in a checklists directory (security check)
-    if (!resolvedPath.endsWith('.md') || !resolvedPath.includes('/checklists/')) {
+    // Use path utilities for cross-platform compatibility
+    const isMarkdownFile = path.extname(resolvedPath).toLowerCase() === '.md';
+    const pathParts = resolvedPath.split(path.sep);
+    const isInChecklistsDir = pathParts.includes('checklists');
+
+    if (!isMarkdownFile || !isInChecklistsDir) {
       const response: ChecklistToggleResponse = {
         success: false,
         error: 'invalid_path',
@@ -93,7 +101,7 @@ export async function PATCH(request: NextRequest) {
     // Read file content
     let content: string;
     try {
-      content = fs.readFileSync(resolvedPath, 'utf-8');
+      content = await fs.readFile(resolvedPath, 'utf-8');
     } catch (readError) {
       console.error('Failed to read checklist file:', readError);
       const response: ChecklistToggleResponse = {
@@ -150,7 +158,7 @@ export async function PATCH(request: NextRequest) {
 
     // Write file
     try {
-      fs.writeFileSync(resolvedPath, result.content, 'utf-8');
+      await fs.writeFile(resolvedPath, result.content, 'utf-8');
     } catch (writeError) {
       console.error('Failed to write checklist file:', writeError);
       const response: ChecklistToggleResponse = {
