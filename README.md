@@ -4,8 +4,8 @@
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 
-🚧 Under Development
-This project is in its early stages. I came up with this idea a few days before the January 1st, 2025 holiday and it's still being refined. Updates may not be frequent as I can't commit to a fixed weekly schedule.
+🚧 Under Development 🚧 <br>
+This project is in its early stages. I came up with this idea a few days before the January 1st, 2026 holiday and it's still being refined. Updates may not be frequent as I can't commit to a fixed weekly schedule.
 
 Please use it, report bugs and provide support: software bugs, feature requests, questions, anything helpful.
 
