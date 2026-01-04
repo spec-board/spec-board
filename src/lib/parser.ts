@@ -420,7 +420,9 @@ export function parseAdditionalFiles(featurePath: string): SpecKitFile[] {
   const contractsDir = path.join(featurePath, 'contracts');
   try {
     if (fs.existsSync(contractsDir) && fs.statSync(contractsDir).isDirectory()) {
-      const contractFiles = fs.readdirSync(contractsDir).filter(f => f.endsWith('.md'));
+      const contractFiles = fs.readdirSync(contractsDir).filter(f =>
+        f.endsWith('.md') || f.endsWith('.yaml') || f.endsWith('.yml')
+      );
       for (const f of contractFiles) {
         const contractPath = path.join(contractsDir, f);
         try {
