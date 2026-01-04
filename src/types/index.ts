@@ -493,3 +493,43 @@ export interface ChecklistItemWithLine {
   tag?: string;
   lineIndex: number;
 }
+
+// ============================================
+// Contract Viewer Types (008-contracts)
+// ============================================
+
+/** Extracted metadata from contract markdown header (T002) */
+export interface ContractMetadata {
+  feature?: string;
+  date?: string;
+  type?: string;
+  endpoint?: string;
+  basePath?: string;
+  location?: string;
+}
+
+/** A section within a contract document (T003) */
+export interface ContractSection {
+  id: string;
+  title: string;
+  level: number;
+}
+
+/** A fenced code block within a contract (T004) */
+export interface ContractCodeBlock {
+  language: string;
+  code: string;
+  lineCount: number;
+}
+
+/** Fully parsed contract with metadata, sections, and code blocks (T005) */
+export interface ParsedContract {
+  rawContent: string;
+  metadata: ContractMetadata;
+  sections: ContractSection[];
+  codeBlocks: ContractCodeBlock[];
+  title?: string;
+}
+
+/** Inferred contract type based on metadata (T006) */
+export type ContractType = 'api' | 'component' | 'unknown';
