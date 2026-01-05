@@ -2,6 +2,7 @@
  * PM2 Ecosystem Configuration for SpecBoard
  *
  * @description Production process manager configuration for the SpecBoard Next.js application.
+ *              Automatically loads environment variables from .env file.
  *
  * @example Start in production mode
  * ```bash
@@ -33,6 +34,11 @@
  *
  * @see https://pm2.keymetrics.io/docs/usage/application-declaration/
  */
+
+// Load environment variables from .env file
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 module.exports = {
   apps: [
     {
@@ -70,11 +76,12 @@ module.exports = {
 
       /**
        * Production environment variables
-       * @description Loaded by default when starting PM2
+       * @description Includes all vars from .env plus production overrides
        */
       env: {
+        ...process.env,
         NODE_ENV: 'production',
-        PORT: 3000,
+        PORT: process.env.PORT || 3000,
       },
 
       /**
@@ -82,8 +89,9 @@ module.exports = {
        * @description Use with: pm2 start ecosystem.config.cjs --env development
        */
       env_development: {
+        ...process.env,
         NODE_ENV: 'development',
-        PORT: 3000,
+        PORT: process.env.PORT || 3000,
       },
 
       // ─────────────────────────────────────────────────────────────
