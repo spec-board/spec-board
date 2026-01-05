@@ -1,12 +1,12 @@
 # ============================================================================
 # SpecBoard Dockerfile
-# Multi-stage build for Next.js 16 with pnpm and Prisma
+# Multi-stage build for Next.js 15 with pnpm and Prisma
 # ============================================================================
 
 # -----------------------------------------------------------------------------
 # Stage 1: Dependencies
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS deps
+FROM dhi.io/node:22-alpine3.23-sfw-dev AS deps
 
 # Install OpenSSL for Prisma compatibility
 RUN apk add --no-cache openssl
@@ -29,7 +29,7 @@ RUN pnpm prisma generate
 # -----------------------------------------------------------------------------
 # Stage 2: Builder
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS builder
+FROM dhi.io/node:22-alpine3.23-sfw-dev AS builder
 
 # Install OpenSSL for Prisma compatibility
 RUN apk add --no-cache openssl
@@ -82,13 +82,13 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 
-# Copy Prisma binaries and client from deps (simpler approach)
+# Copy Prisma client and CLI (pnpm stores packages in .pnpm directory)
 COPY --from=deps /app/node_modules/.pnpm ./node_modules/.pnpm
 COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
 
 # Copy entrypoint script
-COPY --chown=nextjs:nodejs docker/docker-entrypoint.sh ./
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
 # Create logs directory
@@ -105,7 +105,7 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/projects || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
 # Entrypoint handles database migrations
 ENTRYPOINT ["./docker-entrypoint.sh"]
