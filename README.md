@@ -64,6 +64,10 @@ B = Backlog | P = Planning | I = In Progress | D = Done
 
 ## Quick Start
 
+> Note for docker installing method: Please don’t use Docker yet. I still need to finish the syncing logic. Until that’s done, Docker/VPS deployments won’t work reliably. For now, please install and run everything locally only. XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Install dependencies
+
 ```bash
 pnpm install
 cp .env.example .env
