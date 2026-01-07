@@ -16,7 +16,7 @@
 ## Path Conventions
 
 - **Web app**: `src/` at repository root (Next.js App Router)
-- **CLI package**: `packages/specboard-cli/src/`
+- **MCP package**: `packages/spec-board-mcp/src/` *(replaces CLI per clarification 2026-01-06)*
 
 ---
 
@@ -24,10 +24,12 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create CLI package structure at packages/specboard-cli/ with package.json
+**Note**: CLI replaced with MCP server (`spec-board-mcp`) per clarification session 2026-01-06.
+
+- [x] T001 Create MCP package structure at packages/spec-board-mcp/ with package.json *(was: CLI at packages/specboard-cli/)*
 - [ ] T002 [P] Install web app dependencies: better-auth, diff-match-patch in package.json
-- [ ] T003 [P] Install CLI dependencies: commander, better-sqlite3, ky, chokidar in packages/specboard-cli/package.json
-- [ ] T004 [P] Configure TypeScript for CLI package in packages/specboard-cli/tsconfig.json
+- [x] T003 [P] Install MCP dependencies: @modelcontextprotocol/sdk, ky in packages/spec-board-mcp/package.json *(was: CLI deps)*
+- [x] T004 [P] Configure TypeScript for MCP package in packages/spec-board-mcp/tsconfig.json
 - [ ] T005 Add sync-related types to src/types/index.ts (MemberRole, FileType, ConflictStatus, SyncEventType enums)
 
 ---
@@ -40,17 +42,17 @@
 
 ### Database Schema
 
-- [ ] T006 Add User model to prisma/schema.prisma (id, email, name, passwordHash, avatarUrl, emailVerified, timestamps)
+- [x] T006 Add User model to prisma/schema.prisma (id, email, name, passwordHash, avatarUrl, emailVerified, timestamps)
 - [ ] T007 [P] Add Session model to prisma/schema.prisma (id, userId, token, expiresAt, ipAddress, userAgent)
-- [ ] T008 [P] Add OAuthAccount model to prisma/schema.prisma (id, userId, provider, providerAccountId, tokens)
-- [ ] T009 Add CloudProject model to prisma/schema.prisma (id, name, slug, description, ownerId, isArchived, timestamps)
-- [ ] T010 [P] Add ProjectMember model to prisma/schema.prisma (id, projectId, userId, role, invitedBy, joinedAt, lastSyncAt)
-- [ ] T011 [P] Add ProjectLink model to prisma/schema.prisma (id, projectId, code, createdBy, role, usedBy, usedAt, expiresAt)
-- [ ] T012 Add SyncedSpec model to prisma/schema.prisma (id, projectId, path, fileType, content, checksum, lastModifiedBy, isArchived)
+- [x] T008 [P] Add OAuthAccount model to prisma/schema.prisma (id, userId, provider, providerAccountId, tokens)
+- [x] T009 Add CloudProject model to prisma/schema.prisma (id, name, slug, description, ownerId, isArchived, timestamps)
+- [x] T010 [P] Add ProjectMember model to prisma/schema.prisma (id, projectId, userId, role, invitedBy, joinedAt, lastSyncAt)
+- [x] T011 [P] Add ProjectLink model to prisma/schema.prisma (id, projectId, code, createdBy, role, usedBy, usedAt, expiresAt) *(implemented as ProjectLinkCode)*
+- [x] T012 Add SyncedSpec model to prisma/schema.prisma (id, projectId, path, fileType, content, checksum, lastModifiedBy, isArchived)
 - [ ] T013 [P] Add SpecVersion model to prisma/schema.prisma (id, specId, version, content, checksum, modifiedBy)
 - [ ] T014 [P] Add ConflictRecord model to prisma/schema.prisma (id, specId, localContent, cloudContent, status, resolvedBy)
-- [ ] T015 [P] Add SyncEvent model to prisma/schema.prisma (id, projectId, userId, eventType, specPath, details)
-- [ ] T016 Run prisma migrate to create database tables
+- [x] T015 [P] Add SyncEvent model to prisma/schema.prisma (id, projectId, userId, eventType, specPath, details)
+- [x] T016 Run prisma migrate to create database tables
 
 ### Authentication Infrastructure
 
@@ -64,7 +66,9 @@
 
 - [ ] T022 [P] Create checksum utility (SHA-256) in src/lib/sync/checksum.ts
 - [ ] T023 [P] Create diff utility using diff-match-patch in src/lib/sync/diff.ts
-- [ ] T024 Create permission checker utility in src/lib/auth/permissions.ts (VIEW, EDIT, ADMIN role checks)
+- [x] T024 Create permission checker utility in src/lib/auth/permissions.ts (VIEW, EDIT, ADMIN role checks) *(implemented in src/lib/auth/session.ts)*
+
+**Note**: API token authentication implemented in src/lib/auth/api-token.ts and src/lib/auth/session.ts for MCP server auth flow.
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -74,15 +78,17 @@
 
 **Goal**: Users can connect a local spec-kit project to the cloud using a project link code and see their specs in the dashboard.
 
-**Independent Test**: Connect a local project folder using `specboard connect ABC123` and verify specs appear in cloud dashboard within 30 seconds.
+**Independent Test**: Connect a local project folder using MCP `push_spec` tool and verify specs appear in cloud dashboard within 30 seconds.
+
+**Note**: CLI replaced with MCP server per clarification session 2026-01-06. Tasks updated to reflect MCP architecture.
 
 ### Web App - API Endpoints
 
-- [ ] T025 [US1] Create POST /api/projects/cloud endpoint in src/app/api/projects/cloud/route.ts (create cloud project)
-- [ ] T026 [US1] Create GET /api/projects/cloud endpoint in src/app/api/projects/cloud/route.ts (list user's projects)
-- [ ] T027 [US1] Create GET /api/projects/cloud/[slug] endpoint in src/app/api/projects/cloud/[slug]/route.ts (get project details)
-- [ ] T028 [US1] Create POST /api/projects/cloud/[slug]/links endpoint in src/app/api/projects/cloud/[slug]/links/route.ts (generate link code)
-- [ ] T029 [US1] Create POST /api/projects/cloud/connect endpoint in src/app/api/projects/cloud/connect/route.ts (redeem link code)
+- [x] T025 [US1] Create POST /api/cloud-projects endpoint in src/app/api/cloud-projects/route.ts (create cloud project)
+- [x] T026 [US1] Create GET /api/cloud-projects endpoint in src/app/api/cloud-projects/route.ts (list user's projects)
+- [x] T027 [US1] Create GET /api/cloud-projects/[id] endpoint in src/app/api/cloud-projects/[id]/route.ts (get project details)
+- [ ] T028 [US1] Create POST /api/cloud-projects/[id]/links endpoint in src/app/api/cloud-projects/[id]/links/route.ts (generate link code)
+- [ ] T029 [US1] Create POST /api/cloud-projects/connect endpoint in src/app/api/cloud-projects/connect/route.ts (redeem link code)
 
 ### Web App - Services
 
@@ -95,18 +101,18 @@
 - [ ] T033 [P] [US1] Create new cloud project form in src/components/cloud/new-project-form.tsx
 - [ ] T034 [US1] Create project link code generator UI in src/components/cloud/link-code-generator.tsx
 
-### CLI - Core Infrastructure
+### MCP Server - Core Infrastructure *(replaces CLI)*
 
-- [ ] T035 [US1] Create CLI entry point in packages/specboard-cli/src/index.ts with Commander.js setup
-- [ ] T036 [US1] Create API client in packages/specboard-cli/src/lib/api-client.ts (HTTP client with auth)
-- [ ] T037 [US1] Create local config manager in packages/specboard-cli/src/lib/config.ts (read/write .specboard/config.json)
-- [ ] T038 [US1] Create local SQLite database setup in packages/specboard-cli/src/lib/database.ts (sync_state, offline_queue tables)
+- [x] T035 [US1] Create MCP server entry point in packages/spec-board-mcp/src/index.ts with MCP SDK setup
+- [x] T036 [US1] Create API client in packages/spec-board-mcp/src/api/client.ts (HTTP client with auth)
+- [ ] T037 [US1] *(Removed - MCP uses API token from env, no local config needed)*
+- [ ] T038 [US1] *(Removed - MCP is stateless, no local database needed)*
 
-### CLI - Connect Command
+### MCP Server - Tools *(replaces CLI commands)*
 
-- [ ] T039 [US1] Implement connect command in packages/specboard-cli/src/commands/connect.ts
-- [ ] T040 [US1] Implement login command in packages/specboard-cli/src/commands/login.ts (browser auth flow)
-- [ ] T041 [US1] Implement initial spec upload logic in packages/specboard-cli/src/lib/upload.ts
+- [ ] T039 [US1] *(Removed - MCP uses API token auth, no connect command needed)*
+- [ ] T040 [US1] *(Removed - MCP uses API token auth, no login command needed)*
+- [x] T041 [US1] Implement push_spec tool in packages/spec-board-mcp/src/tools/push-spec.ts
 
 **Checkpoint**: User Story 1 complete - users can connect local projects to cloud
 
@@ -114,15 +120,17 @@
 
 ## Phase 4: User Story 2 - Push and Pull Sync (Priority: P1) MVP
 
-**Goal**: Users can push local changes to cloud and pull cloud changes to local via explicit button/command actions.
+**Goal**: Users can push local changes to cloud and pull cloud changes to local via MCP tools.
 
-**Independent Test**: Edit a local spec.md file, run `specboard push`, verify change appears in cloud dashboard within 10 seconds.
+**Independent Test**: Edit a local spec.md file, use MCP `push_spec` tool, verify change appears in cloud dashboard within 10 seconds.
+
+**Note**: CLI replaced with MCP server per clarification session 2026-01-06. Tasks updated to reflect MCP architecture.
 
 ### Web App - Sync API Endpoints
 
-- [ ] T042 [US2] Create GET /api/sync/[slug]/status endpoint in src/app/api/sync/[slug]/status/route.ts
-- [ ] T043 [US2] Create POST /api/sync/[slug]/push endpoint in src/app/api/sync/[slug]/push/route.ts
-- [ ] T044 [US2] Create GET /api/sync/[slug]/pull endpoint in src/app/api/sync/[slug]/pull/route.ts
+- [ ] T042 [US2] Create GET /api/sync/[projectId]/status endpoint in src/app/api/sync/[projectId]/status/route.ts
+- [x] T043 [US2] Create POST /api/sync/[projectId]/push endpoint in src/app/api/sync/[projectId]/push/route.ts
+- [x] T044 [US2] Create GET /api/sync/[projectId]/features endpoint in src/app/api/sync/[projectId]/features/route.ts (pull specs)
 
 ### Web App - Sync Services
 
@@ -135,12 +143,12 @@
 - [ ] T048 [P] [US2] Create push button component in src/components/sync/push-button.tsx
 - [ ] T049 [P] [US2] Create pull button component in src/components/sync/pull-button.tsx
 
-### CLI - Push/Pull Commands
+### MCP Server - Push/Pull Tools *(replaces CLI commands)*
 
-- [ ] T050 [US2] Implement push command in packages/specboard-cli/src/commands/push.ts
-- [ ] T051 [US2] Implement pull command in packages/specboard-cli/src/commands/pull.ts
-- [ ] T052 [US2] Implement status command in packages/specboard-cli/src/commands/status.ts
-- [ ] T053 [US2] Create file scanner utility in packages/specboard-cli/src/lib/scanner.ts (find spec files, compute checksums)
+- [x] T050 [US2] Implement push_spec tool in packages/spec-board-mcp/src/tools/push-spec.ts
+- [x] T051 [US2] Implement pull_spec tool in packages/spec-board-mcp/src/tools/pull-spec.ts
+- [ ] T052 [US2] *(Removed - status shown via MCP tool responses)*
+- [ ] T053 [US2] *(Removed - file scanning done in push_spec tool)*
 
 **Checkpoint**: User Stories 1 AND 2 complete - full MVP sync functionality working
 
@@ -154,9 +162,9 @@
 
 ### Web App - Member Management API
 
-- [ ] T054 [US3] Create GET /api/projects/cloud/[slug]/members endpoint in src/app/api/projects/cloud/[slug]/members/route.ts
-- [ ] T055 [US3] Create PATCH /api/projects/cloud/[slug]/members/[userId] endpoint in src/app/api/projects/cloud/[slug]/members/[userId]/route.ts
-- [ ] T056 [US3] Create DELETE /api/projects/cloud/[slug]/members/[userId] endpoint in src/app/api/projects/cloud/[slug]/members/[userId]/route.ts
+- [x] T054 [US3] Create GET /api/cloud-projects/[id]/members endpoint in src/app/api/cloud-projects/[id]/members/route.ts
+- [x] T055 [US3] Create PATCH /api/cloud-projects/[id]/members/[userId] endpoint in src/app/api/cloud-projects/[id]/members/[userId]/route.ts
+- [x] T056 [US3] Create DELETE /api/cloud-projects/[id]/members/[userId] endpoint in src/app/api/cloud-projects/[id]/members/[userId]/route.ts
 
 ### Web App - Member Services
 
