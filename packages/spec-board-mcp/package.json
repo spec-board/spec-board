@@ -1,0 +1,25 @@
+{
+  "name": "spec-board-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for syncing spec-kit projects with SpecBoard cloud",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "spec-board-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "keywords": ["mcp", "spec-board", "spec-kit", "sync"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

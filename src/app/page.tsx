@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, Settings, Github } from 'lucide-react';
 import Image from 'next/image';
 import { useProjectStore, type RecentProject } from '@/lib/store';
+import { ThemeButton } from '@/components/theme-button';
 import { RecentProjectsList } from '@/components/recent-projects-list';
 import { OpenProjectModal } from '@/components/open-project-modal';
 import type { Project } from '@/types';
@@ -119,6 +120,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeButton />
               <a
                 href="https://github.com/paulpham157/spec-board"
                 target="_blank"
