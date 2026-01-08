@@ -37,10 +37,13 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  apiTokens     ApiToken[]
-  memberships   ProjectMember[]
-  ownedProjects CloudProject[]  @relation("ProjectOwner")
-  syncEvents    SyncEvent[]
+  apiTokens         ApiToken[]
+  memberships       ProjectMember[]
+  ownedProjects     CloudProject[]  @relation("ProjectOwner")
+  syncEvents        SyncEvent[]
+  sessions          Session[]
+  specVersions      SpecVersion[]
+  resolvedConflicts ConflictRecord[]
 
   @@map("users")
 }
@@ -111,7 +114,9 @@ model SyncedSpec {
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   // Relations
-  cloudProject    CloudProject @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
+  cloudProject    CloudProject     @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
+  versions        SpecVersion[]
+  conflicts       ConflictRecord[]
 
   @@unique([cloudProjectId, featureId, fileType])
   @@map("synced_specs")
@@ -163,4 +168,59 @@ model ProjectLinkCode {
   cloudProject    CloudProject @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
 
   @@map("project_link_codes")
+}
+
+// Session for Better Auth (T007)
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Spec version history for conflict resolution (T013)
+model SpecVersion {
+  id          String   @id @default(uuid())
+  specId      String   @map("spec_id")
+  version     Int
+  content     String
+  checksum    String   // SHA-256 hash of content
+  modifiedBy  String   @map("modified_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  spec        SyncedSpec @relation(fields: [specId], references: [id], onDelete: Cascade)
+  modifier    User       @relation(fields: [modifiedBy], references: [id])
+
+  @@unique([specId, version])
+  @@map("spec_versions")
+}
+
+// Conflict record for sync conflicts (T014)
+model ConflictRecord {
+  id            String   @id @default(uuid())
+  specId        String   @map("spec_id")
+  localContent  String   @map("local_content")
+  localChecksum String   @map("local_checksum")
+  cloudContent  String   @map("cloud_content")
+  cloudChecksum String   @map("cloud_checksum")
+  status        String   @default("PENDING") // PENDING, RESOLVED_LOCAL, RESOLVED_CLOUD, RESOLVED_MERGED
+  resolvedBy    String?  @map("resolved_by")
+  resolvedAt    DateTime? @map("resolved_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  spec          SyncedSpec @relation(fields: [specId], references: [id], onDelete: Cascade)
+  resolver      User?      @relation(fields: [resolvedBy], references: [id])
+
+  @@map("conflict_records")
 }

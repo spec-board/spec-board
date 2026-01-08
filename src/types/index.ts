@@ -533,3 +533,80 @@ export interface ParsedContract {
 
 /** Inferred contract type based on metadata (T006) */
 export type ContractType = 'api' | 'component' | 'unknown';
+
+// ============================================
+// Cloud Sync Types (011-cloud-spec-sync)
+// ============================================
+
+/** Member role for cloud project access control */
+export type MemberRole = 'VIEW' | 'EDIT' | 'ADMIN';
+
+/** File types that can be synced to cloud */
+export type SyncFileType = 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart';
+
+/** Status of a sync conflict */
+export type ConflictStatus = 'PENDING' | 'RESOLVED_LOCAL' | 'RESOLVED_CLOUD' | 'RESOLVED_MERGED';
+
+/** Types of sync events for audit logging */
+export type SyncEventType = 'PUSH' | 'PULL' | 'CONFLICT_DETECTED' | 'CONFLICT_RESOLVED';
+
+/** Cloud project summary for dashboard */
+export interface CloudProjectSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  role: MemberRole;
+  memberCount: number;
+  lastSyncAt?: string;
+  createdAt: string;
+}
+
+/** Sync status for a cloud project */
+export interface SyncStatus {
+  projectId: string;
+  lastPushAt?: string;
+  lastPullAt?: string;
+  pendingChanges: number;
+  hasConflicts: boolean;
+  conflictCount: number;
+}
+
+/** Conflict record for resolution UI */
+export interface SyncConflict {
+  id: string;
+  specId: string;
+  featureId: string;
+  fileType: SyncFileType;
+  localContent: string;
+  localChecksum: string;
+  cloudContent: string;
+  cloudChecksum: string;
+  status: ConflictStatus;
+  detectedAt: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+}
+
+/** Diff result for conflict resolution */
+export interface DiffResult {
+  patches: string;
+  hunks: DiffHunk[];
+}
+
+/** Single diff hunk for display */
+export interface DiffHunk {
+  oldStart: number;
+  oldLines: number;
+  newStart: number;
+  newLines: number;
+  lines: DiffLine[];
+}
+
+/** Single line in a diff */
+export interface DiffLine {
+  type: 'add' | 'remove' | 'context';
+  content: string;
+  oldLineNumber?: number;
+  newLineNumber?: number;
+}

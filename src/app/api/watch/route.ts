@@ -36,16 +36,18 @@ export async function GET(request: NextRequest) {
         controller.enqueue(encoder.encode(data));
       }
 
-      // Watch for file changes
-      // Using polling to reliably detect changes from all sources (IDE, AI tools, scripts)
-      // fs.watch (event-based) can miss in-place file writes on some platforms
+      // Watch for file changes using native OS events (FSEvents on macOS, inotify on Linux)
+      // This is much more efficient than polling - only triggers on actual file changes
       const watcher = watch(resolvedPath, {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
         persistent: true,
         ignoreInitial: true,
         depth: 3,
-        usePolling: true,  // Enable polling for reliable detection
-        interval: 300,     // Poll every 300ms (matches debounce timing)
+        usePolling: false,       // Use native OS file watching (low CPU)
+        awaitWriteFinish: {      // Wait for writes to complete before triggering
+          stabilityThreshold: 300,
+          pollInterval: 100,
+        },
       });
 
       const handleChange = async () => {
