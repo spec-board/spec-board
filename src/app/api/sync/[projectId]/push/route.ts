@@ -118,15 +118,17 @@ export async function POST(
       }
     }
 
-    // Record sync event
-    await prisma.syncEvent.create({
-      data: {
-        cloudProjectId: projectId,
-        userId: authResult.userId,
-        eventType: 'PUSH',
-        featuresAffected: syncedFeatures,
-      },
-    });
+    // Record sync event (userId is guaranteed when authResult.valid is true)
+    if (authResult.userId) {
+      await prisma.syncEvent.create({
+        data: {
+          cloudProjectId: projectId,
+          userId: authResult.userId,
+          eventType: 'PUSH',
+          featuresAffected: syncedFeatures,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: errors.length === 0,

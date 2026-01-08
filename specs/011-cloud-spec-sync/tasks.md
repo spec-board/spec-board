@@ -27,10 +27,10 @@
 **Note**: CLI replaced with MCP server (`spec-board-mcp`) per clarification session 2026-01-06.
 
 - [x] T001 Create MCP package structure at packages/spec-board-mcp/ with package.json *(was: CLI at packages/specboard-cli/)*
-- [ ] T002 [P] Install web app dependencies: better-auth, diff-match-patch in package.json
+- [x] T002 [P] Install web app dependencies: better-auth, diff-match-patch in package.json
 - [x] T003 [P] Install MCP dependencies: @modelcontextprotocol/sdk, ky in packages/spec-board-mcp/package.json *(was: CLI deps)*
 - [x] T004 [P] Configure TypeScript for MCP package in packages/spec-board-mcp/tsconfig.json
-- [ ] T005 Add sync-related types to src/types/index.ts (MemberRole, FileType, ConflictStatus, SyncEventType enums)
+- [x] T005 Add sync-related types to src/types/index.ts (MemberRole, FileType, ConflictStatus, SyncEventType enums)
 
 ---
 
@@ -43,29 +43,29 @@
 ### Database Schema
 
 - [x] T006 Add User model to prisma/schema.prisma (id, email, name, passwordHash, avatarUrl, emailVerified, timestamps)
-- [ ] T007 [P] Add Session model to prisma/schema.prisma (id, userId, token, expiresAt, ipAddress, userAgent)
+- [x] T007 [P] Add Session model to prisma/schema.prisma (id, userId, token, expiresAt, ipAddress, userAgent)
 - [x] T008 [P] Add OAuthAccount model to prisma/schema.prisma (id, userId, provider, providerAccountId, tokens)
 - [x] T009 Add CloudProject model to prisma/schema.prisma (id, name, slug, description, ownerId, isArchived, timestamps)
 - [x] T010 [P] Add ProjectMember model to prisma/schema.prisma (id, projectId, userId, role, invitedBy, joinedAt, lastSyncAt)
 - [x] T011 [P] Add ProjectLink model to prisma/schema.prisma (id, projectId, code, createdBy, role, usedBy, usedAt, expiresAt) *(implemented as ProjectLinkCode)*
 - [x] T012 Add SyncedSpec model to prisma/schema.prisma (id, projectId, path, fileType, content, checksum, lastModifiedBy, isArchived)
-- [ ] T013 [P] Add SpecVersion model to prisma/schema.prisma (id, specId, version, content, checksum, modifiedBy)
-- [ ] T014 [P] Add ConflictRecord model to prisma/schema.prisma (id, specId, localContent, cloudContent, status, resolvedBy)
+- [x] T013 [P] Add SpecVersion model to prisma/schema.prisma (id, specId, version, content, checksum, modifiedBy)
+- [x] T014 [P] Add ConflictRecord model to prisma/schema.prisma (id, specId, localContent, cloudContent, status, resolvedBy)
 - [x] T015 [P] Add SyncEvent model to prisma/schema.prisma (id, projectId, userId, eventType, specPath, details)
 - [x] T016 Run prisma migrate to create database tables
 
 ### Authentication Infrastructure
 
-- [ ] T017 Configure Better Auth in src/lib/auth/config.ts (email/password + Google + GitHub providers)
-- [ ] T018 [P] Create auth API route handler in src/app/api/auth/[...all]/route.ts
-- [ ] T019 [P] Create login form component in src/components/auth/login-form.tsx
-- [ ] T020 [P] Create OAuth buttons component in src/components/auth/oauth-buttons.tsx
-- [ ] T021 Create auth middleware for API routes in src/middleware.ts
+- [x] T017 Configure Better Auth in src/lib/auth/config.ts (email/password + Google + GitHub providers)
+- [x] T018 [P] Create auth API route handler in src/app/api/auth/[...all]/route.ts
+- [x] T019 [P] Create login form component in src/components/auth/login-form.tsx
+- [x] T020 [P] Create OAuth buttons component in src/components/auth/oauth-buttons.tsx
+- [x] T021 Create auth middleware for API routes in src/middleware.ts
 
 ### Core Utilities
 
-- [ ] T022 [P] Create checksum utility (SHA-256) in src/lib/sync/checksum.ts
-- [ ] T023 [P] Create diff utility using diff-match-patch in src/lib/sync/diff.ts
+- [x] T022 [P] Create checksum utility (SHA-256) in src/lib/sync/checksum.ts
+- [x] T023 [P] Create diff utility using diff-match-patch in src/lib/sync/diff.ts
 - [x] T024 Create permission checker utility in src/lib/auth/permissions.ts (VIEW, EDIT, ADMIN role checks) *(implemented in src/lib/auth/session.ts)*
 
 **Note**: API token authentication implemented in src/lib/auth/api-token.ts and src/lib/auth/session.ts for MCP server auth flow.
@@ -87,19 +87,19 @@
 - [x] T025 [US1] Create POST /api/cloud-projects endpoint in src/app/api/cloud-projects/route.ts (create cloud project)
 - [x] T026 [US1] Create GET /api/cloud-projects endpoint in src/app/api/cloud-projects/route.ts (list user's projects)
 - [x] T027 [US1] Create GET /api/cloud-projects/[id] endpoint in src/app/api/cloud-projects/[id]/route.ts (get project details)
-- [ ] T028 [US1] Create POST /api/cloud-projects/[id]/links endpoint in src/app/api/cloud-projects/[id]/links/route.ts (generate link code)
-- [ ] T029 [US1] Create POST /api/cloud-projects/connect endpoint in src/app/api/cloud-projects/connect/route.ts (redeem link code)
+- [x] T028 [US1] Create POST /api/cloud-projects/[id]/links endpoint in src/app/api/cloud-projects/[id]/links/route.ts (generate link code)
+- [x] T029 [US1] Create POST /api/cloud-projects/connect endpoint in src/app/api/cloud-projects/connect/route.ts (redeem link code)
 
 ### Web App - Services
 
-- [ ] T030 [US1] Create CloudProjectService in src/lib/services/cloud-project.ts (create, get, list, delete projects)
-- [ ] T031 [US1] Create ProjectLinkService in src/lib/services/project-link.ts (generate code, validate, redeem)
+- [x] T030 [US1] Create CloudProjectService in src/lib/services/cloud-project.ts (create, get, list, delete projects)
+- [x] T031 [US1] Create ProjectLinkService in src/lib/services/project-link.ts (generate code, validate, redeem)
 
 ### Web App - Dashboard UI
 
-- [ ] T032 [P] [US1] Create cloud projects list page in src/app/(dashboard)/cloud/page.tsx
-- [ ] T033 [P] [US1] Create new cloud project form in src/components/cloud/new-project-form.tsx
-- [ ] T034 [US1] Create project link code generator UI in src/components/cloud/link-code-generator.tsx
+- [x] T032 [P] [US1] Create cloud projects list page in src/app/cloud/page.tsx *(path adjusted from dashboard)*
+- [x] T033 [P] [US1] Create new cloud project form in src/components/cloud/new-project-form.tsx
+- [x] T034 [US1] Create project link code generator UI in src/components/cloud/link-code-generator.tsx
 
 ### MCP Server - Core Infrastructure *(replaces CLI)*
 
@@ -128,20 +128,20 @@
 
 ### Web App - Sync API Endpoints
 
-- [ ] T042 [US2] Create GET /api/sync/[projectId]/status endpoint in src/app/api/sync/[projectId]/status/route.ts
+- [x] T042 [US2] Create GET /api/sync/[projectId]/status endpoint in src/app/api/sync/[projectId]/status/route.ts
 - [x] T043 [US2] Create POST /api/sync/[projectId]/push endpoint in src/app/api/sync/[projectId]/push/route.ts
 - [x] T044 [US2] Create GET /api/sync/[projectId]/features endpoint in src/app/api/sync/[projectId]/features/route.ts (pull specs)
 
 ### Web App - Sync Services
 
-- [ ] T045 [US2] Create SyncService in src/lib/services/sync.ts (push, pull, status operations)
-- [ ] T046 [US2] Create SpecVersionService in src/lib/services/spec-version.ts (create version, get history, prune old versions)
+- [x] T045 [US2] Create SyncService in src/lib/services/sync.ts (push, pull, status operations)
+- [x] T046 [US2] Create SpecVersionService in src/lib/services/spec-version.ts (create version, get history, prune old versions)
 
 ### Web App - Sync UI Components
 
-- [ ] T047 [P] [US2] Create sync status indicator in src/components/sync/sync-status.tsx
-- [ ] T048 [P] [US2] Create push button component in src/components/sync/push-button.tsx
-- [ ] T049 [P] [US2] Create pull button component in src/components/sync/pull-button.tsx
+- [x] T047 [P] [US2] Create sync status indicator in src/components/sync/sync-status.tsx
+- [x] T048 [P] [US2] Create push button component in src/components/sync/push-button.tsx
+- [x] T049 [P] [US2] Create pull button component in src/components/sync/pull-button.tsx
 
 ### MCP Server - Push/Pull Tools *(replaces CLI commands)*
 
@@ -168,18 +168,18 @@
 
 ### Web App - Member Services
 
-- [ ] T057 [US3] Create ProjectMemberService in src/lib/services/project-member.ts (list, update role, remove)
+- [x] T057 [US3] Create ProjectMemberService in src/lib/services/project-member.ts (list, update role, remove)
 
 ### Web App - Team UI
 
-- [ ] T058 [P] [US3] Create team members list in src/components/cloud/team-members.tsx
-- [ ] T059 [P] [US3] Create member role selector in src/components/cloud/role-selector.tsx
-- [ ] T060 [US3] Create last modified by indicator in src/components/sync/last-modified.tsx
+- [x] T058 [P] [US3] Create team members list in src/components/cloud/team-members.tsx
+- [x] T059 [P] [US3] Create member role selector in src/components/cloud/role-selector.tsx
+- [x] T060 [US3] Create last modified by indicator in src/components/sync/last-modified.tsx
 
 ### Web App - Activity Tracking
 
-- [ ] T061 [US3] Create SyncEventService in src/lib/services/sync-event.ts (log events, get activity)
-- [ ] T062 [US3] Add activity feed to project dashboard in src/components/cloud/activity-feed.tsx
+- [x] T061 [US3] Create SyncEventService in src/lib/services/sync-event.ts (log events, get activity)
+- [x] T062 [US3] Add activity feed to project dashboard in src/components/cloud/activity-feed.tsx
 
 **Checkpoint**: User Story 3 complete - multi-user collaboration working
 
