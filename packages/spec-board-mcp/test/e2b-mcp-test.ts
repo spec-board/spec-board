@@ -495,8 +495,9 @@ async function runLocalTests(): Promise<void> {
 
     // Test callTool
     const result = await client.callTool({ name: 'test_tool', arguments: {} });
+    const content = result.content as Array<{ type: string; text?: string }>;
     assert(
-      result.content[0].type === 'text' && result.content[0].text === 'Called: test_tool',
+      content[0].type === 'text' && content[0].text === 'Called: test_tool',
       'Unexpected tool result'
     );
 

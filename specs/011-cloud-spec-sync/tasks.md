@@ -193,24 +193,24 @@
 
 ### Web App - Conflict API Endpoints
 
-- [ ] T063 [US4] Create GET /api/sync/[slug]/conflicts endpoint in src/app/api/sync/[slug]/conflicts/route.ts
-- [ ] T064 [US4] Create POST /api/sync/[slug]/conflicts/[conflictId]/resolve endpoint in src/app/api/sync/[slug]/conflicts/[conflictId]/resolve/route.ts
+- [x] T063 [US4] Create GET /api/sync/[projectId]/conflicts endpoint in src/app/api/sync/[projectId]/conflicts/route.ts
+- [x] T064 [US4] Create POST /api/sync/[projectId]/conflicts/[conflictId]/resolve endpoint in src/app/api/sync/[projectId]/conflicts/[conflictId]/resolve/route.ts
 
 ### Web App - Conflict Services
 
-- [ ] T065 [US4] Create ConflictService in src/lib/services/conflict.ts (detect, list, resolve conflicts)
-- [ ] T066 [US4] Integrate conflict detection into SyncService push operation in src/lib/services/sync.ts
+- [x] T065 [US4] Create ConflictService in src/lib/services/conflict.ts (detect, list, resolve conflicts)
+- [x] T066 [US4] Integrate conflict detection into SyncService push operation in src/lib/services/sync.ts *(already implemented)*
 
 ### Web App - Conflict UI
 
-- [ ] T067 [US4] Create conflict list component in src/components/sync/conflict-list.tsx
-- [ ] T068 [US4] Create conflict resolver component in src/components/sync/conflict-resolver.tsx (side-by-side diff view)
-- [ ] T069 [US4] Create conflict resolution options (keep local, keep cloud, manual merge) in src/components/sync/resolution-options.tsx
+- [x] T067 [US4] Create conflict list component in src/components/sync/conflict-list.tsx
+- [x] T068 [US4] Create conflict resolver component in src/components/sync/conflict-resolver.tsx (side-by-side diff view)
+- [x] T069 [US4] Create conflict resolution options (keep local, keep cloud, manual merge) in src/components/sync/resolution-options.tsx
 
-### CLI - Conflict Commands
+### MCP Server - Conflict Tools *(replaces CLI per clarification 2026-01-06)*
 
-- [ ] T070 [US4] Implement conflicts list command in packages/specboard-cli/src/commands/conflicts.ts
-- [ ] T071 [US4] Implement conflict resolve command in packages/specboard-cli/src/commands/conflicts.ts (interactive resolution)
+- [ ] T070 [US4] *(Deferred - MCP can use conflict API endpoints directly)*
+- [ ] T071 [US4] *(Deferred - MCP can use conflict API endpoints directly)*
 
 **Checkpoint**: User Story 4 complete - conflict detection and resolution working
 
