@@ -41,6 +41,9 @@ Get intelligent next action suggestions and save analysis reports for quality as
 - **Progress Tracking** — Visual metrics for tasks and checklists
 - **Accessible** — WCAG 2.2 AA compliant with keyboard navigation
 - **AI Integration** — Next action suggestions and analysis reports
+- **Cloud Sync** — OAuth authentication, team collaboration, conflict resolution
+- **Team Collaboration** — Role-based access (VIEW, EDIT, ADMIN) for cloud projects
+- **Conflict Resolution** — 3-way merge with visual diff viewer
 
 https://youtu.be/WQXb2-dj9zQ
 
@@ -134,9 +137,12 @@ pnpm start
 
 | Document | Description |
 |----------|-------------|
+| [CLAUDE.md](https://github.com/paulpham157/spec-board/blob/main/CLAUDE.md) | Main development guide for Claude Code |
 | [CONTRIBUTING.md](https://github.com/paulpham157/spec-board/blob/main/CONTRIBUTING.md) | Development guide, API reference |
 | [CHANGELOG.md](https://github.com/paulpham157/spec-board/blob/main/CHANGELOG.md) | Version history |
 | [PROJECT_INDEX.md](https://github.com/paulpham157/spec-board/blob/main/PROJECT_INDEX.md) | Codebase structure |
+| [docs/API.md](https://github.com/paulpham157/spec-board/blob/main/docs/API.md) | Complete API documentation |
+| [docs/DEVELOPER_GUIDE.md](https://github.com/paulpham157/spec-board/blob/main/docs/DEVELOPER_GUIDE.md) | Developer guide with examples |
 
 ## License
 

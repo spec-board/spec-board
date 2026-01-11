@@ -7,6 +7,7 @@ import { ProjectInfoBubble } from '@/components/project-info-bubble';
 import { FolderOpen, Settings, Github } from 'lucide-react';
 import Image from 'next/image';
 import { useProjectStore } from '@/lib/store';
+import { ThemeButton } from '@/components/theme-button';
 import type { Project, Feature } from '@/types';
 
 export default function ProjectPage() {
@@ -162,6 +163,7 @@ export default function ProjectPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeButton />
               <a
                 href="https://github.com/paulpham157/spec-board"
                 target="_blank"

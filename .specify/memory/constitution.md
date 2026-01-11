@@ -2,18 +2,15 @@
 ================================================================================
 SYNC IMPACT REPORT
 ================================================================================
-Version change: 0.0.0 → 1.0.0 (MAJOR - initial constitution)
-Modified principles: N/A (initial creation)
+Version change: 1.0.0 → 1.1.0 (MINOR - new principle added)
+Modified principles: None
 Added sections:
-  - Core Principles (6 principles)
-  - Technical Standards
-  - Development Workflow
-  - Governance
-Removed sections: N/A
+  - Principle VII: Visual Identity (Professional design language)
+Removed sections: None
 Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ (Constitution Check section exists)
-  - .specify/templates/spec-template.md ✅ (aligned with user story structure)
-  - .specify/templates/tasks-template.md ✅ (aligned with phase structure)
+  - .specify/templates/plan-template.md ✅ (no design-specific gates needed)
+  - .specify/templates/spec-template.md ✅ (no changes required)
+  - .specify/templates/tasks-template.md ✅ (no changes required)
 Follow-up TODOs: None
 ================================================================================
 -->
@@ -98,6 +95,26 @@ UI components MUST follow the principle of single responsibility.
 **Rationale**: Simple, focused components are easier to test, maintain, and reuse.
 The flat component structure in `src/components/` reflects this principle.
 
+### VII. Visual Identity
+
+All UI design MUST adhere to a professional, focused visual language.
+
+- **Minimal color palette**: Limit to essential colors; avoid decorative hues
+- **Text-centric design**: Typography drives hierarchy; imagery is secondary
+- **Professional tone**: Clean lines, generous whitespace, no visual clutter
+- **Functional aesthetics**: Every visual element MUST serve a purpose
+- **Consistency**: Uniform spacing, sizing, and color application across all views
+
+Design constraints:
+- Primary palette: Neutral grays with single accent color for actions
+- No gradients, shadows, or decorative borders unless functionally necessary
+- Icons used sparingly and only when they improve comprehension
+- Data visualization follows the same minimal aesthetic
+
+**Rationale**: A focused, text-based interface reduces cognitive load and keeps
+attention on spec content. Professional restraint signals tool maturity and
+builds user trust.
+
 ## Technical Standards
 
 ### Stack Requirements
@@ -171,6 +188,7 @@ This constitution supersedes all other development practices for SpecBoard.
 - All PRs MUST verify compliance with these principles
 - Code review MUST check for type safety, security, and accessibility
 - Complexity MUST be justified against the simplicity principle
+- UI changes MUST comply with the visual identity principle
 
 ### Version Policy
 
@@ -178,4 +196,4 @@ This constitution supersedes all other development practices for SpecBoard.
 - MINOR: New principle or section added
 - PATCH: Clarifications, wording improvements
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-29 | **Last Amended**: 2025-12-29
+**Version**: 1.1.0 | **Ratified**: 2025-12-29 | **Last Amended**: 2026-01-05
