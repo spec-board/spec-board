@@ -10,6 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Local project reference (existing)
 model Project {
   id          String   @id @default(uuid())
   name        String   @unique // URL slug (e.g., "my-project")
@@ -19,4 +20,207 @@ model Project {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("projects")
+}
+
+// ============================================
+// Cloud Sync Models (011-cloud-spec-sync)
+// ============================================
+
+// User account for cloud authentication
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String?   @map("password_hash") // null for OAuth-only users
+  avatarUrl     String?   @map("avatar_url")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  apiTokens         ApiToken[]
+  memberships       ProjectMember[]
+  ownedProjects     CloudProject[]  @relation("ProjectOwner")
+  syncEvents        SyncEvent[]
+  sessions          Session[]
+  specVersions      SpecVersion[]
+  resolvedConflicts ConflictRecord[]
+
+  @@map("users")
+}
+
+// OAuth account linking
+model OAuthAccount {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  provider     String   // "google", "github"
+  providerAccountId String @map("provider_account_id")
+  accessToken  String?  @map("access_token")
+  refreshToken String?  @map("refresh_token")
+  expiresAt    DateTime? @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@unique([provider, providerAccountId])
+  @@map("oauth_accounts")
+}
+
+// API tokens for MCP authentication
+model ApiToken {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  name        String    // User-friendly name (e.g., "Claude Code Token")
+  token       String    @unique // The actual token value
+  expiresAt   DateTime? @map("expires_at")
+  revokedAt   DateTime? @map("revoked_at")
+  lastUsedAt  DateTime? @map("last_used_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_tokens")
+}
+
+// Cloud-hosted project
+model CloudProject {
+  id          String   @id @default(uuid())
+  name        String   // Display name
+  slug        String   @unique // URL-safe identifier
+  description String?
+  ownerId     String   @map("owner_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  owner       User            @relation("ProjectOwner", fields: [ownerId], references: [id])
+  specs       SyncedSpec[]
+  members     ProjectMember[]
+  syncEvents  SyncEvent[]
+  linkCodes   ProjectLinkCode[]
+
+  @@map("cloud_projects")
+}
+
+// Spec file stored in cloud
+model SyncedSpec {
+  id              String   @id @default(uuid())
+  cloudProjectId  String   @map("cloud_project_id")
+  featureId       String   @map("feature_id")  // e.g., "001-user-auth"
+  featureName     String?  @map("feature_name") // Human-readable name
+  fileType        String   @map("file_type")   // "spec", "plan", "tasks"
+  content         String   // Markdown content
+  version         Int      @default(1)
+  lastModifiedBy  String?  @map("last_modified_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  cloudProject    CloudProject     @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
+  versions        SpecVersion[]
+  conflicts       ConflictRecord[]
+
+  @@unique([cloudProjectId, featureId, fileType])
+  @@map("synced_specs")
+}
+
+// Project membership with roles
+model ProjectMember {
+  id              String   @id @default(uuid())
+  cloudProjectId  String   @map("cloud_project_id")
+  userId          String   @map("user_id")
+  role            String   @default("EDIT") // "VIEW", "EDIT", "ADMIN"
+  joinedAt        DateTime @default(now()) @map("joined_at")
+  lastSyncAt      DateTime? @map("last_sync_at")
+
+  // Relations
+  cloudProject    CloudProject @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([cloudProjectId, userId])
+  @@map("project_members")
+}
+
+// Sync event audit log
+model SyncEvent {
+  id               String   @id @default(uuid())
+  cloudProjectId   String   @map("cloud_project_id")
+  userId           String   @map("user_id")
+  eventType        String   @map("event_type") // "PUSH", "PULL", "CONFLICT"
+  featuresAffected String[] @map("features_affected")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  cloudProject     CloudProject @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
+  user             User         @relation(fields: [userId], references: [id])
+
+  @@map("sync_events")
+}
+
+// Project link codes for connecting local projects
+model ProjectLinkCode {
+  id              String   @id @default(uuid())
+  cloudProjectId  String   @map("cloud_project_id")
+  code            String   @unique // 6-character code
+  expiresAt       DateTime @map("expires_at")
+  usedAt          DateTime? @map("used_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  cloudProject    CloudProject @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
+
+  @@map("project_link_codes")
+}
+
+// Session for Better Auth (T007)
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Spec version history for conflict resolution (T013)
+model SpecVersion {
+  id          String   @id @default(uuid())
+  specId      String   @map("spec_id")
+  version     Int
+  content     String
+  checksum    String   // SHA-256 hash of content
+  modifiedBy  String   @map("modified_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  spec        SyncedSpec @relation(fields: [specId], references: [id], onDelete: Cascade)
+  modifier    User       @relation(fields: [modifiedBy], references: [id])
+
+  @@unique([specId, version])
+  @@map("spec_versions")
+}
+
+// Conflict record for sync conflicts (T014)
+model ConflictRecord {
+  id            String   @id @default(uuid())
+  specId        String   @map("spec_id")
+  localContent  String   @map("local_content")
+  localChecksum String   @map("local_checksum")
+  cloudContent  String   @map("cloud_content")
+  cloudChecksum String   @map("cloud_checksum")
+  status        String   @default("PENDING") // PENDING, RESOLVED_LOCAL, RESOLVED_CLOUD, RESOLVED_MERGED
+  resolvedBy    String?  @map("resolved_by")
+  resolvedAt    DateTime? @map("resolved_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  spec          SyncedSpec @relation(fields: [specId], references: [id], onDelete: Cascade)
+  resolver      User?      @relation(fields: [resolvedBy], references: [id])
+
+  @@map("conflict_records")
 }
