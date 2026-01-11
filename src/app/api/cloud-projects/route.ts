@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth/session';
+import { createCloudProjectSchema } from '@/lib/validations/sync';
+import { validateBody } from '@/lib/validations/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,17 +71,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Validate request body with zod schema
+  const bodyResult = await validateBody(request, createCloudProjectSchema);
+  if (!bodyResult.success) {
+    return bodyResult.error;
+  }
+
+  const { name, description } = bodyResult.data;
+
   try {
-    const body = await request.json();
-    const { name, description } = body;
-
-    if (!name || typeof name !== 'string') {
-      return NextResponse.json(
-        { error: 'Project name is required' },
-        { status: 400 }
-      );
-    }
-
     // Generate unique slug
     let slug = generateSlug(name);
     let slugSuffix = 0;

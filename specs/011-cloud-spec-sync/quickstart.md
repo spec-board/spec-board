@@ -1,7 +1,7 @@
 # Quickstart: Cloud Specification Sync
 
 **Feature**: 011-cloud-spec-sync
-**Date**: 2026-01-06
+**Date**: 2026-01-11
 
 ## Overview
 
@@ -12,193 +12,208 @@ This guide walks you through setting up cloud sync for your spec-kit project, en
 - Node.js 18+ installed
 - A spec-kit project with specs in `specs/` directory
 - Internet connection
+- Claude Code or another MCP-compatible AI assistant (for MCP sync)
 
 ## Setup Steps
 
-### 1. Install the SpecBoard CLI
+### 1. Create a SpecBoard Account
 
-```bash
-npm install -g @specboard/cli
-```
+1. Visit your SpecBoard instance (e.g., http://localhost:3000)
+2. Click "Cloud" in the navigation
+3. Click "Go to Sign In"
+4. Choose email/password or OAuth (Google/GitHub)
 
-Verify installation:
-```bash
-specboard --version
-```
+### 2. Create a Cloud Project
 
-### 2. Create a SpecBoard Account
-
-**Option A: Via Browser**
-1. Visit https://specboard.app
-2. Click "Sign Up"
-3. Choose email/password or OAuth (Google/GitHub)
-
-**Option B: Via CLI**
-```bash
-specboard login
-# Opens browser for authentication
-```
-
-### 3. Create a Cloud Project
-
-**Via Dashboard**:
-1. Log in to https://specboard.app
+1. After signing in, you'll see the Cloud Projects dashboard
 2. Click "New Project"
-3. Enter project name
-4. Copy the generated link code
+3. Enter a project name and optional description
+4. Click "Create Project"
 
-**Via CLI** (if already logged in):
-```bash
-specboard projects create "My Project"
-# Outputs: Project created. Link code: ABC123
+### 3. Generate an API Token
+
+To sync specs via the MCP server, you need an API token:
+
+1. Go to Settings → API Tokens
+2. Click "Generate New Token"
+3. Give it a descriptive name (e.g., "My Laptop - Claude Code")
+4. Copy the token (you won't see it again!)
+
+### 4. Configure the MCP Server
+
+Add the spec-board-mcp server to your Claude Code configuration:
+
+**For Claude Code** (`.claude/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "spec-board": {
+      "command": "node",
+      "args": ["/path/to/spec-board/packages/spec-board-mcp/dist/index.js"],
+      "env": {
+        "SPECBOARD_API_URL": "http://localhost:3000",
+        "SPECBOARD_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}
 ```
 
-### 4. Connect Your Local Project
-
-Navigate to your spec-kit project directory:
-
-```bash
-cd /path/to/my-project
-specboard connect ABC123
-```
-
-Expected output:
-```
-✓ Connected to project "My Project" (my-project)
-  Role: ADMIN
-  Specs found: 5
-
-Run 'specboard push' to upload your local specs.
-```
+**Environment Variables:**
+- `SPECBOARD_API_URL`: Your SpecBoard instance URL
+- `SPECBOARD_API_TOKEN`: The API token you generated
 
 ### 5. Push Your Specs to Cloud
 
-```bash
-specboard push
+With Claude Code (or another MCP client), use the `push_spec` tool:
+
+```
+Push my local specs to the cloud project "my-project-id"
 ```
 
-Expected output:
-```
-Pushing to "My Project"...
-
-  ↑ specs/001-feature/spec.md (new)
-  ↑ specs/001-feature/plan.md (new)
-  ↑ specs/002-another/spec.md (new)
-
-✓ Pushed 3 files
-```
+The MCP server will:
+1. Read all spec files from your `specs/` directory
+2. Upload them to the cloud project
+3. Report which files were synced
 
 ### 6. View in Dashboard
 
-1. Visit https://specboard.app
-2. Click on your project
+1. Visit your SpecBoard instance
+2. Click on your project in the Cloud dashboard
 3. See your specs in the Kanban board
 
 ## Inviting Team Members
 
 ### Generate a Link Code
 
-**Via Dashboard**:
-1. Open your project
+1. Open your project in the Cloud dashboard
 2. Click "Settings" → "Team"
 3. Click "Generate Link Code"
 4. Choose role (View or Edit)
-5. Share the code with your teammate
-
-**Via CLI**:
-```bash
-specboard links create --role edit
-# Outputs: Link code: XYZ789 (expires in 24h)
-```
+5. Share the 6-character code with your teammate (expires in 24h)
 
 ### Team Member Joins
 
-Your teammate runs:
-```bash
-cd /path/to/their-local-copy
-specboard connect XYZ789
-```
+Your teammate:
+1. Signs in to SpecBoard
+2. Clicks "Connect to Project"
+3. Enters the link code
+4. Gets access with the assigned role
 
 ## Daily Workflow
 
-### Check Status
-
-```bash
-specboard status
-```
-
-Shows:
-- Local changes not yet pushed
-- Cloud changes not yet pulled
-- Any pending conflicts
-
 ### Push Your Changes
 
-After editing specs locally:
-```bash
-specboard push
+After editing specs locally, ask Claude Code:
+```
+Push my spec changes to cloud project "my-project-id"
 ```
 
 ### Pull Team Changes
 
 To get changes from teammates:
-```bash
-specboard pull
 ```
+Pull the latest specs from cloud project "my-project-id" to my local project
+```
+
+### View Sync Status
+
+Check the Cloud dashboard to see:
+- Last sync time
+- Who modified each spec
+- Any pending conflicts
 
 ### Resolve Conflicts
 
 If two people edit the same file:
+1. The dashboard shows a conflict indicator
+2. Click on the conflicted spec
+3. Use the side-by-side diff view
+4. Choose: Keep Local, Keep Cloud, or Manual Merge
 
-```bash
-specboard conflicts
-# Lists pending conflicts
+## MCP Tools Reference
 
-specboard conflicts resolve 1
-# Interactive resolution
+### push_spec
+
+Upload local specs to SpecBoard cloud.
+
+**Parameters:**
+- `projectPath` (required): Local path to the spec-kit project root
+- `cloudProjectId` (required): Cloud project ID or slug
+- `featureId` (optional): Specific feature to push (omit for all)
+
+**Example:**
+```json
+{
+  "projectPath": "/Users/me/my-project",
+  "cloudProjectId": "abc123",
+  "featureId": "001-auth"
+}
 ```
 
-## Offline Work
+### pull_spec
 
-The CLI queues changes when offline:
+Download specs from SpecBoard cloud to local.
 
-1. Edit specs while offline
-2. When back online, run `specboard status` to see queued changes
-3. Run `specboard push` to sync
+**Parameters:**
+- `projectPath` (required): Local path to the spec-kit project root
+- `cloudProjectId` (required): Cloud project ID or slug
+- `featureId` (optional): Specific feature to pull (omit for all)
+
+**Example:**
+```json
+{
+  "projectPath": "/Users/me/my-project",
+  "cloudProjectId": "abc123"
+}
+```
 
 ## Troubleshooting
 
-### "Not connected to a project"
+### "Unauthorized" or "Invalid token"
 
-Run `specboard connect <code>` first, or check if `.specboard/` directory exists.
+Your API token may be expired or invalid. Generate a new one in Settings → API Tokens.
+
+### "Project not found"
+
+Check that:
+- The `cloudProjectId` matches your project's ID or slug
+- You have access to the project (are a member)
 
 ### "Permission denied"
 
-Your role may be VIEW-only. Ask a project admin to upgrade your role.
+Your role may be VIEW-only. Ask a project admin to upgrade your role to EDIT or ADMIN.
 
 ### "Conflict detected"
 
-Two people edited the same file. Run `specboard conflicts` to resolve.
+Two people edited the same file. Use the Cloud dashboard to resolve the conflict.
 
-### "Network error"
+### MCP Server Not Connecting
 
-Check internet connection. The CLI will queue changes for later sync.
+1. Check that the MCP server path is correct in your config
+2. Verify environment variables are set
+3. Check the server logs for errors
 
-## File Structure
+## Project Structure
 
-After connecting, the CLI creates:
+After syncing, your project structure remains unchanged:
 
 ```
 my-project/
 ├── specs/
-│   └── ... (your spec files)
-└── .specboard/
-    ├── config.json    # Connection settings
-    └── sync.db        # Local sync state
+│   ├── 001-feature/
+│   │   ├── spec.md
+│   │   ├── plan.md
+│   │   └── tasks.md
+│   └── 002-another/
+│       └── spec.md
+└── ... (other project files)
 ```
+
+The MCP server is stateless - no local config files are created.
 
 ## Next Steps
 
 - Read the [API documentation](./contracts/api.md) for integration
-- Read the [CLI reference](./contracts/cli.md) for all commands
-- Set up CI/CD with `SPECBOARD_TOKEN` environment variable
+- Set up CI/CD with `SPECBOARD_API_TOKEN` environment variable
+- Explore the Cloud dashboard for team activity and version history

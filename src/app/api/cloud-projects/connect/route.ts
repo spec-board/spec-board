@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth/session';
+import { connectWithLinkCodeSchema } from '@/lib/validations/sync';
+import { validateBody } from '@/lib/validations/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,20 +18,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Validate request body with zod schema
+  const bodyResult = await validateBody(request, connectWithLinkCodeSchema);
+  if (!bodyResult.success) {
+    return bodyResult.error;
+  }
+
+  // Code is already validated and normalized by zod schema
+  const normalizedCode = bodyResult.data.code;
+
   try {
-    const body = await request.json();
-    const { code } = body;
-
-    if (!code || typeof code !== 'string') {
-      return NextResponse.json(
-        { error: 'Link code is required' },
-        { status: 400 }
-      );
-    }
-
-    // Normalize code (uppercase, trim)
-    const normalizedCode = code.toUpperCase().trim();
-
     // Find the link code
     const linkCode = await prisma.projectLinkCode.findUnique({
       where: { code: normalizedCode },
