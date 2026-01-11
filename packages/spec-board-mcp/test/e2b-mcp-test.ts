@@ -11,7 +11,7 @@
  *
  * Requirements:
  * - E2B_API_KEY environment variable
- * - Built spec-board-mcp package
+ * - Built specboard-mcp package
  */
 
 import { Sandbox } from '@e2b/code-interpreter';
@@ -505,8 +505,8 @@ async function runLocalTests(): Promise<void> {
     await server.close();
   });
 
-  // Test spec-board-mcp server (if built)
-  await runTest('Test spec-board-mcp server via stdio', async () => {
+  // Test specboard-mcp server (if built)
+  await runTest('Test specboard-mcp server via stdio', async () => {
     const fs = await import('fs/promises');
     const path = await import('path');
     const { fileURLToPath } = await import('url');
@@ -528,7 +528,7 @@ async function runLocalTests(): Promise<void> {
     });
 
     const client = new Client(
-      { name: 'spec-board-test', version: '1.0.0' },
+      { name: 'specboard-test', version: '1.0.0' },
       { capabilities: {} }
     );
 

@@ -161,13 +161,13 @@ Users can continue working on specs while offline. Changes are queued locally an
 
 ### Session 2026-01-06
 
-- Q: How do users sync local files with cloud (local agent architecture)? → A: Via MCP server (`spec-board-mcp`) that works with all AI coding assistants (Claude Code, GitHub Copilot, Cursor, Gemini CLI, Codex CLI, Windsurf, Kilo Code, Amp).
+- Q: How do users sync local files with cloud (local agent architecture)? → A: Via MCP server (`specboard-mcp`) that works with all AI coding assistants (Claude Code, GitHub Copilot, Cursor, Gemini CLI, Codex CLI, Windsurf, Kilo Code, Amp).
 - Q: What sync tools does the MCP server provide? → A: Two tools - `pull_spec` (download newest specs from cloud) and `push_spec` (upload local specs to cloud).
 - Q: How do users authenticate the MCP server? → A: Users login to spec-board web dashboard to generate an API token, then configure the MCP server with that token.
 
 ## Assumptions
 
-- Users configure the `spec-board-mcp` MCP server in their AI coding assistant (Claude Code, GitHub Copilot, Cursor, Gemini CLI, Codex CLI, Windsurf, Kilo Code, Amp). The MCP server provides `pull_spec` and `push_spec` tools for sync operations.
+- Users configure the `specboard-mcp` MCP server in their AI coding assistant (Claude Code, GitHub Copilot, Cursor, Gemini CLI, Codex CLI, Windsurf, Kilo Code, Amp). The MCP server provides `pull_spec` and `push_spec` tools for sync operations.
 - Authentication uses API tokens generated from the spec-board web dashboard. Users must have a spec-board account and be logged in to generate tokens.
 - The MCP server runs locally and has filesystem access to read/write spec files. It communicates with the spec-board cloud API over HTTPS.
 - The spec-kit folder structure follows the standard pattern: `specs/{feature-name}/{spec.md|plan.md|tasks.md}`.

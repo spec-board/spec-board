@@ -16,7 +16,7 @@
 ## Path Conventions
 
 - **Web app**: `src/` at repository root (Next.js App Router)
-- **MCP package**: `packages/spec-board-mcp/src/` *(replaces CLI per clarification 2026-01-06)*
+- **MCP package**: `packages/specboard-mcp/src/` *(replaces CLI per clarification 2026-01-06)*
 
 ---
 
@@ -24,12 +24,12 @@
 
 **Purpose**: Project initialization and basic structure
 
-**Note**: CLI replaced with MCP server (`spec-board-mcp`) per clarification session 2026-01-06.
+**Note**: CLI replaced with MCP server (`specboard-mcp`) per clarification session 2026-01-06.
 
-- [x] T001 Create MCP package structure at packages/spec-board-mcp/ with package.json *(was: CLI at packages/specboard-cli/)*
+- [x] T001 Create MCP package structure at packages/specboard-mcp/ with package.json *(was: CLI at packages/specboard-cli/)*
 - [x] T002 [P] Install web app dependencies: better-auth, diff-match-patch in package.json
-- [x] T003 [P] Install MCP dependencies: @modelcontextprotocol/sdk, ky in packages/spec-board-mcp/package.json *(was: CLI deps)*
-- [x] T004 [P] Configure TypeScript for MCP package in packages/spec-board-mcp/tsconfig.json
+- [x] T003 [P] Install MCP dependencies: @modelcontextprotocol/sdk, ky in packages/specboard-mcp/package.json *(was: CLI deps)*
+- [x] T004 [P] Configure TypeScript for MCP package in packages/specboard-mcp/tsconfig.json
 - [x] T005 Add sync-related types to src/types/index.ts (MemberRole, FileType, ConflictStatus, SyncEventType enums)
 
 ---
@@ -103,8 +103,8 @@
 
 ### MCP Server - Core Infrastructure *(replaces CLI)*
 
-- [x] T035 [US1] Create MCP server entry point in packages/spec-board-mcp/src/index.ts with MCP SDK setup
-- [x] T036 [US1] Create API client in packages/spec-board-mcp/src/api/client.ts (HTTP client with auth)
+- [x] T035 [US1] Create MCP server entry point in packages/specboard-mcp/src/index.ts with MCP SDK setup
+- [x] T036 [US1] Create API client in packages/specboard-mcp/src/api/client.ts (HTTP client with auth)
 - [ ] T037 [US1] *(Removed - MCP uses API token from env, no local config needed)*
 - [ ] T038 [US1] *(Removed - MCP is stateless, no local database needed)*
 
@@ -112,7 +112,7 @@
 
 - [ ] T039 [US1] *(Removed - MCP uses API token auth, no connect command needed)*
 - [ ] T040 [US1] *(Removed - MCP uses API token auth, no login command needed)*
-- [x] T041 [US1] Implement push_spec tool in packages/spec-board-mcp/src/tools/push-spec.ts
+- [x] T041 [US1] Implement push_spec tool in packages/specboard-mcp/src/tools/push-spec.ts
 
 **Checkpoint**: User Story 1 complete - users can connect local projects to cloud
 
@@ -145,8 +145,8 @@
 
 ### MCP Server - Push/Pull Tools *(replaces CLI commands)*
 
-- [x] T050 [US2] Implement push_spec tool in packages/spec-board-mcp/src/tools/push-spec.ts
-- [x] T051 [US2] Implement pull_spec tool in packages/spec-board-mcp/src/tools/pull-spec.ts
+- [x] T050 [US2] Implement push_spec tool in packages/specboard-mcp/src/tools/push-spec.ts
+- [x] T051 [US2] Implement pull_spec tool in packages/specboard-mcp/src/tools/pull-spec.ts
 - [ ] T052 [US2] *(Removed - status shown via MCP tool responses)*
 - [ ] T053 [US2] *(Removed - file scanning done in push_spec tool)*
 
