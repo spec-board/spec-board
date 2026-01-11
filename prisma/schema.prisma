@@ -221,6 +221,51 @@ model ConflictRecord {
   // Relations
   spec          SyncedSpec @relation(fields: [specId], references: [id], onDelete: Cascade)
   resolver      User?      @relation(fields: [resolvedBy], references: [id])
-
+  
   @@map("conflict_records")
+}
+
+// Remote driver configuration (Feature 010)
+model DriverConfig {
+  id          String   @id @default(uuid())
+  name        String   // Profile name (e.g., "E2B Production")
+  driverType  String   @map("driver_type") // 'e2b' | 'docker' | 'daytona'
+  settings    Json     // Driver-specific settings (JSON)
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  sessions    RemoteSession[]
+
+  @@map("driver_configs")
+}
+
+// Remote execution session
+model RemoteSession {
+  id           String   @id @default(uuid())
+  configId     String   @map("config_id")
+  status       String   // 'connecting' | 'active' | 'disconnected' | 'error'
+  startedAt    DateTime @default(now()) @map("started_at")
+  lastActivity DateTime @updatedAt @map("last_activity")
+  metadata     Json?    // Session-specific data (JSON)
+
+  config       DriverConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  syncManifests SyncManifest[]
+
+  @@map("remote_sessions")
+}
+
+// File synchronization manifest
+model SyncManifest {
+  id          String   @id @default(uuid())
+  sessionId   String   @map("session_id")
+  localPath   String   @map("local_path")
+  remotePath  String   @map("remote_path")
+  checksum    String
+  syncedAt    DateTime @default(now()) @map("synced_at")
+  direction   String   // 'upload' | 'download'
+
+  session     RemoteSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("sync_manifests")
 }
