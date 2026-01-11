@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * spec-board-mcp - MCP server for syncing spec-kit projects with SpecBoard cloud
+ * specboard-mcp - MCP server for syncing spec-kit projects with SpecBoard cloud
  *
  * Tools:
  * - get_spec: Download newest specs from cloud to local
@@ -68,7 +68,7 @@ const tools: Tool[] = [
 // Create server instance
 const server = new Server(
   {
-    name: "spec-board-mcp",
+    name: "specboard-mcp",
     version: "1.0.0",
   },
   {
@@ -130,7 +130,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("spec-board-mcp server started");
+  console.error("specboard-mcp server started");
 }
 
 main().catch((error) => {

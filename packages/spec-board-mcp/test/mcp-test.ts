@@ -1,6 +1,6 @@
 /**
  * MCP Server/Client Test Script
- * Tests the spec-board-mcp functionality in isolation
+ * Tests the specboard-mcp functionality in isolation
  */
 
 import * as fs from 'fs/promises';

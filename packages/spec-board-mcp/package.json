@@ -1,11 +1,11 @@
 {
-  "name": "spec-board-mcp",
+  "name": "specboard-mcp",
   "version": "1.0.0",
   "description": "MCP server for syncing spec-kit projects with SpecBoard cloud",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "spec-board-mcp": "./dist/index.js"
+    "specboard-mcp": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",

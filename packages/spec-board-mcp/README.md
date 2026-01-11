@@ -1,11 +1,11 @@
-# spec-board-mcp
+# specboard-mcp
 
 MCP server for syncing spec-kit projects with SpecBoard cloud.
 
 ## Installation
 
 ```bash
-npm install -g spec-board-mcp
+npm install -g specboard-mcp
 ```
 
 Or add to your AI assistant's MCP configuration directly.
@@ -37,7 +37,7 @@ Add to `~/.claude/settings.json`:
   "mcpServers": {
     "spec-board": {
       "command": "npx",
-      "args": ["spec-board-mcp"],
+      "args": ["specboard-mcp"],
       "env": {
         "SPEC_BOARD_API_TOKEN": "your-token-here"
       }
@@ -54,7 +54,7 @@ Add to your MCP configuration file:
 {
   "spec-board": {
     "command": "npx",
-    "args": ["spec-board-mcp"],
+    "args": ["specboard-mcp"],
     "env": {
       "SPEC_BOARD_API_TOKEN": "your-token-here"
     }

@@ -41,7 +41,7 @@ To sync specs via the MCP server, you need an API token:
 
 ### 4. Configure the MCP Server
 
-Add the spec-board-mcp server to your Claude Code configuration:
+Add the specboard-mcp server to your Claude Code configuration:
 
 **For Claude Code** (`.claude/mcp.json`):
 ```json
@@ -49,7 +49,7 @@ Add the spec-board-mcp server to your Claude Code configuration:
   "mcpServers": {
     "spec-board": {
       "command": "node",
-      "args": ["/path/to/spec-board/packages/spec-board-mcp/dist/index.js"],
+      "args": ["/path/to/spec-board/packages/specboard-mcp/dist/index.js"],
       "env": {
         "SPECBOARD_API_URL": "http://localhost:3000",
         "SPECBOARD_API_TOKEN": "your-api-token-here"
