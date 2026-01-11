@@ -222,23 +222,23 @@
 
 **Independent Test**: Disconnect internet, make local changes, reconnect, verify notification shows pending changes count.
 
-### CLI - Offline Queue
+### MCP Server - Offline Queue *(replaces CLI per clarification 2026-01-06)*
 
-- [ ] T072 [US5] Create offline queue manager in packages/specboard-cli/src/lib/queue.ts (add to queue, get pending, clear)
-- [ ] T073 [US5] Create connectivity checker in packages/specboard-cli/src/lib/connectivity.ts (check online status)
-- [ ] T074 [US5] Integrate offline queue into push command in packages/specboard-cli/src/commands/push.ts
+- [ ] T072 [US5] *(Deferred - MCP is stateless, uses API directly)*
+- [ ] T073 [US5] *(Deferred - MCP is stateless, uses API directly)*
+- [ ] T074 [US5] *(Deferred - MCP is stateless, uses API directly)*
 
-### CLI - Status Enhancements
+### MCP Server - Status Enhancements *(replaces CLI per clarification 2026-01-06)*
 
-- [ ] T075 [US5] Add offline mode indicator to status command in packages/specboard-cli/src/commands/status.ts
-- [ ] T076 [US5] Add pending changes count to status output in packages/specboard-cli/src/commands/status.ts
+- [ ] T075 [US5] *(Deferred - MCP is stateless, uses API directly)*
+- [ ] T076 [US5] *(Deferred - MCP is stateless, uses API directly)*
 
 ### Web App - Offline Indicators
 
-- [ ] T077 [P] [US5] Add offline status to sync-status component in src/components/sync/sync-status.tsx
-- [ ] T078 [P] [US5] Add pending changes badge to dashboard in src/components/sync/pending-badge.tsx
+- [x] T077 [P] [US5] Add offline status to sync-status component in src/components/sync/sync-status.tsx
+- [x] T078 [P] [US5] Add pending changes badge to dashboard in src/components/sync/pending-badge.tsx
 
-**Checkpoint**: User Story 5 complete - offline support working
+**Checkpoint**: User Story 5 web app tasks complete - offline indicators working
 
 ---
 
@@ -246,14 +246,14 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T079 [P] Add disconnect command in packages/specboard-cli/src/commands/disconnect.ts
-- [ ] T080 [P] Add logout command in packages/specboard-cli/src/commands/logout.ts
-- [ ] T081 [P] Add version history API endpoint GET /api/sync/[slug]/specs/[path]/versions in src/app/api/sync/[slug]/specs/[...path]/versions/route.ts
-- [ ] T082 Add input validation for all API endpoints using zod schemas
-- [ ] T083 Add rate limiting middleware for sync endpoints in src/middleware.ts
-- [ ] T084 Add error handling and logging across all services
-- [ ] T085 Run quickstart.md validation (manual walkthrough of setup steps)
-- [ ] T086 Security audit: verify path validation, SQL injection prevention, XSS protection
+- [ ] T079 *(Removed - CLI replaced with MCP server, no disconnect command needed)*
+- [ ] T080 *(Removed - CLI replaced with MCP server, logout handled via API token revocation)*
+- [x] T081 [P] Add version history API endpoint GET /api/sync/[projectId]/specs/[specId]/versions in src/app/api/sync/[projectId]/specs/[specId]/versions/route.ts
+- [x] T082 Add input validation for all API endpoints using zod schemas (src/lib/validations/)
+- [x] T083 Add rate limiting middleware for sync endpoints in src/middleware.ts
+- [x] T084 Add error handling and logging across all services (src/lib/logger.ts, src/lib/errors.ts)
+- [x] T085 Run quickstart.md validation (manual walkthrough of setup steps) *(validated with Playwright, updated for MCP architecture)*
+- [x] T086 Security audit: verify path validation, SQL injection prevention, XSS protection *(see security-audit.md)*
 
 ---
 

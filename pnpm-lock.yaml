@@ -98,6 +98,9 @@ importers:
       ws:
         specifier: ^8.18.3
         version: 8.18.3
+      zod:
+        specifier: ^4.3.5
+        version: 4.3.5
       zustand:
         specifier: ^5.0.9
         version: 5.0.9(@types/react@19.2.7)(immer@11.1.0)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))

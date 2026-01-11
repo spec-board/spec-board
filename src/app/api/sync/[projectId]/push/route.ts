@@ -6,30 +6,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateApiToken } from '@/lib/auth/api-token';
 import prisma from '@/lib/prisma';
+import { pushSpecsSchema } from '@/lib/validations/sync';
+import { validateBody, validateUuid } from '@/lib/validations/utils';
 
 export const dynamic = 'force-dynamic';
-
-interface SpecFile {
-  type: 'spec' | 'plan' | 'tasks';
-  content: string;
-  lastModified: string;
-}
-
-interface CloudSpec {
-  featureId: string;
-  featureName: string;
-  files: SpecFile[];
-}
-
-interface PushRequest {
-  specs: CloudSpec[];
-}
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   const { projectId } = await params;
+
+  // Validate projectId is a valid UUID
+  const uuidResult = validateUuid(projectId, 'projectId');
+  if (!uuidResult.success) {
+    return uuidResult.error;
+  }
 
   // Validate API token
   const authResult = await validateApiToken(request);
@@ -40,17 +32,15 @@ export async function POST(
     );
   }
 
-  try {
-    // Parse request body
-    const body: PushRequest = await request.json();
-    const { specs } = body;
+  // Validate request body with zod schema
+  const bodyResult = await validateBody(request, pushSpecsSchema);
+  if (!bodyResult.success) {
+    return bodyResult.error;
+  }
 
-    if (!specs || !Array.isArray(specs)) {
-      return NextResponse.json(
-        { error: 'Invalid request: specs array required' },
-        { status: 400 }
-      );
-    }
+  const { specs } = bodyResult.data;
+
+  try {
 
     // Find cloud project and check access
     const cloudProject = await prisma.cloudProject.findUnique({

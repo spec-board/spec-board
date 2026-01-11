@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * Sync Status Indicator (T047)
+ * Sync Status Indicator (T047, T077)
  * Shows the current sync status for a cloud project
+ * Includes offline detection and status display
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Cloud,
   CloudOff,
@@ -13,25 +14,65 @@ import {
   AlertTriangle,
   CheckCircle,
   Loader2,
+  WifiOff,
 } from 'lucide-react';
 import type { SyncStatus } from '@/types';
 
 interface SyncStatusProps {
   projectId: string;
   onStatusChange?: (status: SyncStatus | null) => void;
+  onOfflineChange?: (isOffline: boolean) => void;
   compact?: boolean;
 }
 
 export function SyncStatusIndicator({
   projectId,
   onStatusChange,
+  onOfflineChange,
   compact = false,
 }: SyncStatusProps) {
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+
+  // Handle offline/online status changes
+  const handleOnline = useCallback(() => {
+    setIsOffline(false);
+    onOfflineChange?.(false);
+    // Refresh status when coming back online
+    fetchStatus();
+  }, [onOfflineChange]);
+
+  const handleOffline = useCallback(() => {
+    setIsOffline(true);
+    onOfflineChange?.(true);
+  }, [onOfflineChange]);
+
+  // Initialize offline state and set up listeners
+  useEffect(() => {
+    // Check initial state
+    if (typeof navigator !== 'undefined') {
+      setIsOffline(!navigator.onLine);
+    }
+
+    // Add event listeners
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [handleOnline, handleOffline]);
 
   const fetchStatus = async () => {
+    // Don't fetch if offline
+    if (isOffline) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -95,6 +136,14 @@ export function SyncStatusIndicator({
 
   // Compact mode - just an icon with tooltip
   if (compact) {
+    if (isOffline) {
+      return (
+        <div className="p-1.5" title="You are offline">
+          <WifiOff className="w-4 h-4 text-orange-500" />
+        </div>
+      );
+    }
+
     if (isLoading) {
       return (
         <div className="p-1.5" title="Checking sync status...">
@@ -134,7 +183,9 @@ export function SyncStatusIndicator({
     <div className="flex items-center gap-3 p-3 bg-[var(--secondary)] rounded-lg">
       {/* Status Icon */}
       <div className="flex-shrink-0">
-        {isLoading ? (
+        {isOffline ? (
+          <WifiOff className="w-5 h-5 text-orange-500" />
+        ) : isLoading ? (
           <Loader2 className="w-5 h-5 animate-spin text-[var(--muted-foreground)]" />
         ) : error ? (
           <CloudOff className="w-5 h-5 text-red-500" />
@@ -147,7 +198,16 @@ export function SyncStatusIndicator({
 
       {/* Status Text */}
       <div className="flex-1 min-w-0">
-        {isLoading ? (
+        {isOffline ? (
+          <div>
+            <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
+              Offline
+            </p>
+            <p className="text-xs text-[var(--muted-foreground)]">
+              Changes will sync when you reconnect
+            </p>
+          </div>
+        ) : isLoading ? (
           <p className="text-sm text-[var(--muted-foreground)]">
             Checking sync status...
           </p>
@@ -177,9 +237,9 @@ export function SyncStatusIndicator({
       {/* Refresh Button */}
       <button
         onClick={fetchStatus}
-        disabled={isLoading}
+        disabled={isLoading || isOffline}
         className="p-1.5 hover:bg-[var(--card)] rounded transition-colors disabled:opacity-50"
-        title="Refresh status"
+        title={isOffline ? 'Cannot refresh while offline' : 'Refresh status'}
       >
         <RefreshCw
           className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}

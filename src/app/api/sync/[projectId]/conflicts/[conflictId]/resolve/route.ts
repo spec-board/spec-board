@@ -7,19 +7,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateApiToken } from '@/lib/auth/api-token';
 import { ConflictService } from '@/lib/services/conflict';
 import { SyncService } from '@/lib/services/sync';
+import { resolveConflictSchema } from '@/lib/validations/sync';
+import { validateBody, validateUuid } from '@/lib/validations/utils';
 
 export const dynamic = 'force-dynamic';
-
-interface ResolveRequestBody {
-  resolution: 'LOCAL' | 'CLOUD' | 'MERGED';
-  mergedContent?: string;
-}
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ projectId: string; conflictId: string }> }
 ) {
   const { projectId, conflictId } = await params;
+
+  // Validate path parameters
+  const projectIdResult = validateUuid(projectId, 'projectId');
+  if (!projectIdResult.success) {
+    return projectIdResult.error;
+  }
+
+  const conflictIdResult = validateUuid(conflictId, 'conflictId');
+  if (!conflictIdResult.success) {
+    return conflictIdResult.error;
+  }
 
   // Validate API token
   const authResult = await validateApiToken(request);
@@ -39,27 +47,15 @@ export async function POST(
     );
   }
 
+  // Validate request body with zod schema
+  const bodyResult = await validateBody(request, resolveConflictSchema);
+  if (!bodyResult.success) {
+    return bodyResult.error;
+  }
+
+  const { resolution, mergedContent } = bodyResult.data;
+
   try {
-    // Parse request body
-    const body: ResolveRequestBody = await request.json();
-    const { resolution, mergedContent } = body;
-
-    // Validate resolution type
-    if (!['LOCAL', 'CLOUD', 'MERGED'].includes(resolution)) {
-      return NextResponse.json(
-        { error: 'Invalid resolution type. Must be LOCAL, CLOUD, or MERGED.' },
-        { status: 400 }
-      );
-    }
-
-    // Validate merged content for MERGED resolution
-    if (resolution === 'MERGED' && !mergedContent) {
-      return NextResponse.json(
-        { error: 'mergedContent is required for MERGED resolution' },
-        { status: 400 }
-      );
-    }
-
     // Resolve the conflict
     const result = await ConflictService.resolve(
       conflictId,
