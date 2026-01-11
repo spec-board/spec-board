@@ -91,3 +91,5 @@ jspm_packages/
 agent-includes
 .playwright-mcp
 .codex
+pnpm-lock.yaml
+tsconfig.tsbuildinfo
