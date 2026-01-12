@@ -56,13 +56,22 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
         onClick={onClick}
         aria-label={ariaLabel}
         className={cn(
-          'w-full text-left p-4 rounded-lg transition-colors duration-150',
+          'w-full text-left p-4 rounded-lg transition-all duration-200',
           'bg-[var(--card)] border border-[var(--border)]',
-          'hover:bg-[var(--secondary)]',
+          'hover:bg-[var(--card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5',
           'focus-ring',
           // Visual focus indicator for keyboard navigation (FR-005)
           isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]'
         )}
+        style={{
+          boxShadow: 'var(--shadow-sm)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+        }}
       >
       {/* Title */}
       <div className="flex items-center gap-2 mb-2">
@@ -91,13 +100,14 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
         <span>{feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)</span>
       </div>
 
-      {/* Thin progress bar - always show */}
-      <div className="mt-3 h-1 bg-[var(--secondary)] rounded-full overflow-hidden">
+      {/* Progress bar - enhanced visibility */}
+      <div className="mt-3 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden">
         <div
-          className="h-full transition-all duration-300"
+          className="h-full transition-all duration-500 ease-out"
           style={{
             width: progressPercentage === 0 ? '100%' : `${progressPercentage}%`,
-            ...getProgressBarColorStyle(progressPercentage, feature.totalTasks > 0)
+            ...getProgressBarColorStyle(progressPercentage, feature.totalTasks > 0),
+            boxShadow: progressPercentage > 0 && feature.totalTasks > 0 ? '0 0 8px currentColor' : 'none'
           }}
         />
       </div>
@@ -114,10 +124,14 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
             <span>{feature.completedChecklistItems}/{feature.totalChecklistItems} ({checklistPercentage}%)</span>
           </div>
           {/* Checklist progress bar */}
-          <div className="mt-1.5 h-1 bg-[var(--secondary)] rounded-full overflow-hidden">
+          <div className="mt-1.5 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden">
             <div
-              className="h-full transition-all duration-300"
-              style={{ width: `${checklistPercentage}%`, ...getProgressBarColorStyle(checklistPercentage, feature.totalChecklistItems > 0) }}
+              className="h-full transition-all duration-500 ease-out"
+              style={{
+                width: `${checklistPercentage}%`,
+                ...getProgressBarColorStyle(checklistPercentage, feature.totalChecklistItems > 0),
+                boxShadow: checklistPercentage > 0 ? '0 0 8px currentColor' : 'none'
+              }}
             />
           </div>
         </div>
@@ -169,12 +183,14 @@ function KanbanColumnComponent({
       aria-label={`${columnLabel} column`}
     >
       {/* Column header */}
-      <div className="flex items-center justify-between px-1 py-3 border-b border-[var(--border)]">
-        <h3 className="font-medium text-sm text-[var(--foreground)]" id={`column-${column}-heading`}>
+      <div className="flex items-center justify-between px-3 py-4 border-b-2 border-[var(--border)]
+        bg-gradient-to-b from-[var(--card)] to-transparent">
+        <h3 className="font-semibold text-sm uppercase tracking-wide text-[var(--foreground)]" id={`column-${column}-heading`}>
           {columnLabel}
         </h3>
         <span
-          className="text-xs text-[var(--muted-foreground)] tabular-nums"
+          className="text-xs font-medium text-[var(--muted-foreground)] tabular-nums
+            bg-[var(--secondary)] px-2 py-0.5 rounded-full"
           aria-label={`${features.length} features`}
         >
           {features.length}

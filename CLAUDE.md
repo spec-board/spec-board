@@ -465,3 +465,10 @@ pnpm prisma migrate reset
 │ dụng. File này giúp Claude Code hiểu rõ codebase│
 │ và làm việc hiệu quả hơn.                        │
 └─────────────────────────────────────────────────┘
+
+## Active Technologies
+- TypeScript 5.9.x (strict mode) + Next.js 16.x, React 19.x, Tailwind CSS 4.x (012-ui-ux-rebrand)
+- N/A (visual changes only) (012-ui-ux-rebrand)
+
+## Recent Changes
+- 012-ui-ux-rebrand: Added TypeScript 5.9.x (strict mode) + Next.js 16.x, React 19.x, Tailwind CSS 4.x
