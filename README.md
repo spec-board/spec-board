@@ -34,16 +34,29 @@ Get intelligent next action suggestions and save analysis reports for quality as
 
 ## Features
 
-- **Kanban Board** — 4-column pipeline (Backlog → Planning → In Progress → Done)
-- **Real-Time Updates** — Live file watching via SSE
-- **Interactive Checklists** — Click or keyboard to toggle checklist items
+### Core Features
+- **Kanban Board** — 4-column pipeline (Specify → Plan → Tasks → Implement → Complete)
+- **Real-Time Updates** — Live file watching via Server-Sent Events (SSE)
+- **Interactive Checklists** — Click or keyboard to toggle checklist items with optimistic UI
 - **Deep Linking** — Shareable URLs for projects and features
-- **Progress Tracking** — Visual metrics for tasks and checklists
-- **Accessible** — WCAG 2.2 AA compliant with keyboard navigation
+- **Progress Tracking** — Visual metrics for tasks, checklists, and user stories
+- **Accessible** — WCAG 2.2 AA compliant with full keyboard navigation
 - **AI Integration** — Next action suggestions and analysis reports
-- **Cloud Sync** — OAuth authentication, team collaboration, conflict resolution
-- **Team Collaboration** — Role-based access (VIEW, EDIT, ADMIN) for cloud projects
+
+### Cloud Sync & Collaboration
+- **OAuth Authentication** — Login with Google or GitHub
+- **Team Collaboration** — Role-based access control (VIEW, EDIT, ADMIN)
 - **Conflict Resolution** — 3-way merge with visual diff viewer
+- **Version History** — Last 30 versions retained per spec file
+- **Activity Audit Trail** — Track who changed what and when
+- **MCP Server** — Sync specs via AI coding assistants (Claude Code, Cursor, GitHub Copilot)
+
+### Developer Experience
+- **Split-View Modal** — Resizable panes for viewing multiple sections simultaneously
+- **Keyboard Shortcuts** — Navigate features and sections with number keys
+- **Semantic Icons** — Visual indicators for document status and content
+- **Contract Viewer** — Syntax highlighting for API contracts
+- **Analysis Tracking** — Spec alignment reports with severity indicators
 
 https://youtu.be/WQXb2-dj9zQ
 
@@ -67,7 +80,7 @@ B = Backlog | P = Planning | I = In Progress | D = Done
 
 ## Quick Start
 
-> Note for docker installing method: Please don’t use Docker yet. I still need to finish the syncing logic. Until that’s done, Docker/VPS deployments won’t work reliably. For now, please install and run everything locally only. XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+### Local Development
 
 Install dependencies
 
@@ -102,6 +115,41 @@ pnpm build
 pnpm start
 ```
 
+### MCP Server (AI Assistant Integration)
+
+The `specboard-mcp` package enables AI coding assistants to sync specs with SpecBoard cloud.
+
+**Installation:**
+```bash
+npm install -g specboard-mcp
+```
+
+**Configuration for Claude Code:**
+```json
+{
+  "mcpServers": {
+    "spec-board": {
+      "command": "npx",
+      "args": ["specboard-mcp"],
+      "env": {
+        "SPEC_BOARD_API_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+**Get API Token:**
+1. Login to SpecBoard dashboard
+2. Go to Settings → API Tokens
+3. Click "Generate New Token"
+4. Copy token and add to MCP configuration
+
+**Available Tools:**
+- `pull_spec` - Download specs from cloud to local project
+- `push_spec` - Upload local specs to cloud
+
+See [packages/spec-board-mcp/README.md](packages/spec-board-mcp/README.md) for full documentation.
 
 ## URL Structure
 

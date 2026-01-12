@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Cloud Specification Sync (Feature 011)** - Complete cloud sync infrastructure:
+  - OAuth authentication with Google and GitHub
+  - Team collaboration with role-based access (VIEW, EDIT, ADMIN)
+  - Conflict detection and resolution with 3-way merge
+  - Version history (last 30 versions retained per spec file)
+  - Activity audit trail for tracking changes
+  - Project link codes for easy team member invitations
+- **MCP Server (specboard-mcp)** - Model Context Protocol server for AI assistants:
+  - `pull_spec` tool - Download specs from cloud to local
+  - `push_spec` tool - Upload local specs to cloud
+  - API token authentication
+  - Support for Claude Code, Cursor, GitHub Copilot, and other MCP-compatible assistants
+- **API Token Management** - Generate and manage API tokens for programmatic access
+- **Comprehensive Documentation** - Complete API docs, developer guide, and codebase index
 - **Interactive Checklist Toggle** - Click or keyboard to toggle checklist items:
   - Optimistic UI updates with per-item rollback on failure
   - Keyboard accessibility (Tab, Space, Enter) with ARIA attributes
@@ -16,12 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `/api/checklist` PATCH endpoint for toggling items
   - 26 unit tests for checklist utilities
 - **SpecBoard Logo & Favicon** - Custom branding assets
-- **Codebase Documentation** - New `src/lib/markdown/CLAUDE.md` for AST parsers
+- **Codebase Documentation** - CLAUDE.md files for all major directories
 
 ### Changed
+- **MCP Package Renamed** - Changed from `spec-board-mcp` to `specboard-mcp` for consistency
 - **API Route Improvements** - Checklist endpoint uses async `fs/promises`
 - **Cross-Platform Path Validation** - Uses `path.extname()` and `path.sep`
 - **TypeScript Types** - Proper React type imports, cross-platform timer types
+- **Dependencies** - Updated @modelcontextprotocol/sdk to latest version
 
 ### Fixed
 - Rollback logic now only reverts specific failed item, not entire document
