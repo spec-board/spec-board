@@ -3,26 +3,26 @@
 import { forwardRef, useEffect, useCallback, useRef } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature, KanbanColumnType } from '@/types';
-import { GitBranch, ListTodo, Circle } from 'lucide-react';
+import { GitBranch, CheckCircle2 } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
+import { FeatureCardPopover } from './feature-card-popover';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'planning', 'in_progress', 'done'];
 
-// Get color style based on progress percentage
-// gray (0%) -> yellow (1-79%) -> neon (80-99%) -> green (100%)
-function getProgressColorStyle(percentage: number, hasItems: boolean): React.CSSProperties {
-  if (!hasItems || percentage === 0) return { color: 'var(--muted-foreground)' };
-  if (percentage < 80) return { color: 'var(--color-warning)' };
-  if (percentage < 100) return { color: 'var(--color-neon)' };
-  return { color: 'var(--color-success)' };
+// Get status dot style based on progress percentage (Jira-style 3-state)
+// Uses CSS variables: --status-not-started (0%), --status-in-progress (1-79%), --status-complete (80%+)
+function getStatusDotStyle(percentage: number, hasItems: boolean): React.CSSProperties {
+  if (!hasItems || percentage === 0) return { backgroundColor: 'var(--status-not-started)' };
+  if (percentage < 80) return { backgroundColor: 'var(--status-in-progress)' };
+  return { backgroundColor: 'var(--status-complete)' };
 }
 
-function getProgressBarColorStyle(percentage: number, hasItems: boolean): React.CSSProperties {
-  if (!hasItems || percentage === 0) return { backgroundColor: 'var(--progress-empty)' };
-  if (percentage < 80) return { backgroundColor: 'var(--color-warning)' };
-  if (percentage < 100) return { backgroundColor: 'var(--color-neon)' };
-  return { backgroundColor: 'var(--color-success)' };
+function getStatusLabel(percentage: number, hasItems: boolean): string {
+  if (!hasItems || percentage === 0) return 'Not started';
+  if (percentage < 80) return 'In progress';
+  if (percentage < 100) return 'Nearly done';
+  return 'Complete';
 }
 
 interface FeatureCardProps {
@@ -39,10 +39,9 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
     ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
     : 0;
 
-  // Checklist progress
-  const checklistPercentage = feature.totalChecklistItems > 0
-    ? Math.round((feature.completedChecklistItems / feature.totalChecklistItems) * 100)
-    : 0;
+  const isComplete = progressPercentage === 100;
+  const statusDotStyle = getStatusDotStyle(progressPercentage, feature.totalTasks > 0);
+  const statusLabel = getStatusLabel(progressPercentage, feature.totalTasks > 0);
 
   // Build accessible label
   const ariaLabel = [
@@ -51,92 +50,53 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
   ].filter(Boolean).join(', ');
 
   return (
-      <button
-        ref={ref}
-        onClick={onClick}
-        aria-label={ariaLabel}
-        className={cn(
-          'w-full text-left p-4 rounded-lg transition-all duration-200',
-          'bg-[var(--card)] border border-[var(--border)]',
-          'hover:bg-[var(--card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5',
-          'focus-ring',
-          // Visual focus indicator for keyboard navigation (FR-005)
-          isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]'
-        )}
-        style={{
-          boxShadow: 'var(--shadow-sm)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-        }}
-      >
-      {/* Title */}
-      <div className="flex items-center gap-2 mb-2">
-        <h4 className="font-medium text-sm text-[var(--foreground)] capitalize truncate">
+    <button
+      ref={ref}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={cn(
+        'w-full text-left p-4 rounded-lg transition-all duration-200',
+        'bg-[var(--card)] border border-[var(--border)]',
+        'hover:bg-[var(--card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5',
+        'focus-ring',
+        isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]'
+      )}
+    >
+      {/* Title row with status dot */}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <h4 className="font-medium text-sm text-[var(--foreground)] capitalize truncate flex-1">
           {feature.name}
         </h4>
+        {/* Status indicator - dot or checkmark */}
+        {isComplete ? (
+          <CheckCircle2
+            className="w-4 h-4 text-green-500 flex-shrink-0"
+            aria-label="Complete"
+          />
+        ) : (
+          <span
+            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+            style={statusDotStyle}
+            aria-label={statusLabel}
+            title={statusLabel}
+          />
+        )}
       </div>
 
-      {/* Branch name */}
-      {feature.branch && (
-        <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)] mb-2">
-          <GitBranch className="w-3 h-3" />
-          <code className="bg-[var(--secondary)] px-1.5 py-0.5 rounded text-[10px]">
-            {feature.branch}
-          </code>
-        </div>
-      )}
-
-      {/* Task count - always show */}
-      <div
-        className="flex items-center gap-1.5 text-xs tabular-nums"
-        style={getProgressColorStyle(progressPercentage, feature.totalTasks > 0)}
-      >
-        <ListTodo className="w-3 h-3" />
-        <span>Tasks</span>
-        <span>{feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)</span>
-      </div>
-
-      {/* Progress bar - enhanced visibility */}
-      <div className="mt-3 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden">
-        <div
-          className="h-full transition-all duration-500 ease-out"
-          style={{
-            width: progressPercentage === 0 ? '100%' : `${progressPercentage}%`,
-            ...getProgressBarColorStyle(progressPercentage, feature.totalTasks > 0),
-            boxShadow: progressPercentage > 0 && feature.totalTasks > 0 ? '0 0 8px currentColor' : 'none'
-          }}
-        />
-      </div>
-
-      {/* Checklist progress */}
-      {feature.hasChecklists && feature.totalChecklistItems > 0 && (
-        <div className="mt-3">
-          <div
-            className="flex items-center gap-1.5 text-xs tabular-nums"
-            style={getProgressColorStyle(checklistPercentage, feature.totalChecklistItems > 0)}
-          >
-            <Circle className="w-3 h-3" />
-            <span>Checklists</span>
-            <span>{feature.completedChecklistItems}/{feature.totalChecklistItems} ({checklistPercentage}%)</span>
+      {/* Compact task count - Jira style */}
+      <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+        <span className="tabular-nums">
+          {feature.completedTasks}/{feature.totalTasks} tasks
+        </span>
+        
+        {/* Branch icon (shown if exists) */}
+        {feature.branch && (
+          <div className="flex items-center gap-1 opacity-60">
+            <GitBranch className="w-3 h-3" />
           </div>
-          {/* Checklist progress bar */}
-          <div className="mt-1.5 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden">
-            <div
-              className="h-full transition-all duration-500 ease-out"
-              style={{
-                width: `${checklistPercentage}%`,
-                ...getProgressBarColorStyle(checklistPercentage, feature.totalChecklistItems > 0),
-                boxShadow: checklistPercentage > 0 ? '0 0 8px currentColor' : 'none'
-              }}
-            />
-          </div>
-        </div>
-      )}
-      </button>
+        )}
+      </div>
+    </button>
   );
 });
 
@@ -211,15 +171,17 @@ function KanbanColumnComponent({
             const isFocused = feature.id === focusedFeatureId;
             return (
               <div key={feature.id} role="listitem" className="w-full">
-                <FeatureCard
-                  ref={(el) => setCardRef(feature.id, el)}
-                  feature={feature}
-                  onClick={() => {
-                    announce(`Opening ${feature.name} details`);
-                    onFeatureClick(feature);
-                  }}
-                  isFocused={isFocused}
-                />
+                <FeatureCardPopover feature={feature}>
+                  <FeatureCard
+                    ref={(el) => setCardRef(feature.id, el)}
+                    feature={feature}
+                    onClick={() => {
+                      announce(`Opening ${feature.name} details`);
+                      onFeatureClick(feature);
+                    }}
+                    isFocused={isFocused}
+                  />
+                </FeatureCardPopover>
               </div>
             );
           })
