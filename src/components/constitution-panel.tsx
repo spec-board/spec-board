@@ -56,11 +56,15 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
   };
 
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] overflow-hidden">
+    <div
+      className="rounded-lg border border-[var(--border)] bg-[var(--card)] overflow-hidden"
+      style={{ borderRadius: 'var(--radius)' }}
+    >
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-[var(--secondary)] transition-colors"
+        className="w-full flex items-center justify-between hover:bg-[var(--card-hover)] focus-ring"
+        style={{ padding: 'var(--space-2)', transition: 'var(--transition-base)' }}
       >
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-[var(--secondary)]">

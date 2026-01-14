@@ -598,7 +598,8 @@ function PriorityBadge({ priority }: { priority: string }) {
   return (
     <span
       className={cn(
-        'px-2 py-0.5 text-xs font-medium rounded-full border',
+        'px-2 py-0.5 font-medium rounded-full border',
+        { fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' },
         colorConfig.bg,
         colorConfig.border
       )}
@@ -623,7 +624,8 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        'px-2 py-0.5 text-xs font-medium rounded-full border',
+        'px-2 py-0.5 font-medium rounded-full border',
+        { fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' },
         config.bg,
         config.border
       )}
@@ -665,7 +667,7 @@ function UserStoryCard({ story }: { story: UserStory }) {
           {/* Description - formatted with line breaks for As a/I want/so that */}
           {story.description && (
             <div className="pl-7">
-              <p className="text-sm text-[var(--muted-foreground)] italic whitespace-pre-line">
+              <p className="text-[var(--muted-foreground)] italic whitespace-pre-line" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>
                 "{formatUserStoryDescription(story.description)}"
               </p>
             </div>
@@ -677,8 +679,8 @@ function UserStoryCard({ story }: { story: UserStory }) {
               <div className="flex items-start gap-2">
                 <Target className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
                 <div>
-                  <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-warning)' }}>Why this priority</span>
-                  <p className="text-sm text-[var(--foreground)] mt-1">{story.whyPriority}</p>
+                  <span className="font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-warning)', fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' }}>Why this priority</span>
+                  <p className="text-[var(--foreground)] mt-1" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>{story.whyPriority}</p>
                 </div>
               </div>
             </div>
@@ -690,8 +692,8 @@ function UserStoryCard({ story }: { story: UserStory }) {
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
                 <div>
-                  <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-success)' }}>Independent Test</span>
-                  <p className="text-sm text-[var(--foreground)] mt-1">{story.independentTest}</p>
+                  <span className="font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-success)', fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' }}>Independent Test</span>
+                  <p className="text-[var(--foreground)] mt-1" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>{story.independentTest}</p>
                 </div>
               </div>
             </div>
@@ -702,7 +704,7 @@ function UserStoryCard({ story }: { story: UserStory }) {
             <div className="pl-7">
               <div className="flex items-center gap-2 mb-3">
                 <FileCheck className="w-4 h-4" style={{ color: 'var(--tag-text-info)' }} />
-                <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-info)' }}>
+                <span className="font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-info)', fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' }}>
                   Acceptance Scenarios ({story.acceptanceScenarios.length})
                 </span>
               </div>
@@ -710,7 +712,8 @@ function UserStoryCard({ story }: { story: UserStory }) {
                 {story.acceptanceScenarios.map((scenario, idx) => (
                   <div
                     key={idx}
-                    className="bg-[var(--secondary)]/30 rounded-lg p-3 text-sm border-l-2 border-blue-500/50"
+                    className="bg-[var(--secondary)]/30 rounded-lg p-3 border-l-2 border-blue-500/50"
+                    style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}
                   >
                     <div className="flex flex-wrap gap-x-1">
                       <span className="font-semibold" style={{ color: 'var(--tag-text-success)' }}>Given</span>
@@ -762,14 +765,17 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
     return (
       <div className={cn('flex flex-col items-center justify-center py-12 text-[var(--muted-foreground)]', className)}>
         <FileText className="w-12 h-12 mb-4 opacity-50" />
-        <p className="text-lg font-medium">No specification yet</p>
-        <p className="text-sm mt-2">Create a spec.md file to define feature requirements</p>
+        <p className="font-medium" style={{ fontSize: 'var(--text-lg)', lineHeight: 'var(--leading-normal)' }}>No specification yet</p>
+        <p className="mt-2" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>Create a spec.md file to define feature requirements</p>
       </div>
     );
   }
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div
+      className={cn('flex flex-col', className)}
+      style={{ lineHeight: 'var(--leading-normal)', padding: 'var(--space-2)' }}
+    >
       {/* Toolbar */}
       {hasStructuredContent && (
         <div className="flex items-center gap-1 bg-[var(--secondary)] rounded-lg p-1 mb-4" role="tablist" aria-label="View mode">
@@ -779,7 +785,8 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
             aria-selected={!showRawMarkdown}
             aria-controls="spec-content"
             className={cn(
-              'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+              'px-3 py-1.5 font-medium rounded-md transition-colors',
+              { fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' },
               !showRawMarkdown
                 ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
                 : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
@@ -793,7 +800,8 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
             aria-selected={showRawMarkdown}
             aria-controls="spec-content"
             className={cn(
-              'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+              'px-3 py-1.5 font-medium rounded-md transition-colors',
+              { fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' },
               showRawMarkdown
                 ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
                 : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
@@ -806,7 +814,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
 
       {/* Content */}
       {showRawMarkdown || !hasStructuredContent ? (
-        <pre className="text-sm font-mono whitespace-pre-wrap bg-[var(--secondary)]/30 p-4 rounded-lg overflow-auto">
+        <pre className="font-mono whitespace-pre-wrap bg-[var(--secondary)]/30 p-4 rounded-lg overflow-auto" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>
           {content}
         </pre>
       ) : (
@@ -814,13 +822,13 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
           {/* Metadata Header */}
           {parsedSpec && parsedSpec.metadata.title && (
             <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--border)] rounded-xl p-6">
-              <h1 className="text-2xl font-bold mb-4">{parsedSpec.metadata.title}</h1>
+              <h1 className="font-bold mb-4" style={{ fontSize: 'var(--text-2xl)', lineHeight: 'var(--leading-tight)' }}>{parsedSpec.metadata.title}</h1>
 
-              <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex flex-wrap gap-4" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>
                 {parsedSpec.metadata.branch && (
                   <div className="flex items-center gap-2">
                     <GitBranch className="w-4 h-4 text-[var(--muted-foreground)]" />
-                    <code className="bg-[var(--secondary)] px-2 py-0.5 rounded text-xs">
+                    <code className="bg-[var(--secondary)] px-2 py-0.5 rounded" style={{ fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' }}>
                       {parsedSpec.metadata.branch}
                     </code>
                   </div>
@@ -840,7 +848,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
                 <div className="mt-4 pt-4 border-t border-[var(--border)]">
                   <div className="flex items-start gap-2">
                     <MessageSquare className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-[var(--muted-foreground)]">
+                    <p className="text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>
                       {parsedSpec.metadata.input.replace(/^User description:\s*"?|"$/g, '')}
                     </p>
                   </div>
@@ -852,7 +860,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
           {/* User Stories */}
           {parsedSpec && parsedSpec.userStories.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-tight)' }}>
                 <Target className="w-4 h-4" />
                 User Stories ({parsedSpec.userStories.length})
               </h2>
@@ -867,7 +875,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
           {/* Edge Cases */}
           {parsedSpec && parsedSpec.edgeCases.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-tight)' }}>
                 <AlertTriangle className="w-4 h-4" />
                 Edge Cases ({parsedSpec.edgeCases.length})
               </h2>
@@ -877,8 +885,8 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
                     <div className="flex items-start gap-3">
                       <HelpCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-[var(--foreground)]">{edgeCase.question}</p>
-                        <p className="text-sm text-[var(--muted-foreground)] mt-1">{edgeCase.answer}</p>
+                        <p className="font-medium text-[var(--foreground)]" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>{edgeCase.question}</p>
+                        <p className="text-[var(--muted-foreground)] mt-1" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>{edgeCase.answer}</p>
                       </div>
                     </div>
                   </div>
@@ -890,7 +898,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
           {/* Requirements */}
           {parsedSpec && parsedSpec.requirements.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-tight)' }}>
                 <ListChecks className="w-4 h-4" />
                 Functional Requirements ({parsedSpec.requirements.reduce((acc, g) => acc + g.items.length, 0)})
               </h2>
@@ -898,12 +906,12 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
                 {parsedSpec.requirements.map((group, groupIndex) => (
                   <div key={groupIndex} className="bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden">
                     <div className="px-4 py-2 bg-[var(--secondary)]/50 border-b border-[var(--border)]">
-                      <h3 className="text-sm font-medium">{group.category}</h3>
+                      <h3 className="font-medium" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>{group.category}</h3>
                     </div>
                     <div className="p-4 space-y-2">
                       {group.items.map((req) => (
-                        <div key={req.id} className="flex items-start gap-3 text-sm">
-                          <code className="text-xs font-mono bg-blue-500/20 px-1.5 py-0.5 rounded flex-shrink-0" style={{ color: 'var(--tag-text-info)' }}>
+                        <div key={req.id} className="flex items-start gap-3" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>
+                          <code className="font-mono bg-blue-500/20 px-1.5 py-0.5 rounded flex-shrink-0" style={{ color: 'var(--tag-text-info)', fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' }}>
                             {req.id}
                           </code>
                           <span className="text-[var(--foreground)]">{req.text}</span>
@@ -919,19 +927,21 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
           {/* Key Entities */}
           {parsedSpec && parsedSpec.entities.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-tight)' }}>
                 <Database className="w-4 h-4" />
                 Key Entities ({parsedSpec.entities.length})
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
                 {parsedSpec.entities.map((entity, index) => (
                   <div key={index} className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-[var(--foreground)] mb-1">{entity.name}</h3>
-                    <p className="text-xs text-[var(--muted-foreground)] mb-3">{entity.description}</p>
+                    <h3 className="font-semibold text-[var(--foreground)] mb-1" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>{entity.name}</h3>
+                    <p className="text-[var(--muted-foreground)] mb-3" style={{ fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-normal)' }}>
+                      {entity.description}
+                    </p>
                     {entity.properties.length > 0 && (
                       <ul className="space-y-1">
                         {entity.properties.map((prop, propIndex) => (
-                          <li key={propIndex} className="text-xs text-[var(--muted-foreground)] flex items-start gap-2">
+                          <li key={propIndex} className="text-[var(--muted-foreground)] flex items-start gap-2" style={{ fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-normal)' }}>
                             <span className="text-[var(--muted-foreground)]">•</span>
                             <span>{prop}</span>
                           </li>
@@ -947,14 +957,14 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
           {/* Success Criteria */}
           {parsedSpec && parsedSpec.successCriteria.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-tight)' }}>
                 <CheckCircle2 className="w-4 h-4" />
                 Success Criteria ({parsedSpec.successCriteria.length})
               </h2>
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4 space-y-2">
                 {parsedSpec.successCriteria.map((criterion) => (
-                  <div key={criterion.id} className="flex items-start gap-3 text-sm">
-                    <code className="text-xs font-mono bg-green-500/20 px-1.5 py-0.5 rounded flex-shrink-0" style={{ color: 'var(--tag-text-success)' }}>
+                  <div key={criterion.id} className="flex items-start gap-3" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>
+                    <code className="font-mono bg-green-500/20 px-1.5 py-0.5 rounded flex-shrink-0" style={{ color: 'var(--tag-text-success)', fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' }}>
                       {criterion.id}
                     </code>
                     <span className="text-[var(--foreground)]">{criterion.text}</span>
@@ -967,7 +977,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
           {/* Clarifications */}
           {parsedSpec && parsedSpec.clarifications.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-tight)' }}>
                 <MessageSquare className="w-4 h-4" />
                 Clarifications ({parsedSpec.clarifications.length})
               </h2>
@@ -975,15 +985,15 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
                 {parsedSpec.clarifications.map((qa, index) => (
                   <div key={index} className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
                     {qa.session && (
-                      <div className="text-xs text-[var(--muted-foreground)] mb-2">Session {qa.session}</div>
+                      <div className="text-[var(--muted-foreground)] mb-2" style={{ fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' }}>Session {qa.session}</div>
                     )}
                     <div className="flex items-start gap-3 mb-2">
-                      <span className="text-xs font-bold bg-blue-500/20 px-2 py-0.5 rounded" style={{ color: 'var(--tag-text-info)' }}>Q</span>
-                      <p className="text-sm font-medium">{qa.question}</p>
+                      <span className="font-bold bg-blue-500/20 px-2 py-0.5 rounded" style={{ color: 'var(--tag-text-info)', fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' }}>Q</span>
+                      <p className="font-medium" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>{qa.question}</p>
                     </div>
                     <div className="flex items-start gap-3 pl-7">
-                      <span className="text-xs font-bold bg-green-500/20 px-2 py-0.5 rounded" style={{ color: 'var(--tag-text-success)' }}>A</span>
-                      <p className="text-sm text-[var(--muted-foreground)]">{qa.answer}</p>
+                      <span className="font-bold bg-green-500/20 px-2 py-0.5 rounded" style={{ color: 'var(--tag-text-success)', fontSize: 'var(--text-xs)', lineHeight: 'var(--leading-tight)' }}>A</span>
+                      <p className="text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>{qa.answer}</p>
                     </div>
                   </div>
                 ))}
@@ -994,14 +1004,14 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
           {/* Assumptions */}
           {parsedSpec && parsedSpec.assumptions.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-tight)' }}>
                 <Lightbulb className="w-4 h-4" />
                 Assumptions ({parsedSpec.assumptions.length})
               </h2>
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
                 <ul className="space-y-2">
                   {parsedSpec.assumptions.map((assumption, index) => (
-                    <li key={index} className="text-sm text-[var(--foreground)] flex items-start gap-2">
+                    <li key={index} className="text-[var(--foreground)] flex items-start gap-2" style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)' }}>
                       <span className="text-[var(--muted-foreground)]">•</span>
                       <span>{assumption}</span>
                     </li>

@@ -266,7 +266,10 @@ export function AnalysisViewer({ analysis, featurePath, className }: AnalysisVie
   }
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div
+      className={cn('flex flex-col', className)}
+      style={{ lineHeight: 'var(--leading-normal)', padding: 'var(--space-2)' }}
+    >
       {/* Notification toast (T020, T034) */}
       {notification && (
         <div

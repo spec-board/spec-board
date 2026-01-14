@@ -126,17 +126,22 @@ export function AnalysisSaveModal({
     >
       <div
         ref={modalRef}
-        className="bg-[var(--background)] border border-[var(--border)] rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+        className="bg-[var(--background)] border border-[var(--border)] shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+        style={{ borderRadius: 'var(--radius)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
-          <h2 id="save-analysis-title" className="text-lg font-semibold">
+        <div
+          className="flex items-center justify-between border-b border-[var(--border)]"
+          style={{ padding: 'var(--space-2)' }}
+        >
+          <h2 id="save-analysis-title" style={{ fontSize: 'var(--text-lg)' }} className="font-semibold">
             Save Analysis Report
           </h2>
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="p-1 rounded hover:bg-[var(--secondary)] transition-colors disabled:opacity-50"
+            className="p-1 hover:bg-[var(--secondary)] disabled:opacity-50 focus-ring"
+            style={{ borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -157,7 +162,7 @@ export function AnalysisSaveModal({
             className={cn(
               'flex-1 w-full p-3 rounded-lg resize-none',
               'bg-[var(--secondary)]/30 border border-[var(--border)]',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500/50',
+              'focus:outline-none focus:ring-2 focus:ring-[var(--ring)]',
               'placeholder:text-[var(--muted-foreground)]',
               'font-mono text-sm'
             )}

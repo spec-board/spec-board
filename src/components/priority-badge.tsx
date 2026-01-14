@@ -26,13 +26,21 @@ const priorityStyles: Record<'P1' | 'P2' | 'P3', React.CSSProperties> = {
 };
 
 export function PriorityBadge({ priority, className }: PriorityBadgeProps) {
+  const priorityLabels: Record<'P1' | 'P2' | 'P3', string> = {
+    P1: 'Priority 1 - Critical',
+    P2: 'Priority 2 - High',
+    P3: 'Priority 3 - Normal',
+  };
+
   return (
     <span
       className={cn(
-        'inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded border',
+        'inline-flex items-center px-1.5 py-0.5 font-medium border',
         className
       )}
-      style={priorityStyles[priority]}
+      style={{ ...priorityStyles[priority], fontSize: 'var(--text-xs)', borderRadius: 'var(--radius)' }}
+      role="status"
+      aria-label={priorityLabels[priority]}
     >
       {priority}
     </span>

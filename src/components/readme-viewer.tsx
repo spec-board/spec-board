@@ -411,7 +411,10 @@ export function ReadmeViewer({ content }: ReadmeViewerProps) {
   const { header, sections } = useMemo(() => parseReadme(content), [content]);
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      style={{ lineHeight: 'var(--leading-normal)', padding: 'var(--space-2)' }}
+    >
       {header && (
         <div className="border-b border-[var(--border)] pb-4 mb-4">
           <MarkdownRenderer content={header} />

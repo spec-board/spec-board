@@ -82,6 +82,56 @@
   /* Interactive states */
   --card-hover: #1a1a1a;
   --border-hover: #3f3f46;
+
+  /* Typography scale (rem-based for accessibility) */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+
+  /* Line-height tokens */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* 8pt spacing scale (rem-based) */
+  /* Usage guidelines:
+   * - space-1 (8px): Tight spacing between related elements (icon + text)
+   * - space-1-5 (12px): Compact padding for small buttons, badges
+   * - space-2 (16px): Default padding for buttons, inputs, small cards
+   * - space-3 (24px): Spacing between card elements, list items
+   * - space-4 (32px): Card padding, section spacing
+   * - space-5 (40px): Large component padding
+   * - space-6 (48px): Section gaps, column spacing
+   * - space-7 (56px): Large section spacing
+   * - space-8 (64px): Page section spacing, major layout gaps
+   * - space-9+ (72px+): Extra large spacing for visual separation
+   */
+  --space-1: 0.5rem;       /* 8px */
+  --space-1-5: 0.75rem;    /* 12px */
+  --space-2: 1rem;         /* 16px */
+  --space-3: 1.5rem;       /* 24px */
+  --space-4: 2rem;         /* 32px */
+  --space-5: 2.5rem;       /* 40px */
+  --space-6: 3rem;         /* 48px */
+  --space-7: 3.5rem;       /* 56px */
+  --space-8: 4rem;         /* 64px */
+  --space-9: 4.5rem;       /* 72px */
+  --space-10: 5rem;        /* 80px */
+  --space-11: 5.5rem;      /* 88px */
+  --space-12: 6rem;        /* 96px */
+
+  /* Accent color variants */
+  --accent-hover: #0e7490;  /* Darker cyan for hover */
+  --accent-muted: #164e63;  /* Muted cyan for subtle accents */
+
+  /* Transition timing (base is 150ms ease-out) */
+  --transition-base: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Border radius token */
+  --radius: 0.375rem;      /* 6px */
 }
 
 /* Light theme */
@@ -155,6 +205,10 @@
   /* Interactive states */
   --card-hover: #f9fafb;
   --border-hover: #d1d5db;
+
+  /* Accent color variants - darker for light bg */
+  --accent-hover: #0e7490;
+  --accent-muted: #e0f2fe;
 }
 
 body {
@@ -251,4 +305,16 @@ body {
   );
   border: 1px solid var(--border);
   color: var(--foreground);
+}
+
+/* Reduced motion support for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

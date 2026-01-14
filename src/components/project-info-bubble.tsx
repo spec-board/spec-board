@@ -93,10 +93,11 @@ export function ProjectInfoBubble({
         className={cn(
           'flex items-center gap-2 px-4 py-2 rounded-full',
           'bg-[var(--secondary)] border border-[var(--border)]',
-          'hover:bg-[var(--secondary)]/80 transition-colors',
-          'text-sm text-[var(--foreground)]',
+          'hover:bg-[var(--card-hover)]',
+          'text-sm text-[var(--foreground)] focus-ring',
           isOpen && 'ring-2 ring-[var(--foreground)]/20'
         )}
+        style={{ transition: 'var(--transition-base)' }}
       >
         <div className="flex items-center gap-1.5">
           {hasConstitution && <ScrollText className="w-4 h-4" />}
@@ -113,12 +114,15 @@ export function ProjectInfoBubble({
 
       {/* Popup */}
       {isOpen && (
-        <div className={cn(
-          'absolute top-full left-0 mt-2 z-50',
-          'w-[500px] max-h-[70vh] overflow-hidden',
-          'rounded-lg border border-[var(--border)] bg-[var(--card)]',
-          'shadow-lg'
-        )}>
+        <div
+          className={cn(
+            'absolute top-full left-0 mt-2 z-50',
+            'w-[500px] max-h-[70vh] overflow-hidden',
+            'border border-[var(--border)] bg-[var(--card)]',
+            'shadow-lg'
+          )}
+          style={{ borderRadius: 'var(--radius)' }}
+        >
           {/* Tabs */}
           <div className="flex border-b border-[var(--border)]">
             {hasConstitution && (

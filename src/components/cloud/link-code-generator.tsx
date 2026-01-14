@@ -176,7 +176,7 @@ export function LinkCodeGenerator({ projectId, onClose }: LinkCodeGeneratorProps
               <select
                 value={expiresInHours}
                 onChange={(e) => setExpiresInHours(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[var(--secondary)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-[var(--secondary)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
                 disabled={isGenerating}
               >
                 <option value={1}>1 hour</option>

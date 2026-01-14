@@ -88,8 +88,10 @@ export function PushButton({
       <button
         onClick={handlePush}
         disabled={isPushing || disabled || specs.length === 0}
-        className="p-2 hover:bg-[var(--secondary)] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-2 hover:bg-[var(--secondary)] disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+        style={{ borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
         title={isPushing ? 'Pushing...' : `Push ${specs.length} spec(s) to cloud`}
+        aria-label={isPushing ? 'Pushing specs to cloud' : `Push ${specs.length} specs to cloud`}
       >
         {isPushing ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -106,11 +108,12 @@ export function PushButton({
 
   // Default variant - full button with text
   return (
-    <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
       <button
         onClick={handlePush}
         disabled={isPushing || disabled || specs.length === 0}
-        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white focus-ring"
+        style={{ padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
       >
         {isPushing ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -127,13 +130,14 @@ export function PushButton({
       {/* Result feedback */}
       {showResult && lastResult && (
         <div
-          className={`p-3 text-sm rounded-lg ${
+          className={`${
             lastResult.success
               ? 'bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400'
               : lastResult.conflicts.length > 0
               ? 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400'
               : 'bg-red-500/10 border border-red-500/20 text-red-500'
           }`}
+          style={{ padding: 'var(--space-1-5)', borderRadius: 'var(--radius)', fontSize: 'var(--text-sm)' }}
         >
           {lastResult.success ? (
             <div className="flex items-center gap-2">

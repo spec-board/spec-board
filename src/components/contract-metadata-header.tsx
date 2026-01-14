@@ -37,10 +37,11 @@ export function ContractMetadataHeader({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-3 p-3 mb-4 rounded-lg',
+        'flex flex-wrap items-center gap-3 mb-4 rounded-lg',
         'bg-[var(--secondary)]/20 border border-[var(--border)]',
         className
       )}
+      style={{ padding: 'var(--space-2)' }}
     >
       {/* Contract Type Badge (T018) */}
       <ContractTypeBadge type={contractType} />

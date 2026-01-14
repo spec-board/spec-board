@@ -265,7 +265,10 @@ export function ContractsViewer({ contracts, className }: ContractsViewerProps) 
   }
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div
+      className={cn('flex flex-col', className)}
+      style={{ lineHeight: 'var(--leading-normal)', padding: 'var(--space-2)' }}
+    >
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-[var(--muted-foreground)]">
           {contracts.length} contract{contracts.length !== 1 ? 's' : ''} defined

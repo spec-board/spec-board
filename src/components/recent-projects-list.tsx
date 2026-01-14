@@ -79,10 +79,15 @@ export function RecentProjectsList({ projects, onSelect, onRemove }: RecentProje
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && onSelect(project)}
           className={cn(
-            'w-full text-left p-4 rounded-lg border border-[var(--border)]',
-            'bg-[var(--card)] hover:bg-[var(--secondary)] transition-colors',
-            'group relative cursor-pointer'
+            'w-full text-left rounded-lg border border-[var(--border)]',
+            'bg-[var(--card)] hover:bg-[var(--card-hover)] transition-colors',
+            'group relative cursor-pointer focus-ring'
           )}
+          style={{
+            padding: 'var(--space-2)',
+            borderRadius: 'var(--radius)',
+            transition: 'var(--transition-base)'
+          }}
         >
           <div className="flex items-start gap-3">
             <FolderOpen className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />

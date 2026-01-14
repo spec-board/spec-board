@@ -126,12 +126,13 @@ export function SplitView({
         />
       </div>
 
-      {/* Resizable divider */}
+      {/* Resizable divider - subtle 1px line with muted color */}
       <div
         className={cn(
-          'w-1 bg-[var(--border)] hover:bg-blue-500/50 cursor-col-resize transition-colors flex-shrink-0',
-          isDragging && 'bg-blue-500'
+          'w-px bg-[var(--border)] hover:bg-[var(--muted-foreground)]/50 cursor-col-resize flex-shrink-0',
+          isDragging && 'bg-[var(--primary)] w-0.5'
         )}
+        style={{ transition: 'var(--transition-base)' }}
         onMouseDown={handleMouseDown}
         role="separator"
         aria-orientation="vertical"

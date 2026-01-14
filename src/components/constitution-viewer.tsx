@@ -264,7 +264,10 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
   const hasStructuredContent = constitution.principles.length > 0 || constitution.sections.length > 0;
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div
+      className={cn('flex flex-col', className)}
+      style={{ lineHeight: 'var(--leading-normal)', padding: 'var(--space-2)' }}
+    >
       {/* Toolbar */}
       {hasStructuredContent && (
         <div className="flex items-center gap-1 bg-[var(--secondary)] rounded-lg p-1 mb-4" role="tablist" aria-label="View mode">

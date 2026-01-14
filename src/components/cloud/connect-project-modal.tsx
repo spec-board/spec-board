@@ -131,7 +131,7 @@ export function ConnectProjectModal({ onClose, onConnected }: ConnectProjectModa
                   type="text"
                   value={code}
                   onChange={(e) => handleCodeChange(e.target.value)}
-                  className="w-full px-4 py-3 bg-[var(--secondary)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xl tracking-[0.3em] text-center uppercase"
+                  className="w-full px-4 py-3 bg-[var(--secondary)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ring)] font-mono text-xl tracking-[0.3em] text-center uppercase"
                   placeholder="ABC123"
                   autoFocus
                   disabled={isLoading}

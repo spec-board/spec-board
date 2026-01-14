@@ -51,13 +51,13 @@ export function LastModifiedIndicator({
   // Compact mode - inline text
   if (compact) {
     return (
-      <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1">
-        <User className="w-3 h-3" />
+      <span className="text-[var(--muted-foreground)] flex items-center gap-1" style={{ fontSize: 'var(--text-xs)' }}>
+        <User className="w-3 h-3" aria-hidden="true" />
         <span>{displayName}</span>
         {modifiedAt && (
           <>
             <span className="mx-1">·</span>
-            <Clock className="w-3 h-3" />
+            <Clock className="w-3 h-3" aria-hidden="true" />
             <span>{formatDate(modifiedAt)}</span>
           </>
         )}
@@ -67,18 +67,18 @@ export function LastModifiedIndicator({
 
   // Full mode - with avatar
   return (
-    <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
+    <div className="flex items-center gap-2 text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)' }}>
       {/* Avatar */}
       <div className="flex-shrink-0">
         {avatarUrl ? (
           <img
             src={avatarUrl}
-            alt={displayName}
+            alt={`${displayName}'s avatar`}
             className="w-6 h-6 rounded-full"
           />
         ) : (
           <div className="w-6 h-6 rounded-full bg-[var(--secondary)] flex items-center justify-center">
-            <User className="w-3.5 h-3.5" />
+            <User className="w-3.5 h-3.5" aria-hidden="true" />
           </div>
         )}
       </div>

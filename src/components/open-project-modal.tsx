@@ -237,23 +237,33 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg mx-4 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl">
+      <div
+        className="relative w-full max-w-lg mx-4 bg-[var(--card)] border border-[var(--border)] shadow-2xl"
+        style={{ borderRadius: 'var(--radius)' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
-          <h2 className="text-lg font-semibold">Open Project</h2>
+        <div
+          className="flex items-center justify-between border-b border-[var(--border)]"
+          style={{ padding: 'var(--space-2)' }}
+        >
+          <h2 className="font-semibold" style={{ fontSize: 'var(--text-lg)' }}>Open Project</h2>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+            className="p-1.5 hover:bg-[var(--secondary)] rounded-lg focus-ring"
+            style={{ transition: 'var(--transition-base)', borderRadius: 'var(--radius)' }}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div style={{ padding: 'var(--space-2)' }}>
           {/* Search input */}
           <div className="relative">
-            <div className="flex items-center gap-2 px-3 py-2.5 bg-[var(--secondary)] rounded-lg border border-[var(--border)] focus-within:border-[var(--ring)]">
+            <div
+              className="flex items-center gap-2 bg-[var(--secondary)] border border-[var(--border)] focus-within:border-[var(--ring)]"
+              style={{ padding: 'var(--space-1) var(--space-1-5)', borderRadius: 'var(--radius)' }}
+            >
               <Search className="w-4 h-4 text-[var(--muted-foreground)]" />
               <input
                 ref={inputRef}
@@ -264,7 +274,8 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
                 onFocus={() => pathInput && debouncedFetch(pathInput)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                 placeholder="Search or paste project path..."
-                className="flex-1 bg-transparent outline-none text-sm"
+                className="flex-1 bg-transparent outline-none"
+                style={{ fontSize: 'var(--text-sm)' }}
                 spellCheck={false}
                 autoComplete="off"
               />
@@ -275,18 +286,22 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
 
             {/* Suggestions dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 mt-1 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-lg z-10 max-h-64 overflow-auto">
+              <div
+                className="absolute left-0 right-0 mt-1 bg-[var(--card)] border border-[var(--border)] shadow-lg z-10 max-h-64 overflow-auto"
+                style={{ borderRadius: 'var(--radius)' }}
+              >
                 {suggestions.map((suggestion, index) => (
                   <button
                     key={suggestion.path}
                     onClick={() => acceptSuggestion(suggestion)}
                     className={cn(
-                      'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors',
+                      'w-full flex items-center gap-2 px-3 py-2 text-left',
                       selectedIndex === index
                         ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
                         : 'hover:bg-[var(--secondary)]',
                       suggestion.isSpecKitProject && selectedIndex !== index && 'text-[var(--tag-text-success)]'
                     )}
+                    style={{ fontSize: 'var(--text-sm)', transition: 'var(--transition-base)' }}
                   >
                     {suggestion.isSpecKitProject ? (
                       <FolderOpen className="w-4 h-4 flex-shrink-0" />
@@ -295,13 +310,19 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
                     )}
                     <span className="flex-1 truncate">{suggestion.name}</span>
                     {suggestion.isSpecKitProject && (
-                      <span className="text-xs bg-green-500/20 px-1.5 py-0.5 rounded">
+                      <span
+                        className="bg-green-500/20"
+                        style={{ fontSize: 'var(--text-xs)', padding: '2px 6px', borderRadius: 'var(--radius)' }}
+                      >
                         spec-kit
                       </span>
                     )}
                   </button>
                 ))}
-                <div className="px-3 py-1.5 text-xs text-[var(--muted-foreground)] border-t border-[var(--border)]">
+                <div
+                  className="text-[var(--muted-foreground)] border-t border-[var(--border)]"
+                  style={{ padding: 'var(--space-1) var(--space-1-5)', fontSize: 'var(--text-xs)' }}
+                >
                   ↑↓ navigate • Tab accept • Esc close
                 </div>
               </div>
@@ -310,28 +331,37 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
 
           {/* Preview card */}
           {isLoadingPreview && (
-            <div className="mt-4 p-4 bg-[var(--secondary)] rounded-lg flex items-center justify-center">
+            <div
+              className="mt-4 bg-[var(--secondary)] flex items-center justify-center"
+              style={{ padding: 'var(--space-2)', borderRadius: 'var(--radius)' }}
+            >
               <Loader2 className="w-5 h-5 animate-spin text-[var(--muted-foreground)]" />
-              <span className="ml-2 text-sm text-[var(--muted-foreground)]">Loading project...</span>
+              <span className="ml-2 text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)' }}>Loading project...</span>
             </div>
           )}
 
           {error && (
-            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-sm" style={{ color: 'var(--tag-text-error)' }}>
+            <div
+              className="mt-4 bg-red-500/10 border border-red-500/20"
+              style={{ padding: 'var(--space-2)', borderRadius: 'var(--radius)', fontSize: 'var(--text-sm)', color: 'var(--tag-text-error)' }}
+            >
               {error}
             </div>
           )}
 
           {preview && (
-            <div className="mt-4 p-4 bg-[var(--secondary)] rounded-lg border border-green-500/30">
+            <div
+              className="mt-4 bg-[var(--secondary)] border border-green-500/30"
+              style={{ padding: 'var(--space-2)', borderRadius: 'var(--radius)' }}
+            >
               <div className="flex items-start gap-3">
                 <FolderOpen className="w-6 h-6 mt-0.5" style={{ color: 'var(--tag-text-success)' }} />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium">{preview.project.name}</div>
-                  <div className="text-xs text-[var(--muted-foreground)] truncate mt-0.5">
+                  <div className="text-[var(--muted-foreground)] truncate mt-0.5" style={{ fontSize: 'var(--text-xs)' }}>
                     {preview.project.path}
                   </div>
-                  <div className="flex items-center gap-3 mt-2 text-sm text-[var(--muted-foreground)]">
+                  <div className="flex items-center gap-3 mt-2 text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)' }}>
                     <span>{preview.featureCount} features</span>
                     <span>•</span>
                     <span>{preview.completionPercentage}% complete</span>
@@ -340,7 +370,8 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
               </div>
               <button
                 onClick={handleOpen}
-                className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+                className="w-full mt-4 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium focus-ring"
+                style={{ padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
               >
                 <Check className="w-4 h-4" />
                 Open Project

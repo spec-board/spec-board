@@ -558,7 +558,13 @@ export function DataModelViewer({ content, filePath, className }: DataModelViewe
   }
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div
+      className={cn('flex flex-col', className)}
+      style={{
+        lineHeight: 'var(--leading-normal)',
+        padding: 'var(--space-2)',
+      }}
+    >
       {/* Toolbar */}
       <div className="flex items-center gap-1 bg-[var(--secondary)] rounded-lg p-1 mb-4" role="tablist" aria-label="View mode">
         <button

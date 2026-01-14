@@ -259,13 +259,14 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
 
   return (
     <div
-      className="flex flex-col h-full bg-[var(--card)] rounded-lg border border-[var(--border)]"
+      className="flex flex-col h-full bg-[var(--card)] border border-[var(--border)]"
+      style={{ borderRadius: 'var(--radius)' }}
       role="region"
       aria-label="Project selector"
     >
       {/* Header */}
-      <div className="p-4 border-b border-[var(--border)]">
-        <h2 className="text-lg font-semibold mb-2" id="project-selector-heading">Select Project</h2>
+      <div className="border-b border-[var(--border)]" style={{ padding: 'var(--space-2)' }}>
+        <h2 className="font-semibold mb-2" style={{ fontSize: 'var(--text-lg)' }} id="project-selector-heading">Select Project</h2>
         <form onSubmit={handlePathSubmit} className="relative">
           <div className="flex items-center gap-2">
             <div className="flex-1 flex items-center gap-2 text-sm bg-[var(--secondary)] rounded px-3 py-2">

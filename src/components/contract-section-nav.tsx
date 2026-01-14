@@ -48,11 +48,12 @@ export function ContractSectionNav({
   return (
     <nav
       className={cn(
-        'flex flex-col gap-2 p-3 mb-4 rounded-lg',
+        'flex flex-col gap-2 rounded-lg',
         'bg-[var(--background)] border border-[var(--border)]',
         'sticky top-0 z-10',
         className
       )}
+      style={{ padding: 'var(--space-2)' }}
       aria-label="Contract sections"
     >
       {/* Header - bold and centered */}

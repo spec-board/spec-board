@@ -99,7 +99,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="border-b border-[var(--border)] bg-[var(--card)]">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="max-w-6xl mx-auto" style={{ padding: 'var(--space-2) var(--space-3)' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Image
@@ -107,14 +107,14 @@ export default function Home() {
                 alt="SpecBoard Logo"
                 width={32}
                 height={32}
-                className="rounded"
+                style={{ borderRadius: 'var(--radius)' }}
               />
               <div>
-                <h1 className="text-xl font-bold">
+                <h1 className="font-bold" style={{ fontSize: 'var(--text-xl)' }}>
                   <span className="text-blue-500">Spec</span>
                   <span>Board</span>
                 </h1>
-                <p className="text-sm text-[var(--muted-foreground)]">
+                <p className="text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)' }}>
                   Visual dashboard for spec-kit projects
                 </p>
               </div>
@@ -125,14 +125,16 @@ export default function Home() {
                 href="https://github.com/paulpham157/spec-board"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+                className="p-2 hover:bg-[var(--secondary)] focus-ring"
+                style={{ borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
                 title="GitHub Repository"
               >
                 <Github className="w-5 h-5" />
               </a>
               <button
                 onClick={() => router.push('/settings')}
-                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+                className="p-2 hover:bg-[var(--secondary)] focus-ring"
+                style={{ borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
                 title="Settings"
               >
                 <Settings className="w-5 h-5" />
@@ -143,13 +145,16 @@ export default function Home() {
       </header>
 
       {/* Main content - Split view */}
-      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+      <main
+        className="flex-1 max-w-6xl mx-auto w-full"
+        style={{ padding: 'var(--space-4) var(--space-3)' }}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 h-full" style={{ gap: 'var(--space-4)' }}>
           {/* Left side - Recent Projects */}
           <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Recent Projects</h2>
-              <span className="text-sm text-[var(--muted-foreground)]">
+            <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2)' }}>
+              <h2 className="font-semibold" style={{ fontSize: 'var(--text-lg)' }}>Recent Projects</h2>
+              <span className="text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)' }}>
                 {recentProjects.length} project{recentProjects.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -164,16 +169,21 @@ export default function Home() {
 
           {/* Right side - Open Project */}
           <div className="lg:col-span-1">
-            <h2 className="text-lg font-semibold mb-4">Actions</h2>
-            <div className="space-y-3">
+            <h2 className="font-semibold" style={{ fontSize: 'var(--text-lg)', marginBottom: 'var(--space-2)' }}>Actions</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1-5)' }}>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-[var(--border)] rounded-lg hover:bg-[var(--secondary)] transition-colors text-[var(--foreground)]"
+                className="w-full flex items-center justify-center gap-2 border border-[var(--border)] hover:bg-[var(--card-hover)] text-[var(--foreground)] focus-ring"
+                style={{
+                  padding: 'var(--space-1-5) var(--space-2)',
+                  borderRadius: 'var(--radius)',
+                  transition: 'var(--transition-base)',
+                }}
               >
                 <Plus className="w-5 h-5" />
                 Open Project
               </button>
-              <p className="text-xs text-[var(--muted-foreground)] text-center">
+              <p className="text-[var(--muted-foreground)] text-center" style={{ fontSize: 'var(--text-xs)' }}>
                 Browse or search for a spec-kit project folder
               </p>
             </div>

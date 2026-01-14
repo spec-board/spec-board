@@ -249,7 +249,7 @@ function ChecklistSectionView({
           {completed}/{total}
         </span>
       </div>
-      <div className="h-1 bg-[var(--secondary)] rounded-full overflow-hidden mb-3">
+      <div className="h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden mb-3">
         <div
           className="h-full transition-all duration-300"
           style={{
@@ -616,7 +616,10 @@ export function ChecklistViewer({ checklists, className }: ChecklistViewerProps)
   }
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div
+      className={cn('flex flex-col', className)}
+      style={{ lineHeight: 'var(--leading-normal)', padding: 'var(--space-2)' }}
+    >
       {checklists.map((checklist) => (
         <ChecklistContent key={checklist.path} file={checklist} filePath={checklist.path} />
       ))}

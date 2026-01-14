@@ -113,12 +113,14 @@ export function PendingBadge({
         inline-flex items-center rounded-full border font-medium
         ${sizeClasses[size]}
         ${getBadgeStyle()}
-        ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+        ${onClick ? 'cursor-pointer hover:opacity-80' : ''}
       `}
+      style={{ transition: 'var(--transition-base)' }}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
+      aria-label={getTooltipText()}
     >
       {getIcon()}
       <span>{getLabel()}</span>
@@ -129,7 +131,10 @@ export function PendingBadge({
     return (
       <div className="relative group">
         {badge}
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[var(--card)] border border-[var(--border)] rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+        <div
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[var(--card)] border border-[var(--border)] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10"
+          style={{ padding: '4px 8px', borderRadius: 'var(--radius)', fontSize: 'var(--text-xs)', transition: 'var(--transition-base)' }}
+        >
           {getTooltipText()}
         </div>
       </div>

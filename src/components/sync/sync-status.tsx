@@ -180,7 +180,10 @@ export function SyncStatusIndicator({
 
   // Full mode
   return (
-    <div className="flex items-center gap-3 p-3 bg-[var(--secondary)] rounded-lg">
+    <div
+      className="flex items-center gap-3 bg-[var(--secondary)]"
+      style={{ padding: 'var(--space-1-5)', borderRadius: 'var(--radius)' }}
+    >
       {/* Status Icon */}
       <div className="flex-shrink-0">
         {isOffline ? (
@@ -238,8 +241,10 @@ export function SyncStatusIndicator({
       <button
         onClick={fetchStatus}
         disabled={isLoading || isOffline}
-        className="p-1.5 hover:bg-[var(--card)] rounded transition-colors disabled:opacity-50"
+        className="p-1.5 hover:bg-[var(--card)] disabled:opacity-50 focus-ring"
+        style={{ borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
         title={isOffline ? 'Cannot refresh while offline' : 'Refresh status'}
+        aria-label={isOffline ? 'Cannot refresh while offline' : 'Refresh sync status'}
       >
         <RefreshCw
           className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}

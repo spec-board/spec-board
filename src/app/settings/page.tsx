@@ -70,11 +70,14 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
 
 function KeyBadge({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className={cn(
-      'inline-flex items-center justify-center min-w-[22px] h-5 px-1',
-      'bg-[var(--secondary)] border border-[var(--border)] rounded',
-      'text-[10px] font-mono font-medium text-[var(--foreground)]'
-    )}>
+    <kbd
+      className={cn(
+        'inline-flex items-center justify-center min-w-[22px] h-5 px-1',
+        'bg-[var(--secondary)] border border-[var(--border)]',
+        'font-mono font-medium text-[var(--foreground)]'
+      )}
+      style={{ fontSize: '10px', borderRadius: 'var(--radius)' }}
+    >
       {children}
     </kbd>
   );
@@ -83,13 +86,13 @@ function KeyBadge({ children }: { children: React.ReactNode }) {
 function ShortcutRow({ keys, description }: { keys: string[]; description: string }) {
   return (
     <div className="flex items-center justify-between py-1.5 border-b border-[var(--border)] last:border-0">
-      <span className="text-xs text-[var(--muted-foreground)]">{description}</span>
+      <span className="text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-xs)' }}>{description}</span>
       <div className="flex items-center gap-0.5">
         {keys.map((key, index) => (
           <span key={index} className="flex items-center gap-0.5">
             <KeyBadge>{key}</KeyBadge>
             {index < keys.length - 1 && (
-              <span className="text-[10px] text-[var(--muted-foreground)]">+</span>
+              <span className="text-[var(--muted-foreground)]" style={{ fontSize: '10px' }}>+</span>
             )}
           </span>
         ))}
@@ -107,37 +110,43 @@ function ShortcutsContent() {
   }, [loadSettings]);
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <div>
-        <h2 className="text-lg font-semibold mb-1">Keyboard Shortcuts</h2>
-        <p className="text-sm text-[var(--muted-foreground)]">
+        <h2 className="font-semibold" style={{ fontSize: 'var(--text-lg)', marginBottom: '4px' }}>Keyboard Shortcuts</h2>
+        <p className="text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)' }}>
           Navigate SpecBoard faster with keyboard shortcuts
         </p>
       </div>
 
       {/* Toggle Switch */}
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+      <div
+        className="bg-[var(--secondary)]/30 border border-[var(--border)]"
+        style={{ padding: 'var(--space-2)', borderRadius: 'var(--radius)' }}
+      >
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm font-medium">Enable Keyboard Shortcuts</span>
-            <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+            <span className="font-medium" style={{ fontSize: 'var(--text-sm)' }}>Enable Keyboard Shortcuts</span>
+            <p className="text-[var(--muted-foreground)] mt-0.5" style={{ fontSize: 'var(--text-xs)' }}>
               Turn off to disable all keyboard shortcuts
             </p>
           </div>
           <button
             onClick={() => setShortcutsEnabled(!shortcutsEnabled)}
             className={cn(
-              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+              'relative inline-flex h-6 w-11 items-center rounded-full',
               shortcutsEnabled ? 'bg-green-500' : 'bg-[var(--secondary)]'
             )}
+            style={{ transition: 'var(--transition-base)' }}
             role="switch"
             aria-checked={shortcutsEnabled}
+            aria-label="Enable keyboard shortcuts"
           >
             <span
               className={cn(
-                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                'inline-block h-4 w-4 transform rounded-full bg-white',
                 shortcutsEnabled ? 'translate-x-6' : 'translate-x-1'
               )}
+              style={{ transition: 'var(--transition-base)' }}
             />
           </button>
         </div>
@@ -145,15 +154,23 @@ function ShortcutsContent() {
 
       {/* Shortcuts List */}
       <div className={cn(
-        'grid grid-cols-1 lg:grid-cols-2 gap-4 transition-opacity',
+        'grid grid-cols-1 lg:grid-cols-2 gap-4',
         !shortcutsEnabled && 'opacity-50 pointer-events-none'
-      )}>
+      )}
+      style={{ transition: 'opacity var(--transition-base)' }}
+      >
         {SHORTCUT_GROUPS.map((group, index) => (
           <div key={index} className="space-y-1">
-            <h3 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
+            <h3
+              className="font-medium text-[var(--muted-foreground)] uppercase tracking-wide"
+              style={{ fontSize: 'var(--text-xs)', marginBottom: 'var(--space-1)' }}
+            >
               {group.title}
             </h3>
-            <div className="bg-[var(--secondary)]/30 rounded-lg p-3 border border-[var(--border)]">
+            <div
+              className="bg-[var(--secondary)]/30 border border-[var(--border)]"
+              style={{ padding: 'var(--space-1-5)', borderRadius: 'var(--radius)' }}
+            >
               {group.shortcuts.map((shortcut, sIndex) => (
                 <ShortcutRow key={sIndex} keys={shortcut.keys} description={shortcut.description} />
               ))}
@@ -174,20 +191,23 @@ function AppearanceContent() {
   }, [loadSettings]);
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <div>
-        <h2 className="text-lg font-semibold mb-1">Appearance</h2>
-        <p className="text-sm text-[var(--muted-foreground)]">
+        <h2 className="font-semibold" style={{ fontSize: 'var(--text-lg)', marginBottom: '4px' }}>Appearance</h2>
+        <p className="text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)' }}>
           Customize how SpecBoard looks
         </p>
       </div>
 
       {/* Theme Selection */}
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+      <div
+        className="bg-[var(--secondary)]/30 border border-[var(--border)]"
+        style={{ padding: 'var(--space-2)', borderRadius: 'var(--radius)' }}
+      >
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm font-medium">Theme</span>
-            <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+            <span className="font-medium" style={{ fontSize: 'var(--text-sm)' }}>Theme</span>
+            <p className="text-[var(--muted-foreground)] mt-0.5" style={{ fontSize: 'var(--text-xs)' }}>
               Choose light, dark, or match your system
             </p>
           </div>
@@ -230,15 +250,15 @@ function AboutContent() {
 
   if (!appInfo) {
     return (
-      <div className="text-red-400">Failed to load app information</div>
+      <div style={{ color: 'var(--tag-text-error)' }}>Failed to load app information</div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <div>
-        <h2 className="text-lg font-semibold mb-1">About</h2>
-        <p className="text-sm text-[var(--muted-foreground)]">
+        <h2 className="font-semibold" style={{ fontSize: 'var(--text-lg)', marginBottom: '4px' }}>About</h2>
+        <p className="text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-sm)' }}>
           Application information and documentation
         </p>
       </div>
@@ -248,11 +268,12 @@ function AboutContent() {
         <button
           onClick={() => setActiveTab('readme')}
           className={cn(
-            'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
+            'font-medium border-b-2 -mb-px focus-ring',
             activeTab === 'readme'
               ? 'border-blue-500 text-[var(--foreground)]'
               : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
+          style={{ padding: 'var(--space-1) var(--space-2)', fontSize: 'var(--text-sm)', transition: 'var(--transition-base)' }}
         >
           <FileText className="w-4 h-4 inline-block mr-2" />
           README
@@ -260,11 +281,12 @@ function AboutContent() {
         <button
           onClick={() => setActiveTab('changelog')}
           className={cn(
-            'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
+            'font-medium border-b-2 -mb-px focus-ring',
             activeTab === 'changelog'
               ? 'border-blue-500 text-[var(--foreground)]'
               : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
+          style={{ padding: 'var(--space-1) var(--space-2)', fontSize: 'var(--text-sm)', transition: 'var(--transition-base)' }}
         >
           <History className="w-4 h-4 inline-block mr-2" />
           Changelog
@@ -273,13 +295,19 @@ function AboutContent() {
 
       {/* Tab Content */}
       {activeTab === 'readme' && (
-        <div className="space-y-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           {/* Overview Info */}
-          <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <div
+            className="bg-[var(--secondary)]/30 border border-[var(--border)]"
+            style={{ padding: 'var(--space-2)', borderRadius: 'var(--radius)' }}
+          >
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2" style={{ fontSize: 'var(--text-sm)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-[var(--muted-foreground)]">Version</span>
-                <span className="font-mono text-xs px-2 py-0.5 bg-[var(--secondary)] rounded border border-[var(--border)]">
+                <span
+                  className="font-mono bg-[var(--secondary)] border border-[var(--border)]"
+                  style={{ fontSize: 'var(--text-xs)', padding: '2px 8px', borderRadius: 'var(--radius)' }}
+                >
                   v{appInfo.version}
                 </span>
               </div>
@@ -311,14 +339,20 @@ function AboutContent() {
           </div>
 
           {/* README Content */}
-          <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+          <div
+            className="bg-[var(--secondary)]/30 border border-[var(--border)]"
+            style={{ padding: 'var(--space-2)', borderRadius: 'var(--radius)' }}
+          >
             <ReadmeViewer content={appInfo.readme} />
           </div>
         </div>
       )}
 
       {activeTab === 'changelog' && (
-        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+        <div
+          className="bg-[var(--secondary)]/30 border border-[var(--border)]"
+          style={{ padding: 'var(--space-2)', borderRadius: 'var(--radius)' }}
+        >
           <ChangelogViewer content={appInfo.changelog} />
         </div>
       )}
@@ -356,16 +390,17 @@ export default function SettingsPage() {
     <div className="min-h-screen flex flex-col bg-[var(--background)]">
       {/* Header */}
       <header className="border-b border-[var(--border)] bg-[var(--card)]">
-        <div className="px-6 py-4">
+        <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="p-2 -ml-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+              className="p-2 -ml-2 hover:bg-[var(--secondary)] focus-ring"
+              style={{ borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
               aria-label="Back to home"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <h1 className="text-xl font-bold">Settings</h1>
+            <h1 className="font-bold" style={{ fontSize: 'var(--text-xl)' }}>Settings</h1>
           </div>
         </div>
       </header>
@@ -373,18 +408,27 @@ export default function SettingsPage() {
       {/* Main content - 2 column layout */}
       <div className="flex-1 flex">
         {/* Left sidebar menu - 1/4 width */}
-        <aside className="w-1/4 min-w-[200px] max-w-[280px] border-r border-[var(--border)] bg-[var(--card)] p-4">
-          <nav className="space-y-1">
+        <aside
+          className="w-1/4 min-w-[200px] max-w-[280px] border-r border-[var(--border)] bg-[var(--card)]"
+          style={{ padding: 'var(--space-2)' }}
+        >
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {menuItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
                 className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+                  'w-full flex items-center gap-3 focus-ring',
                   activeSection === item.id
                     ? 'bg-[var(--secondary)] text-[var(--foreground)]'
                     : 'text-[var(--muted-foreground)] hover:bg-[var(--secondary)]/50 hover:text-[var(--foreground)]'
                 )}
+                style={{
+                  padding: 'var(--space-1) var(--space-1-5)',
+                  borderRadius: 'var(--radius)',
+                  fontSize: 'var(--text-sm)',
+                  transition: 'var(--transition-base)',
+                }}
               >
                 {item.icon}
                 {item.label}
@@ -394,7 +438,7 @@ export default function SettingsPage() {
         </aside>
 
         {/* Right content area - 3/4 width */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto" style={{ padding: 'var(--space-3)' }}>
           {activeSection === 'shortcuts' && <ShortcutsContent />}
           {activeSection === 'appearance' && <AppearanceContent />}
           {activeSection === 'about' && <AboutContent />}
@@ -402,8 +446,11 @@ export default function SettingsPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--border)] bg-[var(--card)] px-6 py-3">
-        <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted-foreground)]">
+      <footer
+        className="border-t border-[var(--border)] bg-[var(--card)]"
+        style={{ padding: 'var(--space-1-5) var(--space-3)' }}
+      >
+        <div className="flex items-center justify-center gap-2 text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-xs)' }}>
           <span className="font-medium">{appInfo?.name || 'SpecBoard'}</span>
           <span>v{appInfo?.version || '...'}</span>
           <span>—</span>

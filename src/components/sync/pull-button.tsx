@@ -90,8 +90,10 @@ export function PullButton({
       <button
         onClick={handlePull}
         disabled={isPulling || disabled}
-        className="p-2 hover:bg-[var(--secondary)] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-2 hover:bg-[var(--secondary)] disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+        style={{ borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
         title={isPulling ? 'Pulling...' : 'Pull specs from cloud'}
+        aria-label={isPulling ? 'Pulling specs from cloud' : 'Pull specs from cloud'}
       >
         {isPulling ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -110,11 +112,12 @@ export function PullButton({
 
   // Default variant - full button with text
   return (
-    <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
       <button
         onClick={handlePull}
         disabled={isPulling || disabled}
-        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white focus-ring"
+        style={{ padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
       >
         {isPulling ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -127,13 +130,14 @@ export function PullButton({
       {/* Result feedback */}
       {showResult && (lastResult || error) && (
         <div
-          className={`p-3 text-sm rounded-lg ${
+          className={`text-sm ${
             error
               ? 'bg-red-500/10 border border-red-500/20 text-red-500'
               : lastResult?.hasConflicts
               ? 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400'
               : 'bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400'
           }`}
+          style={{ padding: 'var(--space-1-5)', borderRadius: 'var(--radius)', fontSize: 'var(--text-sm)' }}
         >
           {error ? (
             <div>

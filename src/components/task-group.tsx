@@ -17,38 +17,43 @@ function TaskItem({ task }: TaskItemProps) {
   return (
     <div
       className={cn(
-        'flex items-start gap-3 p-2 rounded-lg transition-colors',
+        'flex items-start gap-3',
         task.completed ? 'bg-[var(--color-success)]/10' : 'hover:bg-[var(--secondary)]'
       )}
+      style={{ padding: 'var(--space-1)', borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
+      role="listitem"
     >
       {task.completed ? (
-        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
+        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} aria-hidden="true" />
       ) : (
-        <Circle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
+        <Circle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" aria-hidden="true" />
       )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-mono text-[var(--muted-foreground)]">
+          <span className="font-mono text-[var(--muted-foreground)]" style={{ fontSize: 'var(--text-xs)' }}>
             {task.id}
           </span>
           {task.parallel && (
             <span
-              className="text-xs bg-[var(--color-info)]/20 px-1.5 py-0.5 rounded flex items-center gap-1"
-              style={{ color: 'var(--tag-text-info)' }}
+              className="bg-[var(--color-info)]/20 px-1.5 py-0.5 flex items-center gap-1"
+              style={{ fontSize: 'var(--text-xs)', color: 'var(--tag-text-info)', borderRadius: 'var(--radius)' }}
             >
-              <Zap className="w-3 h-3" />
+              <Zap className="w-3 h-3" aria-hidden="true" />
               Parallel
             </span>
           )}
         </div>
-        <p className={cn(
-          'text-sm mt-1',
-          task.completed && 'text-[var(--muted-foreground)] line-through'
-        )}>
+        <p
+          className={cn(
+            'mt-1',
+            task.completed && 'text-[var(--muted-foreground)] line-through'
+          )}
+          style={{ fontSize: 'var(--text-sm)' }}
+        >
           {task.description}
         </p>
         {task.filePath && (
-          <p className="text-xs text-[var(--muted-foreground)] mt-1 font-mono">
+          <p className="text-[var(--muted-foreground)] mt-1 font-mono" style={{ fontSize: 'var(--text-xs)' }}>
             {task.filePath}
           </p>
         )}
@@ -81,7 +86,10 @@ function TaskGroupHeader({
   return (
     <button
       onClick={onToggle}
-      className="w-full flex items-center gap-3 p-3 rounded-lg bg-[var(--secondary)]/50 hover:bg-[var(--secondary)] transition-colors"
+      className="w-full flex items-center gap-3 bg-[var(--secondary)]/50 hover:bg-[var(--secondary)] focus-ring"
+      style={{ padding: 'var(--space-1-5)', borderRadius: 'var(--radius)', transition: 'var(--transition-base)' }}
+      aria-expanded={isExpanded}
+      aria-label={`${storyTitle}, ${completedCount} of ${totalCount} tasks completed, ${percentage}%`}
     >
       {isExpanded ? (
         <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
@@ -103,13 +111,21 @@ function TaskGroupHeader({
       </div>
 
       <div className="flex items-center gap-3 flex-shrink-0">
-        <div className="w-24 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden">
+        <div
+          className="w-24 h-1.5 bg-[var(--secondary)] overflow-hidden"
+          style={{ borderRadius: 'var(--radius)' }}
+          role="progressbar"
+          aria-valuenow={percentage}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${percentage}% complete`}
+        >
           <div
-            className="h-full bg-[var(--color-success)] transition-all duration-300"
-            style={{ width: `${percentage}%` }}
+            className="h-full bg-[var(--color-success)]"
+            style={{ width: `${percentage}%`, transition: 'var(--transition-base)' }}
           />
         </div>
-        <span className="text-xs text-[var(--muted-foreground)] tabular-nums w-16 text-right">
+        <span className="text-[var(--muted-foreground)] tabular-nums w-16 text-right" style={{ fontSize: 'var(--text-xs)' }}>
           {completedCount}/{totalCount} ({percentage}%)
         </span>
       </div>
@@ -127,7 +143,10 @@ export function TaskGroup({ group, userStory, defaultExpanded = true }: TaskGrou
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className="mb-4">
+    <div
+      className="mb-4"
+      style={{ lineHeight: 'var(--leading-normal)' }}
+    >
       <TaskGroupHeader
         storyId={group.storyId}
         storyTitle={group.storyTitle}
