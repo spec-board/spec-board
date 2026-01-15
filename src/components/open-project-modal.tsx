@@ -239,21 +239,46 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
       {/* Modal */}
       <div className="relative w-full max-w-lg mx-4 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
-          <h2 className="text-lg font-semibold">Open Project</h2>
+        <div 
+          className="flex items-center justify-between border-b border-[var(--border)]"
+          style={{
+            padding: 'var(--space-4)',
+          }}
+        >
+          <h2 
+            className="font-semibold"
+            style={{ fontSize: 'var(--text-lg)' }}
+          >
+            Open Project
+          </h2>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+            className="hover:bg-[var(--secondary)] rounded-lg transition-colors"
+            style={{
+              padding: 'var(--space-2)',
+              borderRadius: 'var(--radius)',
+              transitionDuration: 'var(--transition-base)',
+            }}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div style={{ padding: 'var(--space-4)' }}>
           {/* Search input */}
           <div className="relative">
-            <div className="flex items-center gap-2 px-3 py-2.5 bg-[var(--secondary)] rounded-lg border border-[var(--border)] focus-within:border-[var(--ring)]">
+            <div 
+              className="flex items-center bg-[var(--secondary)] border border-[var(--border)] focus-within:border-[var(--ring)]"
+              style={{
+                gap: 'var(--space-2)',
+                paddingLeft: 'var(--space-3)',
+                paddingRight: 'var(--space-3)',
+                paddingTop: 'calc(var(--space-2) + var(--space-1))',
+                paddingBottom: 'calc(var(--space-2) + var(--space-1))',
+                borderRadius: 'var(--radius)',
+              }}
+            >
               <Search className="w-4 h-4 text-[var(--muted-foreground)]" />
               <input
                 ref={inputRef}
@@ -264,7 +289,8 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
                 onFocus={() => pathInput && debouncedFetch(pathInput)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                 placeholder="Search or paste project path..."
-                className="flex-1 bg-transparent outline-none text-sm"
+                className="flex-1 bg-transparent outline-none"
+                style={{ fontSize: 'var(--text-sm)' }}
                 spellCheck={false}
                 autoComplete="off"
               />
@@ -340,7 +366,19 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
               </div>
               <button
                 onClick={handleOpen}
-                className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+                className="w-full mt-4 flex items-center justify-center gap-2 font-medium rounded-lg transition-colors"
+                style={{
+                  paddingLeft: 'var(--space-4)',
+                  paddingRight: 'var(--space-4)',
+                  paddingTop: 'var(--space-2)',
+                  paddingBottom: 'var(--space-2)',
+                  backgroundColor: 'var(--accent)',
+                  color: 'var(--accent-foreground)',
+                  borderRadius: 'var(--radius)',
+                  transitionDuration: 'var(--transition-base)',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--accent-hover)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--accent)'}
               >
                 <Check className="w-4 h-4" />
                 Open Project
