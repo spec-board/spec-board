@@ -93,3 +93,7 @@ agent-includes
 .codex
 pnpm-lock.yaml
 tsconfig.tsbuildinfo
+
+# Playwright
+playwright-report/
+test-results/
