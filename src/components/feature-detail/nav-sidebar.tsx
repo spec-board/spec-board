@@ -25,6 +25,7 @@ import type {
   WorkflowSubItem,
 } from './types';
 import { NAV_PHASE_CONFIG, getNextTask } from './types';
+import { StatusDot, getStatusFromCompletion } from './status-dot';
 
 interface NavSidebarProps {
   feature: Feature;
@@ -516,6 +517,13 @@ function groupStepsByPhase(steps: WorkflowNavStep[]): Map<NavWorkflowPhase, Work
   return grouped;
 }
 
+// Calculate phase completion status
+function getPhaseStatus(steps: WorkflowNavStep[]): { completed: number; total: number } {
+  const completed = steps.filter(step => step.isComplete).length;
+  const total = steps.length;
+  return { completed, total };
+}
+
 // Main NavSidebar component
 export function NavSidebar({
   feature,
@@ -571,15 +579,18 @@ export function NavSidebar({
           if (phaseSteps.length === 0) return null;
 
           const config = NAV_PHASE_CONFIG[phase];
+          const phaseCompletion = getPhaseStatus(phaseSteps);
+          const phaseStatus = getStatusFromCompletion(phaseCompletion.completed, phaseCompletion.total);
 
           return (
             <div key={phase} className="mb-3">
-              {/* Phase header */}
+              {/* Phase header with aggregate status dot */}
               <div className={cn(
-                'text-[10px] font-bold tracking-wider mb-1 px-2',
+                'text-[10px] font-bold tracking-wider mb-1 px-2 flex items-center gap-1.5',
                 config.color
               )}>
-                {config.label}
+                <StatusDot status={phaseStatus} size="sm" />
+                <span>{config.label}</span>
               </div>
 
               {/* Phase steps */}
