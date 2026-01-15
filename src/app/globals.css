@@ -13,10 +13,45 @@
   --secondary-foreground: #ededed;
   --muted: #27272a;
   --muted-foreground: #a1a1aa;
-  --accent: #27272a;
+  --accent: #06b6d4; /* Cyan accent color */
+  --accent-hover: #0891b2; /* Darker cyan for hover */
+  --accent-muted: rgba(6, 182, 212, 0.1); /* Muted cyan background */
   --accent-foreground: #ededed;
   --border: #27272a;
   --ring: #3b82f6;
+
+  /* Typography scale (rem-based for accessibility) */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+
+  /* Line height tokens */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* Spacing scale (8pt grid system) */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-7: 1.75rem;   /* 28px */
+  --space-8: 2rem;      /* 32px */
+  --space-9: 2.25rem;   /* 36px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-11: 2.75rem;  /* 44px */
+  --space-12: 3rem;     /* 48px */
+
+  /* Border radius (consistent 6px) */
+  --radius: 0.375rem;   /* 6px */
+
+  /* Transition timing (base 150ms ease-out) */
+  --transition-base: 150ms ease-out;
 
   /* Semantic colors for accessibility */
   --color-success: #22c55e;
@@ -96,10 +131,45 @@
   --secondary-foreground: #0a0a0a;
   --muted: #e5e5e5;
   --muted-foreground: #171717;
-  --accent: #e5e5e5;
+  --accent: #0891b2; /* Darker cyan for light theme */
+  --accent-hover: #0e7490; /* Even darker cyan for hover */
+  --accent-muted: rgba(8, 145, 178, 0.1); /* Muted cyan background */
   --accent-foreground: #0a0a0a;
   --border: #d4d4d4;
   --ring: #1d4ed8;
+
+  /* Typography scale (same as dark theme) */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* Line height tokens (same as dark theme) */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* Spacing scale (same as dark theme) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+  --space-10: 2.5rem;
+  --space-11: 2.75rem;
+  --space-12: 3rem;
+
+  /* Border radius (same as dark theme) */
+  --radius: 0.375rem;
+
+  /* Transition timing (same as dark theme) */
+  --transition-base: 150ms ease-out;
 
   /* Semantic colors - dark saturated colors for light bg */
   --color-success: #166534;
@@ -161,6 +231,24 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
+/* Global focus-visible styles (T011) */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Reduced motion support (T012) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Custom scrollbar */

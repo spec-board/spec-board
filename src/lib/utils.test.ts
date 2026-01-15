@@ -129,9 +129,12 @@ function createMockFeature(overrides: Partial<Feature>): Feature {
 }
 
 describe('getKanbanColumn', () => {
-  it('should map specify and plan to backlog', () => {
+  it('should map specify to backlog', () => {
     expect(getKanbanColumn('specify')).toBe('backlog');
-    expect(getKanbanColumn('plan')).toBe('backlog');
+  });
+
+  it('should map plan to planning', () => {
+    expect(getKanbanColumn('plan')).toBe('planning');
   });
 
   it('should map tasks and implement to in_progress', () => {
@@ -156,18 +159,37 @@ describe('getFeatureKanbanColumn', () => {
   });
 
   it('should return in_progress for tasks stage', () => {
-    const feature = createMockFeature({ stage: 'tasks' });
+    const feature = createMockFeature({
+      stage: 'tasks',
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 10,
+      completedTasks: 5, // Incomplete tasks
+    });
     expect(getFeatureKanbanColumn(feature)).toBe('in_progress');
   });
 
   it('should return in_progress for implement stage', () => {
-    const feature = createMockFeature({ stage: 'implement' });
+    const feature = createMockFeature({
+      stage: 'implement',
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 10,
+      completedTasks: 5, // Incomplete tasks
+    });
     expect(getFeatureKanbanColumn(feature)).toBe('in_progress');
   });
 
   it('should return done for complete stage without checklists', () => {
     const feature = createMockFeature({
       stage: 'complete',
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 10,
+      completedTasks: 10, // All tasks complete
       hasChecklists: false,
     });
     expect(getFeatureKanbanColumn(feature)).toBe('done');
@@ -176,38 +198,58 @@ describe('getFeatureKanbanColumn', () => {
   it('should return done for complete stage with all checklists completed', () => {
     const feature = createMockFeature({
       stage: 'complete',
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 10,
+      completedTasks: 10, // All tasks complete
       hasChecklists: true,
       totalChecklistItems: 5,
-      completedChecklistItems: 5,
+      completedChecklistItems: 5, // All checklists complete
     });
     expect(getFeatureKanbanColumn(feature)).toBe('done');
   });
 
-  it('should return review for complete stage with incomplete checklists', () => {
+  it('should return in_progress for complete stage with incomplete checklists', () => {
     const feature = createMockFeature({
       stage: 'complete',
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 10,
+      completedTasks: 10, // All tasks complete
       hasChecklists: true,
       totalChecklistItems: 5,
-      completedChecklistItems: 3,
+      completedChecklistItems: 3, // Incomplete checklists
     });
-    expect(getFeatureKanbanColumn(feature)).toBe('review');
+    expect(getFeatureKanbanColumn(feature)).toBe('in_progress');
   });
 
-  it('should return review for complete stage with no checklist items completed', () => {
+  it('should return in_progress for complete stage with no checklist items completed', () => {
     const feature = createMockFeature({
       stage: 'complete',
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 10,
+      completedTasks: 10, // All tasks complete
       hasChecklists: true,
       totalChecklistItems: 10,
-      completedChecklistItems: 0,
+      completedChecklistItems: 0, // No checklists complete
     });
-    expect(getFeatureKanbanColumn(feature)).toBe('review');
+    expect(getFeatureKanbanColumn(feature)).toBe('in_progress');
   });
 
   it('should return done for complete stage with empty checklists (0 items)', () => {
     const feature = createMockFeature({
       stage: 'complete',
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 10,
+      completedTasks: 10, // All tasks complete
       hasChecklists: true,
-      totalChecklistItems: 0,
+      totalChecklistItems: 0, // No checklist items
       completedChecklistItems: 0,
     });
     expect(getFeatureKanbanColumn(feature)).toBe('done');
@@ -216,6 +258,11 @@ describe('getFeatureKanbanColumn', () => {
   it('should not affect non-complete stages even with incomplete checklists', () => {
     const feature = createMockFeature({
       stage: 'implement',
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 10,
+      completedTasks: 5, // Incomplete tasks
       hasChecklists: true,
       totalChecklistItems: 5,
       completedChecklistItems: 2,

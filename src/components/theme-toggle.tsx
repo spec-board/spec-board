@@ -13,18 +13,31 @@ export function ThemeToggle() {
   const { theme, setTheme } = useSettingsStore();
 
   return (
-    <div className="flex items-center gap-1 p-1 bg-[var(--secondary)] rounded-lg">
+    <div 
+      className="flex items-center rounded-lg"
+      style={{
+        gap: 'var(--space-1)',
+        padding: 'var(--space-1)',
+        backgroundColor: 'var(--secondary)',
+        borderRadius: 'var(--radius)',
+      }}
+    >
       {themes.map(({ value, label, icon: Icon }) => (
         <button
           key={value}
           onClick={() => setTheme(value)}
           className={`
-            p-2 rounded-md transition-colors
+            rounded-md transition-colors
             ${theme === value
               ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
               : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
             }
           `}
+          style={{
+            padding: 'var(--space-2)',
+            borderRadius: 'var(--radius)',
+            transitionDuration: 'var(--transition-base)',
+          }}
           title={label}
           aria-label={`Switch to ${label} theme`}
           aria-pressed={theme === value}
