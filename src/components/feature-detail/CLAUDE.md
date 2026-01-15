@@ -18,6 +18,8 @@ This directory contains the redesigned Feature Detail Modal - a full-screen moda
 | `header-bar.tsx` | Top bar with title and action buttons | ~70 |
 | `nav-item.tsx` | Individual navigation item with drag support | ~100 |
 | `section-icon.tsx` | Semantic icons for each section type | ~75 |
+| `status-dot.tsx` | 8px Jira-style status indicators | ~47 |
+| `section-popover.tsx` | Progressive disclosure hover popovers | ~150 |
 | `index.tsx` | Public export | ~5 |
 
 ## Architecture
@@ -159,3 +161,159 @@ Additional badges:
 - **Spec**: Shows clarifications count with `MessageCircle` icon
 - **Tasks**: Shows User Story count (e.g., "5 US")
 - **Checklists**: Shows checklist file count (e.g., "3 checklists")
+
+## Status Indicators (status-dot.tsx)
+
+**Feature 013** introduced Jira-style status dots to replace verbose progress indicators.
+
+### StatusDot Component
+
+8px circular indicators with three states:
+
+| State | Color | Threshold | CSS Variable |
+|-------|-------|-----------|--------------|
+| `not-started` | Blue | 0% | `--status-not-started` |
+| `in-progress` | Yellow | 1-79% | `--status-in-progress` |
+| `complete` | Green | 80-100% | `--status-complete` |
+
+**Usage:**
+```typescript
+import { StatusDot, getStatusFromCompletion } from './status-dot';
+
+// Calculate status from completion percentage
+const status = getStatusFromCompletion(completed, total);
+
+// Render status dot
+<StatusDot status={status} size="sm" />
+```
+
+**Props:**
+- `status`: `'not-started' | 'in-progress' | 'complete'`
+- `size`: `'sm' | 'md'` (default: `'md'`)
+- `className`: Optional additional classes
+
+**Helper Function:**
+```typescript
+getStatusFromCompletion(completed: number, total: number): StatusState
+```
+- Returns `'not-started'` if 0% complete
+- Returns `'in-progress'` if 1-79% complete
+- Returns `'complete'` if 80-100% complete (80% threshold encourages finishing)
+
+**Accessibility:**
+- `role="img"` for screen reader recognition
+- `aria-label` announces status (e.g., "Status: in progress")
+
+### Phase Header Status Dots
+
+Phase headers in NavSidebar show aggregate completion status:
+
+```typescript
+// Calculate phase completion
+const phaseCompletion = getPhaseStatus(phaseSteps);
+const phaseStatus = getStatusFromCompletion(
+  phaseCompletion.completed,
+  phaseCompletion.total
+);
+
+// Render with status dot
+<StatusDot status={phaseStatus} size="sm" />
+<span>{config.label}</span>
+```
+
+## Progressive Disclosure (section-popover.tsx)
+
+**Feature 013** introduced hover popovers to hide detailed metrics by default.
+
+### SectionPopover Component
+
+Hover-triggered popover with dual-timeout pattern for progressive disclosure.
+
+**Design Decisions:**
+- **400ms show delay**: Prevents accidental triggers during navigation (desktop only)
+- **150ms hide delay**: Allows mouse to move from trigger to popover (desktop only)
+- **Touch devices**: Tap-to-toggle behavior without delays
+- **Escape key**: Closes popover for keyboard users
+
+**Usage:**
+```typescript
+import { SectionPopover } from './section-popover';
+
+<SectionPopover
+  content={
+    <div>
+      <div>Completed: {completed}/{total}</div>
+      <div>Progress: {percentage}%</div>
+    </div>
+  }
+  showDelay={400}
+  hideDelay={150}
+  side="right"
+>
+  <NavItem {...props} />
+</SectionPopover>
+```
+
+**Props:**
+- `children`: Trigger element (nav item, button, etc.)
+- `content`: Popover content (React node)
+- `showDelay`: Milliseconds before showing (default: 400)
+- `hideDelay`: Milliseconds before hiding (default: 150)
+- `side`: `'left' | 'right'` (default: `'right'`)
+- `disabled`: Disable popover functionality
+
+**Behavior:**
+
+**Desktop (hover):**
+1. Mouse enters trigger → start 400ms timer
+2. Timer completes → show popover
+3. Mouse leaves trigger → start 150ms timer
+4. Mouse enters popover → cancel hide timer (allows interaction)
+5. Mouse leaves popover → start 150ms timer
+6. Timer completes → hide popover
+
+**Mobile (touch):**
+1. Tap trigger → show popover immediately (no delay)
+2. Tap trigger again → hide popover
+3. Tap outside → hide popover
+4. Escape key → hide popover
+
+**Touch Detection:**
+```typescript
+// Detects touch capability on mount
+const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+```
+
+**Accessibility:**
+- `role="tooltip"` on popover content
+- Keyboard focus triggers popover (desktop)
+- Escape key closes popover
+- Click outside closes popover (mobile)
+
+### Integration with NavSidebar
+
+Popovers wrap navigation items that have progress information:
+
+```typescript
+<SectionPopover
+  content={
+    <div className="text-xs">
+      <div className="font-semibold mb-1">Progress</div>
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[var(--color-success)]"
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+        <span className="text-[10px] font-mono">{percentage}%</span>
+      </div>
+      <div className="text-[10px] text-[var(--muted-foreground)] mt-1">
+        {completed} of {total} completed
+      </div>
+    </div>
+  }
+>
+  <NavItem {...props} />
+</SectionPopover>
+```
