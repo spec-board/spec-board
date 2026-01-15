@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Detail Page Redesign (Feature 013)** - Visual consistency and progressive disclosure:
+  - Phase header aggregate status dots showing completion at a glance
+  - 8px Jira-style status indicators (blue/yellow/green) matching Kanban board
+  - Progressive disclosure with hover popovers (400ms show delay, 150ms hide delay)
+  - Mobile-responsive touch behavior with tap-to-toggle popovers
+  - Simplified navigation sidebar with status dots replacing verbose progress text
+  - Accessibility improvements with ARIA labels and keyboard support
 - **Cloud Specification Sync (Feature 011)** - Complete cloud sync infrastructure:
   - OAuth authentication with Google and GitHub
   - Team collaboration with role-based access (VIEW, EDIT, ADMIN)
