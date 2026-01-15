@@ -1,4 +1,4 @@
-import fs from 'fs';
+import { promises as fs } from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import type {
@@ -385,10 +385,22 @@ export function groupTasksByUserStory(tasks: Task[], userStories: UserStory[]): 
 }
 
 /**
+ * Helper to check if file exists (async)
+ */
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Parse additional spec-kit files from feature directory (T012)
  * Handles errors gracefully - continues processing other files if one fails
  */
-export function parseAdditionalFiles(featurePath: string): SpecKitFile[] {
+export async function parseAdditionalFiles(featurePath: string): Promise<SpecKitFile[]> {
   const additionalFiles: SpecKitFile[] = [];
   const configs: { name: string; type: SpecKitFileType }[] = [
     { name: 'research.md', type: 'research' },
@@ -399,11 +411,11 @@ export function parseAdditionalFiles(featurePath: string): SpecKitFile[] {
   for (const cfg of configs) {
     const filePath = path.join(featurePath, cfg.name);
     try {
-      const exists = fs.existsSync(filePath);
+      const exists = await fileExists(filePath);
       additionalFiles.push({
         type: cfg.type,
         path: filePath,
-        content: exists ? fs.readFileSync(filePath, 'utf-8') : '',
+        content: exists ? await fs.readFile(filePath, 'utf-8') : '',
         exists,
       });
     } catch (error) {
@@ -419,27 +431,30 @@ export function parseAdditionalFiles(featurePath: string): SpecKitFile[] {
 
   const contractsDir = path.join(featurePath, 'contracts');
   try {
-    if (fs.existsSync(contractsDir) && fs.statSync(contractsDir).isDirectory()) {
-      const contractFiles = fs.readdirSync(contractsDir).filter(f =>
-        f.endsWith('.md') || f.endsWith('.yaml') || f.endsWith('.yml')
-      );
-      for (const f of contractFiles) {
-        const contractPath = path.join(contractsDir, f);
-        try {
-          additionalFiles.push({
-            type: 'contract',
-            path: contractPath,
-            content: fs.readFileSync(contractPath, 'utf-8'),
-            exists: true,
-          });
-        } catch (error) {
-          console.error(`Failed to read contract file ${contractPath}:`, error);
-          additionalFiles.push({
-            type: 'contract',
-            path: contractPath,
-            content: '',
-            exists: false,
-          });
+    if (await fileExists(contractsDir)) {
+      const stat = await fs.stat(contractsDir);
+      if (stat.isDirectory()) {
+        const contractFiles = (await fs.readdir(contractsDir)).filter(f =>
+          f.endsWith('.md') || f.endsWith('.yaml') || f.endsWith('.yml')
+        );
+        for (const f of contractFiles) {
+          const contractPath = path.join(contractsDir, f);
+          try {
+            additionalFiles.push({
+              type: 'contract',
+              path: contractPath,
+              content: await fs.readFile(contractPath, 'utf-8'),
+              exists: true,
+            });
+          } catch (error) {
+            console.error(`Failed to read contract file ${contractPath}:`, error);
+            additionalFiles.push({
+              type: 'contract',
+              path: contractPath,
+              content: '',
+              exists: false,
+            });
+          }
         }
       }
     }
@@ -450,29 +465,32 @@ export function parseAdditionalFiles(featurePath: string): SpecKitFile[] {
   // Parse checklists directory (similar to contracts)
   const checklistsDir = path.join(featurePath, 'checklists');
   try {
-    if (fs.existsSync(checklistsDir) && fs.statSync(checklistsDir).isDirectory()) {
-      const checklistFiles = fs.readdirSync(checklistsDir).filter(f => f.endsWith('.md'));
-      for (const f of checklistFiles) {
-        const checklistPath = path.join(checklistsDir, f);
-        try {
-          const content = fs.readFileSync(checklistPath, 'utf-8');
-          // Parse per-file checklist progress
-          const checklistProgress = parseChecklistCompletion(content);
-          additionalFiles.push({
-            type: 'checklist',
-            path: checklistPath,
-            content,
-            exists: true,
-            checklistProgress,
-          });
-        } catch (error) {
-          console.error(`Failed to read checklist file ${checklistPath}:`, error);
-          additionalFiles.push({
-            type: 'checklist',
-            path: checklistPath,
-            content: '',
-            exists: false,
-          });
+    if (await fileExists(checklistsDir)) {
+      const stat = await fs.stat(checklistsDir);
+      if (stat.isDirectory()) {
+        const checklistFiles = (await fs.readdir(checklistsDir)).filter(f => f.endsWith('.md'));
+        for (const f of checklistFiles) {
+          const checklistPath = path.join(checklistsDir, f);
+          try {
+            const content = await fs.readFile(checklistPath, 'utf-8');
+            // Parse per-file checklist progress
+            const checklistProgress = parseChecklistCompletion(content);
+            additionalFiles.push({
+              type: 'checklist',
+              path: checklistPath,
+              content,
+              exists: true,
+              checklistProgress,
+            });
+          } catch (error) {
+            console.error(`Failed to read checklist file ${checklistPath}:`, error);
+            additionalFiles.push({
+              type: 'checklist',
+              path: checklistPath,
+              content: '',
+              exists: false,
+            });
+          }
         }
       }
     }
@@ -503,31 +521,34 @@ export function extractTimestampFromFilename(filename: string): string {
  * Reads all *-analysis.md files from analysis/ directory
  * Returns reports sorted by filename (newest first) with backwards compatibility
  */
-export function parseAnalysis(featurePath: string): FeatureAnalysis {
+export async function parseAnalysis(featurePath: string): Promise<FeatureAnalysis> {
   const analysisDir = path.join(featurePath, 'analysis');
   const reports: AnalysisReport[] = [];
 
   try {
-    if (fs.existsSync(analysisDir) && fs.statSync(analysisDir).isDirectory()) {
-      // Read all *-analysis.md files
-      const files = fs.readdirSync(analysisDir)
-        .filter(f => f.endsWith('-analysis.md') || f === 'analysis.md')
-        .sort()
-        .reverse(); // Sort descending (newest first by filename)
+    if (await fileExists(analysisDir)) {
+      const stat = await fs.stat(analysisDir);
+      if (stat.isDirectory()) {
+        // Read all *-analysis.md files
+        const files = (await fs.readdir(analysisDir))
+          .filter(f => f.endsWith('-analysis.md') || f === 'analysis.md')
+          .sort()
+          .reverse(); // Sort descending (newest first by filename)
 
-      for (const filename of files) {
-        const filePath = path.join(analysisDir, filename);
-        try {
-          const content = fs.readFileSync(filePath, 'utf-8');
-          const timestamp = extractTimestampFromFilename(filename);
-          reports.push({
-            filename,
-            timestamp,
-            path: filePath,
-            content,
-          });
-        } catch (error) {
-          console.error(`Failed to read analysis file ${filePath}:`, error);
+        for (const filename of files) {
+          const filePath = path.join(analysisDir, filename);
+          try {
+            const content = await fs.readFile(filePath, 'utf-8');
+            const timestamp = extractTimestampFromFilename(filename);
+            reports.push({
+              filename,
+              timestamp,
+              path: filePath,
+              content,
+            });
+          } catch (error) {
+            console.error(`Failed to read analysis file ${filePath}:`, error);
+          }
         }
       }
     }
@@ -773,9 +794,12 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
     const planPath = path.join(featurePath, 'plan.md');
     const tasksPath = path.join(featurePath, 'tasks.md');
 
-    const hasSpec = fs.existsSync(specPath);
-    const hasPlan = fs.existsSync(planPath);
-    const hasTasks = fs.existsSync(tasksPath);
+    // Use async file existence checks
+    const [hasSpec, hasPlan, hasTasks] = await Promise.all([
+      fileExists(specPath),
+      fileExists(planPath),
+      fileExists(tasksPath),
+    ]);
 
     let tasks: Task[] = [];
     let phases: TaskPhase[] = [];
@@ -786,23 +810,31 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
     let planContent: string | null = null;
     let tasksContent: string | null = null;
 
-    if (hasTasks) {
-      tasksContent = fs.readFileSync(tasksPath, 'utf-8');
+    // Read files in parallel where possible
+    const fileReads = await Promise.all([
+      hasTasks ? fs.readFile(tasksPath, 'utf-8') : Promise.resolve(null),
+      hasSpec ? fs.readFile(specPath, 'utf-8') : Promise.resolve(null),
+      hasPlan ? fs.readFile(planPath, 'utf-8') : Promise.resolve(null),
+    ]);
+
+    tasksContent = fileReads[0];
+    specContent = fileReads[1];
+    planContent = fileReads[2];
+
+    if (tasksContent) {
       const parsed = parseTasksFile(tasksContent);
       tasks = parsed.tasks;
       phases = parsed.phases;
     }
 
     // Parse spec.md for clarifications and user stories
-    if (hasSpec) {
-      specContent = fs.readFileSync(specPath, 'utf-8');
+    if (specContent) {
       clarificationSessions = parseClarifications(specContent);
       userStories = parseUserStories(specContent);
     }
 
     // Parse plan.md for technical context
-    if (hasPlan) {
-      planContent = fs.readFileSync(planPath, 'utf-8');
+    if (planContent) {
       technicalContext = parseTechnicalContext(planContent);
     }
 
@@ -812,11 +844,11 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
     // Group tasks by user story
     const taskGroups = groupTasksByUserStory(tasks, userStories);
 
-    // Parse additional spec-kit files
-    const additionalFiles = parseAdditionalFiles(featurePath);
-
-    // Parse analysis data
-    const analysis = parseAnalysis(featurePath);
+    // Parse additional spec-kit files and analysis in parallel
+    const [additionalFiles, analysis] = await Promise.all([
+      parseAdditionalFiles(featurePath),
+      parseAnalysis(featurePath),
+    ]);
 
     // Calculate checklist completion from all checklist files
     const checklists = additionalFiles.filter(f => f.type === 'checklist');
@@ -886,17 +918,19 @@ export async function parseProject(projectPath: string): Promise<Project | null>
     // Check for constitution file in .specify/memory/constitution.md
     const constitutionPath = path.join(projectPath, '.specify', 'memory', 'constitution.md');
     let constitution: Constitution | null = null;
-    const hasConstitution = fs.existsSync(constitutionPath);
+    const hasConstitution = await fileExists(constitutionPath);
 
     if (hasConstitution) {
-      const constitutionContent = fs.readFileSync(constitutionPath, 'utf-8');
+      const constitutionContent = await fs.readFile(constitutionPath, 'utf-8');
       constitution = parseConstitution(constitutionContent);
     }
 
-    if (!fs.existsSync(specsDir)) {
+    const specsExists = await fileExists(specsDir);
+    if (!specsExists) {
       // Try alternative location
       const altSpecsDir = path.join(projectPath, '.specify', 'specs');
-      if (!fs.existsSync(altSpecsDir)) {
+      const altExists = await fileExists(altSpecsDir);
+      if (!altExists) {
         return {
           path: projectPath,
           name: path.basename(projectPath),
@@ -908,20 +942,21 @@ export async function parseProject(projectPath: string): Promise<Project | null>
       }
     }
 
-    const actualSpecsDir = fs.existsSync(specsDir)
+    const actualSpecsDir = (await fileExists(specsDir))
       ? specsDir
       : path.join(projectPath, '.specify', 'specs');
 
-    const entries = fs.readdirSync(actualSpecsDir, { withFileTypes: true });
+    const entries = await fs.readdir(actualSpecsDir, { withFileTypes: true });
     const featureDirs = entries.filter(e => e.isDirectory());
 
-    const features: Feature[] = [];
-    for (const dir of featureDirs) {
-      const feature = await parseFeature(path.join(actualSpecsDir, dir.name));
-      if (feature) {
-        features.push(feature);
-      }
-    }
+    // Parse all features in parallel for better performance
+    const featurePromises = featureDirs.map(dir =>
+      parseFeature(path.join(actualSpecsDir, dir.name))
+    );
+    const featureResults = await Promise.all(featurePromises);
+
+    // Filter out null results
+    const features: Feature[] = featureResults.filter((f): f is Feature => f !== null);
 
     // Sort features by name (which typically includes a number prefix)
     features.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));

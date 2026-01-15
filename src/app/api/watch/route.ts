@@ -29,6 +29,10 @@ export async function GET(request: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      // Circuit breaker state to prevent cascade of parse operations
+      let isParsingInProgress = false;
+      let pendingChange = false;
+
       // Send initial data
       const project = await parseProject(resolvedPath);
       if (project) {
@@ -51,6 +55,13 @@ export async function GET(request: NextRequest) {
       });
 
       const handleChange = async () => {
+        // Circuit breaker: skip if already parsing
+        if (isParsingInProgress) {
+          pendingChange = true;
+          return;
+        }
+
+        isParsingInProgress = true;
         try {
           const updatedProject = await parseProject(resolvedPath);
           if (updatedProject) {
@@ -59,6 +70,15 @@ export async function GET(request: NextRequest) {
           }
         } catch (error) {
           console.error('Error parsing project on change:', error);
+        } finally {
+          isParsingInProgress = false;
+
+          // If changes occurred during parsing, schedule one more parse
+          if (pendingChange) {
+            pendingChange = false;
+            // Use setTimeout to avoid stack overflow from recursive calls
+            setTimeout(handleChange, 100);
+          }
         }
       };
 
