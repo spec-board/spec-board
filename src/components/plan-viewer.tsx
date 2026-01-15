@@ -324,7 +324,7 @@ export function PlanViewer({ content, filePath, className }: PlanViewerProps) {
   }
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div className={cn('flex flex-col', className)} style={{ lineHeight: 'var(--leading-normal)' }}>
       {/* Toolbar */}
       <div className="flex items-center gap-1 bg-[var(--secondary)] rounded-lg p-1 mb-4" role="tablist" aria-label="View mode">
         <button
@@ -332,11 +332,18 @@ export function PlanViewer({ content, filePath, className }: PlanViewerProps) {
           role="tab"
           aria-selected={!showRawMarkdown}
           className={cn(
-            'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+            'font-medium rounded-md transition-colors',
             !showRawMarkdown
               ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
               : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
+          style={{
+            paddingLeft: 'var(--space-3)',
+            paddingRight: 'var(--space-3)',
+            paddingTop: 'calc(var(--space-3) / 2)',
+            paddingBottom: 'calc(var(--space-3) / 2)',
+            fontSize: 'var(--text-xs)',
+          }}
         >
           Structured
         </button>
@@ -345,11 +352,18 @@ export function PlanViewer({ content, filePath, className }: PlanViewerProps) {
           role="tab"
           aria-selected={showRawMarkdown}
           className={cn(
-            'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+            'font-medium rounded-md transition-colors',
             showRawMarkdown
               ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
               : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
+          style={{
+            paddingLeft: 'var(--space-3)',
+            paddingRight: 'var(--space-3)',
+            paddingTop: 'calc(var(--space-3) / 2)',
+            paddingBottom: 'calc(var(--space-3) / 2)',
+            fontSize: 'var(--text-xs)',
+          }}
         >
           Markdown
         </button>
@@ -357,7 +371,13 @@ export function PlanViewer({ content, filePath, className }: PlanViewerProps) {
 
       {/* Content */}
       {showRawMarkdown ? (
-        <pre className="text-sm font-mono whitespace-pre-wrap bg-[var(--secondary)]/30 p-4 rounded-lg overflow-auto">
+        <pre 
+          className="font-mono whitespace-pre-wrap bg-[var(--secondary)]/30 rounded-lg overflow-auto"
+          style={{
+            fontSize: 'var(--text-sm)',
+            padding: 'var(--space-4)',
+          }}
+        >
           {content}
         </pre>
       ) : (

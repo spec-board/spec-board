@@ -55,12 +55,17 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
       onClick={onClick}
       aria-label={ariaLabel}
       className={cn(
-        'w-full text-left p-4 rounded-lg transition-all duration-200',
+        'w-full text-left rounded-md transition-all',
         'bg-[var(--card)] border border-[var(--border)]',
         'hover:bg-[var(--card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5',
         'focus-ring',
         isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]'
       )}
+      style={{
+        padding: 'var(--space-4)', // 16px padding
+        borderRadius: 'var(--radius)', // 6px
+        transitionDuration: 'var(--transition-base)', // 150ms ease-out
+      }}
     >
       {/* Title row with status dot */}
       <div className="flex items-center justify-between gap-2 mb-2">
@@ -143,15 +148,36 @@ function KanbanColumnComponent({
       aria-label={`${columnLabel} column`}
     >
       {/* Column header */}
-      <div className="flex items-center justify-between px-3 py-4 border-b-2 border-[var(--border)]
-        bg-gradient-to-b from-[var(--card)] to-transparent">
-        <h3 className="font-semibold text-sm uppercase tracking-wide text-[var(--foreground)]" id={`column-${column}-heading`}>
+      <div 
+        className="flex items-center justify-between border-b-2 border-[var(--border)]
+          bg-gradient-to-b from-[var(--card)] to-transparent"
+        style={{
+          paddingLeft: 'var(--space-3)', // 12px
+          paddingRight: 'var(--space-3)', // 12px
+          paddingTop: 'var(--space-4)', // 16px
+          paddingBottom: 'var(--space-4)', // 16px
+        }}
+      >
+        <h3 
+          className="font-semibold uppercase tracking-wide text-[var(--foreground)]" 
+          id={`column-${column}-heading`}
+          style={{
+            fontSize: 'var(--text-sm)', // 14px
+          }}
+        >
           {columnLabel}
         </h3>
         <span
-          className="text-xs font-medium text-[var(--muted-foreground)] tabular-nums
-            bg-[var(--secondary)] px-2 py-0.5 rounded-full"
+          className="font-medium text-[var(--muted-foreground)] tabular-nums
+            bg-[var(--secondary)] rounded-full"
           aria-label={`${features.length} features`}
+          style={{
+            fontSize: 'var(--text-xs)', // 12px
+            paddingLeft: 'var(--space-2)', // 8px
+            paddingRight: 'var(--space-2)', // 8px
+            paddingTop: 'calc(var(--space-1) / 2)', // 2px
+            paddingBottom: 'calc(var(--space-1) / 2)', // 2px
+          }}
         >
           {features.length}
         </span>
@@ -159,10 +185,16 @@ function KanbanColumnComponent({
 
       {/* Column content */}
       <div
-        className="flex-1 pt-3 space-y-2 min-h-[200px]"
+        className="flex-1 min-h-[200px]"
         role="list"
         aria-labelledby={`column-${column}-heading`}
         aria-label={`${columnLabel} features, ${features.length} items`}
+        style={{
+          paddingTop: 'var(--space-3)', // 12px
+          gap: 'var(--space-3)', // 12px between cards
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
         {features.length === 0 ? (
           <EmptyColumn column={column} />
@@ -390,9 +422,12 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
     <section
       ref={boardRef}
       aria-label="Feature board"
-      className="flex gap-6 overflow-x-auto pb-4"
+      className="flex overflow-x-auto pb-4"
       tabIndex={0}
       onKeyDown={handleKeyDown}
+      style={{
+        gap: 'var(--space-6)', // 24px gap between columns
+      }}
     >
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">

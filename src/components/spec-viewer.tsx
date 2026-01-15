@@ -769,7 +769,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
   }
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div className={cn('flex flex-col', className)} style={{ lineHeight: 'var(--leading-normal)' }}>
       {/* Toolbar */}
       {hasStructuredContent && (
         <div className="flex items-center gap-1 bg-[var(--secondary)] rounded-lg p-1 mb-4" role="tablist" aria-label="View mode">
@@ -779,11 +779,18 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
             aria-selected={!showRawMarkdown}
             aria-controls="spec-content"
             className={cn(
-              'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+              'font-medium rounded-md transition-colors',
               !showRawMarkdown
                 ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
                 : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
             )}
+            style={{
+              paddingLeft: 'var(--space-3)',
+              paddingRight: 'var(--space-3)',
+              paddingTop: 'calc(var(--space-3) / 2)',
+              paddingBottom: 'calc(var(--space-3) / 2)',
+              fontSize: 'var(--text-xs)',
+            }}
           >
             Structured
           </button>
@@ -793,11 +800,18 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
             aria-selected={showRawMarkdown}
             aria-controls="spec-content"
             className={cn(
-              'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+              'font-medium rounded-md transition-colors',
               showRawMarkdown
                 ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
                 : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
             )}
+            style={{
+              paddingLeft: 'var(--space-3)',
+              paddingRight: 'var(--space-3)',
+              paddingTop: 'calc(var(--space-3) / 2)',
+              paddingBottom: 'calc(var(--space-3) / 2)',
+              fontSize: 'var(--text-xs)',
+            }}
           >
             Markdown
           </button>
@@ -806,46 +820,32 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
 
       {/* Content */}
       {showRawMarkdown || !hasStructuredContent ? (
-        <pre className="text-sm font-mono whitespace-pre-wrap bg-[var(--secondary)]/30 p-4 rounded-lg overflow-auto">
+        <pre 
+          className="font-mono whitespace-pre-wrap bg-[var(--secondary)]/30 rounded-lg overflow-auto"
+          style={{
+            fontSize: 'var(--text-sm)',
+            padding: 'var(--space-4)',
+          }}
+        >
           {content}
         </pre>
       ) : (
-        <div className="space-y-6">
+        <div style={{ gap: 'var(--space-6)', display: 'flex', flexDirection: 'column' }}>
           {/* Metadata Header */}
           {parsedSpec && parsedSpec.metadata.title && (
-            <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--border)] rounded-xl p-6">
-              <h1 className="text-2xl font-bold mb-4">{parsedSpec.metadata.title}</h1>
-
-              <div className="flex flex-wrap gap-4 text-sm">
-                {parsedSpec.metadata.branch && (
-                  <div className="flex items-center gap-2">
-                    <GitBranch className="w-4 h-4 text-[var(--muted-foreground)]" />
-                    <code className="bg-[var(--secondary)] px-2 py-0.5 rounded text-xs">
-                      {parsedSpec.metadata.branch}
-                    </code>
-                  </div>
-                )}
-                {parsedSpec.metadata.created && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[var(--muted-foreground)]" />
-                    <span className="text-[var(--muted-foreground)]">{parsedSpec.metadata.created}</span>
-                  </div>
-                )}
-                {parsedSpec.metadata.status && (
-                  <StatusBadge status={parsedSpec.metadata.status} />
-                )}
-              </div>
-
-              {parsedSpec.metadata.input && (
-                <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                  <div className="flex items-start gap-2">
-                    <MessageSquare className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-[var(--muted-foreground)]">
-                      {parsedSpec.metadata.input.replace(/^User description:\s*"?|"$/g, '')}
-                    </p>
-                  </div>
-                </div>
-              )}
+            <div 
+              className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--border)] rounded-xl"
+              style={{ padding: 'var(--space-6)' }}
+            >
+              <h1 
+                className="font-bold mb-4"
+                style={{ 
+                  fontSize: 'var(--text-2xl)',
+                  lineHeight: 'var(--leading-tight)',
+                }}
+              >
+                {parsedSpec.metadata.title}
+              </h1>
             </div>
           )}
 

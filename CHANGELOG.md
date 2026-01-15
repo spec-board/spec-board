@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **UI/UX Rebrand (Feature 012)** - Complete visual redesign for "simple but professional" appearance:
+  - Design token system with CSS custom properties for theme-awareness
+  - 8pt spacing grid (--space-1 through --space-12) for consistent layout
+  - rem-based typography scale (--text-xs through --text-3xl) for accessibility
+  - Single accent color (cyan) with WCAG 2.2 AA contrast compliance
+  - 4-column Kanban system (Backlog → Planning → In Progress → Done)
+  - Standardized component styling (buttons, inputs, cards, modals)
+  - Dark mode parity with all CSS variables having light/dark variants
+  - Reduced motion support respecting user preferences
+  - Responsive design tested at 320px, 768px, 1280px, 2560px breakpoints
+  - 150ms ease-out transitions for all interactive elements
+  - All 253 unit tests passing with updated Kanban logic
 - **Detail Page Redesign (Feature 013)** - Visual consistency and progressive disclosure:
   - Phase header aggregate status dots showing completion at a glance
   - 8px Jira-style status indicators (blue/yellow/green) matching Kanban board
