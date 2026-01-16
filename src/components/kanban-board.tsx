@@ -30,6 +30,25 @@ interface FeatureCardProps {
   isFocused?: boolean;
 }
 
+// Extract spec number from feature id (e.g., "012" from "012-ui-ux-rebrand")
+function getSpecNumber(featureId: string): string | null {
+  const match = featureId.match(/^(\d+)/);
+  return match ? match[1] : null;
+}
+
+// Count checklist files from additionalFiles
+function getChecklistCount(feature: Feature): number {
+  return feature.additionalFiles?.filter(f => f.type === 'checklist' && f.exists).length ?? 0;
+}
+
+// Format feature name to Title Case (e.g., "ui ux rebrand" → "Ui Ux Rebrand")
+function toTitleCase(str: string): string {
+  return str
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function FeatureCard(
   { feature, onClick, isFocused },
   ref
@@ -42,10 +61,15 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
   const statusDotStyle = getStatusDotStyle(progressPercentage, feature.totalTasks > 0);
   const statusLabel = getStatusLabel(progressPercentage, feature.totalTasks > 0);
 
+  // Extract spec number and checklist count
+  const specNumber = getSpecNumber(feature.id);
+  const checklistCount = getChecklistCount(feature);
+
   // Build accessible label
   const ariaLabel = [
-    feature.name,
+    specNumber ? `${specNumber} ${feature.name}` : feature.name,
     feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null,
+    checklistCount > 0 ? `${checklistCount} checklists` : null,
   ].filter(Boolean).join(', ');
 
   return (
@@ -68,8 +92,12 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
     >
       {/* Title row with status dot */}
       <div className="flex items-center justify-between gap-2 mb-2">
-        <h4 className="font-medium text-sm text-[var(--foreground)] capitalize truncate flex-1">
-          {feature.name}
+        <h4 className="font-medium text-sm text-[var(--foreground)] truncate flex-1">
+          {/* Spec number prefix */}
+          {specNumber && (
+            <span className="text-[var(--muted-foreground)] font-mono">{specNumber} </span>
+          )}
+          <span>{toTitleCase(feature.name)}</span>
         </h4>
         {/* Status indicator - dot or checkmark */}
         {isComplete ? (
@@ -87,12 +115,20 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
         )}
       </div>
 
-      {/* Compact task count - Jira style */}
+      {/* Compact task count and checklist - Jira style */}
       <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
-        <span className="tabular-nums">
-          {feature.completedTasks}/{feature.totalTasks} tasks
-        </span>
-        
+        <div className="flex items-center gap-3">
+          <span className="tabular-nums">
+            {feature.completedTasks}/{feature.totalTasks} tasks
+          </span>
+          {/* Checklist count */}
+          {checklistCount > 0 && (
+            <span className="tabular-nums text-[var(--color-active)]">
+              {checklistCount} {checklistCount === 1 ? 'checklist' : 'checklists'}
+            </span>
+          )}
+        </div>
+
         {/* Branch icon (shown if exists) */}
         {feature.branch && (
           <div className="flex items-center gap-1 opacity-60">
