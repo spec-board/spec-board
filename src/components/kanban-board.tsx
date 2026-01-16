@@ -6,7 +6,6 @@ import type { Feature, KanbanColumnType } from '@/types';
 import { GitBranch, CheckCircle2 } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
-import { FeatureCardPopover } from './feature-card-popover';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'planning', 'in_progress', 'done'];
 
@@ -203,17 +202,15 @@ function KanbanColumnComponent({
             const isFocused = feature.id === focusedFeatureId;
             return (
               <div key={feature.id} role="listitem" className="w-full">
-                <FeatureCardPopover feature={feature}>
-                  <FeatureCard
-                    ref={(el) => setCardRef(feature.id, el)}
-                    feature={feature}
-                    onClick={() => {
-                      announce(`Opening ${feature.name} details`);
-                      onFeatureClick(feature);
-                    }}
-                    isFocused={isFocused}
-                  />
-                </FeatureCardPopover>
+                <FeatureCard
+                  ref={(el) => setCardRef(feature.id, el)}
+                  feature={feature}
+                  onClick={() => {
+                    announce(`Opening ${feature.name} details`);
+                    onFeatureClick(feature);
+                  }}
+                  isFocused={isFocused}
+                />
               </div>
             );
           })

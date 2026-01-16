@@ -85,6 +85,27 @@ As a developer working through feature sections, I want a clean, uncluttered nav
 - **SectionPopover**: Hover-triggered component displaying detailed section metrics (completion %, task counts, last modified)
 - **PhaseHeader**: Navigation group header showing phase name and aggregate status of contained sections
 
+## Screenshots
+
+### Kanban Board - Status Indicators
+![Kanban Board Status Indicators](./screenshots/kanban-board-status-indicators.png)
+
+The Kanban board shows feature cards with status indicators:
+- **Not started** (blue): Features with 0% completion
+- **In progress/Nearly done** (yellow): Features with 1-79% completion
+- **Complete** (green checkmark): Features with 80-100% completion
+
+### Feature Detail Page - Navigation Sidebar
+![Feature Detail Navigation Sidebar](./screenshots/feature-detail-nav-sidebar.png)
+
+The feature detail page navigation sidebar now uses:
+- **8px status dots** matching Kanban board colors
+- **Phase headers** with aggregate status dots (OVERVIEW, PLANNING, QC, WBS, QA, CODING)
+- **ARIA labels** for accessibility (e.g., "Status: complete", "Status: in progress")
+- **Simplified layout** with task counts shown inline (e.g., "16/16", "41/42")
+
+---
+
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
