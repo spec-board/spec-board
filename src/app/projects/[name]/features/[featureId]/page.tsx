@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { FeatureDetail } from '@/components/feature-detail';
+import { FeatureDetailV2 } from '@/components/feature-detail-v2';
 import { ArrowLeft } from 'lucide-react';
 import type { Project, Feature, Constitution } from '@/types';
 import type { SectionId } from '@/components/feature-detail/types';
@@ -14,6 +15,8 @@ export default function FeaturePage() {
   const projectSlug = params.name as string;
   const featureId = params.featureId as string;
   const initialSection = searchParams.get('section') as SectionId | null;
+  // V2 is now the default - use ?legacy=true to access V1
+  const useLegacy = searchParams.get('legacy') === 'true';
 
   const [feature, setFeature] = useState<Feature | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -133,13 +136,23 @@ export default function FeaturePage() {
   }
 
   // Render the feature detail as a full page
+  // V2 is now the default - use ?legacy=true to access the old design
+  if (useLegacy) {
+    return (
+      <FeatureDetail
+        feature={feature}
+        onClose={handleClose}
+        hasConstitution={hasConstitution}
+        constitution={constitution}
+        initialSection={initialSection || undefined}
+      />
+    );
+  }
+
   return (
-    <FeatureDetail
+    <FeatureDetailV2
       feature={feature}
       onClose={handleClose}
-      hasConstitution={hasConstitution}
-      constitution={constitution}
-      initialSection={initialSection || undefined}
     />
   );
 }
