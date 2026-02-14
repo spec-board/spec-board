@@ -204,6 +204,7 @@ export default function ProjectPage() {
             <KanbanBoard
               features={project.features}
               onFeatureClick={handleFeatureClick}
+              projectPath={project.path}
             />
           </div>
         </div>
