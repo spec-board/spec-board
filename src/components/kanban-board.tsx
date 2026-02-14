@@ -1,11 +1,12 @@
 'use client';
 
-import { forwardRef, useEffect, useCallback, useRef } from 'react';
+import { forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature, KanbanColumnType } from '@/types';
-import { GitBranch, CheckCircle2 } from 'lucide-react';
+import { GitBranch, CheckCircle2, Sparkles } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
+import { CreateFeatureModal } from './create-feature-modal';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'planning', 'in_progress', 'done'];
 
@@ -259,9 +260,11 @@ function KanbanColumnComponent({
 interface KanbanBoardProps {
   features: Feature[];
   onFeatureClick: (feature: Feature) => void;
+  projectPath?: string;
 }
 
-export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
+export function KanbanBoard({ features, onFeatureClick, projectPath }: KanbanBoardProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { focusState, setFocusState, clearFocusState } = useProjectStore();
   const cardRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map());
   const boardRef = useRef<HTMLElement>(null);
@@ -452,6 +455,7 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
   }, []);
 
   return (
+    <>
     <section
       ref={boardRef}
       aria-label="Feature board"
@@ -483,6 +487,29 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
           setCardRef={setCardRef}
         />
       ))}
+
+      {/* Create Feature FAB - positioned inside section for proper z-index */}
+      <div className="sticky bottom-0 ml-auto pt-4">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
+          aria-label="Create new feature from PRD"
+        >
+          <Sparkles className="w-5 h-5" />
+        </button>
+      </div>
     </section>
+
+    {projectPath && (
+      <CreateFeatureModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        projectPath={projectPath}
+        onFeatureCreated={(featureId) => {
+          console.log('Feature created:', featureId);
+        }}
+      />
+    )}
+    </>
   );
 }
