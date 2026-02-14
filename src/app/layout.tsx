@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ShortcutsProvider } from "@/components/shortcuts-provider";
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen font-sans">
         <ThemeProvider>
           <ShortcutsProvider>{children}</ShortcutsProvider>
+          <Toaster position="bottom-right" richColors />
         </ThemeProvider>
       </body>
     </html>
