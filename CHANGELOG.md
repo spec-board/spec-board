@@ -8,6 +8,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **AI Feature Creation** - Generate spec-kit documents automatically:
+  - User enters feature name and description
+  - AI generates spec.md, plan.md, and tasks.md using speckit
+  - New `/api/features/ai-create` endpoint
+- **Configurable AI Provider Settings** - Choose your preferred LLM:
+  - Settings page with provider selection (OpenAI/Anthropic)
+  - Custom base URL support for OpenAI-compatible APIs (Ollama, LM Studio, LiteLLM)
+  - Separate base URLs for OpenAI and Anthropic
+  - Model configuration per provider
+  - API keys stored server-side for security
+- **REST API Endpoints** - Complete CRUD for features:
+  - `/api/features` - List, create features
+  - `/api/features/[id]` - Get, update, delete feature
+  - `/api/features/[id]/status` - Update feature status
+  - `/api/features/ai-create` - AI-powered feature creation
+  - `/api/export`, `/api/import` - Export/import project data
+  - `/api/kanban`, `/api/stories`, `/api/tasks` - Kanban operations
+
+### Changed
+- **Kanban Board** - Inline "Add Feature" button in Backlog column
+- **Feature Status** - New features now appear in Backlog (not In Progress)
+- **Dark Mode** - Fixed white background in feature detail components
+- **Settings Page** - Simplified AI settings to single form
+
+### Fixed
+- Feature not found error when clicking on kanban cards
+- Dark mode showing white background in feature detail components
+- API key status not showing after save
+- UI shows "***" in API key field when configured
+
+## [1.2.0] - 2026-02-15
+
+### Added
+- **Toast Notifications** - User feedback for actions:
+  - Success, error, and info toast types
+  - Auto-dismiss after 3 seconds
+  - Positioned in bottom-right corner
+
+### Changed
+- **Database Schema** - Added Feature and Task models for better data management
 - **UI/UX Rebrand (Feature 012)** - Complete visual redesign for "simple but professional" appearance:
   - Design token system with CSS custom properties for theme-awareness
   - 8pt spacing grid (--space-1 through --space-12) for consistent layout
