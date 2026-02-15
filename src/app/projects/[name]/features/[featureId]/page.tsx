@@ -29,28 +29,43 @@ export default function FeaturePage() {
     setIsLoading(true);
     setError(null);
     try {
-      // Always lookup by slug from database
-      const projectRes = await fetch('/api/projects/' + projectSlug, { cache: 'no-store' });
-      if (!projectRes.ok) {
-        if (projectRes.status === 404) {
+      // Use unified endpoint to maintain consistency with project page
+      // This ensures feature IDs match (database or filesystem)
+      const response = await fetch('/api/project/' + projectSlug + '/data', { cache: 'no-store' });
+      if (!response.ok) {
+        if (response.status === 404) {
           throw new Error('Project "' + projectSlug + '" not found. Please open it from the home page first.');
         }
         throw new Error('Failed to load project');
       }
-      const projectData = await projectRes.json();
-      const filePath = projectData.filePath;
+      const data = await response.json();
 
-      setProjectPath(filePath);
+      // For database-first projects, we need to load full feature content from filesystem
+      const projectPath = data.path;
 
-      // Load the actual project data from filesystem
-      const response = await fetch('/api/project?path=' + encodeURIComponent(filePath), { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error('Failed to load project files');
+      // If we have a filesystem path, load full content
+      if (projectPath && data.source === 'database') {
+        const fullResponse = await fetch('/api/project?path=' + encodeURIComponent(projectPath), { cache: 'no-store' });
+        if (fullResponse.ok) {
+          const fullData: Project = await fullResponse.json();
+          // Merge full content into database features
+          const featuresWithContent = data.features.map((f: Feature) => {
+            const matching = fullData.features.find(ff => ff.id === f.id || ff.id === f.name);
+            if (matching) {
+              return { ...f, ...matching };
+            }
+            return f;
+          });
+          data.features = featuresWithContent;
+          data.hasConstitution = fullData.hasConstitution;
+          data.constitution = fullData.constitution;
+        }
       }
-      const data: Project = await response.json();
+
+      setProjectPath(projectPath || '');
 
       // Find the specific feature
-      const foundFeature = data.features.find(f => f.id === featureId);
+      const foundFeature = data.features.find((f: Feature) => f.id === featureId || f.name === featureId);
       if (!foundFeature) {
         throw new Error('Feature "' + featureId + '" not found');
       }

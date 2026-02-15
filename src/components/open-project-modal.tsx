@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, KeyboardEvent } from 'react';
-import { X, Search, FolderOpen, Folder, Loader2, Check } from 'lucide-react';
+import { X, Search, FolderOpen, Folder, Loader2, Check, Clock, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Project, FeatureStage } from '@/types';
 
@@ -25,9 +25,33 @@ interface OpenProjectModalProps {
   onOpen: (project: Project) => void;
 }
 
+// Recent paths stored in localStorage
+const RECENT_PATHS_KEY = 'specboard-recent-paths';
+
+function getRecentPaths(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(RECENT_PATHS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function addRecentPath(path: string) {
+  try {
+    const paths = getRecentPaths().filter(p => p !== path);
+    const updated = [path, ...paths].slice(0, 5);
+    localStorage.setItem(RECENT_PATHS_KEY, JSON.stringify(updated));
+  } catch {
+    // Ignore errors
+  }
+}
+
 export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalProps) {
   const [pathInput, setPathInput] = useState('~/');
   const [suggestions, setSuggestions] = useState<DirectoryEntry[]>([]);
+  const [recentPaths, setRecentPaths] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -38,14 +62,16 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load home directory contents when modal opens
-  const loadHomeDirectory = useCallback(async () => {
+  // Load recent paths and home directory when modal opens
+  const loadInitialData = useCallback(async () => {
     setIsLoadingSuggestions(true);
+    setRecentPaths(getRecentPaths());
+
     try {
       const response = await fetch('/api/browse?path=' + encodeURIComponent('~'));
       if (response.ok) {
         const data = await response.json();
-        setSuggestions(data.entries.slice(0, 8));
+        setSuggestions(data.entries.slice(0, 6));
         setShowSuggestions(true);
       }
     } catch {
@@ -59,7 +85,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
   useEffect(() => {
     if (isOpen) {
       setPathInput('~/');
-      loadHomeDirectory();
+      loadInitialData();
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
       setPathInput('~/');
@@ -68,7 +94,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
       setPreview(null);
       setError(null);
     }
-  }, [isOpen, loadHomeDirectory]);
+  }, [isOpen, loadInitialData]);
 
   // Fetch suggestions
   const fetchSuggestions = useCallback(async (input: string) => {
@@ -97,7 +123,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
       const data = await response.json();
       const filtered = data.entries
         .filter((entry: DirectoryEntry) => entry.name.toLowerCase().startsWith(partialName))
-        .slice(0, 8);
+        .slice(0, 6);
 
       setSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
@@ -148,6 +174,10 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
         completionPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
         stageBreakdown,
       });
+
+      // Add to recent paths
+      addRecentPath(path);
+      setRecentPaths(getRecentPaths());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load project');
     } finally {
@@ -168,6 +198,12 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
       setPreview(null);
       setError(null);
     }
+  };
+
+  // Handle recent path click
+  const handleRecentPathClick = (path: string) => {
+    setPathInput(path);
+    loadPreview(path);
   };
 
   // Handle input change
@@ -237,27 +273,39 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg mx-4 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl">
+      <div className="relative w-full max-w-lg mx-4 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div 
+        <div
           className="flex items-center justify-between border-b border-[var(--border)]"
           style={{
             padding: 'var(--space-4)',
           }}
         >
-          <h2 
-            className="font-semibold"
-            style={{ fontSize: 'var(--text-lg)' }}
-          >
-            Open Project
-          </h2>
+          <div className="flex items-center gap-3">
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 'var(--radius)',
+                background: 'var(--secondary)',
+              }}
+            >
+              <FolderOpen className="w-5 h-5" style={{ color: 'var(--tag-text-success)' }} />
+            </div>
+            <h2
+              className="font-semibold"
+              style={{ fontSize: 'var(--text-lg)' }}
+            >
+              Open Project
+            </h2>
+          </div>
           <button
             onClick={onClose}
             className="hover:bg-[var(--secondary)] rounded-lg transition-colors"
             style={{
               padding: 'var(--space-2)',
               borderRadius: 'var(--radius)',
-              transitionDuration: 'var(--transition-base)',
             }}
           >
             <X className="w-5 h-5" />
@@ -268,7 +316,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
         <div style={{ padding: 'var(--space-4)' }}>
           {/* Search input */}
           <div className="relative">
-            <div 
+            <div
               className="flex items-center bg-[var(--secondary)] border border-[var(--border)] focus-within:border-[var(--ring)]"
               style={{
                 gap: 'var(--space-2)',
@@ -298,6 +346,25 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
                 <Loader2 className="w-4 h-4 animate-spin text-[var(--muted-foreground)]" />
               )}
             </div>
+
+            {/* Recent Paths - Show when no input */}
+            {pathInput === '~/' && recentPaths.length > 0 && !showSuggestions && (
+              <div className="mt-3 space-y-1">
+                <p className="text-xs font-medium text-[var(--muted-foreground)] px-1">
+                  Recent
+                </p>
+                {recentPaths.map((path) => (
+                  <button
+                    key={path}
+                    onClick={() => handleRecentPathClick(path)}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-left hover:bg-[var(--secondary)] transition-colors"
+                  >
+                    <Clock className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
+                    <span className="truncate text-[var(--foreground)]">{path}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Suggestions dropdown */}
             {showSuggestions && suggestions.length > 0 && (
@@ -375,7 +442,6 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
                   backgroundColor: 'var(--accent)',
                   color: 'var(--accent-foreground)',
                   borderRadius: 'var(--radius)',
-                  transitionDuration: 'var(--transition-base)',
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--accent-hover)'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--accent)'}

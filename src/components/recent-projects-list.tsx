@@ -1,23 +1,23 @@
 'use client';
 
-import { FolderOpen, Clock, Trash2, Rocket, FileText, ListTodo, Hammer, CheckCircle } from 'lucide-react';
+import { FolderOpen, Clock, Trash2, Rocket, FileText, ListTodo, Hammer, CheckCircle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RecentProject } from '@/lib/store';
 import type { FeatureStage } from '@/types';
 
 // Get icon and label for active feature stage
-function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; cssVar: string } {
+function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; cssVar: string; bgVar: string } {
   switch (stage) {
     case 'implement':
-      return { icon: <Hammer className="w-3.5 h-3.5" />, label: 'Implementing', cssVar: 'var(--tag-text-info)' };
+      return { icon: <Hammer className="w-3 h-3" />, label: 'Implementing', cssVar: 'var(--tag-text-info)', bgVar: 'var(--tag-bg-info)' };
     case 'tasks':
-      return { icon: <ListTodo className="w-3.5 h-3.5" />, label: 'Tasks ready', cssVar: 'var(--tag-text-purple)' };
+      return { icon: <ListTodo className="w-3 h-3" />, label: 'Tasks ready', cssVar: 'var(--tag-text-purple)', bgVar: 'var(--tag-bg-purple)' };
     case 'plan':
-      return { icon: <FileText className="w-3.5 h-3.5" />, label: 'Planning', cssVar: 'var(--tag-text-warning)' };
+      return { icon: <FileText className="w-3 h-3" />, label: 'Planning', cssVar: 'var(--tag-text-warning)', bgVar: 'var(--tag-bg-warning)' };
     case 'specify':
-      return { icon: <Rocket className="w-3.5 h-3.5" />, label: 'Specifying', cssVar: 'var(--tag-text-orange)' };
+      return { icon: <Rocket className="w-3 h-3" />, label: 'Specifying', cssVar: 'var(--tag-text-orange)', bgVar: 'var(--tag-bg-orange)' };
     case 'complete':
-      return { icon: <CheckCircle className="w-3.5 h-3.5" />, label: 'Complete', cssVar: 'var(--tag-text-success)' };
+      return { icon: <CheckCircle className="w-3 h-3" />, label: 'Complete', cssVar: 'var(--tag-text-success)', bgVar: 'var(--tag-bg-success)' };
   }
 }
 
@@ -45,14 +45,14 @@ function formatRelativeTime(isoDate: string): string {
 function getStageLabel(stageBreakdown: RecentProject['stageBreakdown']): string {
   const total = Object.values(stageBreakdown).reduce((a, b) => a + b, 0);
   if (total === 0) return 'No features';
-  
+
   const parts: string[] = [];
   if (stageBreakdown.complete > 0) parts.push(`${stageBreakdown.complete} complete`);
   if (stageBreakdown.implement > 0) parts.push(`${stageBreakdown.implement} implementing`);
   if (stageBreakdown.tasks > 0) parts.push(`${stageBreakdown.tasks} in tasks`);
   if (stageBreakdown.plan > 0) parts.push(`${stageBreakdown.plan} planning`);
   if (stageBreakdown.specify > 0) parts.push(`${stageBreakdown.specify} specifying`);
-  
+
   return parts.slice(0, 2).join(', ') || 'No features';
 }
 
@@ -60,106 +60,166 @@ export function RecentProjectsList({ projects, onSelect, onRemove }: RecentProje
   if (projects.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <FolderOpen className="w-12 h-12 text-[var(--muted-foreground)] mb-4 opacity-50" />
-        <p className="text-[var(--muted-foreground)] mb-2">No recent projects</p>
+        <div
+          className="flex items-center justify-center mb-4"
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 'var(--radius-lg)',
+            background: 'var(--secondary)',
+          }}
+        >
+          <FolderOpen className="w-8 h-8 text-[var(--muted-foreground)] opacity-50" />
+        </div>
+        <p className="text-[var(--muted-foreground)] mb-1 font-medium">No recent projects</p>
         <p className="text-sm text-[var(--muted-foreground)] opacity-70">
-          Open a project to see it here
+          Create or open a project to get started
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {projects.map((project) => (
-        <div
-          key={project.path}
-          onClick={() => onSelect(project)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && onSelect(project)}
-          className={cn(
-            'w-full text-left p-4 rounded-lg border border-[var(--border)]',
-            'bg-[var(--card)] hover:bg-[var(--secondary)] transition-colors',
-            'group relative cursor-pointer'
-          )}
-        >
-          <div className="flex items-start gap-3">
-            <FolderOpen className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
-            <div className="flex-1 min-w-0">
-              {/* Project name */}
-              <div className="font-medium truncate">{project.name}</div>
-              
-              {/* Path */}
-              <div className="text-xs text-[var(--muted-foreground)] truncate mt-0.5">
-                {project.path}
+    <div className="space-y-3">
+      {projects.map((project) => {
+        const stageInfo = project.activeFeature ? getStageDisplay(project.activeFeature.stage) : null;
+
+        return (
+          <div
+            key={project.path}
+            onClick={() => onSelect(project)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && onSelect(project)}
+            className={cn(
+              'group relative p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]',
+              'hover:border-[var(--ring)] hover:shadow-lg hover:shadow-[var(--ring)]/5 transition-all duration-200',
+              'cursor-pointer'
+            )}
+          >
+            <div className="flex items-start gap-4">
+              {/* Icon */}
+              <div
+                className="flex-shrink-0 flex items-center justify-center"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 'var(--radius-lg)',
+                  background: 'var(--secondary)',
+                }}
+              >
+                <FolderOpen className="w-5 h-5" style={{ color: 'var(--tag-text-success)' }} />
               </div>
-              
-              {/* Dynamic Status - shows current focus */}
-              {project.activeFeature && (() => {
-                const stageInfo = getStageDisplay(project.activeFeature.stage);
-                return (
-                  <div className="flex items-center gap-1.5 mt-2 text-sm" style={{ color: stageInfo.cssVar }}>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                {/* Header */}
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold truncate">{project.name}</h3>
+                  <ChevronRight
+                    className="w-4 h-4 text-[var(--muted-foreground)] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  />
+                </div>
+
+                {/* Path */}
+                <p className="text-xs text-[var(--muted-foreground)] truncate mt-0.5">
+                  {project.path}
+                </p>
+
+                {/* Stage Badge */}
+                {stageInfo && (
+                  <div
+                    className="inline-flex items-center gap-1.5 mt-2 px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: stageInfo.bgVar,
+                      color: stageInfo.cssVar,
+                    }}
+                  >
                     {stageInfo.icon}
                     <span>
                       {stageInfo.label}
-                      {project.activeFeature.stage !== 'complete' && ': '}
-                      {project.activeFeature.stage !== 'complete' && (
+                      {project.activeFeature && project.activeFeature.stage !== 'complete' && ': '}
+                      {project.activeFeature && project.activeFeature.stage !== 'complete' && (
                         <span className="text-[var(--foreground)]">{project.activeFeature.featureName}</span>
                       )}
                     </span>
                   </div>
-                );
-              })()}
+                )}
 
-              {/* Fallback to summary if no active feature (and summary is clean) */}
-              {!project.activeFeature && project.summary && !project.summary.startsWith('<!--') && (
-                <div className="text-sm text-[var(--muted-foreground)] mt-2 line-clamp-2">
-                  {project.summary}
+                {/* Fallback to summary */}
+                {!stageInfo && project.summary && !project.summary.startsWith('<!--') && (
+                  <p className="text-sm text-[var(--muted-foreground)] mt-2 line-clamp-2">
+                    {project.summary}
+                  </p>
+                )}
+
+                {/* Stats */}
+                <div className="flex items-center gap-4 mt-3">
+                  {/* Last opened */}
+                  <span className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
+                    <Clock className="w-3 h-3" />
+                    {formatRelativeTime(project.lastOpened)}
+                  </span>
+
+                  {/* Features */}
+                  {project.featureCount > 0 && (
+                    <>
+                      <span className="text-xs text-[var(--muted-foreground)]">
+                        {project.featureCount} feature{project.featureCount !== 1 ? 's' : ''}
+                      </span>
+
+                      {/* Progress bar */}
+                      <div className="flex-1 max-w-24">
+                        <div
+                          className="h-1.5 rounded-full overflow-hidden"
+                          style={{ backgroundColor: 'var(--secondary)' }}
+                        >
+                          <div
+                            className="h-full rounded-full transition-all duration-300"
+                            style={{
+                              width: `${project.completionPercentage}%`,
+                              backgroundColor: project.completionPercentage === 100
+                                ? 'var(--tag-text-success)'
+                                : 'var(--tag-text-info)',
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <span className="text-xs font-medium" style={{ color: 'var(--tag-text-info)' }}>
+                        {project.completionPercentage}%
+                      </span>
+                    </>
+                  )}
                 </div>
-              )}
-              
-              {/* Stats row */}
-              <div className="flex items-center gap-4 mt-2 text-xs text-[var(--muted-foreground)]">
-                {/* Last opened */}
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {formatRelativeTime(project.lastOpened)}
-                </span>
-                
-                {/* Feature count & completion */}
-                <span>
-                  {project.featureCount} feature{project.featureCount !== 1 ? 's' : ''}
-                  {project.featureCount > 0 && ` • ${project.completionPercentage}%`}
-                </span>
+
+                {/* Stage breakdown */}
+                {project.featureCount > 0 && (
+                  <div className="text-xs text-[var(--muted-foreground)] mt-1.5">
+                    {getStageLabel(project.stageBreakdown)}
+                  </div>
+                )}
               </div>
-              
-              {/* Stage breakdown */}
-              {project.featureCount > 0 && (
-                <div className="text-xs text-[var(--muted-foreground)] mt-1 opacity-70">
-                  {getStageLabel(project.stageBreakdown)}
-                </div>
-              )}
             </div>
+
+            {/* Remove button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(project.path);
+              }}
+              className={cn(
+                'absolute top-3 right-3 p-1.5 rounded-lg',
+                'opacity-0 group-hover:opacity-100 transition-all duration-200',
+                'hover:bg-red-500/20 text-[var(--muted-foreground)] hover:text-[var(--tag-text-error)]'
+              )}
+              title="Remove from recent"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
-          
-          {/* Remove button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove(project.path);
-            }}
-            className={cn(
-              'absolute top-3 right-3 p-1.5 rounded',
-              'opacity-0 group-hover:opacity-100 transition-opacity',
-              'hover:bg-red-500/20 text-[var(--muted-foreground)] hover:text-[var(--tag-text-error)]'
-            )}
-            title="Remove from recent"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

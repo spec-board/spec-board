@@ -162,6 +162,7 @@ export interface Feature {
 }
 
 export interface Project {
+  projectId?: string;
   path: string;
   name: string;
   features: Feature[];
