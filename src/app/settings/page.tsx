@@ -277,7 +277,7 @@ function AIContent() {
           </select>
           {hasApiKey && (
             <span className="text-xs text-green-500 mt-1 inline-flex items-center gap-1">
-              ✓ API key configured
+              *** API key configured
             </span>
           )}
         </div>
