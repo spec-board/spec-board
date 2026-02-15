@@ -275,11 +275,6 @@ function AIContent() {
             <option value="openai">OpenAI</option>
             <option value="anthropic">Anthropic (Claude)</option>
           </select>
-          {hasApiKey && (
-            <span className="text-xs text-green-500 mt-1 inline-flex items-center gap-1">
-              *** API key configured
-            </span>
-          )}
         </div>
 
         {/* Base URL */}
@@ -299,7 +294,7 @@ function AIContent() {
           <label className="text-xs text-[var(--muted-foreground)] block mb-1">API Key</label>
           <input
             type="password"
-            value={formData.apiKey}
+            value={hasApiKey ? '***' : formData.apiKey}
             onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
             placeholder={formData.provider === 'openai' ? 'sk-...' : 'sk-ant-...'}
             className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
