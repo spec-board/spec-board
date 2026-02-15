@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History, Palette } from 'lucide-react';
+import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useSettingsStore } from '@/lib/settings-store';
+import { useSettingsStore, type AIProvider } from '@/lib/settings-store';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
 import { ReadmeViewer } from '@/components/readme-viewer';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -21,7 +21,7 @@ interface AppInfo {
   changelog: string;
 }
 
-type MenuSection = 'shortcuts' | 'appearance' | 'about';
+type MenuSection = 'shortcuts' | 'appearance' | 'ai' | 'about';
 
 interface ShortcutGroup {
   title: string;
@@ -198,6 +198,172 @@ function AppearanceContent() {
   );
 }
 
+function AIContent() {
+  const { aiSettings, setAISettings, loadSettings } = useSettingsStore();
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  const [openaiKey, setOpenaiKey] = useState('');
+  const [anthropicKey, setAnthropicKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState(aiSettings.baseUrl || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleProviderChange = async (provider: AIProvider) => {
+    setIsSaving(true);
+    await setAISettings({ provider });
+    setIsSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSaveApiKey = async (provider: 'openai' | 'anthropic', key: string) => {
+    if (!key.trim()) return;
+    setIsSaving(true);
+    await setAISettings({
+      provider,
+      openaiApiKey: provider === 'openai' ? key : undefined,
+      anthropicApiKey: provider === 'anthropic' ? key : undefined,
+    });
+    setIsSaving(false);
+    setSaved(true);
+    if (provider === 'openai') setOpenaiKey('');
+    if (provider === 'anthropic') setAnthropicKey('');
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSaveBaseUrl = async () => {
+    setIsSaving(true);
+    await setAISettings({ baseUrl: baseUrl.trim() || undefined });
+    setIsSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold mb-1">AI Settings</h2>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          Configure AI provider for feature generation
+        </p>
+      </div>
+
+      {/* Provider Selection */}
+      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+        <h3 className="text-sm font-medium mb-3">AI Provider</h3>
+        <div className="space-y-2">
+          {[
+            { value: 'openai', label: 'OpenAI', desc: 'Use OpenAI API for generation' },
+            { value: 'anthropic', label: 'Anthropic (Claude)', desc: 'Use Anthropic API for generation' },
+          ].map((option) => (
+            <button
+              key={option.value}
+              onClick={() => handleProviderChange(option.value as AIProvider)}
+              disabled={isSaving}
+              className={cn(
+                'w-full flex items-center justify-between p-3 rounded-lg border transition-colors',
+                aiSettings.provider === option.value
+                  ? 'border-blue-500 bg-blue-500/10'
+                  : 'border-[var(--border)] hover:bg-[var(--secondary)]/50'
+              )}
+            >
+              <div className="text-left">
+                <div className="text-sm font-medium">{option.label}</div>
+                <div className="text-xs text-[var(--muted-foreground)]">{option.desc}</div>
+              </div>
+              {aiSettings.provider === option.value && (
+                <span className="text-blue-500 text-sm">Active</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Base URL (for OpenAI-compatible APIs) */}
+      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+        <h3 className="text-sm font-medium mb-3">Base URL (Optional)</h3>
+        <p className="text-xs text-[var(--muted-foreground)] mb-3">
+          Use a custom OpenAI-compatible API endpoint (e.g., Ollama, LM Studio, LiteLLM)
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            placeholder="https://api.openai.com/v1"
+            className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+          />
+          <button
+            onClick={handleSaveBaseUrl}
+            disabled={isSaving}
+            className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+
+      {/* API Key Inputs */}
+      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+        <h3 className="text-sm font-medium mb-3">API Keys</h3>
+
+        {/* OpenAI Key */}
+        <div className="mb-4">
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
+            OpenAI API Key (sk-...)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              value={openaiKey}
+              onChange={(e) => setOpenaiKey(e.target.value)}
+              placeholder="sk-..."
+              className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+            />
+            <button
+              onClick={() => handleSaveApiKey('openai', openaiKey)}
+              disabled={!openaiKey.trim() || isSaving}
+              className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+
+        {/* Anthropic Key */}
+        <div>
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
+            Anthropic API Key (sk-ant-...)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              value={anthropicKey}
+              onChange={(e) => setAnthropicKey(e.target.value)}
+              placeholder="sk-ant-..."
+              className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+            />
+            <button
+              onClick={() => handleSaveApiKey('anthropic', anthropicKey)}
+              disabled={!anthropicKey.trim() || isSaving}
+              className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+
+        {saved && (
+          <div className="mt-3 text-xs text-green-500">Settings saved successfully</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AboutContent() {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [activeTab, setActiveTab] = useState<'readme' | 'changelog'>('readme');
@@ -349,6 +515,7 @@ export default function SettingsPage() {
   const menuItems: { id: MenuSection; label: string; icon: React.ReactNode }[] = [
     { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
     { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
+    { id: 'ai', label: 'AI Settings', icon: <Sparkles className="w-4 h-4" /> },
     { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
   ];
 
@@ -397,6 +564,7 @@ export default function SettingsPage() {
         <main className="flex-1 p-6 overflow-y-auto">
           {activeSection === 'shortcuts' && <ShortcutsContent />}
           {activeSection === 'appearance' && <AppearanceContent />}
+          {activeSection === 'ai' && <AIContent />}
           {activeSection === 'about' && <AboutContent />}
         </main>
       </div>
