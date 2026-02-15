@@ -22,32 +22,53 @@ export async function GET() {
 }
 
 // POST /api/projects - Create a new project
+// Supports both filesystem-based and database-first projects
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, displayName, filePath } = body;
+    const { name, displayName, filePath, description } = body;
 
-    if (!name || !displayName || !filePath) {
+    // name is always required
+    if (!name || typeof name !== 'string') {
       return NextResponse.json(
-        { error: 'Missing required fields: name, displayName, filePath' },
+        { error: 'name is required' },
         { status: 400 }
       );
     }
 
-    // Validate name format (URL-safe slug)
-    const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-    if (!slugRegex.test(name)) {
+    // Generate slug from name if displayName not provided
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    if (!slug) {
       return NextResponse.json(
-        { error: 'Name must be a URL-safe slug (lowercase letters, numbers, hyphens)' },
+        { error: 'Invalid name - must contain alphanumeric characters' },
         { status: 400 }
       );
     }
 
+    // Check if project already exists
+    const existing = await prisma.project.findUnique({
+      where: { name: slug },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: 'A project with this name already exists' },
+        { status: 409 }
+      );
+    }
+
+    // Create project - filePath is optional for database-first projects
     const project = await prisma.project.create({
       data: {
-        name,
-        displayName,
-        filePath,
+        name: slug,
+        displayName: displayName || name,
+        description: description || null,
+        filePath: filePath || null, // null for database-first projects
+        isCloud: false,
       },
     });
 
