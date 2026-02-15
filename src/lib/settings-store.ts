@@ -7,10 +7,12 @@ export type AIProvider = 'openai' | 'anthropic';
 
 interface AISettings {
   provider: AIProvider;
-  openaiBaseUrl?: string;  // Custom API base URL for OpenAI-compatible APIs
-  anthropicBaseUrl?: string; // Custom API base URL for Anthropic-compatible APIs
+  openaiBaseUrl?: string;
+  anthropicBaseUrl?: string;
   openaiApiKey?: string;
   anthropicApiKey?: string;
+  openaiModel?: string;
+  anthropicModel?: string;
 }
 
 interface Settings {
@@ -126,7 +128,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     saveSettingsToStorage({ shortcutsEnabled, theme, aiSettings: newAiSettings });
 
     // Save settings server-side (API keys, baseUrl)
-    if (settings.openaiApiKey || settings.anthropicApiKey || settings.openaiBaseUrl !== undefined || settings.anthropicBaseUrl !== undefined) {
+    if (settings.openaiApiKey || settings.anthropicApiKey || settings.openaiBaseUrl !== undefined || settings.anthropicBaseUrl !== undefined || settings.openaiModel || settings.anthropicModel) {
       try {
         await fetch('/api/settings/ai', {
           method: 'POST',
@@ -137,6 +139,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
             anthropicBaseUrl: newAiSettings.anthropicBaseUrl,
             openaiApiKey: settings.openaiApiKey,
             anthropicApiKey: settings.anthropicApiKey,
+            openaiModel: settings.openaiModel,
+            anthropicModel: settings.anthropicModel,
           }),
         });
       } catch (error) {
@@ -178,7 +182,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       .then(res => res.json())
       .then(data => {
         if (data.provider) {
-          set({ aiSettings: { ...aiSettings, provider: data.provider, openaiBaseUrl: data.openaiBaseUrl, anthropicBaseUrl: data.anthropicBaseUrl } });
+          set({ aiSettings: { 
+            ...aiSettings, 
+            provider: data.provider, 
+            openaiBaseUrl: data.openaiBaseUrl, 
+            anthropicBaseUrl: data.anthropicBaseUrl,
+            openaiModel: data.openaiModel,
+            anthropicModel: data.anthropicModel,
+          } });
         }
       })
       .catch(() => {

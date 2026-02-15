@@ -205,50 +205,47 @@ function AIContent() {
     loadSettings();
   }, [loadSettings]);
 
-  const [openaiKey, setOpenaiKey] = useState('');
-  const [anthropicKey, setAnthropicKey] = useState('');
-  const [openaiBaseUrl, setOpenaiBaseUrl] = useState(aiSettings.openaiBaseUrl || '');
-  const [anthropicBaseUrl, setAnthropicBaseUrl] = useState(aiSettings.anthropicBaseUrl || '');
+  // Single form state
+  const [formData, setFormData] = useState({
+    provider: aiSettings.provider,
+    baseUrl: aiSettings.openaiBaseUrl || aiSettings.anthropicBaseUrl || '',
+    apiKey: '',
+    model: aiSettings.openaiModel || aiSettings.anthropicModel || '',
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const handleProviderChange = async (provider: AIProvider) => {
+  const handleSave = async () => {
     setIsSaving(true);
-    await setAISettings({ provider });
+    
+    const settings: any = { provider: formData.provider };
+    
+    if (formData.provider === 'openai') {
+      settings.openaiBaseUrl = formData.baseUrl.trim() || undefined;
+      settings.openaiApiKey = formData.apiKey.trim() || undefined;
+      settings.openaiModel = formData.model.trim() || undefined;
+    } else {
+      settings.anthropicBaseUrl = formData.baseUrl.trim() || undefined;
+      settings.anthropicApiKey = formData.apiKey.trim() || undefined;
+      settings.anthropicModel = formData.model.trim() || undefined;
+    }
+    
+    await setAISettings(settings);
     setIsSaving(false);
     setSaved(true);
+    setFormData({ ...formData, apiKey: '' }); // Clear API key after save
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handleSaveApiKey = async (provider: 'openai' | 'anthropic', key: string) => {
-    if (!key.trim()) return;
-    setIsSaving(true);
-    await setAISettings({
-      provider,
-      openaiApiKey: provider === 'openai' ? key : undefined,
-      anthropicApiKey: provider === 'anthropic' ? key : undefined,
-    });
-    setIsSaving(false);
-    setSaved(true);
-    if (provider === 'openai') setOpenaiKey('');
-    if (provider === 'anthropic') setAnthropicKey('');
-    setTimeout(() => setSaved(false), 2000);
-  };
-
-  const handleSaveOpenAIBaseUrl = async () => {
-    setIsSaving(true);
-    await setAISettings({ openaiBaseUrl: openaiBaseUrl.trim() || undefined });
-    setIsSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
-
-  const handleSaveAnthropicBaseUrl = async () => {
-    setIsSaving(true);
-    await setAISettings({ anthropicBaseUrl: anthropicBaseUrl.trim() || undefined });
-    setIsSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  // Update form when provider changes
+  const handleProviderChange = (provider: AIProvider) => {
+    const baseUrl = provider === 'openai' 
+      ? (aiSettings.openaiBaseUrl || '') 
+      : (aiSettings.anthropicBaseUrl || '');
+    const model = provider === 'openai'
+      ? (aiSettings.openaiModel || '')
+      : (aiSettings.anthropicModel || '');
+    setFormData({ ...formData, provider, baseUrl, apiKey: '', model });
   };
 
   return (
@@ -260,143 +257,67 @@ function AIContent() {
         </p>
       </div>
 
-      {/* Provider Selection */}
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
-        <h3 className="text-sm font-medium mb-3">AI Provider</h3>
-        <div className="space-y-2">
-          {[
-            { value: 'openai', label: 'OpenAI', desc: 'Use OpenAI API for generation' },
-            { value: 'anthropic', label: 'Anthropic (Claude)', desc: 'Use Anthropic API for generation' },
-          ].map((option) => (
-            <button
-              key={option.value}
-              onClick={() => handleProviderChange(option.value as AIProvider)}
-              disabled={isSaving}
-              className={cn(
-                'w-full flex items-center justify-between p-3 rounded-lg border transition-colors',
-                aiSettings.provider === option.value
-                  ? 'border-blue-500 bg-blue-500/10'
-                  : 'border-[var(--border)] hover:bg-[var(--secondary)]/50'
-              )}
-            >
-              <div className="text-left">
-                <div className="text-sm font-medium">{option.label}</div>
-                <div className="text-xs text-[var(--muted-foreground)]">{option.desc}</div>
-              </div>
-              {aiSettings.provider === option.value && (
-                <span className="text-blue-500 text-sm">Active</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Base URLs for Custom API Endpoints */}
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
-        <h3 className="text-sm font-medium mb-3">Base URLs (Optional)</h3>
-        <p className="text-xs text-[var(--muted-foreground)] mb-3">
-          Use custom API endpoints for OpenAI-compatible or Anthropic-compatible APIs
-        </p>
-
-        {/* OpenAI Base URL */}
-        <div className="mb-4">
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
-            OpenAI Base URL (e.g., Ollama, LM Studio)
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={openaiBaseUrl}
-              onChange={(e) => setOpenaiBaseUrl(e.target.value)}
-              placeholder="http://localhost:11434/v1"
-              className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
-            />
-            <button
-              onClick={handleSaveOpenAIBaseUrl}
-              disabled={isSaving}
-              className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
-            >
-              Save
-            </button>
-          </div>
-        </div>
-
-        {/* Anthropic Base URL */}
+      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-4">
+        {/* Provider */}
         <div>
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
-            Anthropic Base URL (e.g., Anthropic-compatible API)
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={anthropicBaseUrl}
-              onChange={(e) => setAnthropicBaseUrl(e.target.value)}
-              placeholder="https://api.anthropic.com"
-              className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
-            />
-            <button
-              onClick={handleSaveAnthropicBaseUrl}
-              disabled={isSaving}
-              className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* API Key Inputs */}
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
-        <h3 className="text-sm font-medium mb-3">API Keys</h3>
-
-        {/* OpenAI Key */}
-        <div className="mb-4">
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
-            OpenAI API Key (sk-...)
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="password"
-              value={openaiKey}
-              onChange={(e) => setOpenaiKey(e.target.value)}
-              placeholder="sk-..."
-              className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
-            />
-            <button
-              onClick={() => handleSaveApiKey('openai', openaiKey)}
-              disabled={!openaiKey.trim() || isSaving}
-              className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
-            >
-              Save
-            </button>
-          </div>
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">Provider</label>
+          <select
+            value={formData.provider}
+            onChange={(e) => handleProviderChange(e.target.value as AIProvider)}
+            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+          >
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+          </select>
         </div>
 
-        {/* Anthropic Key */}
+        {/* Base URL */}
         <div>
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
-            Anthropic API Key (sk-ant-...)
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="password"
-              value={anthropicKey}
-              onChange={(e) => setAnthropicKey(e.target.value)}
-              placeholder="sk-ant-..."
-              className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
-            />
-            <button
-              onClick={() => handleSaveApiKey('anthropic', anthropicKey)}
-              disabled={!anthropicKey.trim() || isSaving}
-              className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
-            >
-              Save
-            </button>
-          </div>
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">Base URL (Optional)</label>
+          <input
+            type="text"
+            value={formData.baseUrl}
+            onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+            placeholder={formData.provider === 'openai' ? 'http://localhost:11434/v1' : 'https://api.anthropic.com'}
+            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+          />
         </div>
+
+        {/* API Key */}
+        <div>
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">API Key</label>
+          <input
+            type="password"
+            value={formData.apiKey}
+            onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+            placeholder={formData.provider === 'openai' ? 'sk-...' : 'sk-ant-...'}
+            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+          />
+        </div>
+
+        {/* Model */}
+        <div>
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">Model</label>
+          <input
+            type="text"
+            value={formData.model}
+            onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+            placeholder={formData.provider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-20250514'}
+            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+          />
+        </div>
+
+        {/* Save Button */}
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="w-full px-4 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
+        >
+          {isSaving ? 'Saving...' : 'Save'}
+        </button>
 
         {saved && (
-          <div className="mt-3 text-xs text-green-500">Settings saved successfully</div>
+          <div className="text-xs text-green-500 text-center">Settings saved successfully</div>
         )}
       </div>
     </div>

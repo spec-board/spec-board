@@ -6,6 +6,8 @@ export interface AISettingsData {
   anthropicBaseUrl?: string;
   openaiApiKey?: string;
   anthropicApiKey?: string;
+  openaiModel?: string;
+  anthropicModel?: string;
 }
 
 // In-memory storage (note: this resets on server restart)
