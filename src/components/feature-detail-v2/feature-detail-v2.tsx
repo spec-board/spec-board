@@ -116,7 +116,7 @@ export function FeatureDetailV2({
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
       <div
         className={cn(
-          'bg-white rounded-lg shadow-2xl overflow-hidden',
+          'bg-[var(--card)] rounded-lg shadow-2xl overflow-hidden',
           'w-[95vw] h-[90vh] max-w-7xl',
           'flex flex-col'
         )}
@@ -125,10 +125,10 @@ export function FeatureDetailV2({
         aria-labelledby="feature-detail-title"
       >
         {/* Header */}
-        <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 flex items-center gap-3 bg-white">
+        <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] flex items-center gap-3 bg-[var(--card)]">
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-gray-100 transition-colors text-gray-500"
+            className="p-1.5 rounded-md hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)]"
             aria-label="Back to board"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -137,18 +137,18 @@ export function FeatureDetailV2({
           <div className="flex-1 min-w-0">
             <h1
               id="feature-detail-title"
-              className="text-lg font-semibold text-gray-900 truncate"
+              className="text-lg font-semibold text-[var(--card-foreground)] truncate"
             >
               {feature.name}
             </h1>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-[var(--muted-foreground)]">
               Feature {feature.id} • {feature.stage}
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-gray-100 transition-colors text-gray-500"
+            className="p-1.5 rounded-md hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)]"
             aria-label="Close"
           >
             <X className="w-5 h-5" />

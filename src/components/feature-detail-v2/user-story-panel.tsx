@@ -93,33 +93,33 @@ export function UserStoryPanel({
   if (userStories.length === 0 && orphanTasks.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-        <div className="text-gray-400 mb-2">
+        <div className="text-[var(--muted-foreground)] mb-2">
           <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
         </div>
-        <p className="text-sm text-gray-500">No user stories defined</p>
-        <p className="text-xs text-gray-400 mt-1">Add them to spec.md</p>
+        <p className="text-sm text-[var(--muted-foreground)]">No user stories defined</p>
+        <p className="text-xs text-[var(--muted-foreground)] opacity-70 mt-1">Add them to spec.md</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-[var(--muted)]">
       {/* Header with overall progress */}
-      <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 bg-white">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--card)]">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold text-gray-700">User Stories</h2>
-          <span className="text-xs text-gray-500">
+          <h2 className="text-sm font-semibold text-[var(--foreground)]">User Stories</h2>
+          <span className="text-xs text-[var(--muted-foreground)]">
             {completedTasks}/{totalTasks} tasks
           </span>
         </div>
         {/* Overall progress bar */}
-        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-[var(--muted)] rounded-full overflow-hidden">
           <div
             className={cn(
               'h-full rounded-full transition-all duration-300',
               completedTasks === totalTasks && totalTasks > 0
-                ? 'bg-green-500'
-                : 'bg-blue-500'
+                ? 'bg-[var(--color-success)]'
+                : 'bg-[var(--primary)]'
             )}
             style={{ width: totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%' }}
           />
@@ -149,28 +149,28 @@ export function UserStoryPanel({
 
         {/* Uncategorized Tasks Card - shown at bottom per design decision */}
         {orphanTasks.length > 0 && (
-          <div 
+          <div
             ref={(el) => { cardRefs.current.set(userStories.length, el); }}
             className={cn(
-              "bg-white rounded-lg shadow-sm border overflow-hidden transition-all",
-              focusedCardIndex === userStories.length 
-                ? "border-blue-400 ring-2 ring-blue-200" 
-                : "border-gray-200"
+              "bg-[var(--card)] rounded-lg shadow-sm border overflow-hidden transition-all",
+              focusedCardIndex === userStories.length
+                ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/20"
+                : "border-[var(--border)]"
             )}
           >
             <button
               onClick={() => toggleExpand('uncategorized')}
-              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--muted)] transition-colors text-left"
             >
-              <Package className="w-4 h-4 text-gray-400" />
+              <Package className="w-4 h-4 text-[var(--muted-foreground)]" />
               <div className="flex-1">
-                <h3 className="text-sm font-medium text-gray-600">
+                <h3 className="text-sm font-medium text-[var(--foreground)]">
                   Uncategorized Tasks
                 </h3>
                 <div className="mt-1 flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-[var(--muted)] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gray-400 rounded-full transition-all duration-300"
+                      className="h-full bg-[var(--muted-foreground)] rounded-full transition-all duration-300"
                       style={{
                         width: `${orphanTasks.length > 0
                           ? (orphanTasks.filter(t => t.completed).length / orphanTasks.length) * 100
@@ -178,7 +178,7 @@ export function UserStoryPanel({
                       }}
                     />
                   </div>
-                  <span className="text-xs text-gray-500 font-medium whitespace-nowrap">
+                  <span className="text-xs text-[var(--muted-foreground)] font-medium whitespace-nowrap">
                     {orphanTasks.filter(t => t.completed).length}/{orphanTasks.length} tasks
                   </span>
                 </div>
@@ -186,7 +186,7 @@ export function UserStoryPanel({
             </button>
 
             {expandedCards.has('uncategorized') && (
-              <div className="border-t border-gray-100 px-2 py-2 space-y-1 bg-gray-50/50">
+              <div className="border-t border-[var(--border)] px-2 py-2 space-y-1 bg-[var(--muted)]/50">
                 {orphanTasks.map(task => (
                   <TaskRow
                     key={task.id}
