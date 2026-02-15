@@ -6,7 +6,7 @@ import type { Feature, KanbanColumnType } from '@/types';
 import { GitBranch, CheckCircle2, Plus } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
-import { CreateFeatureModal } from './create-feature-modal';
+import { SpecWorkflowWizard } from './spec-workflow-wizard';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'planning', 'in_progress', 'done'];
 
@@ -507,7 +507,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
     </section>
 
     {projectId && (
-      <CreateFeatureModal
+      <SpecWorkflowWizard
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         projectId={projectId}
