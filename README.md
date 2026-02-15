@@ -25,7 +25,7 @@ Deep dive into specifications with structured user stories, acceptance scenarios
 
 ### AI-Powered Development Assistance
 
-Get intelligent next action suggestions and save analysis reports for quality assurance.
+Generate complete feature specifications from natural language. Configure your preferred LLM provider (OpenAI or Anthropic) with custom base URLs for self-hosted models.
 
 <p align="center">
   <img src="https://github.com/paulpham157/spec-board/blob/main/public/assests/suggestion-next-action.png" alt="Next Action Suggestions" width="400" />
@@ -35,13 +35,14 @@ Get intelligent next action suggestions and save analysis reports for quality as
 ## Features
 
 ### Core Features
-- **Kanban Board** — 4-column pipeline (Specify → Plan → Tasks → Implement → Complete)
+- **Kanban Board** — 4-column pipeline (Backlog → Planning → In Progress → Done)
+- **AI Feature Creation** — Enter feature name and description, AI generates spec/plan/tasks automatically
 - **Real-Time Updates** — Live file watching via Server-Sent Events (SSE)
 - **Interactive Checklists** — Click or keyboard to toggle checklist items with optimistic UI
 - **Deep Linking** — Shareable URLs for projects and features
 - **Progress Tracking** — Visual metrics for tasks, checklists, and user stories
 - **Accessible** — WCAG 2.2 AA compliant with full keyboard navigation
-- **AI Integration** — Next action suggestions and analysis reports
+- **AI Integration** — Next action suggestions, analysis reports, and feature generation
 
 ### Cloud Sync & Collaboration
 - **OAuth Authentication** — Login with Google or GitHub
