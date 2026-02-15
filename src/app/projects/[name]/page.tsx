@@ -4,10 +4,8 @@ import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { KanbanBoard } from '@/components/kanban-board';
 import { ProjectInfoBubble } from '@/components/project-info-bubble';
-import { FolderOpen, Settings, Github } from 'lucide-react';
-import Image from 'next/image';
+import { Header } from '@/components/header';
 import { useProjectStore } from '@/lib/store';
-import { ThemeButton } from '@/components/theme-button';
 import type { Project, Feature } from '@/types';
 
 export default function ProjectPage() {
@@ -20,33 +18,34 @@ export default function ProjectPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
 
   const loadProject = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Always lookup by slug from database
-      const projectRes = await fetch('/api/projects/' + projectSlug, { cache: 'no-store' });
-      if (!projectRes.ok) {
-        if (projectRes.status === 404) {
+      // Unified endpoint - handles both database-first and filesystem-based projects
+      const response = await fetch('/api/project/' + projectSlug + '/data', { cache: 'no-store' });
+      if (!response.ok) {
+        if (response.status === 404) {
           throw new Error('Project "' + projectSlug + '" not found. Please open it from the home page first.');
         }
         throw new Error('Failed to load project');
       }
-      const projectData = await projectRes.json();
-      const filePath = projectData.filePath;
-
-      setProjectPath(filePath);
-
-      // Load the actual project data from filesystem
-      const response = await fetch('/api/project?path=' + encodeURIComponent(filePath), { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error('Failed to load project files');
-      }
-      const data: Project = await response.json();
+      const data: Project & { projectId?: string } = await response.json();
       setProject(data);
 
-      // Update recent projects cache with fresh data
+      // Set project ID if available (for database-first projects)
+      if (data.projectId) {
+        setProjectId(data.projectId);
+      }
+
+      // Set project path if available (for filesystem-based projects)
+      if (data.path) {
+        setProjectPath(data.path);
+      }
+
+      // Update recent projects cache
       addRecentProject(data, projectSlug);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -128,62 +127,12 @@ export default function ProjectPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b border-[var(--border)] bg-[var(--card)]">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/')}
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                title="Home"
-              >
-                <Image
-                  src="/images/specboard-logo.svg"
-                  alt="SpecBoard Logo"
-                  width={28}
-                  height={28}
-                  className="rounded"
-                />
-                <h1 className="text-xl font-bold">
-                  <span className="text-blue-500">Spec</span>
-                  <span>Board</span>
-                </h1>
-              </button>
-              <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-                <FolderOpen className="w-4 h-4 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span>{project.name}</span>
-                  {projectPath && (
-                    <span className="text-xs opacity-60 truncate max-w-md">
-                      {projectPath}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeButton />
-              <a
-                href="https://github.com/paulpham157/spec-board"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
-                title="GitHub Repository"
-              >
-                <Github className="w-4 h-4" />
-              </a>
-              <button
-                onClick={() => router.push('/settings')}
-                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
-                title="Settings"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Unified Header */}
+      <Header
+        variant="project"
+        projectName={project?.name}
+        projectPath={projectPath || undefined}
+      />
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-6">
@@ -205,6 +154,7 @@ export default function ProjectPage() {
               features={project.features}
               onFeatureClick={handleFeatureClick}
               projectPath={project.path}
+              projectId={projectId || undefined}
             />
           </div>
         </div>
