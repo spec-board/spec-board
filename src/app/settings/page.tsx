@@ -205,6 +205,11 @@ function AIContent() {
     loadSettings();
   }, [loadSettings]);
 
+  // Get current provider's API key status
+  const hasApiKey = aiSettings.provider === 'openai' 
+    ? aiSettings.hasOpenAI 
+    : aiSettings.hasAnthropic;
+
   // Single form state
   const [formData, setFormData] = useState({
     provider: aiSettings.provider,
@@ -231,6 +236,7 @@ function AIContent() {
     }
     
     await setAISettings(settings);
+    await loadSettings(); // Reload to get updated has flags
     setIsSaving(false);
     setSaved(true);
     setFormData({ ...formData, apiKey: '' }); // Clear API key after save
@@ -269,6 +275,11 @@ function AIContent() {
             <option value="openai">OpenAI</option>
             <option value="anthropic">Anthropic (Claude)</option>
           </select>
+          {hasApiKey && (
+            <span className="text-xs text-green-500 mt-1 inline-flex items-center gap-1">
+              ✓ API key configured
+            </span>
+          )}
         </div>
 
         {/* Base URL */}
