@@ -1,7 +1,7 @@
 # SpecBoard API Documentation
 
 > **Version**: 1.1.0
-> **Last Updated**: 2026-01-08
+> **Last Updated**: 2026-02-15
 > **Base URL**: `http://localhost:3000/api`
 
 ## Table of Contents
@@ -10,6 +10,7 @@
 - [Project Management](#project-management)
 - [Spec Data](#spec-data)
 - [File Operations](#file-operations)
+- [Spec Workflow](#spec-workflow)
 - [Cloud Sync](#cloud-sync)
 - [Real-Time Updates](#real-time-updates)
 - [Error Handling](#error-handling)
@@ -445,6 +446,120 @@ Content-Type: application/json
 {
   "success": true,
   "filePath": "/Users/paul/Projects/my-todolist/specs/001-feature/analysis/2026-01-08-10-30-analysis.md"
+}
+```
+
+---
+
+## Spec Workflow
+
+AI-powered 5-step feature generation workflow.
+
+### Generate Spec
+
+Create feature specification from description.
+
+```http
+POST /api/spec-workflow/specify
+Content-Type: application/json
+
+{
+  "projectId": "proj_123",
+  "name": "User Authentication",
+  "description": "Add login/logout functionality with OAuth"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "specContent": "# User Authentication\n\n## User Stories\n..."
+}
+```
+
+### Generate Clarifications
+
+Generate clarification questions for ambiguous specs.
+
+```http
+POST /api/spec-workflow/clarify
+Content-Type: application/json
+
+{
+  "specContent": "# Feature Spec\n..."
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "questions": [
+    { "question": "Q1", "context": "Context 1" }
+  ]
+}
+```
+
+### Generate Plan
+
+Generate implementation plan from spec.
+
+```http
+POST /api/spec-workflow/plan
+Content-Type: application/json
+
+{
+  "projectId": "proj_123",
+  "name": "User Authentication",
+  "specContent": "# User Authentication\n..."
+}
+```
+
+### Generate Tasks
+
+Generate actionable tasks from spec and plan.
+
+```http
+POST /api/spec-workflow/tasks
+Content-Type: application/json
+
+{
+  "projectId": "proj_123",
+  "name": "User Authentication",
+  "specContent": "# User Authentication\n...",
+  "planContent": "# Implementation Plan\n..."
+}
+```
+
+### Analyze Artifacts
+
+Cross-artifact consistency analysis.
+
+```http
+POST /api/spec-workflow/analyze
+Content-Type: application/json
+
+{
+  "featurePath": "/path/to/feature",
+  "specContent": "# Spec\n...",
+  "planContent": "# Plan\n...",
+  "tasksContent": "# Tasks\n..."
+}
+```
+
+### Create Constitution
+
+Generate project constitution.
+
+```http
+POST /api/spec-workflow/constitution
+Content-Type: application/json
+
+{
+  "projectId": "proj_123",
+  "name": "My Project",
+  "principles": ["Principle 1", "Principle 2"]
 }
 ```
 

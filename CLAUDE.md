@@ -22,6 +22,21 @@ pnpm test:run         # Run tests once
 pnpm test:coverage    # Run tests with coverage report
 ```
 
+### E2B Cloud Sandbox Testing
+```bash
+# Run tests in E2B cloud sandbox (requires E2B_API_KEY)
+node scripts/e2b-run-tests.js [test-pattern]
+
+# Example: Run specific test file
+node scripts/e2b-run-tests.js src/app/api/spec-workflow/route.test.ts
+```
+
+**E2B Configuration:**
+- Uses `/home/user` as writable directory (not `/workspace`)
+- Uploads files via `sandbox.files.write()`
+- Creates directories with placeholder files (`.dir`)
+- Node.js available by default (no template needed)
+
 ### Type Checking
 ```bash
 pnpm tsc --noEmit     # Type check without emitting files
@@ -133,6 +148,8 @@ spec-board/
 │   │   └── sync/              # Sync utilities (checksum, diff)
 │   └── types/
 │       └── index.ts           # All TypeScript type definitions
+├── scripts/
+│   └── e2b-run-tests.js       # E2B cloud sandbox test runner
 ├── .env                       # Environment variables (DATABASE_URL, PORT)
 └── vitest.config.ts           # Vitest configuration
 ```
@@ -226,6 +243,14 @@ Zustand store with localStorage persistence:
 
 **Analysis Reports**:
 - `POST /api/analysis`: Save AI analysis report to feature directory
+
+**Spec Workflow** (AI-powered feature generation):
+- `POST /api/spec-workflow/specify`: Generate spec from feature description
+- `POST /api/spec-workflow/clarify`: Generate clarification questions
+- `POST /api/spec-workflow/plan`: Generate implementation plan
+- `POST /api/spec-workflow/tasks`: Generate actionable tasks
+- `POST /api/spec-workflow/analyze`: Analyze consistency across artifacts
+- `POST /api/spec-workflow/constitution`: Create project constitution
 
 **Cloud Sync**:
 - `POST /api/cloud-projects`: Create cloud project
@@ -357,6 +382,7 @@ Tests are co-located with source files:
 - `src/lib/path-utils.test.ts`
 - `src/lib/utils.test.ts`
 - `src/lib/markdown/*.test.ts`
+- `src/app/api/**/*.test.ts`
 
 ### Running Tests
 
