@@ -27,6 +27,10 @@ Deep dive into specifications with structured user stories, acceptance scenarios
 
 Generate complete feature specifications from natural language. Configure your preferred LLM provider (OpenAI or Anthropic) with custom base URLs for self-hosted models.
 
+### Spec Workflow Wizard
+
+AI-powered 5-step workflow: specify → clarify → plan → tasks → analyze
+
 <p align="center">
   <img src="https://github.com/paulpham157/spec-board/blob/main/public/assests/suggestion-next-action.png" alt="Next Action Suggestions" width="400" />
   <img src="https://github.com/paulpham157/spec-board/blob/main/public/assests/save-the-analysis.png" alt="Save Analysis Report" width="300" />
@@ -37,6 +41,7 @@ Generate complete feature specifications from natural language. Configure your p
 ### Core Features
 - **Kanban Board** — 4-column pipeline (Backlog → Planning → In Progress → Done)
 - **AI Feature Creation** — Enter feature name and description, AI generates spec/plan/tasks automatically
+- **Spec Workflow Wizard** — 5-step AI workflow: specify → clarify → plan → tasks → analyze
 - **Real-Time Updates** — Live file watching via Server-Sent Events (SSE)
 - **Interactive Checklists** — Click or keyboard to toggle checklist items with optimistic UI
 - **Deep Linking** — Shareable URLs for projects and features
@@ -107,6 +112,24 @@ Run dev
 
 ```bash
 pnpm dev
+```
+
+### Commands
+
+```bash
+pnpm dev              # Start dev server
+pnpm build            # Production build
+pnpm start            # Start production server
+pnpm test             # Run tests (watch mode)
+pnpm test:run        # Run tests once
+pnpm test:coverage   # Run tests with coverage
+```
+
+### E2B Cloud Testing
+
+```bash
+# Run tests in E2B sandbox (requires E2B_API_KEY)
+node scripts/e2b-run-tests.js
 ```
 
 Or build for stable production
