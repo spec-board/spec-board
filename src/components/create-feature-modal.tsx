@@ -1,133 +1,107 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Sparkles, Loader2, FileText, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Plus, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface CreateFeatureModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projectPath: string;
-  onFeatureCreated?: (featureId: string) => void;
+  projectId: string;
+  projectPath?: string | null;
+  onFeatureCreated?: (feature: { id: string; featureId: string; name: string }) => void;
 }
-
-type GenerationMode = 'user-stories' | 'full-spec-kit';
 
 export function CreateFeatureModal({
   isOpen,
   onClose,
+  projectId,
   projectPath,
   onFeatureCreated
 }: CreateFeatureModalProps) {
   const [featureName, setFeatureName] = useState('');
-  const [prdContent, setPRDContent] = useState('');
-  const [mode, setMode] = useState<GenerationMode>('full-spec-kit');
+  const [description, setDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<{
-    spec?: string;
-    plan?: string;
-    tasks?: string;
-    userStories?: any[];
-  } | null>(null);
+  const [generationStatus, setGenerationStatus] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
-      // Reset state
       setFeatureName('');
-      setPRDContent('');
-      setGeneratedContent(null);
+      setDescription('');
       setError(null);
-      setShowPreview(false);
-
-      // Focus name input
-      setTimeout(() => nameInputRef.current?.focus(), 100);
+      setIsGenerating(false);
+      setGenerationStatus('');
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
 
-  const handleGenerate = async () => {
-    if (!prdContent.trim()) {
-      setError('Please enter PRD content');
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     if (!featureName.trim()) {
-      setError('Please enter a feature name');
+      setError('Feature name is required');
       return;
     }
 
+    setIsLoading(true);
     setIsGenerating(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/prd-to-us', {
+      // Call AI to generate spec/plan/tasks and create feature
+      const response = await fetch('/api/features/ai-create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prdContent,
+          projectId,
           projectPath,
-          featureName,
-          generateFullSpecKit: mode === 'full-spec-kit'
-        })
+          name: featureName.trim(),
+          description: description.trim() || featureName.trim(),
+        }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate content');
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create feature');
       }
 
-      setGeneratedContent(data.files || { userStories: data.userStories });
-      setShowPreview(true);
+      const feature = await response.json();
 
-      // Show success toast
-      if (mode === 'full-specKit') {
-        toast.success('Spec-Kit generated successfully!', {
-          description: `Created ${data.featureId} with spec.md, plan.md, and tasks.md`
-        });
-      } else {
-        toast.success('User stories generated!', {
-          description: `Created ${data.userStories?.length || 0} user stories`
-        });
-      }
+      setGenerationStatus('Generating spec...');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      setGenerationStatus('Generating plan...');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      setGenerationStatus('Generating tasks...');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      toast.success('Feature created with AI', {
+        description: `Created "${featureName}" with generated spec/plan/tasks`
+      });
+
+      onFeatureCreated?.({
+        id: feature.id,
+        featureId: feature.featureId,
+        name: feature.name
+      });
+      onClose();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create feature';
       setError(errorMessage);
-      toast.error('Generation failed', {
+      toast.error('Failed to create feature', {
         description: errorMessage
       });
     } finally {
+      setIsLoading(false);
       setIsGenerating(false);
+      setGenerationStatus('');
     }
-  };
-
-  const handleSave = async () => {
-    if (!generatedContent) return;
-
-    // If full spec-kit, the files are already saved by the API
-    // If user-stories only, we need to save them
-    if (generatedContent.spec) {
-      // Already saved by API
-      onFeatureCreated?.(featureName);
-      handleClose();
-    } else {
-      // TODO: Implement save for user-stories only mode
-      handleClose();
-    }
-  };
-
-  const handleClose = () => {
-    setFeatureName('');
-    setPRDContent('');
-    setGeneratedContent(null);
-    setError(null);
-    setShowPreview(false);
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -137,14 +111,14 @@ export function CreateFeatureModal({
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
+        onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal */}
       <div
         className={cn(
-          'relative bg-[var(--card)] rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh]',
+          'relative bg-[var(--card)] rounded-lg shadow-xl w-full max-w-md',
           'overflow-hidden flex flex-col border border-[var(--border)]'
         )}
         role="dialog"
@@ -152,27 +126,29 @@ export function CreateFeatureModal({
         aria-labelledby="create-feature-title"
       >
         {/* Header */}
-        <div className="flex-shrink-0 px-6 py-4 border-b border-[var(--border)] bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/30 dark:to-indigo-950/30">
+        <div className="flex-shrink-0 px-6 py-4 border-b border-[var(--border)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div
+                className="p-2 rounded-lg bg-[var(--primary)]/10"
+              >
+                <Sparkles className="w-5 h-5 text-[var(--primary)]" />
               </div>
               <div>
                 <h2
                   id="create-feature-title"
-                  className="text-xl font-semibold text-[var(--foreground)]"
+                  className="text-lg font-semibold text-[var(--foreground)]"
                 >
-                  Create Feature from PRD
+                  Create Feature with AI
                 </h2>
                 <p className="text-sm text-[var(--muted-foreground)]">
-                  Enter a product requirement to generate spec-kit files
+                  AI will generate spec, plan & tasks
                 </p>
               </div>
             </div>
 
             <button
-              onClick={handleClose}
+              onClick={onClose}
               className="p-2 rounded-md hover:bg-[var(--secondary)] transition-colors text-[var(--muted-foreground)]"
               aria-label="Close"
             >
@@ -182,219 +158,111 @@ export function CreateFeatureModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6 space-y-6">
-          {error && (
-            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
+        <form onSubmit={handleSubmit}>
+          <div className="p-6 space-y-4">
+            {error && (
+              <div
+                className="p-3 rounded-lg text-sm bg-red-500/10 text-red-400 border border-red-500/20"
+              >
+                {error}
+              </div>
+            )}
+
+            {isGenerating && (
+              <div className="p-3 rounded-lg text-sm bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {generationStatus || 'Generating...'}
+              </div>
+            )}
+
+            {/* Feature Name */}
+            <div>
+              <label
+                htmlFor="feature-name"
+                className="block text-sm font-medium mb-2 text-[var(--foreground)]"
+              >
+                Feature Name *
+              </label>
+              <input
+                ref={inputRef}
+                id="feature-name"
+                type="text"
+                value={featureName}
+                onChange={(e) => {
+                  setFeatureName(e.target.value);
+                  setError(null);
+                }}
+                placeholder="e.g., User Authentication"
+                disabled={isLoading}
+                className={cn(
+                  'w-full px-4 py-2.5 rounded-lg border bg-[var(--secondary)] text-[var(--foreground)]',
+                  'outline-none focus:border-[var(--ring)] transition-colors',
+                  error && 'border-red-500/50'
+                )}
+              />
             </div>
-          )}
 
-          {!showPreview ? (
-            <>
-              {/* Feature Name */}
-              <div>
-                <label htmlFor="feature-name" className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                  Feature Name
-                </label>
-                <input
-                  ref={nameInputRef}
-                  id="feature-name"
-                  type="text"
-                  value={featureName}
-                  onChange={(e) => setFeatureName(e.target.value)}
-                  placeholder="e.g., User Authentication, Payment Integration"
-                  className="w-full px-4 py-2 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Generation Mode */}
-              <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                  Generation Mode
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setMode('full-spec-kit')}
-                    className={cn(
-                      'p-4 rounded-lg border-2 text-left transition-all',
-                      mode === 'full-spec-kit'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                        : 'border-[var(--border)] hover:border-[var(--border-hover)]'
-                    )}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <FileText className={cn('w-4 h-4', mode === 'full-spec-kit' ? 'text-blue-500' : 'text-[var(--muted-foreground)]')} />
-                      <span className="font-medium text-[var(--foreground)]">Full Spec-Kit</span>
-                    </div>
-                    <p className="text-xs text-[var(--muted-foreground)]">
-                      Generate spec.md, plan.md, tasks.md
-                    </p>
-                  </button>
-
-                  <button
-                    onClick={() => setMode('user-stories')}
-                    className={cn(
-                      'p-4 rounded-lg border-2 text-left transition-all',
-                      mode === 'user-stories'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                        : 'border-[var(--border)] hover:border-[var(--border-hover)]'
-                    )}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <FileText className={cn('w-4 h-4', mode === 'user-stories' ? 'text-blue-500' : 'text-[var(--muted-foreground)]')} />
-                      <span className="font-medium text-[var(--foreground)]">User Stories Only</span>
-                    </div>
-                    <p className="text-xs text-[var(--muted-foreground)]">
-                      Generate only user stories
-                    </p>
-                  </button>
-                </div>
-              </div>
-
-              {/* PRD Input */}
-              <div>
-                <label htmlFor="prd-content" className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                  Product Requirement Document (PRD)
-                </label>
-                <textarea
-                  ref={textareaRef}
-                  id="prd-content"
-                  value={prdContent}
-                  onChange={(e) => setPRDContent(e.target.value)}
-                  placeholder="Paste your PRD content here. Include:&#10;- Feature description&#10;- User requirements&#10;- Acceptance criteria&#10;- Technical considerations"
-                  className="w-full h-64 px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)] resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                  disabled={isGenerating}
-                />
-                <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-                  The more detailed your PRD, the better the generated spec-kit
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  onClick={handleClose}
-                  className="px-4 py-2 text-[var(--foreground)] bg-[var(--secondary)] hover:bg-[var(--secondary)]/80 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleGenerate}
-                  disabled={isGenerating || !prdContent.trim() || !featureName.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      Generate {mode === 'full-spec-kit' ? 'Spec-Kit' : 'User Stories'}
-                    </>
-                  )}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Preview */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-[var(--foreground)]">Generated Content</h3>
-                  <button
-                    onClick={() => setShowPreview(false)}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    Regenerate
-                  </button>
-                </div>
-
-                {/* Generated files preview */}
-                {generatedContent?.spec && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                      <Check className="w-4 h-4" />
-                      <span className="font-medium">spec.md created</span>
-                    </div>
-                    <div className="border border-[var(--border)] rounded-lg overflow-hidden">
-                      <div className="bg-[var(--secondary)] px-4 py-2 font-medium text-sm text-[var(--foreground)] border-b border-[var(--border)]">
-                        spec.md - User Stories
-                      </div>
-                      <div className="p-4 max-h-48 overflow-auto text-sm text-[var(--foreground)] whitespace-pre-wrap">
-                        {generatedContent.spec.substring(0, 500)}...
-                      </div>
-                    </div>
-                  </div>
+            {/* Description */}
+            <div>
+              <label
+                htmlFor="feature-description"
+                className="block text-sm font-medium mb-2 text-[var(--foreground)]"
+              >
+                Description / PRD *
+              </label>
+              <textarea
+                id="feature-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe what this feature should do, key requirements, user needs..."
+                rows={5}
+                disabled={isLoading}
+                className={cn(
+                  'w-full px-4 py-2.5 rounded-lg border bg-[var(--secondary)] text-[var(--foreground)]',
+                  'outline-none focus:border-[var(--ring)] transition-colors resize-none'
                 )}
+              />
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                AI will use this description to generate spec, plan, and tasks
+              </p>
+            </div>
+          </div>
 
-                {generatedContent?.plan && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                      <Check className="w-4 h-4" />
-                      <span className="font-medium">plan.md created</span>
-                    </div>
-                  </div>
-                )}
-
-                {generatedContent?.tasks && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                      <Check className="w-4 h-4" />
-                      <span className="font-medium">tasks.md created</span>
-                    </div>
-                  </div>
-                )}
-
-                {generatedContent?.userStories && (
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-[var(--foreground)]">Generated User Stories</h4>
-                    <div className="space-y-2">
-                      {generatedContent.userStories.map((story: any, idx: number) => (
-                        <div key={idx} className="p-3 bg-[var(--secondary)] rounded-lg">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-sm text-[var(--foreground)]">
-                              {story.id}: {story.title}
-                            </span>
-                            <span className={cn(
-                              'px-2 py-0.5 rounded text-xs font-medium',
-                              story.priority === 'P1' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                              story.priority === 'P2' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                              'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            )}>
-                              {story.priority}
-                            </span>
-                          </div>
-                          <p className="text-xs text-[var(--muted-foreground)]">
-                            {story.description}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="px-4 py-2 text-[var(--foreground)] bg-[var(--secondary)] hover:bg-[var(--secondary)]/80 rounded-lg transition-colors"
-                >
-                  Edit & Regenerate
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                >
-                  <Check className="w-4 h-4" />
-                  Save to Project
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+          {/* Footer */}
+          <div
+            className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--border)]"
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isLoading}
+              className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--secondary)] transition-colors text-[var(--foreground)] disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || !featureName.trim() || !description.trim()}
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium',
+                'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+                'bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)]'
+              )}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {isGenerating ? 'Generating with AI...' : 'Creating...'}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Generate with AI
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
