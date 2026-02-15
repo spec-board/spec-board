@@ -13,6 +13,8 @@ interface AISettings {
   anthropicApiKey?: string;
   openaiModel?: string;
   anthropicModel?: string;
+  hasOpenAI?: boolean;
+  hasAnthropic?: boolean;
 }
 
 interface Settings {
@@ -189,6 +191,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
             anthropicBaseUrl: data.anthropicBaseUrl,
             openaiModel: data.openaiModel,
             anthropicModel: data.anthropicModel,
+            hasOpenAI: data.hasOpenAI,
+            hasAnthropic: data.hasAnthropic,
           } });
         }
       })
