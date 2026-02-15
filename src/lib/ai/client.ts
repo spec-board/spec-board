@@ -7,19 +7,19 @@ import type {
   GeneratedSpecKit
 } from './types';
 import { generateUserStories as mockGenerateUserStories, generateSpecKit as mockGenerateSpecKit } from './mock';
+import { getAISettings } from './settings';
 
 /**
  * AI Client - Unified interface for AI generation
- * Supports mock, Claude, and OpenAI providers
- * Easy to swap between providers based on configuration
+ * Supports Anthropic (Claude), OpenAI, and OpenAI-compatible APIs
  */
 
 const DEFAULT_CONFIG: AIConfig = {
-  provider: 'mock',
-  model: 'mock-model'
+  provider: 'anthropic',
+  model: 'claude-sonnet-4-20250514'
 };
 
-// Environment variables for real AI (when enabled)
+// Environment variables as fallback
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -41,20 +41,14 @@ class AIService {
 
   // Get current provider
   getProvider(): AIProvider {
-    // Auto-detect if real API keys are available
-    if (ANTHROPIC_API_KEY && this.config.provider === 'mock') {
-      return 'claude';
-    }
-    if (OPENAI_API_KEY && this.config.provider === 'mock') {
-      return 'openai';
-    }
-    return this.config.provider;
+    const settings = getAISettings();
+    return settings.provider as AIProvider;
   }
 
   // Check if using real AI
   isRealAI(): boolean {
-    const provider = this.getProvider();
-    return provider === 'claude' || provider === 'openai';
+    const settings = getAISettings();
+    return !!(settings.anthropicApiKey || settings.openaiApiKey);
   }
 
   // Generate user stories
@@ -62,11 +56,10 @@ class AIService {
     const provider = this.getProvider();
 
     switch (provider) {
-      case 'claude':
+      case 'anthropic':
         return this.generateWithClaude(options);
       case 'openai':
         return this.generateWithOpenAI(options);
-      case 'mock':
       default:
         return mockGenerateUserStories(options);
     }
@@ -77,11 +70,10 @@ class AIService {
     const provider = this.getProvider();
 
     switch (provider) {
-      case 'claude':
+      case 'anthropic':
         return this.generateSpecKitWithClaude(options);
       case 'openai':
         return this.generateSpecKitWithOpenAI(options);
-      case 'mock':
       default:
         return mockGenerateSpecKit(options);
     }
@@ -89,11 +81,17 @@ class AIService {
 
   // Claude API implementation
   private async generateWithClaude(options: GenerateUserStoriesOptions): Promise<GeneratedUserStory[]> {
+    const settings = getAISettings();
+    if (!settings.anthropicApiKey) {
+      console.warn('[AI] No Anthropic API key, falling back to mock');
+      return mockGenerateUserStories(options);
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY!,
+        'x-api-key': settings.anthropicApiKey,
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
@@ -113,15 +111,21 @@ class AIService {
     }
 
     const data = await response.json();
-    return this.parseUserStoriesResponse(data.choices[0].message.content);
+    return this.parseUserStoriesResponse(data.content[0].text);
   }
 
   private async generateSpecKitWithClaude(options: GenerateSpecKitOptions): Promise<GeneratedSpecKit> {
+    const settings = getAISettings();
+    if (!settings.anthropicApiKey) {
+      console.warn('[AI] No Anthropic API key, falling back to mock');
+      return mockGenerateSpecKit(options);
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY!,
+        'x-api-key': settings.anthropicApiKey,
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
@@ -141,16 +145,23 @@ class AIService {
     }
 
     const data = await response.json();
-    return this.parseSpecKitResponse(data.choices[0].message.content);
+    return this.parseSpecKitResponse(data.content[0].text);
   }
 
-  // OpenAI API implementation
+  // OpenAI API implementation (supports custom baseUrl)
   private async generateWithOpenAI(options: GenerateUserStoriesOptions): Promise<GeneratedUserStory[]> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const settings = getAISettings();
+    if (!settings.openaiApiKey) {
+      console.warn('[AI] No OpenAI API key, falling back to mock');
+      return mockGenerateUserStories(options);
+    }
+
+    const baseUrl = settings.baseUrl || 'https://api.openai.com/v1';
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'Authorization': `Bearer ${settings.openaiApiKey}`
       },
       body: JSON.stringify({
         model: this.config.model || 'gpt-4o',
@@ -172,11 +183,18 @@ class AIService {
   }
 
   private async generateSpecKitWithOpenAI(options: GenerateSpecKitOptions): Promise<GeneratedSpecKit> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const settings = getAISettings();
+    if (!settings.openaiApiKey) {
+      console.warn('[AI] No OpenAI API key, falling back to mock');
+      return mockGenerateSpecKit(options);
+    }
+
+    const baseUrl = settings.baseUrl || 'https://api.openai.com/v1';
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'Authorization': `Bearer ${settings.openaiApiKey}`
       },
       body: JSON.stringify({
         model: this.config.model || 'gpt-4o',

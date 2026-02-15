@@ -34,7 +34,7 @@ export interface AICompletionResponse {
 }
 
 // Provider types
-export type AIProvider = 'claude' | 'openai' | 'mock';
+export type AIProvider = 'anthropic' | 'openai';
 
 // Configuration
 export interface AIConfig {

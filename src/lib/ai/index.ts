@@ -1,6 +1,7 @@
 // AI Service exports
 export * from './types';
 export * from './mock';
+export * from './settings';
 export { AIService } from './client';
 
 // Re-export functions directly to avoid Turbopack class instance issues
