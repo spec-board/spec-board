@@ -89,7 +89,13 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
   }
 
   // Has tasks - check if all complete
+  // If no tasks (totalTasks = 0), treat as backlog until tasks are added
   const allTasksComplete = feature.totalTasks > 0 && feature.completedTasks === feature.totalTasks;
+
+  // No tasks yet -> backlog (not in_progress)
+  if (feature.totalTasks === 0) {
+    return 'backlog';
+  }
 
   // Tasks not complete -> in_progress
   if (!allTasksComplete) {
