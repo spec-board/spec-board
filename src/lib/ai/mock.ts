@@ -1,8 +1,18 @@
 import type {
   GenerateUserStoriesOptions,
   GenerateSpecKitOptions,
+  GenerateSpecOptions,
+  GenerateClarifyOptions,
+  GeneratePlanOptions,
+  GenerateTasksOptions,
+  AnalyzeOptions,
   GeneratedUserStory,
-  GeneratedSpecKit
+  GeneratedSpecKit,
+  GeneratedSpec,
+  ClarificationQuestion,
+  GeneratedPlan,
+  GeneratedTasks,
+  AnalysisResult
 } from './types';
 
 /**
@@ -253,4 +263,259 @@ export function getAvailableModels(provider: 'claude' | 'openai' | 'mock'): stri
     default:
       return ['mock-model'];
   }
+}
+
+// ============================================================================
+// Speckit-aligned workflow functions: specify → clarify → plan → tasks → analyze
+// ============================================================================
+
+// Step 1: Specify - Generate feature specification
+export async function generateSpec(options: GenerateSpecOptions): Promise<GeneratedSpec> {
+  const { featureName, description } = options;
+
+  await new Promise(resolve => setTimeout(resolve, MOCK_DELAY_MS));
+
+  const userStories = await generateUserStories({ prdContent: description });
+
+  return {
+    userStories,
+    edgeCases: [
+      'What happens when input is empty?',
+      'How does the system handle errors?',
+      'What are the boundary conditions?'
+    ],
+    functionalRequirements: [
+      'FR-001: System MUST allow users to perform core actions',
+      'FR-002: System MUST validate user input',
+      'FR-003: System MUST provide feedback on actions'
+    ],
+    successCriteria: [
+      'SC-001: Users can complete primary task in under 2 minutes',
+      'SC-002: System handles 1000 concurrent users',
+      'SC-003: 90% of users complete task on first attempt'
+    ],
+    keyEntities: [
+      'User: Represents system users',
+      'Action: Core actions performed by users',
+      'Result: Output of actions'
+    ]
+  };
+}
+
+// Step 2: Clarify - Generate clarification questions
+export async function generateClarify(options: GenerateClarifyOptions): Promise<ClarificationQuestion[]> {
+  const { specContent } = options;
+
+  await new Promise(resolve => setTimeout(resolve, MOCK_DELAY_MS));
+
+  // Analyze spec content and generate relevant questions
+  const hasAuth = specContent.toLowerCase().includes('auth');
+  const hasData = specContent.toLowerCase().includes('data');
+  const hasApi = specContent.toLowerCase().includes('api');
+
+  const questions: ClarificationQuestion[] = [];
+
+  if (hasAuth) {
+    questions.push({
+      question: 'What authentication method should be used?',
+      context: 'Authentication was mentioned in the spec'
+    });
+  }
+
+  if (hasData) {
+    questions.push({
+      question: 'What is the expected data volume?',
+      context: 'Data handling was mentioned in the spec'
+    });
+  }
+
+  if (hasApi) {
+    questions.push({
+      question: 'Should the API be REST or GraphQL?',
+      context: 'API was mentioned in the spec'
+    });
+  }
+
+  // Default questions
+  questions.push(
+    {
+      question: 'What is the target user audience?',
+      context: 'Clarifying target users helps prioritize features'
+    },
+    {
+      question: 'Are there specific design requirements?',
+      context: 'Design constraints affect implementation approach'
+    }
+  );
+
+  return questions;
+}
+
+// Step 3: Plan - Generate technical plan
+export async function generatePlan(options: GeneratePlanOptions): Promise<GeneratedPlan> {
+  const { specContent, constitution } = options;
+
+  await new Promise(resolve => setTimeout(resolve, MOCK_DELAY_MS * 2));
+
+  const hasWeb = specContent.toLowerCase().includes('web') || specContent.toLowerCase().includes('frontend');
+  const hasMobile = specContent.toLowerCase().includes('mobile') || specContent.toLowerCase().includes('ios') || specContent.toLowerCase().includes('android');
+
+  return {
+    summary: `Implementation plan based on the feature specification. ${hasWeb ? 'Web application architecture.' : ''} ${hasMobile ? 'Mobile-first responsive design.' : ''}`,
+    technicalContext: {
+      language: hasWeb ? 'TypeScript' : hasMobile ? 'Swift' : 'TypeScript',
+      version: hasWeb ? '5.9' : hasMobile ? '5.9' : '3.11',
+      dependencies: ['react', 'zustand', 'tailwindcss'],
+      storage: constitution?.toLowerCase().includes('database') ? 'PostgreSQL' : 'Local state',
+      testing: 'Vitest + Playwright',
+      platform: hasWeb ? 'Web (responsive)' : hasMobile ? 'iOS 15+' : 'Cross-platform',
+      performanceGoals: '<200ms p95 response time',
+      constraints: 'Must be accessible (WCAG 2.2 AA)'
+    },
+    projectStructure: {
+      decision: hasWeb ? 'Web application structure' : 'Single project structure',
+      structure: hasWeb
+        ? 'frontend/src/, backend/src/, tests/'
+        : 'src/, tests/'
+    }
+  };
+}
+
+// Step 4: Tasks - Generate task breakdown
+export async function generateTasks(options: GenerateTasksOptions): Promise<GeneratedTasks> {
+  const { specContent, planContent } = options;
+
+  await new Promise(resolve => setTimeout(resolve, MOCK_DELAY_MS * 2));
+
+  const hasApi = specContent.toLowerCase().includes('api');
+  const hasDatabase = planContent.toLowerCase().includes('database');
+
+  return {
+    phases: [
+      {
+        name: 'Phase 1: Setup',
+        purpose: 'Project initialization and basic structure',
+        tasks: [
+          { id: 'T001', description: 'Create project structure per implementation plan', parallel: true },
+          { id: 'T002', description: 'Initialize project with required dependencies', parallel: true },
+          { id: 'T003', description: 'Configure linting and formatting tools', parallel: true }
+        ]
+      },
+      {
+        name: 'Phase 2: Foundational',
+        purpose: 'Core infrastructure that MUST be complete before any user story',
+        checkpoint: 'Foundation ready - user story implementation can now begin',
+        tasks: [
+          { id: 'T004', description: hasDatabase ? 'Setup database schema and migrations' : 'Setup configuration management' },
+          { id: 'T005', description: 'Create base models/entities', parallel: true },
+          { id: 'T006', description: 'Setup error handling and logging infrastructure', parallel: true }
+        ]
+      },
+      {
+        name: 'Phase 3: User Story 1',
+        purpose: 'Core functionality implementation',
+        tasks: [
+          { id: 'T007', description: 'Implement core feature components', userStory: 'US01' },
+          { id: 'T008', description: hasApi ? 'Implement API endpoints' : 'Implement UI components', userStory: 'US01', parallel: true },
+          { id: 'T009', description: 'Add validation and error handling', userStory: 'US01' }
+        ]
+      },
+      {
+        name: 'Phase 4: Polish',
+        purpose: 'Cross-cutting concerns and improvements',
+        tasks: [
+          { id: 'T010', description: 'Documentation updates', parallel: true },
+          { id: 'T011', description: 'Code cleanup and refactoring', parallel: true },
+          { id: 'T012', description: 'Performance optimization' }
+        ]
+      }
+    ]
+  };
+}
+
+// Step 5: Analyze - Validate consistency across documents
+export async function analyzeDocuments(options: AnalyzeOptions): Promise<AnalysisResult> {
+  const { specContent, planContent, tasksContent, constitution } = options;
+
+  await new Promise(resolve => setTimeout(resolve, MOCK_DELAY_MS));
+
+  const issues: AnalysisResult['issues'] = [];
+
+  // Check spec-plan consistency
+  const specHasUserStories = specContent.toLowerCase().includes('user story');
+  const planHasImplementation = planContent.toLowerCase().includes('implementation') || planContent.toLowerCase().includes('plan');
+  const specPlanConsistent = specHasUserStories && planHasImplementation;
+
+  // Check plan-tasks consistency
+  const tasksHasPhases = tasksContent.toLowerCase().includes('phase');
+  const planHasStructure = planContent.toLowerCase().includes('structure') || planContent.toLowerCase().includes('context');
+  const planTasksConsistent = tasksHasPhases && planHasStructure;
+
+  // Check constitution alignment
+  let constitutionAligned = true;
+  if (constitution) {
+    const hasPrinciples = constitution.toLowerCase().includes('principle');
+    constitutionAligned = hasPrinciples;
+    if (!hasPrinciples) {
+      issues.push({
+        severity: 'warning',
+        category: 'alignment',
+        message: 'Constitution may not have core principles defined'
+      });
+    }
+  }
+
+  // Add issues if inconsistencies found
+  if (!specPlanConsistent) {
+    issues.push({
+      severity: 'error',
+      category: 'consistency',
+      message: 'Plan does not appear to reference the specification',
+      location: 'plan.md'
+    });
+  }
+
+  if (!planTasksConsistent) {
+    issues.push({
+      severity: 'warning',
+      category: 'consistency',
+      message: 'Tasks may not align with the plan structure',
+      location: 'tasks.md'
+    });
+  }
+
+  // Check for completeness
+  if (!specContent.includes('Acceptance') && !specContent.includes('Scenario')) {
+    issues.push({
+      severity: 'warning',
+      category: 'completeness',
+      message: 'Spec may be missing acceptance criteria'
+    });
+  }
+
+  return {
+    isValid: issues.filter(i => i.severity === 'error').length === 0,
+    specPlanConsistency: {
+      isConsistent: specPlanConsistent,
+      score: specPlanConsistent ? 90 : 50,
+      details: specPlanConsistent
+        ? 'Plan properly references specification'
+        : 'Potential disconnect between spec and plan'
+    },
+    planTasksConsistency: {
+      isConsistent: planTasksConsistent,
+      score: planTasksConsistent ? 85 : 40,
+      details: planTasksConsistent
+        ? 'Tasks properly derived from plan'
+        : 'Tasks may not fully align with plan'
+    },
+    constitutionAlignment: {
+      isConsistent: constitutionAligned,
+      score: constitution ? (constitutionAligned ? 90 : 60) : 100,
+      details: constitution
+        ? (constitutionAligned ? 'Plan aligns with constitution' : 'Potential constitution violations')
+        : 'No constitution to check'
+    },
+    issues
+  };
 }
