@@ -15,11 +15,93 @@ model Project {
   id          String   @id @default(uuid())
   name        String   @unique // URL slug (e.g., "my-project")
   displayName String   @map("display_name")
-  filePath    String   @map("file_path") // Local path to spec files
+  description String?
+  filePath    String?  @map("file_path") // Optional - for migration from filesystem
+
+  // Database-first fields
+  isCloud     Boolean  @default(false) @map("is_cloud")
+
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  // Relations
+  features    Feature[]
+
   @@map("projects")
+}
+
+// ============================================
+// Feature/Task Management Models (Database-first)
+// ============================================
+
+// Feature model (replaces filesystem-based features)
+model Feature {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  featureId   String   // e.g., "001-user-login" (from spec)
+  name        String
+  description String?
+  stage       String   @default("specify") // specify, plan, tasks, implement, complete
+  status      String   @default("backlog") // backlog, planning, in_progress, done
+  order       Int      @default(0)
+
+  // Timestamps
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userStories UserStory[]
+  tasks       Task[]
+
+  @@unique([projectId, featureId])
+  @@map("features")
+}
+
+// User Story model
+model UserStory {
+  id          String   @id @default(uuid())
+  featureId   String   @map("feature_id")
+  storyId     String   // e.g., "US1"
+  title       String
+  description String?
+  status      String   @default("pending") // pending, in_progress, completed
+  order       Int      @default(0)
+
+  // Timestamps
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  feature     Feature  @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@unique([featureId, storyId])
+  @@map("user_stories")
+}
+
+// Task model (granular than markdown tasks)
+model Task {
+  id          String   @id @default(uuid())
+  featureId   String   @map("feature_id")
+  userStoryId String?  @map("user_story_id")
+  taskId      String   // e.g., "T001"
+  title       String
+  description String?
+  status      String   @default("pending") // pending, in_progress, completed
+  priority    String   @default("P") // P (High), M (Medium), L (Low)
+  order       Int      @default(0)
+
+  // Timestamps
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  feature     Feature    @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  userStory   UserStory? @relation(fields: [userStoryId], references: [id], onDelete: SetNull)
+
+  @@unique([featureId, taskId])
+  @@map("tasks")
 }
 
 // ============================================
