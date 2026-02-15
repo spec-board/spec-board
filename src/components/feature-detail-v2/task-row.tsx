@@ -50,8 +50,8 @@ export function TaskRow({ task, onClick, isSelected, featurePath }: TaskRowProps
       onClick={onClick}
       className={cn(
         'flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors',
-        'hover:bg-gray-50',
-        isSelected && 'bg-blue-50 ring-1 ring-blue-200'
+        'hover:bg-[var(--muted)]',
+        isSelected && 'bg-[var(--primary)]/10 ring-1 ring-[var(--primary)]/20'
       )}
       role="button"
       tabIndex={0}
@@ -69,8 +69,8 @@ export function TaskRow({ task, onClick, isSelected, featurePath }: TaskRowProps
         className={cn(
           'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
           isCompleted
-            ? 'bg-blue-500 border-blue-500 text-white'
-            : 'border-gray-300 hover:border-blue-400',
+            ? 'bg-[var(--primary)] border-[var(--primary)] text-[var(--primary-foreground)]'
+            : 'border-[var(--border)] hover:border-[var(--primary)]',
           isToggling && 'opacity-50'
         )}
         aria-label={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
@@ -79,7 +79,7 @@ export function TaskRow({ task, onClick, isSelected, featurePath }: TaskRowProps
       </button>
 
       {/* Task ID */}
-      <span className="flex-shrink-0 text-xs font-mono text-gray-400 w-10">
+      <span className="flex-shrink-0 text-xs font-mono text-[var(--muted-foreground)] w-10">
         {task.id}
       </span>
 
@@ -87,7 +87,7 @@ export function TaskRow({ task, onClick, isSelected, featurePath }: TaskRowProps
       <span
         className={cn(
           'flex-1 text-sm truncate',
-          isCompleted ? 'text-gray-400 line-through' : 'text-gray-700'
+          isCompleted ? 'text-[var(--muted-foreground)] line-through' : 'text-[var(--foreground)]'
         )}
       >
         {task.description}
@@ -95,7 +95,7 @@ export function TaskRow({ task, onClick, isSelected, featurePath }: TaskRowProps
 
       {/* Parallel indicator */}
       {task.parallel && (
-        <span className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-600 font-medium">
+        <span className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded bg-[var(--color-phase-purple)]/10 text-[var(--color-phase-purple)] font-medium">
           P
         </span>
       )}

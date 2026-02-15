@@ -55,17 +55,17 @@ export function DocumentSelector({ options, selected, onChange }: DocumentSelect
         onKeyDown={handleKeyDown}
         className={cn(
           'flex items-center gap-2 px-3 py-1.5 rounded-md border transition-colors',
-          'bg-white border-gray-200 hover:border-gray-300',
-          'text-sm font-medium text-gray-700',
-          isOpen && 'border-blue-400 ring-1 ring-blue-100'
+          'bg-[var(--card)] border-[var(--border)] hover:border-[var(--primary)]',
+          'text-sm font-medium text-[var(--foreground)]',
+          isOpen && 'border-[var(--primary)] ring-1 ring-[var(--primary)]/20'
         )}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
         <span>Document:</span>
-        <span className="text-blue-600">{selectedOption?.label || 'Select'}</span>
+        <span className="text-[var(--primary)]">{selectedOption?.label || 'Select'}</span>
         <ChevronDown className={cn(
-          'w-4 h-4 text-gray-400 transition-transform',
+          'w-4 h-4 text-[var(--muted-foreground)] transition-transform',
           isOpen && 'rotate-180'
         )} />
       </button>
@@ -75,7 +75,7 @@ export function DocumentSelector({ options, selected, onChange }: DocumentSelect
         <div
           className={cn(
             'absolute top-full left-0 mt-1 z-50',
-            'bg-white rounded-md shadow-lg border border-gray-200',
+            'bg-[var(--card)] rounded-md shadow-lg border border-[var(--border)]',
             'py-1 min-w-[160px]'
           )}
           role="listbox"
@@ -89,21 +89,21 @@ export function DocumentSelector({ options, selected, onChange }: DocumentSelect
               }}
               className={cn(
                 'w-full px-3 py-2 text-left text-sm flex items-center gap-2',
-                'hover:bg-gray-50 transition-colors',
-                option.type === selected && 'bg-blue-50 text-blue-700'
+                'hover:bg-[var(--muted)] transition-colors',
+                option.type === selected && 'bg-[var(--primary)]/10 text-[var(--primary)]'
               )}
               role="option"
               aria-selected={option.type === selected}
             >
               <span className="flex-1">{option.label}</span>
               {option.type === selected && (
-                <Check className="w-4 h-4 text-blue-600" />
+                <Check className="w-4 h-4 text-[var(--primary)]" />
               )}
             </button>
           ))}
 
           {availableOptions.length === 0 && (
-            <div className="px-3 py-2 text-sm text-gray-400 italic">
+            <div className="px-3 py-2 text-sm text-[var(--muted-foreground)] italic">
               No documents available
             </div>
           )}

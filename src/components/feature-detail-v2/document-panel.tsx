@@ -56,9 +56,9 @@ export function DocumentPanel({
   // Empty state when no content
   if (!currentContent) {
     return (
-      <div className="h-full flex flex-col bg-white">
+      <div className="h-full flex flex-col bg-[var(--card)]">
         {/* Header with selector */}
-        <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200">
+        <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)]">
           <DocumentSelector
             options={documentOptions}
             selected={selectedDocument}
@@ -68,9 +68,9 @@ export function DocumentPanel({
 
         {/* Empty state */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <FileText className="w-12 h-12 text-gray-300 mb-3" />
-          <p className="text-sm text-gray-500">No content available</p>
-          <p className="text-xs text-gray-400 mt-1">
+          <FileText className="w-12 h-12 text-[var(--muted-foreground)] opacity-50 mb-3" />
+          <p className="text-sm text-[var(--muted-foreground)]">No content available</p>
+          <p className="text-xs text-[var(--muted-foreground)] opacity-70 mt-1">
             This document hasn&apos;t been created yet
           </p>
         </div>
@@ -79,9 +79,9 @@ export function DocumentPanel({
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-[var(--card)]">
       {/* Header with selector */}
-      <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)]">
         <DocumentSelector
           options={documentOptions}
           selected={selectedDocument}
@@ -94,13 +94,13 @@ export function DocumentPanel({
         ref={contentRef}
         className={cn(
           'flex-1 overflow-y-auto p-6',
-          'prose prose-sm max-w-none',
-          'prose-headings:text-gray-900',
-          'prose-p:text-gray-600',
-          'prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:rounded',
-          'prose-pre:bg-gray-900 prose-pre:text-gray-100',
-          'prose-li:text-gray-600',
-          'prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline'
+          'prose prose-sm max-w-none dark:prose-invert',
+          'prose-headings:text-[var(--foreground)]',
+          'prose-p:text-[var(--foreground)]',
+          'prose-code:text-[var(--primary)] prose-code:bg-[var(--accent-muted)] prose-code:px-1 prose-code:rounded',
+          'prose-pre:bg-[var(--muted)] prose-pre:text-[var(--foreground)]',
+          'prose-li:text-[var(--foreground)]',
+          'prose-a:text-[var(--primary)] prose-a:no-underline hover:prose-a:underline'
         )}
       >
         <MarkdownRenderer content={currentContent} />
