@@ -7,7 +7,8 @@ export type AIProvider = 'openai' | 'anthropic';
 
 interface AISettings {
   provider: AIProvider;
-  baseUrl?: string;  // Custom API base URL (e.g., for OpenAI-compatible APIs)
+  openaiBaseUrl?: string;  // Custom API base URL for OpenAI-compatible APIs
+  anthropicBaseUrl?: string; // Custom API base URL for Anthropic-compatible APIs
   openaiApiKey?: string;
   anthropicApiKey?: string;
 }
@@ -125,14 +126,15 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     saveSettingsToStorage({ shortcutsEnabled, theme, aiSettings: newAiSettings });
 
     // Save settings server-side (API keys, baseUrl)
-    if (settings.openaiApiKey || settings.anthropicApiKey || settings.baseUrl !== undefined) {
+    if (settings.openaiApiKey || settings.anthropicApiKey || settings.openaiBaseUrl !== undefined || settings.anthropicBaseUrl !== undefined) {
       try {
         await fetch('/api/settings/ai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             provider: newAiSettings.provider,
-            baseUrl: newAiSettings.baseUrl,
+            openaiBaseUrl: newAiSettings.openaiBaseUrl,
+            anthropicBaseUrl: newAiSettings.anthropicBaseUrl,
             openaiApiKey: settings.openaiApiKey,
             anthropicApiKey: settings.anthropicApiKey,
           }),
@@ -176,7 +178,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       .then(res => res.json())
       .then(data => {
         if (data.provider) {
-          set({ aiSettings: { ...aiSettings, provider: data.provider, baseUrl: data.baseUrl } });
+          set({ aiSettings: { ...aiSettings, provider: data.provider, openaiBaseUrl: data.openaiBaseUrl, anthropicBaseUrl: data.anthropicBaseUrl } });
         }
       })
       .catch(() => {

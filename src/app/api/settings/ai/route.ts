@@ -8,7 +8,8 @@ export async function GET() {
 
     return NextResponse.json({
       provider: settings.provider,
-      baseUrl: settings.baseUrl || '',
+      openaiBaseUrl: settings.openaiBaseUrl || '',
+      anthropicBaseUrl: settings.anthropicBaseUrl || '',
       hasOpenAI: !!settings.openaiApiKey,
       hasAnthropic: !!settings.anthropicApiKey,
     });
@@ -25,11 +26,12 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { provider, baseUrl, openaiApiKey, anthropicApiKey } = body;
+    const { provider, openaiBaseUrl, anthropicBaseUrl, openaiApiKey, anthropicApiKey } = body;
 
     setAISettings({
       provider: provider || 'anthropic',
-      baseUrl,
+      openaiBaseUrl,
+      anthropicBaseUrl,
       openaiApiKey,
       anthropicApiKey,
     });
@@ -38,7 +40,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       provider: settings.provider,
-      baseUrl: settings.baseUrl,
+      openaiBaseUrl: settings.openaiBaseUrl,
+      anthropicBaseUrl: settings.anthropicBaseUrl,
     });
   } catch (error) {
     console.error('Error saving AI settings:', error);

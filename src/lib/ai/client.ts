@@ -156,7 +156,7 @@ class AIService {
       return mockGenerateUserStories(options);
     }
 
-    const baseUrl = settings.baseUrl || 'https://api.openai.com/v1';
+    const baseUrl = settings.openaiBaseUrl || 'https://api.openai.com/v1';
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -189,7 +189,7 @@ class AIService {
       return mockGenerateSpecKit(options);
     }
 
-    const baseUrl = settings.baseUrl || 'https://api.openai.com/v1';
+    const baseUrl = settings.openaiBaseUrl || 'https://api.openai.com/v1';
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
