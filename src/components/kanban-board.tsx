@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature, KanbanColumnType } from '@/types';
-import { GitBranch, CheckCircle2, Sparkles } from 'lucide-react';
+import { GitBranch, CheckCircle2, Plus } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
 import { CreateFeatureModal } from './create-feature-modal';
@@ -166,6 +166,7 @@ interface KanbanColumnComponentProps {
   onFeatureClick: (feature: Feature) => void;
   focusedFeatureId: string | null;
   setCardRef: (featureId: string, element: HTMLButtonElement | null) => void;
+  onCreateFeature?: () => void;
 }
 
 function KanbanColumnComponent({
@@ -174,6 +175,7 @@ function KanbanColumnComponent({
   onFeatureClick,
   focusedFeatureId,
   setCardRef,
+  onCreateFeature,
 }: KanbanColumnComponentProps) {
   const columnLabel = getKanbanColumnLabel(column);
 
@@ -194,29 +196,42 @@ function KanbanColumnComponent({
           paddingBottom: 'var(--space-4)', // 16px
         }}
       >
-        <h3 
-          className="font-semibold uppercase tracking-wide text-[var(--foreground)]" 
-          id={`column-${column}-heading`}
-          style={{
-            fontSize: 'var(--text-sm)', // 14px
-          }}
-        >
-          {columnLabel}
-        </h3>
-        <span
-          className="font-medium text-[var(--muted-foreground)] tabular-nums
-            bg-[var(--secondary)] rounded-full"
-          aria-label={`${features.length} features`}
-          style={{
-            fontSize: 'var(--text-xs)', // 12px
-            paddingLeft: 'var(--space-2)', // 8px
-            paddingRight: 'var(--space-2)', // 8px
-            paddingTop: 'calc(var(--space-1) / 2)', // 2px
-            paddingBottom: 'calc(var(--space-1) / 2)', // 2px
-          }}
-        >
-          {features.length}
-        </span>
+        <div className="flex items-center gap-2">
+          <h3
+            className="font-semibold uppercase tracking-wide text-[var(--foreground)]"
+            id={`column-${column}-heading`}
+            style={{
+              fontSize: 'var(--text-sm)', // 14px
+            }}
+          >
+            {columnLabel}
+          </h3>
+          <span
+            className="font-medium text-[var(--muted-foreground)] tabular-nums
+              bg-[var(--secondary)] rounded-full"
+            aria-label={`${features.length} features`}
+            style={{
+              fontSize: 'var(--text-xs)', // 12px
+              paddingLeft: 'var(--space-2)', // 8px
+              paddingRight: 'var(--space-2)', // 8px
+              paddingTop: 'calc(var(--space-1) / 2)', // 2px
+              paddingBottom: 'calc(var(--space-1) / 2)', // 2px
+            }}
+          >
+            {features.length}
+          </span>
+        </div>
+        {/* Inline create feature button for Backlog column */}
+        {column === 'backlog' && onCreateFeature && (
+          <button
+            onClick={onCreateFeature}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)] text-xs font-medium transition-colors"
+            aria-label="Create new feature"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Feature
+          </button>
+        )}
       </div>
 
       {/* Column content */}
@@ -261,9 +276,10 @@ interface KanbanBoardProps {
   features: Feature[];
   onFeatureClick: (feature: Feature) => void;
   projectPath?: string;
+  projectId?: string;
 }
 
-export function KanbanBoard({ features, onFeatureClick, projectPath }: KanbanBoardProps) {
+export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }: KanbanBoardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { focusState, setFocusState, clearFocusState } = useProjectStore();
   const cardRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map());
@@ -485,28 +501,21 @@ export function KanbanBoard({ features, onFeatureClick, projectPath }: KanbanBoa
           onFeatureClick={onFeatureClick}
           focusedFeatureId={focusState.featureId}
           setCardRef={setCardRef}
+          onCreateFeature={column === 'backlog' ? () => setIsModalOpen(true) : undefined}
         />
       ))}
-
-      {/* Create Feature FAB - positioned inside section for proper z-index */}
-      <div className="sticky bottom-0 ml-auto pt-4">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
-          aria-label="Create new feature from PRD"
-        >
-          <Sparkles className="w-5 h-5" />
-        </button>
-      </div>
     </section>
 
-    {projectPath && (
+    {projectId && (
       <CreateFeatureModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        projectId={projectId}
         projectPath={projectPath}
-        onFeatureCreated={(featureId) => {
-          console.log('Feature created:', featureId);
+        onFeatureCreated={(feature) => {
+          console.log('Feature created:', feature);
+          // Reload the page to fetch new data
+          window.location.reload();
         }}
       />
     )}
