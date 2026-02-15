@@ -207,7 +207,8 @@ function AIContent() {
 
   const [openaiKey, setOpenaiKey] = useState('');
   const [anthropicKey, setAnthropicKey] = useState('');
-  const [baseUrl, setBaseUrl] = useState(aiSettings.baseUrl || '');
+  const [openaiBaseUrl, setOpenaiBaseUrl] = useState(aiSettings.openaiBaseUrl || '');
+  const [anthropicBaseUrl, setAnthropicBaseUrl] = useState(aiSettings.anthropicBaseUrl || '');
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -234,9 +235,17 @@ function AIContent() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handleSaveBaseUrl = async () => {
+  const handleSaveOpenAIBaseUrl = async () => {
     setIsSaving(true);
-    await setAISettings({ baseUrl: baseUrl.trim() || undefined });
+    await setAISettings({ openaiBaseUrl: openaiBaseUrl.trim() || undefined });
+    setIsSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSaveAnthropicBaseUrl = async () => {
+    setIsSaving(true);
+    await setAISettings({ anthropicBaseUrl: anthropicBaseUrl.trim() || undefined });
     setIsSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -282,27 +291,57 @@ function AIContent() {
         </div>
       </div>
 
-      {/* Base URL (for OpenAI-compatible APIs) */}
+      {/* Base URLs for Custom API Endpoints */}
       <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
-        <h3 className="text-sm font-medium mb-3">Base URL (Optional)</h3>
+        <h3 className="text-sm font-medium mb-3">Base URLs (Optional)</h3>
         <p className="text-xs text-[var(--muted-foreground)] mb-3">
-          Use a custom OpenAI-compatible API endpoint (e.g., Ollama, LM Studio, LiteLLM)
+          Use custom API endpoints for OpenAI-compatible or Anthropic-compatible APIs
         </p>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={baseUrl}
-            onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="https://api.openai.com/v1"
-            className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
-          />
-          <button
-            onClick={handleSaveBaseUrl}
-            disabled={isSaving}
-            className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
-          >
-            Save
-          </button>
+
+        {/* OpenAI Base URL */}
+        <div className="mb-4">
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
+            OpenAI Base URL (e.g., Ollama, LM Studio)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={openaiBaseUrl}
+              onChange={(e) => setOpenaiBaseUrl(e.target.value)}
+              placeholder="http://localhost:11434/v1"
+              className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+            />
+            <button
+              onClick={handleSaveOpenAIBaseUrl}
+              disabled={isSaving}
+              className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+
+        {/* Anthropic Base URL */}
+        <div>
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
+            Anthropic Base URL (e.g., Anthropic-compatible API)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={anthropicBaseUrl}
+              onChange={(e) => setAnthropicBaseUrl(e.target.value)}
+              placeholder="https://api.anthropic.com"
+              className="flex-1 px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+            />
+            <button
+              onClick={handleSaveAnthropicBaseUrl}
+              disabled={isSaving}
+              className="px-3 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
+            >
+              Save
+            </button>
+          </div>
         </div>
       </div>
 

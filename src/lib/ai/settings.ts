@@ -2,7 +2,8 @@
 
 export interface AISettingsData {
   provider: string;
-  baseUrl?: string;
+  openaiBaseUrl?: string;
+  anthropicBaseUrl?: string;
   openaiApiKey?: string;
   anthropicApiKey?: string;
 }
