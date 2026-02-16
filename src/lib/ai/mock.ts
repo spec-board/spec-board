@@ -253,12 +253,10 @@ export async function generateSpecKit(options: GenerateSpecKitOptions): Promise<
 }
 
 // Get available models for a provider
-export function getAvailableModels(provider: 'claude' | 'openai' | 'mock'): string[] {
+export function getAvailableModels(provider: 'openai' | 'mock'): string[] {
   switch (provider) {
-    case 'claude':
-      return ['claude-sonnet-4-20250514', 'claude-haiku-4-20250514'];
     case 'openai':
-      return ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'];
+      return ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo', 'llama3', 'mistral'];
     case 'mock':
     default:
       return ['mock-model'];

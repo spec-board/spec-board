@@ -1,20 +1,14 @@
 import { create } from 'zustand';
 
-const SETTINGS_KEY = 'specboard-settings';
-
 export type Theme = 'light' | 'dark' | 'system';
-export type AIProvider = 'openai' | 'anthropic';
+export type AIProvider = 'openai';
 
 interface AISettings {
   provider: AIProvider;
-  openaiBaseUrl?: string;
-  anthropicBaseUrl?: string;
-  openaiApiKey?: string;
-  anthropicApiKey?: string;
-  openaiModel?: string;
-  anthropicModel?: string;
-  hasOpenAI?: boolean;
-  hasAnthropic?: boolean;
+  baseUrl?: string;
+  apiKey?: string;
+  model?: string;
+  hasApiKey?: boolean;
 }
 
 interface Settings {
@@ -29,47 +23,22 @@ interface SettingsStore {
   theme: Theme;
   resolvedTheme: 'light' | 'dark'; // Actual theme after resolving 'system'
   aiSettings: AISettings;
+  isLoaded: boolean;
 
   // Actions
-  setShortcutsEnabled: (enabled: boolean) => void;
-  setTheme: (theme: Theme) => void;
+  setShortcutsEnabled: (enabled: boolean) => Promise<void>;
+  setTheme: (theme: Theme) => Promise<void>;
   setAISettings: (settings: Partial<AISettings>) => Promise<void>;
-  loadSettings: () => void;
+  loadSettings: () => Promise<void>;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   shortcutsEnabled: true, // Default: shortcuts are enabled
   theme: 'dark', // Default: dark theme
   aiSettings: {
-    provider: 'anthropic', // Default to Anthropic
+    provider: 'openai', // Default to OpenAI-compatible
   },
 };
-
-function loadSettingsFromStorage(): Settings {
-  if (typeof window === 'undefined') return DEFAULT_SETTINGS;
-  try {
-    const stored = localStorage.getItem(SETTINGS_KEY);
-    if (stored) {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
-    }
-    return DEFAULT_SETTINGS;
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
-}
-
-function saveSettingsToStorage(settings: Settings) {
-  if (typeof window === 'undefined') return;
-  // Don't save API keys to localStorage for security
-  const safeSettings = {
-    ...settings,
-    aiSettings: {
-      provider: settings.aiSettings.provider,
-      // Don't persist API keys to localStorage
-    },
-  };
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(safeSettings));
-}
 
 /**
  * Get the system's preferred color scheme
@@ -106,56 +75,56 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   theme: DEFAULT_SETTINGS.theme,
   resolvedTheme: 'dark',
   aiSettings: DEFAULT_SETTINGS.aiSettings,
+  isLoaded: false,
 
-  setShortcutsEnabled: (enabled: boolean) => {
-    const { theme, aiSettings } = get();
+  setShortcutsEnabled: async (enabled: boolean) => {
     set({ shortcutsEnabled: enabled });
-    saveSettingsToStorage({ shortcutsEnabled: enabled, theme, aiSettings });
+
+    // Save to database
+    try {
+      await fetch('/api/settings/app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shortcutsEnabled: enabled }),
+      });
+    } catch (error) {
+      console.error('Failed to save shortcuts setting:', error);
+    }
   },
 
-  setTheme: (theme: Theme) => {
-    const { shortcutsEnabled, aiSettings } = get();
+  setTheme: async (theme: Theme) => {
     const resolvedTheme = resolveTheme(theme);
     applyTheme(resolvedTheme);
     set({ theme, resolvedTheme });
-    saveSettingsToStorage({ shortcutsEnabled, theme, aiSettings });
+
+    // Save to database
+    try {
+      await fetch('/api/settings/app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme }),
+      });
+    } catch (error) {
+      console.error('Failed to save theme setting:', error);
+    }
   },
 
   setAISettings: async (settings: Partial<AISettings>) => {
-    const { shortcutsEnabled, theme, aiSettings } = get();
+    const { aiSettings } = get();
     const newAiSettings = { ...aiSettings, ...settings };
     set({ aiSettings: newAiSettings });
 
-    // Save non-sensitive settings to localStorage
-    saveSettingsToStorage({ shortcutsEnabled, theme, aiSettings: newAiSettings });
-
     // Save settings server-side (API keys, baseUrl)
-    if (settings.openaiApiKey || settings.anthropicApiKey || settings.openaiBaseUrl !== undefined || settings.anthropicBaseUrl !== undefined || settings.openaiModel || settings.anthropicModel) {
+    if (settings.apiKey || settings.baseUrl !== undefined || settings.model) {
       try {
         await fetch('/api/settings/ai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             provider: newAiSettings.provider,
-            openaiBaseUrl: newAiSettings.openaiBaseUrl,
-            anthropicBaseUrl: newAiSettings.anthropicBaseUrl,
-            openaiApiKey: settings.openaiApiKey,
-            anthropicApiKey: settings.anthropicApiKey,
-            openaiModel: settings.openaiModel,
-            anthropicModel: settings.anthropicModel,
-          }),
-        });
-      } catch (error) {
-        console.error('Failed to save AI settings:', error);
-      }
-    } else if (settings.provider) {
-      // Just update provider
-      try {
-        await fetch('/api/settings/ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            provider: newAiSettings.provider,
+            baseUrl: newAiSettings.baseUrl,
+            apiKey: settings.apiKey,
+            model: settings.model,
           }),
         });
       } catch (error) {
@@ -164,41 +133,44 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     }
   },
 
-  loadSettings: () => {
-    const settings = loadSettingsFromStorage();
-    const resolvedTheme = resolveTheme(settings.theme);
-    applyTheme(resolvedTheme);
+  loadSettings: async () => {
+    // Load app settings from database
+    try {
+      const [appRes, aiRes] = await Promise.all([
+        fetch('/api/settings/app'),
+        fetch('/api/settings/ai'),
+      ]);
 
-    // Load API keys from server (they're stored server-side for security)
-    let aiSettings = settings.aiSettings;
+      const appData = await appRes.json();
+      const aiData = await aiRes.json();
 
-    set({
-      shortcutsEnabled: settings.shortcutsEnabled,
-      theme: settings.theme,
-      resolvedTheme,
-      aiSettings,
-    });
+      const resolvedTheme = resolveTheme(appData.theme || 'dark');
+      applyTheme(resolvedTheme);
 
-    // Fetch API keys from server
-    fetch('/api/settings/ai')
-      .then(res => res.json())
-      .then(data => {
-        if (data.provider) {
-          set({ aiSettings: { 
-            ...aiSettings, 
-            provider: data.provider, 
-            openaiBaseUrl: data.openaiBaseUrl, 
-            anthropicBaseUrl: data.anthropicBaseUrl,
-            openaiModel: data.openaiModel,
-            anthropicModel: data.anthropicModel,
-            hasOpenAI: data.hasOpenAI,
-            hasAnthropic: data.hasAnthropic,
-          } });
-        }
-      })
-      .catch(() => {
-        // Ignore errors - will use default
+      set({
+        shortcutsEnabled: appData.shortcutsEnabled ?? DEFAULT_SETTINGS.shortcutsEnabled,
+        theme: appData.theme || DEFAULT_SETTINGS.theme,
+        resolvedTheme,
+        aiSettings: {
+          provider: aiData.provider || DEFAULT_SETTINGS.aiSettings.provider,
+          baseUrl: aiData.baseUrl,
+          model: aiData.model,
+          hasApiKey: aiData.hasApiKey,
+        },
+        isLoaded: true,
       });
+    } catch (error) {
+      console.error('Failed to load settings from database:', error);
+      // Fall back to defaults
+      applyTheme('dark');
+      set({
+        shortcutsEnabled: DEFAULT_SETTINGS.shortcutsEnabled,
+        theme: DEFAULT_SETTINGS.theme,
+        resolvedTheme: 'dark',
+        aiSettings: DEFAULT_SETTINGS.aiSettings,
+        isLoaded: true,
+      });
+    }
 
     // Listen for system theme changes when using 'system' theme
     if (typeof window !== 'undefined') {

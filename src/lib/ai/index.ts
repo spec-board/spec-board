@@ -2,18 +2,10 @@
 export * from './types';
 export * from './mock';
 export * from './settings';
-export { AIService } from './client';
+export { AIService, aiService } from './client';
 
-// Re-export functions directly to avoid Turbopack class instance issues
-import {
-  generateUserStories as mockGenerateUserStories,
-  generateSpecKit as mockGenerateSpecKit,
-  generateSpec as mockGenerateSpec,
-  generateClarify as mockGenerateClarify,
-  generatePlan as mockGeneratePlan,
-  generateTasks as mockGenerateTasks,
-  analyzeDocuments as mockAnalyzeDocuments
-} from './mock';
+import { aiService } from './client';
+import { getAISettingsSync } from './settings';
 import type {
   GenerateUserStoriesOptions,
   GenerateSpecKitOptions,
@@ -28,40 +20,40 @@ import type {
   ClarificationQuestion,
   GeneratedPlan,
   GeneratedTasks,
-  AnalysisResult
+  AnalysisResult,
+  AIProvider
 } from './types';
 
-// Get current provider - defaults to mock
-function getProvider(): 'claude' | 'openai' | 'mock' {
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+/**
+ * Get current AI provider from settings
+ * @throws Error if no API key is configured
+ */
+export function getProvider(): AIProvider {
+  const settings = getAISettingsSync();
 
-  if (ANTHROPIC_API_KEY) return 'claude';
-  if (OPENAI_API_KEY) return 'openai';
-  return 'mock';
-}
-
-// Wrapper functions that use the mock for now
-export async function generateUserStories(options: GenerateUserStoriesOptions): Promise<GeneratedUserStory[]> {
-  const provider = getProvider();
-
-  if (provider === 'claude' || provider === 'openai') {
-    // TODO: Implement real AI integration
-    console.log(`[AI] Would use ${provider} for user stories generation`);
+  // Only OpenAI-compatible API supported
+  if (settings.provider === 'openai' && settings.apiKey) {
+    return 'openai';
   }
 
-  return mockGenerateUserStories(options);
+  throw new Error(
+    'No AI API key configured. Please configure an API key in settings to use AI features.'
+  );
+}
+
+// Wrapper functions that use AIService
+export async function generateUserStories(options: GenerateUserStoriesOptions): Promise<GeneratedUserStory[]> {
+  const provider = getProvider();
+  console.log(`[AI] Generating user stories with ${provider}`);
+
+  return aiService.generateUserStories(options);
 }
 
 export async function generateSpecKit(options: GenerateSpecKitOptions): Promise<GeneratedSpecKit> {
   const provider = getProvider();
+  console.log(`[AI] Generating spec-kit with ${provider}`);
 
-  if (provider === 'claude' || provider === 'openai') {
-    // TODO: Implement real AI integration
-    console.log(`[AI] Would use ${provider} for spec-kit generation`);
-  }
-
-  return mockGenerateSpecKit(options);
+  return aiService.generateSpecKit(options);
 }
 
 // ============================================================================
@@ -74,12 +66,10 @@ export async function generateSpecKit(options: GenerateSpecKitOptions): Promise<
  */
 export async function generateSpec(options: GenerateSpecOptions): Promise<GeneratedSpec> {
   const provider = getProvider();
+  console.log(`[AI] Generating spec with ${provider}`);
 
-  if (provider === 'claude' || provider === 'openai') {
-    console.log(`[AI] Would use ${provider} for spec generation`);
-  }
-
-  return mockGenerateSpec(options);
+  // Use AIService for generation - throws if no API key
+  return aiService.generateSpec(options);
 }
 
 /**
@@ -88,12 +78,10 @@ export async function generateSpec(options: GenerateSpecOptions): Promise<Genera
  */
 export async function generateClarify(options: GenerateClarifyOptions): Promise<ClarificationQuestion[]> {
   const provider = getProvider();
+  console.log(`[AI] Generating clarifications with ${provider}`);
 
-  if (provider === 'claude' || provider === 'openai') {
-    console.log(`[AI] Would use ${provider} for clarification generation`);
-  }
-
-  return mockGenerateClarify(options);
+  // Use AIService for generation - throws if no API key
+  return aiService.generateClarify(options);
 }
 
 /**
@@ -102,12 +90,10 @@ export async function generateClarify(options: GenerateClarifyOptions): Promise<
  */
 export async function generatePlan(options: GeneratePlanOptions): Promise<GeneratedPlan> {
   const provider = getProvider();
+  console.log(`[AI] Generating plan with ${provider}`);
 
-  if (provider === 'claude' || provider === 'openai') {
-    console.log(`[AI] Would use ${provider} for plan generation`);
-  }
-
-  return mockGeneratePlan(options);
+  // Use AIService for generation - throws if no API key
+  return aiService.generatePlan(options);
 }
 
 /**
@@ -116,12 +102,10 @@ export async function generatePlan(options: GeneratePlanOptions): Promise<Genera
  */
 export async function generateTasks(options: GenerateTasksOptions): Promise<GeneratedTasks> {
   const provider = getProvider();
+  console.log(`[AI] Generating tasks with ${provider}`);
 
-  if (provider === 'claude' || provider === 'openai') {
-    console.log(`[AI] Would use ${provider} for tasks generation`);
-  }
-
-  return mockGenerateTasks(options);
+  // Use AIService for generation - throws if no API key
+  return aiService.generateTasks(options);
 }
 
 /**
@@ -130,12 +114,26 @@ export async function generateTasks(options: GenerateTasksOptions): Promise<Gene
  */
 export async function analyzeDocuments(options: AnalyzeOptions): Promise<AnalysisResult> {
   const provider = getProvider();
+  console.log(`[AI] Analyzing documents with ${provider}`);
 
-  if (provider === 'claude' || provider === 'openai') {
-    console.log(`[AI] Would use ${provider} for document analysis`);
-  }
-
-  return mockAnalyzeDocuments(options);
+  // Use AIService for analysis - throws if no API key
+  return aiService.analyzeDocuments(options);
 }
 
-export { getProvider };
+/**
+ * Generate Constitution - Create project constitution with AI
+ * Returns principles and suggested sections based on project context
+ */
+export async function generateConstitution(options: {
+  projectName: string;
+  projectDescription?: string;
+  existingPrinciples?: string;
+}): Promise<{
+  principles: Array<{ name: string; description: string }>;
+  suggestedSections: Array<{ name: string; content: string }>;
+}> {
+  const provider = getProvider();
+  console.log(`[AI] Generating constitution with ${provider}`);
+
+  return aiService.generateConstitution(options);
+}
