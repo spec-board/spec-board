@@ -274,38 +274,38 @@ Some planning notes here.
 });
 
 describe('determineFeatureStage', () => {
-  it('should return "specify" when no spec exists', () => {
-    expect(determineFeatureStage(false, false, false, 0, 0)).toBe('specify');
-    expect(determineFeatureStage(false, true, true, 5, 10)).toBe('specify');
+  it('should return "backlog" when no spec exists', () => {
+    expect(determineFeatureStage(false, false, false, 0, 0)).toBe('backlog');
+    expect(determineFeatureStage(false, true, true, 5, 10)).toBe('backlog');
   });
 
-  it('should return "plan" when spec exists but no plan', () => {
-    expect(determineFeatureStage(true, false, false, 0, 0)).toBe('plan');
-    expect(determineFeatureStage(true, false, true, 0, 0)).toBe('plan');
+  it('should return "planning" when spec exists but no plan', () => {
+    expect(determineFeatureStage(true, false, false, 0, 0)).toBe('planning');
+    expect(determineFeatureStage(true, false, true, 0, 0)).toBe('planning');
   });
 
-  it('should return "tasks" when plan exists but no tasks file', () => {
-    expect(determineFeatureStage(true, true, false, 0, 0)).toBe('tasks');
+  it('should return "backlog" when plan exists but no tasks file', () => {
+    expect(determineFeatureStage(true, true, false, 0, 0)).toBe('backlog');
   });
 
-  it('should return "tasks" when tasks file exists but no tasks completed', () => {
-    expect(determineFeatureStage(true, true, true, 0, 5)).toBe('tasks');
-    expect(determineFeatureStage(true, true, true, 0, 0)).toBe('tasks');
+  it('should return "backlog" when tasks file exists but no tasks completed', () => {
+    expect(determineFeatureStage(true, true, true, 0, 5)).toBe('backlog');
+    expect(determineFeatureStage(true, true, true, 0, 0)).toBe('backlog');
   });
 
-  it('should return "implement" when some tasks are completed', () => {
-    expect(determineFeatureStage(true, true, true, 3, 10)).toBe('implement');
-    expect(determineFeatureStage(true, true, true, 1, 5)).toBe('implement');
+  it('should return "in_progress" when some tasks are completed', () => {
+    expect(determineFeatureStage(true, true, true, 3, 10)).toBe('in_progress');
+    expect(determineFeatureStage(true, true, true, 1, 5)).toBe('in_progress');
   });
 
-  it('should return "complete" when all tasks are completed', () => {
-    expect(determineFeatureStage(true, true, true, 10, 10)).toBe('complete');
-    expect(determineFeatureStage(true, true, true, 1, 1)).toBe('complete');
+  it('should return "done" when all tasks are completed', () => {
+    expect(determineFeatureStage(true, true, true, 10, 10)).toBe('done');
+    expect(determineFeatureStage(true, true, true, 1, 1)).toBe('done');
   });
 
   it('should handle edge case of zero total tasks with tasks file', () => {
-    // When tasks file exists but is empty, should stay in tasks stage
-    expect(determineFeatureStage(true, true, true, 0, 0)).toBe('tasks');
+    // When tasks file exists but is empty, should stay in backlog
+    expect(determineFeatureStage(true, true, true, 0, 0)).toBe('backlog');
   });
 });
 
