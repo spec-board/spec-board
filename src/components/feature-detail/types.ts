@@ -170,27 +170,37 @@ export function getStageIndex(stage: string): number {
   return STAGE_ORDER.indexOf(stage as typeof STAGE_ORDER[number]);
 }
 
-// Determine section status based on feature stage and file existence
+// Get the current workflow step based on file existence (not stage)
+export function getCurrentWorkflowStep(feature: Feature): typeof STAGE_ORDER[number] {
+  if (!feature.hasSpec) return 'specify';
+  if (!feature.hasPlan) return 'plan';
+  if (!feature.hasTasks) return 'tasks';
+  if (feature.totalTasks > 0 && feature.completedTasks === feature.totalTasks) return 'complete';
+  return 'implement';
+}
+
+// Determine section status based on workflow step and file existence
 export function getSectionStatus(sectionId: SectionId, feature: Feature): SectionStatus {
-  const currentStageIndex = getStageIndex(feature.stage);
+  const currentStep = getCurrentWorkflowStep(feature);
+  const currentStepIndex = STAGE_ORDER.indexOf(currentStep);
 
   if (sectionId === 'spec') {
-    if (feature.hasSpec && currentStageIndex > 0) return 'complete';
-    if (feature.stage === 'specify') return 'in-progress';
+    if (feature.hasSpec && currentStepIndex > 0) return 'complete';
+    if (currentStep === 'specify') return 'in-progress';
     if (!feature.hasSpec) return 'pending';
     return 'none';
   }
 
   if (sectionId === 'plan') {
-    if (feature.hasPlan && currentStageIndex > 1) return 'complete';
-    if (feature.stage === 'plan') return 'in-progress';
+    if (feature.hasPlan && currentStepIndex > 1) return 'complete';
+    if (currentStep === 'plan') return 'in-progress';
     if (!feature.hasPlan) return 'pending';
     return 'none';
   }
 
   if (sectionId === 'tasks') {
-    if (feature.hasTasks && currentStageIndex > 2) return 'complete';
-    if (feature.stage === 'tasks') return 'in-progress';
+    if (feature.hasTasks && currentStepIndex > 2) return 'complete';
+    if (currentStep === 'tasks' || currentStep === 'implement') return 'in-progress';
     if (!feature.hasTasks) return 'pending';
     return 'none';
   }

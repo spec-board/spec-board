@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         featureId,
         name,
         description,
-        stage: stage || 'specify',
+        stage: stage || 'backlog',
         status: status || 'backlog',
         order: order || 0,
       },

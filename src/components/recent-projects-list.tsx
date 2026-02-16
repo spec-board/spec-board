@@ -8,16 +8,14 @@ import type { FeatureStage } from '@/types';
 // Get icon and label for active feature stage
 function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; cssVar: string; bgVar: string } {
   switch (stage) {
-    case 'implement':
-      return { icon: <Hammer className="w-3 h-3" />, label: 'Implementing', cssVar: 'var(--tag-text-info)', bgVar: 'var(--tag-bg-info)' };
-    case 'tasks':
-      return { icon: <ListTodo className="w-3 h-3" />, label: 'Tasks ready', cssVar: 'var(--tag-text-purple)', bgVar: 'var(--tag-bg-purple)' };
-    case 'plan':
+    case 'in_progress':
+      return { icon: <Hammer className="w-3 h-3" />, label: 'In Progress', cssVar: 'var(--tag-text-info)', bgVar: 'var(--tag-bg-info)' };
+    case 'backlog':
+      return { icon: <Rocket className="w-3 h-3" />, label: 'Backlog', cssVar: 'var(--tag-text-orange)', bgVar: 'var(--tag-bg-orange)' };
+    case 'planning':
       return { icon: <FileText className="w-3 h-3" />, label: 'Planning', cssVar: 'var(--tag-text-warning)', bgVar: 'var(--tag-bg-warning)' };
-    case 'specify':
-      return { icon: <Rocket className="w-3 h-3" />, label: 'Specifying', cssVar: 'var(--tag-text-orange)', bgVar: 'var(--tag-bg-orange)' };
-    case 'complete':
-      return { icon: <CheckCircle className="w-3 h-3" />, label: 'Complete', cssVar: 'var(--tag-text-success)', bgVar: 'var(--tag-bg-success)' };
+    case 'done':
+      return { icon: <CheckCircle className="w-3 h-3" />, label: 'Done', cssVar: 'var(--tag-text-success)', bgVar: 'var(--tag-bg-success)' };
   }
 }
 
