@@ -22,7 +22,7 @@ This directory contains all shared TypeScript interfaces and types used througho
 | `Feature` | Single feature with tasks, specs, plans |
 | `Task` | Individual task item |
 | `TaskPhase` | Group of tasks in a phase |
-| `FeatureStage` | Stage enum: specify, plan, tasks, implement, complete |
+| `FeatureStage` | Stage enum: backlog, planning, in_progress, done |
 
 ### Spec-Kit File Types
 
@@ -61,8 +61,8 @@ This directory contains all shared TypeScript interfaces and types used througho
 ## Key Interfaces
 
 ```typescript
-// Feature stages
-type FeatureStage = 'specify' | 'plan' | 'tasks' | 'implement' | 'complete';
+// Feature stages (Kanban-style)
+type FeatureStage = 'backlog' | 'planning' | 'in_progress' | 'done';
 
 // Task with markers
 interface Task {
