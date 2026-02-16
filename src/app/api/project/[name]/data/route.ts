@@ -30,9 +30,13 @@ export async function GET(
             },
             tasks: {
               orderBy: { order: 'asc' },
+              include: {
+                userStory: true,
+              },
             },
           },
         },
+        constitution: true,
       },
     });
 
@@ -79,8 +83,8 @@ export async function GET(
         })),
         technicalContext: null,
         taskGroups: [],
-        specContent: null,
-        planContent: null,
+        specContent: feature.specContent,
+        planContent: feature.planContent,
         tasksContent: null,
         clarificationsContent: null,
         researchContent: null,
@@ -93,8 +97,16 @@ export async function GET(
         name: project.displayName || project.name,
         features,
         lastUpdated: project.updatedAt,
-        constitution: null,
-        hasConstitution: false,
+        constitution: project.constitution ? {
+          rawContent: project.constitution.content,
+          title: project.constitution.title || undefined,
+          principles: project.constitution.principles as any,
+          sections: [],
+          version: project.constitution.version || undefined,
+          ratifiedDate: project.constitution.ratifiedDate?.toISOString(),
+          lastAmendedDate: project.constitution.lastAmendedDate?.toISOString(),
+        } : null,
+        hasConstitution: !!project.constitution,
         source: 'database', // Indicate data came from database
       });
     }
@@ -107,8 +119,16 @@ export async function GET(
         name: project.displayName || project.name,
         features: [],
         lastUpdated: project.updatedAt,
-        constitution: null,
-        hasConstitution: false,
+        constitution: project.constitution ? {
+          rawContent: project.constitution.content,
+          title: project.constitution.title || undefined,
+          principles: project.constitution.principles as any,
+          sections: [],
+          version: project.constitution.version || undefined,
+          ratifiedDate: project.constitution.ratifiedDate?.toISOString(),
+          lastAmendedDate: project.constitution.lastAmendedDate?.toISOString(),
+        } : null,
+        hasConstitution: !!project.constitution,
         source: 'empty',
       });
     }

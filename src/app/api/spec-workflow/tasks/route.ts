@@ -1,20 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { prisma } from '@/lib/prisma';
-import { isPathSafe } from '@/lib/path-utils';
 import { generateTasks, getProvider } from '@/lib/ai';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/spec-workflow/tasks - Generate task breakdown
+// POST /api/spec-workflow/tasks - Generate task breakdown and save to database
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, name, specContent, planContent } = body;
+    const { projectId, featureId, name, specContent, planContent } = body;
+
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    }
+
+    if (!featureId) {
+      return NextResponse.json({ error: 'Feature ID is required' }, { status: 400 });
+    }
 
     if (!specContent || !planContent) {
       return NextResponse.json({ error: 'Spec and plan content required' }, { status: 400 });
+    }
+
+    // Verify project exists
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     const provider = getProvider();
@@ -22,31 +33,52 @@ export async function POST(request: NextRequest) {
 
     const tasksContent = generateTasksMarkdown(tasks);
 
-    let featureDir: string | null = null;
-    if (projectId && name) {
-      const project = await prisma.project.findUnique({ where: { id: projectId } });
-      if (project?.filePath) {
-        const { safe, resolvedPath } = isPathSafe(project.filePath);
-        if (safe) {
-          const specsDir = path.join(resolvedPath, 'specs');
-          const exists = await fs.access(specsDir).then(() => true).catch(() => false);
-          if (exists) {
-            featureDir = path.join(specsDir, `001-${name.toLowerCase().replace(/\s+/g, '-')}`);
+    // Get feature to find existing user stories for mapping
+    const feature = await prisma.feature.findUnique({
+      where: { id: featureId },
+      include: { userStories: true }
+    });
+
+    // Delete existing tasks and create new ones
+    await prisma.task.deleteMany({ where: { featureId } });
+
+    // Create tasks in database
+    let taskCount = 0;
+    for (const phase of tasks.phases || []) {
+      for (const task of phase.tasks || []) {
+        // Find matching user story by ID
+        const matchingStory = feature?.userStories.find(
+          us => us.storyId === task.userStory || us.storyId.replace('US', '') === task.userStory?.replace('US', '')
+        );
+
+        await prisma.task.create({
+          data: {
+            featureId,
+            userStoryId: matchingStory?.id || null,
+            taskId: task.id,
+            title: task.description,
+            description: null,
+            status: 'pending',
+            priority: task.priority || 'M',
+            order: taskCount,
           }
-        }
+        });
+        taskCount++;
       }
     }
 
-    if (featureDir) {
-      await fs.mkdir(featureDir, { recursive: true });
-      await fs.writeFile(path.join(featureDir, 'tasks.md'), tasksContent);
-    }
+    // Update feature stage to tasks
+    await prisma.feature.update({
+      where: { id: featureId },
+      data: { stage: 'tasks' }
+    });
 
     return NextResponse.json({
       step: 'tasks',
       tasks,
       content: tasksContent,
-      featurePath: featureDir,
+      featureId,
+      taskCount,
       provider
     });
   } catch (error) {

@@ -2,11 +2,10 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { FeatureDetail } from '@/components/feature-detail';
 import { FeatureDetailV2 } from '@/components/feature-detail-v2';
 import { ArrowLeft } from 'lucide-react';
 import type { Project, Feature, Constitution } from '@/types';
-import type { SectionId } from '@/components/feature-detail/types';
+import { deleteFeature } from '@/lib/api-client';
 
 export default function FeaturePage() {
   const params = useParams();
@@ -14,9 +13,6 @@ export default function FeaturePage() {
   const searchParams = useSearchParams();
   const projectSlug = params.name as string;
   const featureId = params.featureId as string;
-  const initialSection = searchParams.get('section') as SectionId | null;
-  // V2 is now the default - use ?legacy=true to access V1
-  const useLegacy = searchParams.get('legacy') === 'true';
 
   const [feature, setFeature] = useState<Feature | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,6 +117,19 @@ export default function FeaturePage() {
     router.push('/projects/' + projectSlug);
   };
 
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete "${feature?.name}"?`)) {
+      return;
+    }
+    try {
+      await deleteFeature(feature!.id);
+      router.push('/projects/' + projectSlug);
+    } catch (err) {
+      console.error('Error deleting feature:', err);
+      alert('Failed to delete feature');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -150,24 +159,12 @@ export default function FeaturePage() {
     return null;
   }
 
-  // Render the feature detail as a full page
-  // V2 is now the default - use ?legacy=true to access the old design
-  if (useLegacy) {
-    return (
-      <FeatureDetail
-        feature={feature}
-        onClose={handleClose}
-        hasConstitution={hasConstitution}
-        constitution={constitution}
-        initialSection={initialSection || undefined}
-      />
-    );
-  }
-
+  // Always use FeatureDetailV2 - legacy UI has been removed
   return (
     <FeatureDetailV2
       feature={feature}
       onClose={handleClose}
+      onDelete={handleDelete}
     />
   );
 }

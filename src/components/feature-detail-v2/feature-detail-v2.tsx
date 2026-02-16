@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { X, ArrowLeft } from 'lucide-react';
+import { X, ArrowLeft, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Feature, Task } from '@/types';
 import type { FeatureDetailV2Props, DocumentType } from './types';
@@ -12,6 +12,7 @@ import { DocumentPanel } from './document-panel';
 export function FeatureDetailV2({
   feature,
   onClose,
+  onDelete,
   initialDocument = 'spec',
 }: FeatureDetailV2Props) {
   const [selectedDocument, setSelectedDocument] = useState<DocumentType>(initialDocument);
@@ -153,6 +154,15 @@ export function FeatureDetailV2({
           >
             <X className="w-5 h-5" />
           </button>
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              className="p-1.5 rounded-md hover:bg-red-500/10 transition-colors text-[var(--muted-foreground)] hover:text-red-500"
+              aria-label="Delete feature"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Keyboard navigation hint */}

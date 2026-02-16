@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Columns2 } from 'lucide-react';
+import { ArrowLeft, Columns2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { HeaderBarProps } from './types';
 
@@ -10,6 +10,7 @@ export function HeaderBar({
   onClose,
   onToggleSplit,
   isSplitActive,
+  onDelete,
 }: HeaderBarProps) {
   return (
     <div 
@@ -59,10 +60,24 @@ export function HeaderBar({
       </div>
 
       {/* Right: Action buttons */}
-      <div 
+      <div
         className="flex items-center"
         style={{ gap: 'var(--space-1)' }}
       >
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            className="rounded-lg hover:bg-red-500/10 text-[var(--muted-foreground)] hover:text-red-500 transition-colors focus-ring"
+            style={{
+              padding: 'var(--space-2)',
+              borderRadius: 'var(--radius)',
+              transitionDuration: 'var(--transition-base)',
+            }}
+            aria-label="Delete feature"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+        )}
         <button
           onClick={onToggleSplit}
           className={cn(

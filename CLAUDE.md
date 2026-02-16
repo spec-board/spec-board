@@ -458,6 +458,18 @@ APP_PORT=3000
 - **TypeScript strict mode**: All code must pass strict type checking
 - **Accessibility first**: WCAG 2.2 AA compliance required
 
+## Mandatory Policies
+
+### UI Requirements
+- **ALWAYS use FeatureDetailV2**: The new UI component at `src/components/feature-detail-v2/` is the ONLY supported UI. Never use the legacy `FeatureDetail` component.
+- **No legacy mode**: Never use `?legacy=true` query parameter to access old UI.
+
+### AI API Requirements
+- **ALWAYS use real AI**: AI functions MUST call actual AI APIs (Anthropic Claude or OpenAI). Never return mock data.
+- **AI settings from database**: Use `getAISettings()` to retrieve API keys from the database (not hardcoded).
+- **AIService from client.ts**: All AI operations MUST use the `AIService` class from `src/lib/ai/client.ts` which contains real implementations.
+- **No mock fallback**: Do NOT use mock implementations. If no API key is configured, throw an error instead of returning fake data.
+
 ## Troubleshooting
 
 ### Database Connection Issues

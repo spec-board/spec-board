@@ -14,6 +14,7 @@ export interface DocumentOption {
 export interface FeatureDetailV2Props {
   feature: Feature;
   onClose: () => void;
+  onDelete?: () => void;
   initialDocument?: DocumentType;
 }
 

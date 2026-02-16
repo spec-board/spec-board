@@ -1,20 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { prisma } from '@/lib/prisma';
-import { isPathSafe } from '@/lib/path-utils';
 import { generateSpec, getProvider } from '@/lib/ai';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/spec-workflow/specify - Generate spec from description
+// POST /api/spec-workflow/specify - Generate spec and save to database
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { projectId, name, description } = body;
 
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    }
+
     if (!name?.trim()) {
       return NextResponse.json({ error: 'Feature name is required' }, { status: 400 });
+    }
+
+    // Verify project exists
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     const provider = getProvider();
@@ -26,31 +33,43 @@ export async function POST(request: NextRequest) {
 
     const specContent = generateSpecMarkdown(spec, name);
 
-    let featureDir: string | null = null;
-    if (projectId) {
-      const project = await prisma.project.findUnique({ where: { id: projectId } });
-      if (project?.filePath) {
-        const { safe, resolvedPath } = isPathSafe(project.filePath);
-        if (safe) {
-          const specsDir = path.join(resolvedPath, 'specs');
-          const exists = await fs.access(specsDir).then(() => true).catch(() => false);
-          if (exists) {
-            featureDir = path.join(specsDir, `001-${name.toLowerCase().replace(/\s+/g, '-')}`);
-          }
-        }
-      }
-    }
+    // Generate feature ID
+    const featureCount = await prisma.feature.count({ where: { projectId } });
+    const featureId = `${String(featureCount + 1).padStart(3, '0')}-${name.toLowerCase().replace(/\s+/g, '-')}`;
 
-    if (featureDir) {
-      await fs.mkdir(featureDir, { recursive: true });
-      await fs.writeFile(path.join(featureDir, 'spec.md'), specContent);
+    // Create feature in database
+    const feature = await prisma.feature.create({
+      data: {
+        projectId,
+        featureId,
+        name,
+        description: description || null,
+        stage: 'specify',
+        status: 'backlog',
+        order: featureCount,
+      }
+    });
+
+    // Create user stories in database
+    if (spec.userStories?.length) {
+      await prisma.userStory.createMany({
+        data: spec.userStories.map((story: any, index: number) => ({
+          featureId: feature.id,
+          storyId: story.id || `US${index + 1}`,
+          title: story.title,
+          description: story.description || null,
+          status: 'pending',
+          order: index,
+        }))
+      });
     }
 
     return NextResponse.json({
       step: 'specify',
       spec,
       content: specContent,
-      featurePath: featureDir,
+      featureId: feature.id,
+      featureIdDb: feature.featureId,
       provider
     });
   } catch (error) {
