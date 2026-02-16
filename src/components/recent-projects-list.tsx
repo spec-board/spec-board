@@ -45,11 +45,10 @@ function getStageLabel(stageBreakdown: RecentProject['stageBreakdown']): string 
   if (total === 0) return 'No features';
 
   const parts: string[] = [];
-  if (stageBreakdown.complete > 0) parts.push(`${stageBreakdown.complete} complete`);
-  if (stageBreakdown.implement > 0) parts.push(`${stageBreakdown.implement} implementing`);
-  if (stageBreakdown.tasks > 0) parts.push(`${stageBreakdown.tasks} in tasks`);
-  if (stageBreakdown.plan > 0) parts.push(`${stageBreakdown.plan} planning`);
-  if (stageBreakdown.specify > 0) parts.push(`${stageBreakdown.specify} specifying`);
+  if (stageBreakdown.done > 0) parts.push(`${stageBreakdown.done} done`);
+  if (stageBreakdown.in_progress > 0) parts.push(`${stageBreakdown.in_progress} in progress`);
+  if (stageBreakdown.planning > 0) parts.push(`${stageBreakdown.planning} planning`);
+  if (stageBreakdown.backlog > 0) parts.push(`${stageBreakdown.backlog} backlog`);
 
   return parts.slice(0, 2).join(', ') || 'No features';
 }
@@ -136,8 +135,8 @@ export function RecentProjectsList({ projects, onSelect, onRemove }: RecentProje
                     {stageInfo.icon}
                     <span>
                       {stageInfo.label}
-                      {project.activeFeature && project.activeFeature.stage !== 'complete' && ': '}
-                      {project.activeFeature && project.activeFeature.stage !== 'complete' && (
+                      {project.activeFeature && project.activeFeature.stage !== 'done' && ': '}
+                      {project.activeFeature && project.activeFeature.stage !== 'done' && (
                         <span className="text-[var(--foreground)]">{project.activeFeature.featureName}</span>
                       )}
                     </span>
