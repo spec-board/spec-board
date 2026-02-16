@@ -34,11 +34,15 @@ export async function POST(request: NextRequest) {
 
     const planContent = generatePlanMarkdown(plan, name || 'Feature');
 
-    // Update feature in database - save plan content and update stage
+    // Generate clarifications markdown for spec.md (spec-kit format)
+    const clarificationsContent = generateClarificationsMarkdown(clarifications);
+
+    // Update feature in database - save plan content, clarifications, and update stage
     const feature = await prisma.feature.update({
       where: { id: featureId },
       data: {
         planContent: planContent,
+        clarifications: clarificationsContent, // Store in spec-kit format
         stage: 'plan',
       }
     });
@@ -84,6 +88,26 @@ function generatePlanMarkdown(plan: any, featureName: string): string {
   content += `## Project Structure\n\n`;
   content += `**Decision**: ${plan.projectStructure?.decision || 'TBD'}\n\n`;
   content += '```\n' + (plan.projectStructure?.structure || 'src/\ntests/') + '\n```\n\n';
+
+  return content;
+}
+
+// Generate clarifications section in spec-kit format
+function generateClarificationsMarkdown(clarifications: { question: string; answer: string }[]): string {
+  if (!clarifications || clarifications.length === 0) {
+    return '';
+  }
+
+  const date = new Date().toISOString().split('T')[0];
+  let content = `## Clarifications\n\n`;
+  content += `### Session ${date}\n\n`;
+
+  for (const item of clarifications) {
+    if (item.answer) {
+      // Only include answered questions in spec-kit format
+      content += `- Q: ${item.question} → A: ${item.answer}\n`;
+    }
+  }
 
   return content;
 }
