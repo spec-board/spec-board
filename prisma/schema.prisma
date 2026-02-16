@@ -49,6 +49,7 @@ model Feature {
   // Content stored in database (database-first)
   specContent   String?  @db.Text // Includes clarifications appended
   planContent   String?  @db.Text
+  tasksContent  String?  @db.Text
 
   // Timestamps
   createdAt   DateTime @default(now()) @map("created_at")
