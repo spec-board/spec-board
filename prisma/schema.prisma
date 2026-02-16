@@ -47,8 +47,9 @@ model Feature {
   order       Int      @default(0)
 
   // Content stored in database (database-first)
-  specContent   String?  @db.Text
-  planContent   String?  @db.Text
+  specContent     String?  @db.Text
+  planContent    String?  @db.Text
+  clarifications String?  @db.Text // JSON array of {question, answer} in spec-kit format
 
   // Timestamps
   createdAt   DateTime @default(now()) @map("created_at")
