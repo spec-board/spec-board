@@ -84,6 +84,17 @@
   --tag-text-indigo: #818cf8;
   --tag-text-pink: #f472b6;
 
+  /* Badge/tag background colors */
+  --tag-bg-success: rgba(74, 222, 128, 0.1);
+  --tag-bg-info: rgba(96, 165, 250, 0.1);
+  --tag-bg-warning: rgba(251, 191, 36, 0.1);
+  --tag-bg-error: rgba(248, 113, 113, 0.1);
+  --tag-bg-purple: rgba(192, 132, 252, 0.1);
+  --tag-bg-cyan: rgba(34, 211, 238, 0.1);
+  --tag-bg-orange: rgba(251, 146, 60, 0.1);
+  --tag-bg-indigo: rgba(129, 140, 248, 0.1);
+  --tag-bg-pink: rgba(244, 114, 182, 0.1);
+
   /* Progress bar empty state */
   --progress-empty: #a1a1aa;
 
@@ -201,6 +212,17 @@
   --tag-text-orange: #7c2d12;
   --tag-text-indigo: #3730a3;
   --tag-text-pink: #9d174d;
+
+  /* Badge/tag background colors - more opaque for light theme */
+  --tag-bg-success: rgba(74, 222, 128, 0.2);
+  --tag-bg-info: rgba(96, 165, 250, 0.2);
+  --tag-bg-warning: rgba(251, 191, 36, 0.2);
+  --tag-bg-error: rgba(248, 113, 113, 0.2);
+  --tag-bg-purple: rgba(192, 132, 252, 0.2);
+  --tag-bg-cyan: rgba(34, 211, 238, 0.2);
+  --tag-bg-orange: rgba(251, 146, 60, 0.2);
+  --tag-bg-indigo: rgba(129, 140, 248, 0.2);
+  --tag-bg-pink: rgba(244, 114, 182, 0.2);
 
   /* Progress bar empty state - white in light mode */
   --progress-empty: #ffffff;
