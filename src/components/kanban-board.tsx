@@ -63,8 +63,9 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
   const statusDotStyle = getStatusDotStyle(progressPercentage, feature.totalTasks > 0);
   const statusLabel = getStatusLabel(progressPercentage, feature.totalTasks > 0);
 
-  // Extract spec number and checklist count
-  const specNumber = getSpecNumber(feature.id);
+  // Extract spec number from featureId (e.g., "001" from "001-user-login")
+  // Use featureId if available, fallback to id for backwards compatibility
+  const specNumber = getSpecNumber(feature.featureId || feature.id);
   const checklistCount = getChecklistCount(feature);
 
   // Build accessible label

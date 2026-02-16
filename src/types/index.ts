@@ -129,6 +129,7 @@ export interface TaskPhase {
 
 export interface Feature {
   id: string;
+  featureId?: string;  // Database identifier (e.g., "001-user-login") - optional for backwards compatibility
   name: string;
   path: string;
   stage: FeatureStage;
