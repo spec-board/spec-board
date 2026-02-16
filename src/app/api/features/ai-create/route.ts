@@ -151,7 +151,6 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         description: description?.trim() || null,
         stage: 'backlog',
-        status: 'backlog',
         order: newOrder,
       },
     });
@@ -162,7 +161,6 @@ export async function POST(request: NextRequest) {
       name: feature.name,
       description: feature.description,
       stage: feature.stage,
-      status: feature.status,
       featurePath: featureDir || null,
       generatedWithAI: true,
       message: 'Feature created with AI-generated spec-kit'

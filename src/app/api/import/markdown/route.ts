@@ -69,8 +69,7 @@ export async function POST(request: NextRequest) {
           featureId: feature.id,
           name: feature.name,
           description: feature.description || null,
-          stage: feature.stage,
-          status: 'backlog', // Default status
+          stage: feature.stage || 'backlog',
           order: featuresImported,
         },
       });

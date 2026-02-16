@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 
 /**
  * PATCH /api/features/[id]/status
- * Update feature status (for Kanban drag-and-drop)
+ * Update feature stage (for Kanban drag-and-drop)
+ * Note: status field was removed - now using stage only
  */
 export async function PATCH(
   request: NextRequest,
@@ -12,24 +13,24 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { status } = body;
+    const { stage } = body;
 
-    if (!status) {
-      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+    if (!stage) {
+      return NextResponse.json({ error: 'Stage is required' }, { status: 400 });
     }
 
-    // Validate status
-    const validStatuses = ['backlog', 'planning', 'in_progress', 'done'];
-    if (!validStatuses.includes(status)) {
+    // Validate stage (now replaces status)
+    const validStages = ['backlog', 'planning', 'in_progress', 'done'];
+    if (!validStages.includes(stage)) {
       return NextResponse.json(
-        { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
+        { error: `Invalid stage. Must be one of: ${validStages.join(', ')}` },
         { status: 400 }
       );
     }
 
     const feature = await prisma.feature.update({
       where: { id },
-      data: { status },
+      data: { stage },
       include: {
         userStories: { orderBy: { order: 'asc' } },
         tasks: { orderBy: { order: 'asc' } },
@@ -38,7 +39,7 @@ export async function PATCH(
 
     return NextResponse.json(feature);
   } catch (error) {
-    console.error('Error updating feature status:', error);
-    return NextResponse.json({ error: 'Failed to update feature status' }, { status: 500 });
+    console.error('Error updating feature stage:', error);
+    return NextResponse.json({ error: 'Failed to update feature stage' }, { status: 500 });
   }
 }
