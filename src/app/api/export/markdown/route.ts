@@ -119,7 +119,7 @@ function generateSpecMd(feature: any): string {
     }
   }
 
-  content += `\n## Status\n- **Stage**: ${feature.stage}\n- **Status**: ${feature.status}\n`;
+  content += `\n## Status\n- **Stage**: ${feature.stage}\n`;
 
   return content;
 }

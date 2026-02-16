@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
         name,
         description: description || null,
         stage: 'backlog',
-        status: 'backlog',
         order: featureCount,
         specContent, // Save spec markdown to database
       }
