@@ -1,0 +1,31 @@
+{
+    "description": "Browser automation MCP servers",
+    "servers": {
+        "playwright": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@playwright/mcp@latest"
+            ],
+            "purpose": "E2E browser testing and automation",
+            "options": {
+                "--browser": "chrome | firefox | webkit | msedge",
+                "--headless": "Run without visible browser",
+                "--viewport-size": "e.g., 1280x720",
+                "--device": "e.g., iPhone 15, Pixel 7"
+            }
+        },
+        "chrome-devtools": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "chrome-devtools-mcp@latest"
+            ],
+            "purpose": "Quick browser inspection via CDP"
+        }
+    },
+    "when_to_use": {
+        "playwright": "E2E test automation, form testing, user flow testing",
+        "chrome-devtools": "Quick inspection, debugging, screenshots"
+    }
+}

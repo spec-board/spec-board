@@ -1,0 +1,93 @@
+{
+    "mcpServers": {
+        "context7": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "context7-mcp"
+            ],
+            "disabled": false
+        },
+        "sequential-thinking": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ],
+            "disabled": false
+        },
+        "playwright": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@playwright/mcp@latest"
+            ],
+            "disabled": false
+        },
+        "chrome-devtools": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "chrome-devtools-mcp@latest"
+            ],
+            "disabled": false
+        },
+        "magic-mcp": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@21st-dev/magic-mcp"
+            ],
+            "disabled": false
+        },
+        "postman": {
+            "command": "npx",
+            "args": [
+                "@postman/postman-mcp-server",
+                "--full",
+                "--region",
+                "us"
+            ],
+            "disabled": false
+        },
+        "figma": {
+            "command": "figma-developer-mcp",
+            "args": [
+                "--stdio"
+            ],
+            "disabled": false
+        },
+        "perplexity": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "perplexity-mcp"
+            ],
+            "disabled": false
+        },
+        "github": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "disabled": false
+        },
+        "postgres": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-postgres"
+            ],
+            "disabled": false
+        },
+        "mem0": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mem0-mcp"
+            ],
+            "disabled": false
+        }
+    }
+}

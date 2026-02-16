@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "title": "Research PRD parsing techniques",
+    "description": "Investigate different approaches to parse PRDs and extract user stories",
+    "assignee": "researcher",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "id": 2,
+    "title": "Design PRD input UI",
+    "description": "Create UI components for PRD input and user story generation preview",
+    "assignee": "ux-designer",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "id": 3,
+    "title": "Implement PRD to US API endpoint",
+    "description": "Create backend endpoint to process PRDs and generate user stories",
+    "assignee": "developer",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "id": 4,
+    "title": "Build UI components",
+    "description": "Implement the frontend components for the PRD to US feature",
+    "assignee": "developer",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "id": 5,
+    "title": "Create tests",
+    "description": "Develop comprehensive tests for the new functionality",
+    "assignee": "tester",
+    "status": "pending",
+    "priority": "medium"
+  },
+  {
+    "id": 6,
+    "title": "Code review",
+    "description": "Review all code for quality, security, and best practices",
+    "assignee": "reviewer",
+    "status": "pending",
+    "priority": "medium"
+  }
+]

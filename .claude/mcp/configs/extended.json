@@ -1,0 +1,69 @@
+{
+    "description": "Extended MCP servers for specialized workflows",
+    "servers": {
+        "magic-mcp": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@21st-dev/magic-mcp"
+            ],
+            "purpose": "AI-powered UI component generation",
+            "requires": "MAGIC_API_KEY env var"
+        },
+        "postman": {
+            "command": "npx",
+            "args": [
+                "@postman/postman-mcp-server",
+                "--full",
+                "--region",
+                "us"
+            ],
+            "purpose": "API testing automation",
+            "requires": "POSTMAN_API_KEY env var"
+        },
+        "figma": {
+            "command": "figma-developer-mcp",
+            "args": [
+                "--stdio"
+            ],
+            "purpose": "Design-to-code integration",
+            "requires": "FIGMA_API_KEY env var, npm install -g figma-developer-mcp"
+        },
+        "perplexity": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "perplexity-mcp"
+            ],
+            "purpose": "AI-powered web search",
+            "requires": "PERPLEXITY_API_KEY env var"
+        },
+        "github": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "purpose": "GitHub API operations",
+            "requires": "GITHUB_TOKEN env var"
+        },
+        "postgres": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-postgres"
+            ],
+            "purpose": "PostgreSQL database access",
+            "requires": "DATABASE_URL env var"
+        },
+        "mem0": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mem0-mcp"
+            ],
+            "purpose": "Long-term memory for AI agents",
+            "requires": "MEM0_API_KEY env var"
+        }
+    }
+}

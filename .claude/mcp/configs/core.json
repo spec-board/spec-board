@@ -1,0 +1,34 @@
+{
+    "description": "Core MCP servers - essential for most workflows",
+    "servers": {
+        "context7": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "context7-mcp"
+            ],
+            "purpose": "Library documentation lookup",
+            "recommended": true
+        },
+        "sequential-thinking": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ],
+            "purpose": "Multi-step reasoning for complex problems",
+            "recommended": true
+        },
+        "filesystem": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "."
+            ],
+            "purpose": "Secure file operations",
+            "recommended": true
+        }
+    },
+    "windows_note": "Replace 'npx' with 'cmd' and prepend '/c', 'npx' to args"
+}
