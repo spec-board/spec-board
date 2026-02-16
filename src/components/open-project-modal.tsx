@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, KeyboardEvent } from 'react';
-import { X, Search, FolderOpen, Folder, Loader2, Check, Clock, Star } from 'lucide-react';
+import { Search, FolderOpen, Folder, Loader2, Clock, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Project, FeatureStage } from '@/types';
 
@@ -276,40 +276,17 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
       <div className="relative w-full max-w-lg mx-4 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div
-          className="flex items-center justify-between border-b border-[var(--border)]"
+          className="flex items-center justify-center border-b border-[var(--border)]"
           style={{
             padding: 'var(--space-4)',
           }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 'var(--radius)',
-                background: 'var(--secondary)',
-              }}
-            >
-              <FolderOpen className="w-5 h-5" style={{ color: 'var(--tag-text-success)' }} />
-            </div>
-            <h2
-              className="font-semibold"
-              style={{ fontSize: 'var(--text-lg)' }}
-            >
-              Open Project
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="hover:bg-[var(--secondary)] rounded-lg transition-colors"
-            style={{
-              padding: 'var(--space-2)',
-              borderRadius: 'var(--radius)',
-            }}
+          <h2
+            className="font-semibold"
+            style={{ fontSize: 'var(--text-lg)' }}
           >
-            <X className="w-5 h-5" />
-          </button>
+            Open Project
+          </h2>
         </div>
 
         {/* Content */}
@@ -433,7 +410,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
               </div>
               <button
                 onClick={handleOpen}
-                className="w-full mt-4 flex items-center justify-center gap-2 font-medium rounded-lg transition-colors"
+                className="w-full mt-4 flex items-center justify-center font-medium rounded-lg transition-colors"
                 style={{
                   paddingLeft: 'var(--space-4)',
                   paddingRight: 'var(--space-4)',
@@ -446,7 +423,6 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--accent-hover)'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--accent)'}
               >
-                <Check className="w-4 h-4" />
                 Open Project
               </button>
             </div>

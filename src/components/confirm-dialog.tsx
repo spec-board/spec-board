@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { AlertTriangle, X, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ConfirmDialogProps {
@@ -88,33 +88,23 @@ export function ConfirmDialog({
         aria-labelledby="dialog-title"
         aria-describedby="dialog-description"
       >
-        {/* Close button */}
-        <button
-          onClick={onCancel}
-          className="absolute top-4 right-4 p-1 rounded-md hover:bg-[var(--secondary)] transition-colors text-[var(--muted-foreground)]"
-          aria-label="Close"
-          disabled={isLoading}
-        >
-          <X className="w-4 h-4" />
-        </button>
-
         {/* Icon */}
-        <div className={cn('w-12 h-12 rounded-full flex items-center justify-center mb-4', variantStyles[variant].icon)}>
+        <div className={cn('w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto', variantStyles[variant].icon)}>
           <AlertTriangle className="w-6 h-6" />
         </div>
 
         {/* Title */}
-        <h2 id="dialog-title" className="text-lg font-semibold mb-2">
+        <h2 id="dialog-title" className="text-lg font-semibold mb-2 text-center">
           {title}
         </h2>
 
         {/* Message */}
-        <p id="dialog-description" className="text-sm text-[var(--muted-foreground)] mb-6">
+        <p id="dialog-description" className="text-sm text-[var(--muted-foreground)] mb-6 text-center">
           {message}
         </p>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-end">
+        <div className="flex gap-3 justify-center">
           <button
             ref={cancelButtonRef}
             onClick={onCancel}

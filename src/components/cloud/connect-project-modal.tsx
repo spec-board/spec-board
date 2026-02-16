@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { X, Loader2, Link as LinkIcon, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 
 interface ConnectProjectModalProps {
   onClose: () => void;
@@ -83,17 +83,8 @@ export function ConnectProjectModal({ onClose, onConnected }: ConnectProjectModa
       {/* Modal */}
       <div className="relative w-full max-w-sm mx-4 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
-          <div className="flex items-center gap-2">
-            <LinkIcon className="w-5 h-5 text-blue-500" />
-            <h2 className="text-lg font-semibold">Join Project</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-[var(--secondary)] rounded transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        <div className="flex items-center justify-center p-4 border-b border-[var(--border)]">
+          <h2 className="text-lg font-semibold">Join Project</h2>
         </div>
 
         {/* Content */}
@@ -139,7 +130,7 @@ export function ConnectProjectModal({ onClose, onConnected }: ConnectProjectModa
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-center gap-3 pt-2">
                 <button
                   type="button"
                   onClick={onClose}
