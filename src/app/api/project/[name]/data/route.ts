@@ -53,6 +53,7 @@ export async function GET(
       const features = project.features.map((feature) => ({
         id: feature.id,  // Use database UUID for API operations
         featureId: feature.featureId,  // Keep featureId for display purposes
+        name: feature.name || feature.featureId,  // Use name or fallback to featureId
         path: '', // No filesystem path for database-first
         stage: feature.stage,
         hasSpec: true,
