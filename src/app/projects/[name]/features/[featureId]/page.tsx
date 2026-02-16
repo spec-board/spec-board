@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { FeatureDetailV2 } from '@/components/feature-detail-v2';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ArrowLeft } from 'lucide-react';
 import type { Project, Feature, Constitution } from '@/types';
 import { deleteFeature } from '@/lib/api-client';
@@ -20,6 +21,8 @@ export default function FeaturePage() {
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [hasConstitution, setHasConstitution] = useState(false);
   const [constitution, setConstitution] = useState<Constitution | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadFeature = useCallback(async () => {
     setIsLoading(true);
@@ -117,17 +120,28 @@ export default function FeaturePage() {
     router.push('/projects/' + projectSlug);
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete "${feature?.name}"?`)) {
-      return;
-    }
+  // Trigger delete confirmation
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  // Actual delete after confirmation
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
     try {
       await deleteFeature(feature!.id);
       router.push('/projects/' + projectSlug);
     } catch (err) {
       console.error('Error deleting feature:', err);
+      setShowDeleteConfirm(false);
       alert('Failed to delete feature');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
   };
 
   if (isLoading) {
@@ -161,10 +175,23 @@ export default function FeaturePage() {
 
   // Always use FeatureDetailV2 - legacy UI has been removed
   return (
-    <FeatureDetailV2
-      feature={feature}
-      onClose={handleClose}
-      onDelete={handleDelete}
-    />
+    <>
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Feature"
+        message={`Are you sure you want to delete "${feature?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        isLoading={isDeleting}
+      />
+      <FeatureDetailV2
+        feature={feature}
+        onClose={handleClose}
+        onDelete={handleDelete}
+      />
+    </>
   );
 }
