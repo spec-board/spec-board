@@ -51,8 +51,8 @@ export async function GET(
     if (project.features && project.features.length > 0) {
       // Transform database features to frontend format
       const features = project.features.map((feature) => ({
-        id: feature.featureId,
-        name: feature.name,
+        id: feature.id,  // Use database UUID for API operations
+        featureId: feature.featureId,  // Keep featureId for display purposes
         path: '', // No filesystem path for database-first
         stage: feature.stage,
         hasSpec: true,
