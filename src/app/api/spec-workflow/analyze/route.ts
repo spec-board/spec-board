@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         where: { id: featureId },
         data: {
           analysisContent,
-          stage: 'complete'
+          stage: 'done'
         }
       });
     }
