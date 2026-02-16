@@ -8,7 +8,6 @@
  */
 
 import { useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
 import { useFocusTrap } from '@/lib/accessibility';
 import {
   getShortcutsGroupedByCategory,
@@ -24,12 +23,9 @@ interface ShortcutHelpOverlayProps {
 
 export function ShortcutHelpOverlay({ isOpen, onClose }: ShortcutHelpOverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Focus trap for accessibility
-  useFocusTrap(overlayRef, isOpen, {
-    initialFocusRef: closeButtonRef,
-  });
+  useFocusTrap(overlayRef, isOpen);
 
   // Handle escape key
   useEffect(() => {
@@ -66,18 +62,10 @@ export function ShortcutHelpOverlay({ isOpen, onClose }: ShortcutHelpOverlayProp
         className="bg-background border border-border rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-background">
+        <div className="flex items-center justify-center p-4 border-b border-border sticky top-0 bg-background">
           <h2 id="shortcuts-title" className="text-lg font-semibold">
             Keyboard Shortcuts
           </h2>
-          <button
-            ref={closeButtonRef}
-            onClick={onClose}
-            className="p-1 rounded hover:bg-muted transition-colors"
-            aria-label="Close shortcuts help"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Content */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Sparkles, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { UserStory } from '@/types';
 
@@ -110,31 +110,16 @@ export function PRDToUserStoriesModal({
       >
         {/* Header */}
         <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Sparkles className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <h2
-                  id="prd-modal-title"
-                  className="text-xl font-semibold text-gray-900"
-                >
-                  Generate User Stories from PRD
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Paste your Product Requirement Document to generate user stories
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={handleClose}
-              className="p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-500"
-              aria-label="Close"
+          <div className="text-center">
+            <h2
+              id="prd-modal-title"
+              className="text-xl font-semibold text-gray-900"
             >
-              <X className="w-5 h-5" />
-            </button>
+              Generate User Stories from PRD
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Paste your Product Requirement Document to generate user stories
+            </p>
           </div>
         </div>
 
@@ -168,7 +153,7 @@ export function PRDToUserStoriesModal({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex justify-center gap-3 pt-4">
                 <button
                   onClick={handleClose}
                   className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
@@ -186,10 +171,7 @@ export function PRDToUserStoriesModal({
                       Generating...
                     </>
                   ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      Generate User Stories
-                    </>
+                    'Generate User Stories'
                   )}
                 </button>
               </div>
@@ -247,7 +229,7 @@ export function PRDToUserStoriesModal({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex justify-center gap-3 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => setGeneratedStories([])}
                   className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
