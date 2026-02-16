@@ -13,6 +13,8 @@ interface CreateProjectModalProps {
 export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProjectModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [constitutionPrompt, setConstitutionPrompt] = useState('');
+  const [generateConstitution, setGenerateConstitution] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,6 +25,8 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
     if (isOpen) {
       setName('');
       setDescription('');
+      setConstitutionPrompt('');
+      setGenerateConstitution(false);
       setError(null);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
@@ -47,6 +51,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || undefined,
+          constitutionPrompt: generateConstitution ? (constitutionPrompt.trim() || undefined) : undefined,
         }),
       });
 
@@ -179,6 +184,45 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
                 style={{ fontSize: 'var(--text-sm)' }}
               />
             </div>
+
+            {/* Generate Constitution Toggle */}
+            <div className="flex items-center gap-2 mt-4">
+              <input
+                type="checkbox"
+                id="generate-constitution"
+                checked={generateConstitution}
+                onChange={(e) => setGenerateConstitution(e.target.checked)}
+                className="w-4 h-4 rounded border-[var(--border)]"
+              />
+              <label htmlFor="generate-constitution" className="text-sm font-medium">
+                Generate Constitution with AI
+              </label>
+            </div>
+
+            {/* Constitution Prompt - only shown when checkbox is checked */}
+            {generateConstitution && (
+              <div className="space-y-2 mt-2">
+                <label
+                  htmlFor="constitution-prompt"
+                  className="text-xs text-[var(--muted-foreground)]"
+                >
+                  Describe your project principles and requirements for the AI to generate a constitution
+                </label>
+                <textarea
+                  id="constitution-prompt"
+                  value={constitutionPrompt}
+                  onChange={(e) => setConstitutionPrompt(e.target.value)}
+                  placeholder="e.g., This is a TypeScript/Next.js e-commerce app focused on performance and accessibility..."
+                  rows={3}
+                  className={cn(
+                    'w-full px-3 py-2 rounded-lg border bg-[var(--secondary)]',
+                    'outline-none focus:border-[var(--ring)] transition-colors resize-none',
+                    'placeholder:text-[var(--muted-foreground)]'
+                  )}
+                  style={{ fontSize: 'var(--text-sm)' }}
+                />
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (
