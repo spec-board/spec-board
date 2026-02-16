@@ -25,7 +25,8 @@ model Project {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  features    Feature[]
+  features       Feature[]
+  constitution   Constitution?
 
   @@map("projects")
 }
@@ -44,6 +45,10 @@ model Feature {
   stage       String   @default("specify") // specify, plan, tasks, implement, complete
   status      String   @default("backlog") // backlog, planning, in_progress, done
   order       Int      @default(0)
+
+  // Content stored in database (database-first)
+  specContent   String?  @db.Text
+  planContent   String?  @db.Text
 
   // Timestamps
   createdAt   DateTime @default(now()) @map("created_at")
@@ -102,6 +107,34 @@ model Task {
 
   @@unique([featureId, taskId])
   @@map("tasks")
+}
+
+// ============================================
+// Constitution Model (Database-first)
+// ============================================
+
+model Constitution {
+  id        String   @id @default(uuid())
+  projectId String   @unique @map("project_id")
+  title     String?
+  content   String   // Full markdown content
+
+  // Principles stored as JSON
+  principles Json?   // Array of {name, description}
+
+  // Metadata
+  version         String?
+  ratifiedDate    DateTime? @map("ratified_date")
+  lastAmendedDate DateTime? @map("last_amended_date")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("constitutions")
 }
 
 // ============================================
@@ -350,4 +383,26 @@ model SyncManifest {
   session     RemoteSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("sync_manifests")
+}
+
+// ============================================
+// Application Settings (Database-first)
+// ============================================
+
+model AppSettings {
+  id        String   @id @default(uuid())
+  key       String   @unique // 'app-settings' - single row for all settings
+  theme     String   @default("dark") // light, dark, system
+  shortcutsEnabled Boolean @default(true)
+
+  // AI Settings - OpenAI-Compatible API only
+  aiProvider        String   @default("openai") // openai only
+  openaiBaseUrl     String?  // Base URL for OpenAI-compatible API (e.g., Ollama, LM Studio)
+  openaiApiKey     String?  // API key (Encrypted in production)
+  openaiModel      String?  // Model name
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
 }

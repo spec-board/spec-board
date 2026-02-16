@@ -4,16 +4,13 @@ import { getAISettings, setAISettings } from '@/lib/ai/settings';
 // GET /api/settings/ai - Get current AI settings
 export async function GET() {
   try {
-    const settings = getAISettings();
+    const settings = await getAISettings();
 
     return NextResponse.json({
       provider: settings.provider,
-      openaiBaseUrl: settings.openaiBaseUrl || '',
-      anthropicBaseUrl: settings.anthropicBaseUrl || '',
-      openaiModel: settings.openaiModel || '',
-      anthropicModel: settings.anthropicModel || '',
-      hasOpenAI: !!settings.openaiApiKey,
-      hasAnthropic: !!settings.anthropicApiKey,
+      baseUrl: settings.baseUrl || '',
+      model: settings.model || '',
+      hasApiKey: !!settings.apiKey,
     });
   } catch (error) {
     console.error('Error getting AI settings:', error);
@@ -28,26 +25,21 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { provider, openaiBaseUrl, anthropicBaseUrl, openaiApiKey, anthropicApiKey, openaiModel, anthropicModel } = body;
+    const { provider, baseUrl, apiKey, model } = body;
 
-    setAISettings({
-      provider: provider || 'anthropic',
-      openaiBaseUrl,
-      anthropicBaseUrl,
-      openaiApiKey,
-      anthropicApiKey,
-      openaiModel,
-      anthropicModel,
+    const settings = await setAISettings({
+      provider: provider || 'openai',
+      baseUrl,
+      apiKey,
+      model,
     });
 
-    const settings = getAISettings();
     return NextResponse.json({
       success: true,
       provider: settings.provider,
-      openaiBaseUrl: settings.openaiBaseUrl,
-      anthropicBaseUrl: settings.anthropicBaseUrl,
-      openaiModel: settings.openaiModel,
-      anthropicModel: settings.anthropicModel,
+      baseUrl: settings.baseUrl,
+      model: settings.model,
+      hasApiKey: !!settings.apiKey,
     });
   } catch (error) {
     console.error('Error saving AI settings:', error);

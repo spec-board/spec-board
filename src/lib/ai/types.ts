@@ -34,7 +34,7 @@ export interface AICompletionResponse {
 }
 
 // Provider types
-export type AIProvider = 'anthropic' | 'openai';
+export type AIProvider = 'openai';
 
 // Configuration
 export interface AIConfig {
@@ -177,6 +177,23 @@ export interface GenerateSpecKitOptions {
   prdContent: string;
   featureName: string;
   projectContext?: string;
+}
+
+// Constitution generation
+export interface GenerateConstitutionOptions {
+  projectName: string;
+  projectDescription?: string;
+  existingPrinciples?: string; // Current principles to improve on
+}
+
+export interface GeneratedPrinciple {
+  name: string;
+  description: string;
+}
+
+export interface GeneratedConstitution {
+  principles: GeneratedPrinciple[];
+  suggestedSections: Array<{ name: string; content: string }>;
 }
 
 // Output types
