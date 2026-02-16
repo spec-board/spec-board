@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { isPrismaError } from '@/lib/utils';
-import { generateConstitution, getProvider } from '@/lib/ai';
+import { generateConstitution, getProvider, getAISettings } from '@/lib/ai';
 
 // Disable Next.js route caching - always read fresh data from database
 export const dynamic = 'force-dynamic';
@@ -11,8 +11,27 @@ export async function GET() {
   try {
     const projects = await prisma.project.findMany({
       orderBy: { updatedAt: 'desc' },
+      include: {
+        _count: {
+          select: { features: true },
+        },
+      },
     });
-    return NextResponse.json(projects);
+
+    // Transform to include feature count
+    const transformed = projects.map(p => ({
+      id: p.id,
+      name: p.name,
+      displayName: p.displayName,
+      description: p.description,
+      filePath: p.filePath,
+      isCloud: p.isCloud,
+      createdAt: p.createdAt.toISOString(),
+      updatedAt: p.updatedAt.toISOString(),
+      featureCount: p._count.features,
+    }));
+
+    return NextResponse.json(transformed);
   } catch (error) {
     console.error('Error fetching projects:', error);
     return NextResponse.json(
@@ -27,7 +46,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, displayName, filePath, description, constitutionPrompt } = body;
+    const { name, displayName, filePath, description, generateConstitution } = body;
+
+    console.log('[API/Projects] POST received:', { name, displayName, hasDescription: !!description, generateConstitution });
 
     // name is always required
     if (!name || typeof name !== 'string') {
@@ -73,48 +94,79 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Generate Constitution with AI if prompt is provided
-    let constitutionGenerated = false;
-    if (constitutionPrompt) {
+    // Generate Constitution with AI if requested
+    // Uses description as context - similar to speckit workflow
+    // Skip if no API key configured - graceful fallback
+    let constitutionSkipped = false;
+    let constitutionError: string | null = null;
+    if (generateConstitution && description) {
+      // Check if AI API key is available before attempting generation
+      let hasApiKey = false;
       try {
-        const provider = getProvider();
-        const result = await generateConstitution({
-          projectName: project.displayName || name,
-          projectDescription: constitutionPrompt,
-        });
+        const aiSettings = await getAISettings();
+        hasApiKey = !!aiSettings.apiKey;
+      } catch (settingsError) {
+        // If we can't read settings, skip constitution generation
+        console.log(`[Projects] Could not read AI settings - skipping constitution generation`);
+        hasApiKey = false;
+      }
 
-        // Generate markdown content
-        const content = generateConstitutionMarkdown(
-          project.displayName || name,
-          result.principles,
-          result.suggestedSections
-        );
+      if (!hasApiKey) {
+        // Skip constitution generation gracefully - user can add it later
+        console.log(`[Projects] Skipping constitution generation - no API key configured for project ${project.name}`);
+        constitutionSkipped = true;
+      } else {
+        try {
+          const provider = getProvider();
+          // Insert user description into AI prompt as context
+          const result = await generateConstitution({
+            projectName: project.displayName || name,
+            projectDescription: description, // User's description becomes AI context
+          });
 
-        // Save constitution to database
-        await prisma.constitution.create({
-          data: {
-            projectId: project.id,
-            title: `${project.displayName || name} Constitution`,
-            content,
-            principles: result.principles,
-            version: '1.0.0',
-            ratifiedDate: new Date(),
-            lastAmendedDate: new Date(),
-          },
-        });
+          // Generate markdown content
+          const content = generateConstitutionMarkdown(
+            project.displayName || name,
+            result.principles,
+            result.suggestedSections
+          );
 
-        constitutionGenerated = true;
-        console.log(`[Projects] Constitution generated for project ${project.name} using ${provider}`);
-      } catch (aiError) {
-        console.error('Error generating constitution:', aiError);
-        // Continue - constitution is optional
+          // Save constitution to database
+          await prisma.constitution.create({
+            data: {
+              projectId: project.id,
+              title: `${project.displayName || name} Constitution`,
+              content,
+              principles: result.principles,
+              version: '1.0.0',
+              ratifiedDate: new Date(),
+              lastAmendedDate: new Date(),
+            },
+          });
+
+          console.log(`[Projects] Constitution generated for project ${project.name} using ${provider}`);
+        } catch (aiError) {
+          const message = aiError instanceof Error ? aiError.message : 'Unknown error';
+          console.error('[Projects] Error generating constitution:', message);
+          // Don't fail the whole project - just log the error and skip constitution
+          constitutionError = message;
+          constitutionSkipped = true;
+        }
       }
     }
 
-    return NextResponse.json({
+    // Return response - include warning if constitution was skipped
+    const response: Record<string, unknown> = {
       ...project,
-      constitutionGenerated,
-    }, { status: 201 });
+    };
+
+    if (constitutionSkipped) {
+      response.warning = constitutionError
+        ? `Constitution generation failed: ${constitutionError}. You can generate it later from the project page.`
+        : 'Constitution was skipped because no AI API key is configured. You can generate it later from the project page.';
+    }
+
+    return NextResponse.json(response, { status: 201 });
   } catch (error: unknown) {
     console.error('Error creating project:', error);
 
