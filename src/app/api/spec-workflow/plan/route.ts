@@ -34,15 +34,16 @@ export async function POST(request: NextRequest) {
 
     const planContent = generatePlanMarkdown(plan, name || 'Feature');
 
-    // Generate clarifications markdown for spec.md (spec-kit format)
+    // Generate clarifications markdown and append to specContent (spec-kit format)
     const clarificationsContent = generateClarificationsMarkdown(clarifications);
+    const updatedSpecContent = specContent + '\n\n' + clarificationsContent;
 
-    // Update feature in database - save plan content, clarifications, and update stage
+    // Update feature in database - save plan content, updated spec with clarifications, and update stage
     const feature = await prisma.feature.update({
       where: { id: featureId },
       data: {
+        specContent: updatedSpecContent, // Append clarifications to spec
         planContent: planContent,
-        clarifications: clarificationsContent, // Store in spec-kit format
         stage: 'plan',
       }
     });
