@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { prisma } from '@/lib/prisma';
-import { isPathSafe } from '@/lib/path-utils';
 import { generatePlan, getProvider } from '@/lib/ai';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/spec-workflow/plan - Generate technical plan
+// POST /api/spec-workflow/plan - Generate technical plan and save to database
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, name, specContent, clarifications, constitution } = body;
+    const { projectId, featureId, name, specContent, clarifications, constitution } = body;
+
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    }
+
+    if (!featureId) {
+      return NextResponse.json({ error: 'Feature ID is required' }, { status: 400 });
+    }
+
+    // Verify project exists
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
 
     const provider = getProvider();
     const plan = await generatePlan({
@@ -21,33 +32,22 @@ export async function POST(request: NextRequest) {
       projectContext: ''
     });
 
-    const planContent = generatePlanMarkdown(plan, name);
+    const planContent = generatePlanMarkdown(plan, name || 'Feature');
 
-    let featureDir: string | null = null;
-    if (projectId && name) {
-      const project = await prisma.project.findUnique({ where: { id: projectId } });
-      if (project?.filePath) {
-        const { safe, resolvedPath } = isPathSafe(project.filePath);
-        if (safe) {
-          const specsDir = path.join(resolvedPath, 'specs');
-          const exists = await fs.access(specsDir).then(() => true).catch(() => false);
-          if (exists) {
-            featureDir = path.join(specsDir, `001-${name.toLowerCase().replace(/\s+/g, '-')}`);
-          }
-        }
+    // Update feature in database - save plan content and update stage
+    const feature = await prisma.feature.update({
+      where: { id: featureId },
+      data: {
+        planContent: planContent,
+        stage: 'plan',
       }
-    }
-
-    if (featureDir) {
-      await fs.mkdir(featureDir, { recursive: true });
-      await fs.writeFile(path.join(featureDir, 'plan.md'), planContent);
-    }
+    });
 
     return NextResponse.json({
       step: 'plan',
       plan,
       content: planContent,
-      featurePath: featureDir,
+      featureId: feature.id,
       provider
     });
   } catch (error) {

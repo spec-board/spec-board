@@ -205,36 +205,26 @@ function AIContent() {
     loadSettings();
   }, [loadSettings]);
 
-  // Get current provider's API key status
-  const hasApiKey = aiSettings.provider === 'openai' 
-    ? aiSettings.hasOpenAI 
-    : aiSettings.hasAnthropic;
-
   // Single form state
   const [formData, setFormData] = useState({
     provider: aiSettings.provider,
-    baseUrl: aiSettings.openaiBaseUrl || aiSettings.anthropicBaseUrl || '',
+    baseUrl: aiSettings.baseUrl || '',
     apiKey: '',
-    model: aiSettings.openaiModel || aiSettings.anthropicModel || '',
+    model: aiSettings.model || '',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
-    
-    const settings: any = { provider: formData.provider };
-    
-    if (formData.provider === 'openai') {
-      settings.openaiBaseUrl = formData.baseUrl.trim() || undefined;
-      settings.openaiApiKey = formData.apiKey.trim() || undefined;
-      settings.openaiModel = formData.model.trim() || undefined;
-    } else {
-      settings.anthropicBaseUrl = formData.baseUrl.trim() || undefined;
-      settings.anthropicApiKey = formData.apiKey.trim() || undefined;
-      settings.anthropicModel = formData.model.trim() || undefined;
-    }
-    
+
+    const settings = {
+      provider: formData.provider,
+      baseUrl: formData.baseUrl.trim() || undefined,
+      apiKey: formData.apiKey.trim() || undefined,
+      model: formData.model.trim() || undefined,
+    };
+
     await setAISettings(settings);
     await loadSettings(); // Reload to get updated has flags
     setIsSaving(false);
@@ -243,38 +233,22 @@ function AIContent() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  // Update form when provider changes
-  const handleProviderChange = (provider: AIProvider) => {
-    const baseUrl = provider === 'openai' 
-      ? (aiSettings.openaiBaseUrl || '') 
-      : (aiSettings.anthropicBaseUrl || '');
-    const model = provider === 'openai'
-      ? (aiSettings.openaiModel || '')
-      : (aiSettings.anthropicModel || '');
-    setFormData({ ...formData, provider, baseUrl, apiKey: '', model });
-  };
-
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold mb-1">AI Settings</h2>
         <p className="text-sm text-[var(--muted-foreground)]">
-          Configure AI provider for feature generation
+          Configure OpenAI-compatible API for feature generation
         </p>
       </div>
 
       <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-4">
-        {/* Provider */}
+        {/* Provider - Fixed to OpenAI */}
         <div>
           <label className="text-xs text-[var(--muted-foreground)] block mb-1">Provider</label>
-          <select
-            value={formData.provider}
-            onChange={(e) => handleProviderChange(e.target.value as AIProvider)}
-            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
-          >
-            <option value="openai">OpenAI</option>
-            <option value="anthropic">Anthropic (Claude)</option>
-          </select>
+          <div className="px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg">
+            OpenAI-Compatible API
+          </div>
         </div>
 
         {/* Base URL */}
@@ -284,7 +258,7 @@ function AIContent() {
             type="text"
             value={formData.baseUrl}
             onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-            placeholder={formData.provider === 'openai' ? 'http://localhost:11434/v1' : 'https://api.anthropic.com'}
+            placeholder="http://localhost:11434/v1 (for Ollama, LM Studio)"
             className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
           />
         </div>
@@ -294,9 +268,9 @@ function AIContent() {
           <label className="text-xs text-[var(--muted-foreground)] block mb-1">API Key</label>
           <input
             type="password"
-            value={hasApiKey ? '***' : formData.apiKey}
+            value={aiSettings.hasApiKey ? '***' : formData.apiKey}
             onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-            placeholder={formData.provider === 'openai' ? 'sk-...' : 'sk-ant-...'}
+            placeholder="sk-... (leave empty to keep existing)"
             className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
           />
         </div>
@@ -308,7 +282,7 @@ function AIContent() {
             type="text"
             value={formData.model}
             onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-            placeholder={formData.provider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-20250514'}
+            placeholder="gpt-4o, llama3, mistral, etc."
             className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
           />
         </div>

@@ -20,6 +20,7 @@ import {
 interface FeatureDetailProps {
   feature: Feature;
   onClose: () => void;
+  onDelete?: () => void;
   hasConstitution?: boolean;
   constitution?: Constitution | null;
   initialSection?: SectionId;
@@ -105,7 +106,7 @@ function buildSectionConfigs(feature: Feature): SectionConfig[] {
   ];
 }
 
-export function FeatureDetail({ feature, onClose, hasConstitution = false, constitution = null, initialSection }: FeatureDetailProps) {
+export function FeatureDetail({ feature, onClose, onDelete, hasConstitution = false, constitution = null, initialSection }: FeatureDetailProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<SectionId>(initialSection || 'spec');
   const [selectedNavIndex, setSelectedNavIndex] = useState(0);
@@ -464,6 +465,7 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
         onClose={onClose}
         onToggleSplit={handleToggleSplit}
         isSplitActive={splitView.isActive}
+        onDelete={onDelete}
       />
 
       {/* Main content area */}

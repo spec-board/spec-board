@@ -132,6 +132,7 @@ export default function ProjectPage() {
         variant="project"
         projectName={project?.name}
         projectPath={projectPath || undefined}
+        projectSlug={projectSlug}
       />
 
       {/* Main content */}

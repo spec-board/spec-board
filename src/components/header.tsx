@@ -2,17 +2,18 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FolderOpen, Github, Settings, Plus } from 'lucide-react';
+import { FolderOpen, Github, Settings, Plus, Scale } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
 
 interface HeaderProps {
   variant: 'home' | 'project';
   projectName?: string;
   projectPath?: string;
+  projectSlug?: string;
   onNewProject?: () => void;
 }
 
-export function Header({ variant, projectName, projectPath, onNewProject }: HeaderProps) {
+export function Header({ variant, projectName, projectPath, projectSlug, onNewProject }: HeaderProps) {
   const router = useRouter();
 
   return (
@@ -91,6 +92,19 @@ export function Header({ variant, projectName, projectPath, onNewProject }: Head
               </button>
             )}
             <ThemeButton />
+            {variant === 'project' && projectSlug && (
+              <a
+                href={`/projects/${projectSlug}/constitution`}
+                className="hover:bg-[var(--secondary)] rounded-lg transition-colors flex items-center justify-center"
+                style={{
+                  padding: 'var(--space-2)',
+                  borderRadius: 'var(--radius)',
+                }}
+                title="Constitution"
+              >
+                <Scale className="w-5 h-5" />
+              </a>
+            )}
             <a
               href="https://github.com/paulpham157/spec-board"
               target="_blank"

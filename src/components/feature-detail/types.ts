@@ -105,6 +105,7 @@ export interface HeaderBarProps {
   onClose: () => void;
   onToggleSplit: () => void;
   isSplitActive: boolean;
+  onDelete?: () => void;
 }
 
 export interface NavSidebarProps {
