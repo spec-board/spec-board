@@ -1,10 +1,10 @@
 # Lib Directory
 
 ## Purpose
-Utilities, parsers, state management, and business logic.
+Utilities, parsers, state management, AI client, auth, and business logic.
 
 ## Overview
-This directory contains all non-component TypeScript code including markdown parsers, path utilities, the Zustand store, and general utilities. Some files are server-only (use Node.js fs), while others work on both client and server.
+This directory contains all non-component TypeScript code including markdown parsers, path utilities, the Zustand store, AI client, authentication, and cloud sync services. Some files are server-only (use Node.js fs), while others work on both client and server.
 
 ## Key Files
 
@@ -15,6 +15,10 @@ This directory contains all non-component TypeScript code including markdown par
 | `prisma.ts` | Prisma client singleton | Server only |
 | `store.ts` | Zustand state management | Client only |
 | `utils.ts` | General utilities (cn, colors) | Both |
+| `ai/` | AI client (OpenAI-compatible) | Server only |
+| `auth/` | Better Auth configuration | Server only |
+| `services/` | Cloud sync services | Server only |
+| `sync/` | Sync utilities | Server only |
 
 ## File Details
 
@@ -100,7 +104,7 @@ General utilities:
 ## Dependencies
 
 - **Internal**: `@/types`
-- **External**: fs, path, os, gray-matter, clsx, tailwind-merge, zustand
+- **External**: fs, path, os, gray-matter, clsx, tailwind-merge, zustand, better-auth
 
 ## Common Tasks
 
