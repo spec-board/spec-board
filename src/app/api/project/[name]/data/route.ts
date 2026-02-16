@@ -4,12 +4,8 @@ import { parseProject } from '@/lib/parser';
 
 /**
  * GET /api/project/[name]/data
- * Unified endpoint that returns project data from database if available,
- * otherwise falls back to filesystem parser.
- *
- * This supports both:
- * - Database-first projects (migrated from markdown)
- * - Filesystem-based projects (legacy markdown parsing)
+ * Returns project data - features from DB or filesystem,
+ * constitution always from database.
  */
 export async function GET(
   request: NextRequest,
@@ -108,7 +104,6 @@ export async function GET(
           lastAmendedDate: project.constitution.lastAmendedDate?.toISOString(),
         } : null,
         hasConstitution: !!project.constitution,
-        source: 'database', // Indicate data came from database
       });
     }
 
@@ -130,7 +125,6 @@ export async function GET(
           lastAmendedDate: project.constitution.lastAmendedDate?.toISOString(),
         } : null,
         hasConstitution: !!project.constitution,
-        source: 'empty',
       });
     }
 
@@ -144,10 +138,22 @@ export async function GET(
       );
     }
 
+    // Constitution always from DB
+    const constitution = project.constitution ? {
+      rawContent: project.constitution.content,
+      title: project.constitution.title || undefined,
+      principles: project.constitution.principles as any,
+      sections: [],
+      version: project.constitution.version || undefined,
+      ratifiedDate: project.constitution.ratifiedDate?.toISOString(),
+      lastAmendedDate: project.constitution.lastAmendedDate?.toISOString(),
+    } : null;
+
     return NextResponse.json({
       ...parsedProject,
-      projectId: project.id,  // Include projectId even for filesystem-based projects
-      source: 'filesystem',
+      projectId: project.id,
+      constitution,
+      hasConstitution: !!project.constitution,
     });
 
   } catch (error) {

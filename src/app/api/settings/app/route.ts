@@ -11,9 +11,10 @@ export async function GET() {
       shortcutsEnabled: settings.shortcutsEnabled,
     });
   } catch (error) {
-    console.error('Error getting app settings:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error getting app settings:', message);
     return NextResponse.json(
-      { error: 'Failed to get app settings' },
+      { error: 'Failed to get app settings', details: message },
       { status: 500 }
     );
   }

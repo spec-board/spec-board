@@ -13,9 +13,10 @@ export async function GET() {
       hasApiKey: !!settings.apiKey,
     });
   } catch (error) {
-    console.error('Error getting AI settings:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error getting AI settings:', message);
     return NextResponse.json(
-      { error: 'Failed to get AI settings' },
+      { error: 'Failed to get AI settings', details: message },
       { status: 500 }
     );
   }
