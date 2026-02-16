@@ -158,7 +158,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
       const project: Project = await response.json();
 
       const stageBreakdown: Record<FeatureStage, number> = {
-        specify: 0, plan: 0, tasks: 0, implement: 0, complete: 0
+        backlog: 0, planning: 0, in_progress: 0, done: 0
       };
       let totalTasks = 0, completedTasks = 0;
 
