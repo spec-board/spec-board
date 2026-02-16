@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, featureId, name, description, stage, status, order } = body;
+    const { projectId, featureId, name, description, stage, order } = body;
 
     if (!projectId || !featureId || !name) {
       return NextResponse.json(
@@ -59,7 +59,6 @@ export async function POST(request: NextRequest) {
         name,
         description,
         stage: stage || 'backlog',
-        status: status || 'backlog',
         order: order || 0,
       },
       include: {

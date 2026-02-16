@@ -25,12 +25,12 @@ export async function GET(request: NextRequest) {
       orderBy: { order: 'asc' },
     });
 
-    // Group by status for kanban
+    // Group by stage for kanban (stage now replaces status)
     const kanbanData = {
-      backlog: features.filter(f => f.status === 'backlog'),
-      planning: features.filter(f => f.status === 'planning'),
-      in_progress: features.filter(f => f.status === 'in_progress'),
-      done: features.filter(f => f.status === 'done'),
+      backlog: features.filter(f => f.stage === 'backlog'),
+      planning: features.filter(f => f.stage === 'planning'),
+      in_progress: features.filter(f => f.stage === 'in_progress'),
+      done: features.filter(f => f.stage === 'done'),
     };
 
     return NextResponse.json(kanbanData);

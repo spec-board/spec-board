@@ -39,7 +39,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const { name, description, stage, status, order } = body;
+    const { name, description, stage, order } = body;
 
     const feature = await prisma.feature.update({
       where: { id },
@@ -47,7 +47,6 @@ export async function PUT(
         ...(name && { name }),
         ...(description !== undefined && { description }),
         ...(stage && { stage }),
-        ...(status && { status }),
         ...(order !== undefined && { order }),
       },
       include: {
