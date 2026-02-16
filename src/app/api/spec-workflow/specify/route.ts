@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const featureCount = await prisma.feature.count({ where: { projectId } });
     const featureId = `${String(featureCount + 1).padStart(3, '0')}-${name.toLowerCase().replace(/\s+/g, '-')}`;
 
-    // Create feature in database
+    // Create feature in database with specContent
     const feature = await prisma.feature.create({
       data: {
         projectId,
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
         stage: 'specify',
         status: 'backlog',
         order: featureCount,
+        specContent, // Save spec markdown to database
       }
     });
 
