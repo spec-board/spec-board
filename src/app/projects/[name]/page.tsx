@@ -5,14 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import { KanbanBoard } from '@/components/kanban-board';
 import { ProjectInfoBubble } from '@/components/project-info-bubble';
 import { Header } from '@/components/header';
-import { useProjectStore } from '@/lib/store';
 import type { Project, Feature } from '@/types';
 
 export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
   const projectSlug = params.name as string;
-  const { addRecentProject } = useProjectStore();
 
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,15 +42,12 @@ export default function ProjectPage() {
       if (data.path) {
         setProjectPath(data.path);
       }
-
-      // Update recent projects cache
-      addRecentProject(data, projectSlug);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
-  }, [projectSlug, addRecentProject]);
+  }, [projectSlug]);
 
   // Load project on mount
   useEffect(() => {
@@ -133,6 +128,7 @@ export default function ProjectPage() {
         projectName={project?.name}
         projectPath={projectPath || undefined}
         projectSlug={projectSlug}
+        hasConstitution={project.hasConstitution}
       />
 
       {/* Main content */}
