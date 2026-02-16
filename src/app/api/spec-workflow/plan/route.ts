@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       projectContext: ''
     });
 
-    const planContent = generatePlanMarkdown(plan, name || 'Feature');
+    const planContent = generatePlanMarkdown(plan, name || 'Feature', featureId);
 
     // Generate clarifications markdown and append to specContent (spec-kit format)
     const clarificationsContent = generateClarificationsMarkdown(clarifications);
@@ -61,34 +61,73 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generatePlanMarkdown(plan: any, featureName: string): string {
+function generatePlanMarkdown(plan: any, featureName: string, featureId?: string): string {
   const date = new Date().toISOString().split('T')[0];
-  let content = `# ${featureName} - Plan\n\n`;
-  content += `> **Input**: spec.md\n`;
-  content += `> **Date**: ${date}\n`;
-  content += `> **Status**: Plan\n\n`;
+  let content = `# Implementation Plan: ${featureName}\n\n`;
+  content += `**Branch**: \`${featureId || 'feature/placeholder'}\` | **Date**: ${date} | **Spec**: [spec.md](spec.md)\n`;
+  content += `**Input**: Feature specification from spec.md\n\n`;
 
-  content += `## Summary\n\n${plan.summary}\n\n`;
+  content += `## Summary\n\n${plan.summary || 'TBD'}\n\n`;
+
+  // Technical Context
   content += `## Technical Context\n\n`;
   content += `| Aspect | Value |\n|--------|-------|\n`;
-  content += `| Language | ${plan.technicalContext?.language || 'TBD'} |\n`;
-  content += `| Version | ${plan.technicalContext?.version || 'N/A'} |\n`;
-  content += `| Dependencies | ${plan.technicalContext?.dependencies?.join(', ') || 'None'} |\n`;
-  content += `| Storage | ${plan.technicalContext?.storage || 'TBD'} |\n`;
+  content += `| Language/Version | ${plan.technicalContext?.language || 'TBD'} |\n`;
+  content += `| Primary Dependencies | ${plan.technicalContext?.dependencies?.join(', ') || 'None'} |\n`;
+  content += `| Storage | ${plan.technicalContext?.storage || 'N/A'} |\n`;
   content += `| Testing | ${plan.technicalContext?.testing || 'TBD'} |\n`;
-  content += `| Platform | ${plan.technicalContext?.platform || 'TBD'} |\n`;
+  content += `| Target Platform | ${plan.technicalContext?.platform || 'TBD'} |\n`;
+  content += `| Project Type | ${plan.technicalContext?.projectType || 'single'} |\n`;
+  content += `| Performance Goals | ${plan.technicalContext?.performanceGoals || 'TBD'} |\n`;
+  content += `| Constraints | ${plan.technicalContext?.constraints || 'TBD'} |\n`;
+  content += `| Scale/Scope | ${plan.technicalContext?.scaleScope || 'TBD'} |\n`;
+  content += `\n`;
 
-  if (plan.technicalContext?.performanceGoals) {
-    content += `| Performance | ${plan.technicalContext.performanceGoals} |\n`;
-  }
-  if (plan.technicalContext?.constraints) {
-    content += `| Constraints | ${plan.technicalContext.constraints} |\n`;
+  // Constitution Check
+  content += `## Constitution Check\n\n`;
+  content += `*GATE: Must pass before implementation*\n\n`;
+  if (plan.constitutionCheck?.length) {
+    for (const item of plan.constitutionCheck) {
+      content += `- **${item.principle}**: ${item.requirement} [${item.status || 'PENDING'}]\n`;
+    }
+  } else {
+    content += `_No constitution checks defined_\n`;
   }
   content += `\n`;
 
+  // Project Structure
   content += `## Project Structure\n\n`;
-  content += `**Decision**: ${plan.projectStructure?.decision || 'TBD'}\n\n`;
-  content += '```\n' + (plan.projectStructure?.structure || 'src/\ntests/') + '\n```\n\n';
+  content += `### Source Code\n\n`;
+  content += '```text\n';
+  content += (plan.projectStructure?.structure || 'src/\ntests/\n') + '\n';
+  content += '```\n\n';
+  content += `**Structure Decision**: ${plan.projectStructure?.decision || 'TBD'}\n\n`;
+
+  // Quality Gates
+  content += `## Quality Gates\n\n`;
+  if (plan.qualityGates?.length) {
+    for (const gate of plan.qualityGates) {
+      content += `- [ ] ${gate}\n`;
+    }
+  } else {
+    content += `- [ ] All tests pass\n`;
+    content += `- [ ] Code follows project style\n`;
+    content += `- [ ] No security vulnerabilities\n`;
+  }
+  content += `\n`;
+
+  // Complexity Tracking
+  content += `## Complexity Tracking\n\n`;
+  if (plan.complexityTracking?.length) {
+    content += `| Violation | Why Needed | Simpler Alternative Rejected Because |\n`;
+    content += `|-----------|------------|-------------------------------------|\n`;
+    for (const item of plan.complexityTracking) {
+      content += `| ${item.aspect} | ${item.rationale} | ${item.alternative || 'N/A'} |\n`;
+    }
+  } else {
+    content += `_No complexity violations_\n`;
+  }
+  content += `\n`;
 
   return content;
 }
