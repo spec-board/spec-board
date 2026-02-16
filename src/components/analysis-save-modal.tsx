@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Save, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AnalysisSaveModalProps {
@@ -129,18 +129,10 @@ export function AnalysisSaveModal({
         className="bg-[var(--background)] border border-[var(--border)] rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+        <div className="flex items-center justify-center px-4 py-3 border-b border-[var(--border)]">
           <h2 id="save-analysis-title" className="text-lg font-semibold">
             Save Analysis Report
           </h2>
-          <button
-            onClick={onClose}
-            disabled={isSaving}
-            className="p-1 rounded hover:bg-[var(--secondary)] transition-colors disabled:opacity-50"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Content (T014) */}
@@ -174,7 +166,7 @@ export function AnalysisSaveModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-[var(--border)]">
+        <div className="flex items-center justify-center gap-3 px-4 py-3 border-t border-[var(--border)]">
           <button
             onClick={onClose}
             disabled={isSaving}
@@ -198,10 +190,7 @@ export function AnalysisSaveModal({
                 Saving...
               </>
             ) : (
-              <>
-                <Save className="w-4 h-4" />
-                Save
-              </>
+              'Save'
             )}
           </button>
         </div>

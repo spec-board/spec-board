@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { X, Plus, Loader2, FolderOpen, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CreateProjectModalProps {
@@ -13,10 +13,9 @@ interface CreateProjectModalProps {
 export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProjectModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [constitutionPrompt, setConstitutionPrompt] = useState('');
-  const [generateConstitution, setGenerateConstitution] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -25,9 +24,8 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
     if (isOpen) {
       setName('');
       setDescription('');
-      setConstitutionPrompt('');
-      setGenerateConstitution(false);
       setError(null);
+      setWarning(null);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
@@ -43,25 +41,32 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
 
     setIsLoading(true);
     setError(null);
+    setWarning(null);
 
     try {
+      const requestBody = {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        generateConstitution: !!description.trim(),
+      };
+      console.log('[Frontend] Creating project with:', requestBody);
+
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || undefined,
-          constitutionPrompt: generateConstitution ? (constitutionPrompt.trim() || undefined) : undefined,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      // Check for warning (e.g., constitution skipped)
+      if (data.warning) {
+        setWarning(data.warning);
+      }
+
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || 'Failed to create project');
       }
 
-      const project = await response.json();
-      onCreated(project);
+      onCreated(data);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create project');
@@ -94,38 +99,15 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between border-b border-[var(--border)]"
+          className="flex items-center justify-center border-b border-[var(--border)]"
           style={{ padding: 'var(--space-4)' }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 'var(--radius)',
-                background: 'linear-gradient(135deg, var(--tag-bg-info) 0%, var(--tag-bg-purple) 100%)',
-              }}
-            >
-              <Sparkles className="w-5 h-5" style={{ color: 'var(--tag-text-info)' }} />
-            </div>
-            <h2
-              className="font-semibold"
-              style={{ fontSize: 'var(--text-lg)' }}
-            >
-              Create New Project
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="hover:bg-[var(--secondary)] rounded-lg transition-colors"
-            style={{
-              padding: 'var(--space-2)',
-              borderRadius: 'var(--radius)',
-            }}
+          <h2
+            className="font-semibold"
+            style={{ fontSize: 'var(--text-lg)' }}
           >
-            <X className="w-5 h-5" />
-          </button>
+            Create New Project
+          </h2>
         </div>
 
         {/* Content */}
@@ -158,7 +140,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
                 style={{ fontSize: 'var(--text-sm)' }}
               />
               <p className="text-xs text-[var(--muted-foreground)]">
-                URL: /projects/{name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'your-project'}
+                URL: /projects/{name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'my-awesome-project'}
               </p>
             </div>
 
@@ -174,7 +156,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
                 id="project-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief description of your project..."
+                placeholder="e.g., A project management tool for small teams to track tasks and collaborate in real-time..."
                 rows={3}
                 className={cn(
                   'w-full px-3 py-2 rounded-lg border bg-[var(--secondary)]',
@@ -183,44 +165,21 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
                 )}
                 style={{ fontSize: 'var(--text-sm)' }}
               />
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Describe the project purpose, key features, and quality requirements. This will guide AI to generate appropriate development principles for the constitution.
+              </p>
             </div>
 
-            {/* Generate Constitution Toggle */}
-            <div className="flex items-center gap-2 mt-4">
-              <input
-                type="checkbox"
-                id="generate-constitution"
-                checked={generateConstitution}
-                onChange={(e) => setGenerateConstitution(e.target.checked)}
-                className="w-4 h-4 rounded border-[var(--border)]"
-              />
-              <label htmlFor="generate-constitution" className="text-sm font-medium">
-                Generate Constitution with AI
-              </label>
-            </div>
-
-            {/* Constitution Prompt - only shown when checkbox is checked */}
-            {generateConstitution && (
-              <div className="space-y-2 mt-2">
-                <label
-                  htmlFor="constitution-prompt"
-                  className="text-xs text-[var(--muted-foreground)]"
-                >
-                  Describe your project principles and requirements for the AI to generate a constitution
-                </label>
-                <textarea
-                  id="constitution-prompt"
-                  value={constitutionPrompt}
-                  onChange={(e) => setConstitutionPrompt(e.target.value)}
-                  placeholder="e.g., This is a TypeScript/Next.js e-commerce app focused on performance and accessibility..."
-                  rows={3}
-                  className={cn(
-                    'w-full px-3 py-2 rounded-lg border bg-[var(--secondary)]',
-                    'outline-none focus:border-[var(--ring)] transition-colors resize-none',
-                    'placeholder:text-[var(--muted-foreground)]'
-                  )}
-                  style={{ fontSize: 'var(--text-sm)' }}
-                />
+            {/* Warning Message */}
+            {warning && (
+              <div
+                className="mt-4 p-3 rounded-lg text-sm"
+                style={{
+                  backgroundColor: 'var(--tag-bg-warning)',
+                  color: 'var(--tag-text-warning)',
+                }}
+              >
+                {warning}
               </div>
             )}
 
@@ -240,7 +199,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
 
           {/* Footer */}
           <div
-            className="flex items-center justify-end gap-3 border-t border-[var(--border)]"
+            className="flex items-center justify-center gap-3 border-t border-[var(--border)]"
             style={{ padding: 'var(--space-4)' }}
           >
             <button
@@ -265,10 +224,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
                   Creating...
                 </>
               ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  Create Project
-                </>
+                'Create Project'
               )}
             </button>
           </div>

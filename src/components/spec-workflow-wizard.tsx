@@ -2,9 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import {
-  X,
   Loader2,
-  Sparkles,
   FileText,
   HelpCircle,
   Map,
@@ -288,27 +286,13 @@ export function SpecWorkflowWizard({
       >
         {/* Header */}
         <div className="flex-shrink-0 px-6 py-4 border-b border-[var(--border)]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[var(--primary)]/10">
-                <Sparkles className="w-5 h-5 text-[var(--primary)]" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-[var(--foreground)]">
-                  Spec Workflow
-                </h2>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  specify → clarify → plan → tasks → analyze
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-md hover:bg-[var(--secondary)] transition-colors text-[var(--muted-foreground)]"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="text-center">
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">
+              Spec Workflow
+            </h2>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              specify → clarify → plan → tasks → analyze
+            </p>
           </div>
 
           {/* Step Indicator */}
@@ -566,58 +550,54 @@ export function SpecWorkflowWizard({
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-[var(--border)]">
-          <div>
-            {currentStep !== 'specify' && currentStep !== 'complete' && (
-              <button
-                onClick={handleBack}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--secondary)] transition-colors text-[var(--foreground)]"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Back
-              </button>
-            )}
-          </div>
+        <div className="flex-shrink-0 flex items-center justify-center gap-3 px-6 py-4 border-t border-[var(--border)]">
+          {currentStep !== 'specify' && currentStep !== 'complete' && (
+            <button
+              onClick={handleBack}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--secondary)] transition-colors text-[var(--foreground)]"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
+          )}
 
-          <div className="flex items-center gap-3">
-            {currentStep !== 'complete' && (
-              <button
-                onClick={handleNext}
-                disabled={isLoading || !canProceed()}
-                className={cn(
-                  'flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium',
-                  'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
-                  'bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)]'
-                )}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    {currentStep === 'analyze' ? 'Finish' : 'Continue'}
-                    <ChevronRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            )}
+          {currentStep !== 'complete' && (
+            <button
+              onClick={handleNext}
+              disabled={isLoading || !canProceed()}
+              className={cn(
+                'flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium',
+                'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+                'bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)]'
+              )}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  {currentStep === 'analyze' ? 'Finish' : 'Continue'}
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          )}
 
-            {currentStep === 'complete' && (
-              <button
-                onClick={handleFinish}
-                className={cn(
-                  'flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium',
-                  'bg-green-500 hover:bg-green-500/90 text-white'
-                )}
-              >
-                Done
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+          {currentStep === 'complete' && (
+            <button
+              onClick={handleFinish}
+              className={cn(
+                'flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium',
+                'bg-green-500 hover:bg-green-500/90 text-white'
+              )}
+            >
+              Done
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>
