@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Feature Stage Consolidation** - Simplified feature status model:
+  - Removed duplicate `status` field from Feature model (kept only `stage`)
+  - `FeatureStage` now uses Kanban-style values: `'backlog' | 'planning' | 'in_progress' | 'done'`
+  - Previously used workflow-style values: `'specify' | 'plan' | 'tasks' | 'implement' | 'complete'`
+  - API endpoint `/api/features/[id]/status` now updates `stage` instead of `status`
+  - UI components updated to use `stage` as single source of truth
+  - All tests updated to reflect new stage values
+
 ### Added
 - **AI Feature Creation** - Generate spec-kit documents automatically:
   - User enters feature name and description
