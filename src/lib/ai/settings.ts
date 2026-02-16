@@ -1,5 +1,5 @@
 // Settings - stored in database via Prisma
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 
 const SETTINGS_KEY = 'app-settings';
 

@@ -141,8 +141,23 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         fetch('/api/settings/ai'),
       ]);
 
-      const appData = await appRes.json();
-      const aiData = await aiRes.json();
+      // Use defaults if API fails
+      let appData = DEFAULT_SETTINGS;
+      let aiData = { provider: 'openai', baseUrl: '', model: '', hasApiKey: false };
+
+      if (appRes.ok) {
+        appData = await appRes.json();
+      } else {
+        const err = await appRes.json().catch(() => ({}));
+        console.warn('Failed to load app settings:', appRes.status, err);
+      }
+
+      if (aiRes.ok) {
+        aiData = await aiRes.json();
+      } else {
+        const err = await aiRes.json().catch(() => ({}));
+        console.warn('Failed to load AI settings:', aiRes.status, err);
+      }
 
       const resolvedTheme = resolveTheme(appData.theme || 'dark');
       applyTheme(resolvedTheme);
