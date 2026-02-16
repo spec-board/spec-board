@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { prisma } from '@/lib/prisma';
-import { isPathSafe } from '@/lib/path-utils';
+import { generateConstitution, getProvider } from '@/lib/ai';
 
 // Constitution generation types
 interface ConstitutionPrinciples {
@@ -17,60 +15,120 @@ interface ConstitutionSection {
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/spec-workflow/constitution - Generate project constitution
+// POST /api/spec-workflow/constitution - Create, update, or generate constitution
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, name, principles, additionalSections } = body;
+    const { projectId, name, principles, additionalSections, generateWithAI } = body;
 
-    if (!name?.trim()) {
-      return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
 
-    // Generate constitution markdown
-    const constitution = generateConstitutionMarkdown(
-      name,
-      principles || getDefaultPrinciples(),
-      additionalSections
-    );
+    // Verify project exists
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
 
-    // Determine constitution path
-    let constitutionPath: string | null = null;
-    if (projectId) {
-      const project = await prisma.project.findUnique({ where: { id: projectId } });
-      if (project?.filePath) {
-        const { safe, resolvedPath } = isPathSafe(project.filePath);
-        if (safe) {
-          // Check for .specify or specs directory
-          const specifyDir = path.join(resolvedPath, '.specify', 'memory');
-          const specifyExists = await fs.access(specifyDir).then(() => true).catch(() => false);
+    // Handle AI generation request
+    if (generateWithAI) {
+      try {
+        const provider = getProvider();
+        const result = await generateConstitution({
+          projectName: project.displayName || name || 'Project',
+          projectDescription: project.description || undefined,
+        });
 
-          if (specifyExists) {
-            constitutionPath = path.join(specifyDir, 'constitution.md');
-          } else {
-            // Fallback to specs directory
-            const specsDir = path.join(resolvedPath, 'specs');
-            const specsExists = await fs.access(specsDir).then(() => true).catch(() => false);
-            if (specsExists) {
-              constitutionPath = path.join(specsDir, 'constitution.md');
-            }
-          }
-        }
+        // Generate markdown content with AI principles
+        const content = generateConstitutionMarkdown(
+          project.displayName || name || 'Project',
+          result.principles,
+          result.suggestedSections
+        );
+
+        // Upsert constitution in database
+        const constitution = await prisma.constitution.upsert({
+          where: { projectId },
+          create: {
+            projectId,
+            title: `${project.displayName || name || 'Project'} Constitution`,
+            content,
+            principles: result.principles,
+            version: '1.0.0',
+            ratifiedDate: new Date(),
+            lastAmendedDate: new Date(),
+          },
+          update: {
+            content,
+            principles: result.principles,
+            lastAmendedDate: new Date(),
+          },
+        });
+
+        return NextResponse.json({
+          success: true,
+          constitution: {
+            id: constitution.id,
+            title: constitution.title,
+            content: constitution.content,
+            principles: constitution.principles,
+            version: constitution.version,
+            ratifiedDate: constitution.ratifiedDate,
+            lastAmendedDate: constitution.lastAmendedDate,
+          },
+          message: 'Constitution generated with AI',
+          provider
+        });
+      } catch (aiError) {
+        console.error('AI generation error:', aiError);
+        return NextResponse.json({
+          error: aiError instanceof Error ? aiError.message : 'Failed to generate with AI'
+        }, { status: 500 });
       }
     }
 
-    // Write constitution file if path found
-    if (constitutionPath) {
-      await fs.writeFile(constitutionPath, constitution, { flag: 'w' });
-    }
+    // Use default principles if not provided
+    const principlesToUse = principles || getDefaultPrinciples();
+
+    // Generate markdown content
+    const content = generateConstitutionMarkdown(
+      project.displayName || name || 'Project',
+      principlesToUse,
+      additionalSections
+    );
+
+    // Upsert constitution in database
+    const constitution = await prisma.constitution.upsert({
+      where: { projectId },
+      create: {
+        projectId,
+        title: `${project.displayName || name || 'Project'} Constitution`,
+        content,
+        principles: principlesToUse,
+        version: '1.0.0',
+        ratifiedDate: new Date(),
+        lastAmendedDate: new Date(),
+      },
+      update: {
+        content,
+        principles: principlesToUse,
+        lastAmendedDate: new Date(),
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      constitution,
-      path: constitutionPath,
-      message: constitutionPath
-        ? 'Constitution created successfully'
-        : 'Could not determine project path'
+      constitution: {
+        id: constitution.id,
+        title: constitution.title,
+        content: constitution.content,
+        principles: constitution.principles,
+        version: constitution.version,
+        ratifiedDate: constitution.ratifiedDate,
+        lastAmendedDate: constitution.lastAmendedDate,
+      },
+      message: 'Constitution saved to database'
     });
   } catch (error) {
     console.error('Error creating constitution:', error);
@@ -79,7 +137,6 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/spec-workflow/constitution - Get constitution for a project
-// GET /api/spec-workflow/constitution - Get project constitution
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -89,46 +146,55 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
 
-    const project = await prisma.project.findUnique({ where: { id: projectId } });
-    if (!project?.filePath) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
-    }
+    const constitution = await prisma.constitution.findUnique({
+      where: { projectId }
+    });
 
-    const { safe, resolvedPath } = isPathSafe(project.filePath);
-    if (!safe) {
-      return NextResponse.json({ error: 'Invalid project path' }, { status: 400 });
-    }
-
-    // Try different possible locations
-    const possiblePaths = [
-      path.join(resolvedPath, '.specify', 'memory', 'constitution.md'),
-      path.join(resolvedPath, 'specs', 'constitution.md'),
-      path.join(resolvedPath, 'constitution.md')
-    ];
-
-    for (const constitutionPath of possiblePaths) {
-      try {
-        const exists = await fs.access(constitutionPath).then(() => true).catch(() => false);
-        if (exists) {
-          const content = await fs.readFile(constitutionPath, 'utf-8');
-          return NextResponse.json({
-            content,
-            path: constitutionPath
-          });
-        }
-      } catch {
-        continue;
-      }
+    if (!constitution) {
+      return NextResponse.json({
+        exists: false,
+        message: 'No constitution found for this project'
+      });
     }
 
     return NextResponse.json({
-      content: null,
-      message: 'No constitution found',
-      availablePaths: possiblePaths
+      exists: true,
+      constitution: {
+        id: constitution.id,
+        title: constitution.title,
+        content: constitution.content,
+        principles: constitution.principles,
+        version: constitution.version,
+        ratifiedDate: constitution.ratifiedDate,
+        lastAmendedDate: constitution.lastAmendedDate,
+      }
     });
   } catch (error) {
     console.error('Error getting constitution:', error);
     return NextResponse.json({ error: 'Failed to get constitution' }, { status: 500 });
+  }
+}
+
+// DELETE /api/spec-workflow/constitution - Delete constitution
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get('projectId');
+
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    }
+
+    await prisma.constitution.delete({
+      where: { projectId }
+    }).catch(() => {
+      // Ignore if doesn't exist
+    });
+
+    return NextResponse.json({ success: true, message: 'Constitution deleted' });
+  } catch (error) {
+    console.error('Error deleting constitution:', error);
+    return NextResponse.json({ error: 'Failed to delete constitution' }, { status: 500 });
   }
 }
 
