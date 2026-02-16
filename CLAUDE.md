@@ -505,8 +505,15 @@ pnpm prisma migrate reset
 └─────────────────────────────────────────────────┘
 
 ## Active Technologies
-- TypeScript 5.9.x (strict mode) + Next.js 16.x, React 19.x, Tailwind CSS 4.x (012-ui-ux-rebrand)
-- N/A (visual changes only) (012-ui-ux-rebrand)
+- TypeScript 5.9.x (strict mode) + Next.js 16.x, React 19.x, Tailwind CSS 4.x
+- Better Auth (OAuth)
+- OpenAI-compatible AI client
 
 ## Recent Changes
-- 012-ui-ux-rebrand: Added TypeScript 5.9.x (strict mode) + Next.js 16.x, React 19.x, Tailwind CSS 4.x
+- FeatureDetailV2: Jira-like layout with user story panel
+- AI Integration: spec-workflow API endpoints with real AI
+- Cloud Sync: OAuth-based sync with Better Auth
+- SpecKitFileType: 9 file types (spec, plan, tasks, research, data-model, quickstart, contract, checklist, analysis)
+
+## Generated CLAUDE.md Files
+- `src/lib/ai/CLAUDE.md` - NEW: AI client documentation

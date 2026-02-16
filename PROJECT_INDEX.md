@@ -1,7 +1,7 @@
 # PROJECT_INDEX.md
 
 > Auto-generated codebase index for SpecBoard
-> Last updated: 2026-01-04
+> Last updated: 2026-02-16
 
 ## Overview
 
@@ -17,12 +17,13 @@
 |----------|------------|
 | **Framework** | Next.js 16.1.1 (App Router) |
 | **Language** | TypeScript 5.9.3 (strict mode) |
-| **UI** | React 19.2.3, Tailwind CSS v4.1.18, Lucide Icons |
-| **Database** | PostgreSQL via Prisma ORM 5.22.0 |
-| **State** | Zustand 5.0.9 (client), localStorage persistence |
-| **Charts** | Recharts 3.6.0 |
-| **Markdown** | remark 15, remark-html 16, DOMPurify 3.3.1 |
-| **File Watching** | chokidar 5.0.0 |
+| **UI** | React 19.2.3, Tailwind CSS v4.x, Lucide Icons |
+| **Database** | PostgreSQL via Prisma ORM |
+| **State** | Zustand (client), localStorage persistence |
+| **Markdown** | remark, DOMPurify |
+| **File Watching** | chokidar |
+| **AI** | OpenAI-compatible API (Ollama, LM Studio, etc.) |
+| **Auth** | Better Auth with OAuth |
 
 ## Architecture
 
@@ -47,10 +48,12 @@ spec-board/
 │   │           ├── page.tsx    # Feature detail
 │   │           ├── spec/       # Spec viewer
 │   │           └── plan/       # Plan viewer
-│   ├── components/             # React UI components (25+ files)
-│   │   ├── feature-detail/     # Feature detail modal components
-│   │   ├── readme-viewer.tsx   # Beautified README with custom diagrams
-│   │   ├── changelog-viewer.tsx # Version timeline with badges
+│   ├── components/             # React UI components
+│   │   ├── feature-detail-v2/  # NEW: Feature detail modal (Jira-like layout)
+│   │   ├── feature-detail/      # Legacy feature detail modal
+│   │   ├── kanban-board.tsx    # Kanban board view
+│   │   ├── cloud/              # Cloud sync UI components
+│   │   ├── sync/               # Sync UI components
 │   │   └── ...
 │   ├── lib/                    # Utilities and business logic
 │   │   ├── parser.ts           # Markdown parsing (core logic)
@@ -58,8 +61,11 @@ spec-board/
 │   │   ├── path-utils.ts       # Path validation/security
 │   │   ├── prisma.ts           # Database client
 │   │   ├── store.ts            # Zustand state management
-│   │   ├── settings-store.ts   # Settings persistence
 │   │   ├── utils.ts            # General utilities
+│   │   ├── ai/                 # AI client (OpenAI-compatible)
+│   │   ├── auth/               # Better Auth configuration
+│   │   ├── services/           # Cloud sync services
+│   │   ├── sync/               # Sync utilities
 │   │   └── accessibility/      # A11y utilities
 │   └── types/                  # TypeScript definitions
 │       └── index.ts            # All shared types
@@ -135,24 +141,60 @@ spec-board/
 
 ## API Endpoints
 
+### Project Management
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/api/projects` | GET | List all registered projects |
-| `/api/projects` | POST | Create new project |
+| `/api/projects` | GET/POST | List/create projects |
 | `/api/projects/register` | POST | Auto-register project from path |
-| `/api/projects/{slug}` | GET | Get project by slug |
-| `/api/projects/{slug}` | PUT | Update project |
-| `/api/projects/{slug}` | DELETE | Delete project |
-| `/api/project?path=...` | GET | Parse spec-kit project from filesystem |
-| `/api/browse?path=...` | GET | List directory contents |
-| `/api/watch?path=...` | GET | SSE stream for file changes |
-| `/api/app-info` | GET | App metadata (version, readme, changelog) |
+| `/api/projects/{slug}` | GET/PUT/DELETE | Project CRUD |
+
+### Spec Data
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/project?path=...` | GET | Parse spec-kit project |
+| `/api/browse?path=...` | GET | List directory |
+| `/api/watch?path=...` | GET | SSE real-time updates |
+
+### Spec Workflow (AI)
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/spec-workflow/specify` | POST | Generate spec from description |
+| `/api/spec-workflow/clarify` | POST | Generate clarification questions |
+| `/api/spec-workflow/plan` | POST | Generate implementation plan |
+| `/api/spec-workflow/tasks` | POST | Generate tasks |
+| `/api/spec-workflow/analyze` | POST | Analyze consistency |
+| `/api/spec-workflow/constitution` | POST | Create constitution |
+
+### Cloud Sync
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/cloud-projects` | GET/POST | Cloud project CRUD |
+| `/api/cloud-projects/connect` | POST | Connect local to cloud |
+| `/api/sync/{id}/push` | POST | Push changes to cloud |
+| `/api/sync/{id}/status` | GET | Get sync status |
+| `/api/sync/{id}/conflicts` | GET | List conflicts |
+
+### Other
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/checklist` | POST | Toggle checklist item |
+| `/api/analysis` | POST | Save analysis report |
+| `/api/app-info` | GET | App metadata |
 
 ## Core Types
 
 ```typescript
 // Feature stages (Kanban columns)
 type FeatureStage = 'specify' | 'plan' | 'tasks' | 'implement' | 'complete';
+
+// Spec-Kit file types
+type SpecKitFileType = 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist' | 'analysis';
+
+interface SpecKitFile {
+  type: SpecKitFileType;
+  content: string;
+  path: string;
+}
 
 // Main domain types
 interface Project {
@@ -164,9 +206,9 @@ interface Project {
 }
 
 interface Feature {
-  id: string;                    // Folder name (e.g., "1-todo-app")
-  name: string;                  // Display name
-  path: string;                  // Filesystem path
+  id: string;
+  name: string;
+  path: string;
   stage: FeatureStage;
   hasSpec: boolean;
   hasPlan: boolean;
@@ -175,20 +217,21 @@ interface Feature {
   phases: TaskPhase[];
   userStories: UserStory[];
   taskGroups: TaskGroup[];
-  branch: string | null;         // Git branch from spec/plan
+  branch: string | null;
   clarificationSessions: ClarificationSession[];
   specContent: string | null;
   planContent: string | null;
+  tasksContent: string | null;
   additionalFiles: SpecKitFile[];
   analysis: FeatureAnalysis | null;
 }
 
 interface Task {
-  id: string;           // T001, T002, etc.
+  id: string;
   description: string;
   completed: boolean;
-  parallel: boolean;    // [P] marker
-  userStory?: string;   // [US1] marker
+  parallel: boolean;
+  userStory?: string;
   filePath?: string;
 }
 ```
@@ -333,18 +376,23 @@ model Project {
 
 ## Recent Changes
 
-- **Settings Page Redesign**: Merged Overview into README tab, removed scroll limits for full content display
-- **Beautified README Viewer**: ASCII diagrams replaced with styled React components (FeaturesGrid, HowItWorksFlow, TechStackDisplay)
-- **Changelog Viewer**: Version timeline with color-coded badges for change types
-- **AGPL-3.0 + CLA**: Added dual-license notice, Contributor License Agreement, and PR template with CLA requirements
-- **Feature Detail Modal Redesign**: Full-screen modal with split-view, 5-phase navigation (OVERVIEW, PLANNING, CODING, QA, QC), drag-to-split functionality, and comprehensive keyboard shortcuts
-- **Semantic Icons**: Section icons that convey document meaning (existence, clarifications count, analysis severity)
-- **Group Counts**: Tasks show User Story count, Checklists show checklist file count
-- **Split View Highlighting**: Both panes highlighted in nav when split view is active
-- **Database slug routing**: URLs now use clean slugs (`/projects/todolist`) instead of encoded paths
-- **Auto-registration**: Projects auto-register when opened, generating unique slugs
-- **Analysis viewer**: Tab for spec alignment tracking with JSON/markdown support
-- **Checklist viewer**: Support for checklist files in feature directories
+- **FeatureDetailV2**: New Jira-like layout with user story panel, task hierarchy, and document panels
+- **AI Integration**: OpenAI-compatible AI client with spec-workflow API endpoints
+- **Cloud Sync**: OAuth-based cloud sync with Better Auth, conflict resolution
+- **SpecKitFileType**: Added support for 9 file types (spec, plan, tasks, research, data-model, quickstart, contract, checklist, analysis)
+- **UI Rebrand**: Tailwind CSS v4 with new design system
+
+## Mandatory Policies
+
+### UI Requirements
+- **ALWAYS use FeatureDetailV2**: The new UI component at `src/components/feature-detail-v2/` is the ONLY supported UI. Never use the legacy `FeatureDetail` component.
+- **No legacy mode**: Never use `?legacy=true` query parameter to access old UI.
+
+### AI API Requirements
+- **ALWAYS use real AI**: AI functions MUST call actual AI APIs (Anthropic Claude or OpenAI). Never return mock data.
+- **AI settings from database**: Use `getAISettings()` to retrieve API keys from the database (not hardcoded).
+- **AIService from client.ts**: All AI operations MUST use the `AIService` class from `src/lib/ai/client.ts` which contains real implementations.
+- **No mock fallback**: Do NOT use mock implementations. If no API key is configured, throw an error instead of returning fake data.
 
 ## Contributing
 
@@ -359,10 +407,17 @@ The following directories have CLAUDE.md files for context:
 - `src/app/CLAUDE.md` - App Router pages and API routes
 - `src/app/api/CLAUDE.md` - API routes documentation
 - `src/components/CLAUDE.md` - UI components
-- `src/components/feature-detail/CLAUDE.md` - Feature modal components
+- `src/components/feature-detail/CLAUDE.md` - Legacy feature modal
+- `src/components/feature-detail-v2/` - NEW: Jira-like feature modal
+- `src/components/cloud/CLAUDE.md` - Cloud sync UI
+- `src/components/sync/CLAUDE.md` - Sync UI
 - `src/lib/CLAUDE.md` - Utilities and helpers
-- `src/lib/markdown/CLAUDE.md` - AST-based markdown parsers
-- `src/lib/shortcuts/CLAUDE.md` - Keyboard shortcuts system
-- `src/lib/accessibility/CLAUDE.md` - Accessibility utilities
+- `src/lib/ai/CLAUDE.md` - AI client (NEW)
+- `src/lib/auth/CLAUDE.md` - Better Auth (NEW)
+- `src/lib/markdown/CLAUDE.md` - Markdown parsers
+- `src/lib/services/CLAUDE.md` - Cloud sync services
+- `src/lib/sync/CLAUDE.md` - Sync utilities
+- `src/lib/shortcuts/CLAUDE.md` - Keyboard shortcuts
+- `src/lib/accessibility/CLAUDE.md` - Accessibility
 - `src/types/CLAUDE.md` - Type definitions
 - `prisma/CLAUDE.md` - Database schema
