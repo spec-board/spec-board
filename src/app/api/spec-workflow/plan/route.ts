@@ -44,12 +44,12 @@ export async function POST(request: NextRequest) {
       data: {
         specContent: updatedSpecContent, // Append clarifications to spec
         planContent: planContent,
-        stage: 'plan',
+        stage: 'planning',
       }
     });
 
     return NextResponse.json({
-      step: 'plan',
+      step: 'planning',
       plan,
       content: planContent,
       featureId: feature.id,

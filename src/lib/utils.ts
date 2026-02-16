@@ -25,11 +25,10 @@ export function formatPercentage(value: number): string {
 
 export function getStageColor(stage: string): string {
   const colors: Record<string, string> = {
-    specify: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    plan: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    tasks: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    implement: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    complete: 'bg-green-500/20 text-green-400 border-green-500/30',
+    backlog: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    planning: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    in_progress: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    done: 'bg-green-500/20 text-green-400 border-green-500/30',
   };
   return colors[stage] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
 }
@@ -48,21 +47,9 @@ export function getStageLabel(stage: string): string {
 // Kanban column types for 4-column view
 export type KanbanColumn = 'backlog' | 'planning' | 'in_progress' | 'done';
 
-// Map feature stages to kanban columns (legacy - use getFeatureKanbanColumn for full logic)
+// Map feature stages to kanban columns
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
-  switch (stage) {
-    case 'specify':
-      return 'backlog';
-    case 'plan':
-      return 'planning';
-    case 'tasks':
-    case 'implement':
-      return 'in_progress';
-    case 'complete':
-      return 'done';
-    default:
-      return 'backlog';
-  }
+  return stage;
 }
 
 /**

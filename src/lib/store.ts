@@ -140,9 +140,9 @@ function extractSummary(project: Project): string | null {
   return null;
 }
 
-// Get the most relevant active feature (prioritize implement > tasks > plan > specify)
+// Get the most relevant active feature (prioritize in_progress > planning > backlog > done)
 function getActiveFeature(project: Project): ActiveFeatureStatus | null {
-  const stagePriority: FeatureStage[] = ['implement', 'tasks', 'plan', 'specify'];
+  const stagePriority: FeatureStage[] = ['in_progress', 'planning', 'backlog', 'done'];
 
   for (const stage of stagePriority) {
     const feature = project.features.find(f => f.stage === stage);
@@ -154,10 +154,10 @@ function getActiveFeature(project: Project): ActiveFeatureStatus | null {
     }
   }
 
-  // All complete
-  if (project.features.length > 0 && project.features.every(f => f.stage === 'complete')) {
+  // All done
+  if (project.features.length > 0 && project.features.every(f => f.stage === 'done')) {
     return {
-      stage: 'complete',
+      stage: 'done',
       featureName: `${project.features.length} feature${project.features.length > 1 ? 's' : ''}`,
     };
   }
