@@ -178,7 +178,7 @@ The parser is the most critical component. It reads spec-kit markdown files and 
 - `[P]`: Parallel marker (optional)
 - `[US1]`: User story reference (optional)
 
-**Feature Stages**: `specify` → `plan` → `tasks` → `implement` → `complete`
+**Feature Stages**: `specify` → `clarifying` → `planning` → `in_progress` → `done`
 
 ### State Management (lib/store.ts)
 
@@ -514,6 +514,7 @@ pnpm prisma migrate reset
 - AI Integration: spec-workflow API endpoints with real AI
 - Cloud Sync: OAuth-based sync with Better Auth
 - SpecKitFileType: 9 file types (spec, plan, tasks, research, data-model, quickstart, contract, checklist, analysis)
+- Clarify to DB: Clarifications saved to `clarificationsContent` field in Feature model
 
 ## Generated CLAUDE.md Files
 - `src/lib/ai/CLAUDE.md` - NEW: AI client documentation

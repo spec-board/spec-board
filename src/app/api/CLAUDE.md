@@ -19,6 +19,11 @@ This directory contains all Next.js API routes using the App Router convention. 
 | `checklist/route.ts` | Toggle checklist items in markdown files |
 | `app-info/route.ts` | App metadata (version, readme, changelog) |
 | `analysis/route.ts` | Save analysis reports |
+| `spec-workflow/specify/route.ts` | Generate spec from feature description |
+| `spec-workflow/clarify/route.ts` | Generate clarification questions (saves to DB) |
+| `spec-workflow/plan/route.ts` | Generate implementation plan |
+| `spec-workflow/tasks/route.ts` | Generate task breakdown |
+| `spec-workflow/analyze/route.ts` | Analyze consistency across documents |
 
 ## Endpoints
 
@@ -165,6 +170,170 @@ This directory contains all Next.js API routes using the App Router convention. 
   content: string       // Analysis markdown content
 }
 ```
+
+### Spec Workflow (`/api/spec-workflow`)
+
+AI-powered workflow for generating spec-kit documents. Flow: specify → clarify → plan → tasks → analyze
+
+#### Specify (`/api/spec-workflow/specify`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/spec-workflow/specify` | Generate spec from feature description |
+
+**Request:**
+```typescript
+{
+  projectId: string,    // Database project ID
+  name: string,         // Feature name
+  description?: string  // Feature description
+}
+```
+
+**Response:**
+```typescript
+{
+  step: 'backlog',
+  spec: { userStories, edgeCases, functionalRequirements },
+  content: string,      // Generated spec.md markdown
+  featureId: string,    // Database feature ID
+  featureIdDb: string   // Human-readable ID (e.g., "001-feature-name")
+}
+```
+
+#### Clarify (`/api/spec-workflow/clarify`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/spec-workflow/clarify` | Generate/answer clarification questions |
+
+**Request:**
+```typescript
+{
+  projectId?: string,        // Optional (used if featureId provided)
+  featureId?: string,         // Optional - if provided, saves to database
+  specContent: string,       // Current spec content
+  questions?: { question: string; answer: string }[]  // Optional - existing Q&A
+}
+```
+
+**Response:**
+```typescript
+{
+  step: 'clarify',
+  questions: { question: string; answer?: string }[],
+  content: string,      // Generated clarifications markdown
+  featureId: string     // Database feature ID (if provided)
+}
+```
+
+**Behavior:**
+- If `questions` provided (user answered), saves to database
+- If no `questions`, generates new questions from AI
+- Saves to `clarificationsContent` field in Feature table
+
+#### Plan (`/api/spec-workflow/plan`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/spec-workflow/plan` | Generate implementation plan |
+
+**Request:**
+```typescript
+{
+  projectId: string,
+  featureId: string,
+  name?: string,
+  specContent: string,
+  clarifications?: { question: string; answer: string }[],  // Optional - reads from DB if missing
+  constitution?: string
+}
+```
+
+**Response:**
+```typescript
+{
+  step: 'planning',
+  plan: { summary, technicalContext, projectStructure, qualityGates },
+  content: string,     // Generated plan.md markdown
+  featureId: string
+}
+```
+
+**Behavior:**
+- If `clarifications` not provided, reads from database (`clarificationsContent`)
+- Saves plan content and updates spec with clarifications
+- Stage changes to 'planning'
+
+#### Tasks (`/api/spec-workflow/tasks`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/spec-workflow/tasks` | Generate task breakdown |
+
+**Request:**
+```typescript
+{
+  projectId: string,
+  featureId: string,
+  name?: string,
+  specContent: string,
+  planContent: string
+}
+```
+
+**Response:**
+```typescript
+{
+  step: 'in_progress',
+  tasks: { phases: [...] },
+  content: string,     // Generated tasks.md markdown
+  featureId: string,
+  taskCount: number    // Number of tasks created
+}
+```
+
+**Behavior:**
+- Creates Task records in database linked to User Stories
+- Stage changes to 'in_progress'
+
+#### Analyze (`/api/spec-workflow/analyze`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/spec-workflow/analyze` | Analyze consistency across documents |
+
+**Request:**
+```typescript
+{
+  projectId?: string,
+  featureId?: string,
+  specContent: string,
+  planContent: string,
+  tasksContent: string,
+  constitution?: string
+}
+```
+
+**Response:**
+```typescript
+{
+  step: 'analyze',
+  analysis: {
+    isValid: boolean,
+    specPlanConsistency: { score: number, isConsistent: boolean },
+    planTasksConsistency: { score: number, isConsistent: boolean },
+    constitutionAlignment: { score: number, isConsistent: boolean },
+    issues: { severity: string, description: string, location?: string }[]
+  },
+  content: string      // Generated analysis.md markdown
+}
+```
+
+**Behavior:**
+- Calculates consistency scores between spec/plan/tasks
+- Compares against constitution if provided
+- Stage changes to 'done' if featureId provided
 
 ## Patterns & Conventions
 
