@@ -35,11 +35,10 @@ export function getStageColor(stage: string): string {
 
 export function getStageLabel(stage: string): string {
   const labels: Record<string, string> = {
-    specify: 'Specify',
-    plan: 'Plan',
-    tasks: 'Tasks',
-    implement: 'Implement',
-    complete: 'Complete',
+    backlog: 'Backlog',
+    planning: 'Planning',
+    in_progress: 'In Progress',
+    done: 'Done',
   };
   return labels[stage] || stage;
 }
