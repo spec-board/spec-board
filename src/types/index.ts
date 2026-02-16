@@ -153,6 +153,12 @@ export interface Feature {
   specContent: string | null;
   planContent: string | null;
   tasksContent: string | null;
+  analysisContent: string | null;
+  researchContent: string | null;
+  dataModelContent: string | null;
+  quickstartContent: string | null;
+  contractsContent: string | null; // JSON array
+  checklistsContent: string | null; // JSON array
   additionalFiles: SpecKitFile[];
   // Analysis data for spec alignment tracking
   analysis: FeatureAnalysis | null;
