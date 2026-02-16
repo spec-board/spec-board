@@ -87,7 +87,8 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-.claude
+# AI config (but keep project-level CLAUDE.md and settings)
+.claude/memory/
 agent-includes
 .playwright-mcp
 .codex
