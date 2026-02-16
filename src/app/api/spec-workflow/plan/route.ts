@@ -24,24 +24,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
+    // Get clarifications from database if not provided in request
+    let clarificationsToUse = clarifications;
+    if (!clarificationsToUse) {
+      const feature = await prisma.feature.findUnique({
+        where: { id: featureId },
+        select: { clarificationsContent: true }
+      });
+      if (feature?.clarificationsContent) {
+        // Parse clarificationsContent to extract Q&A pairs
+        clarificationsToUse = parseClarificationsContent(feature.clarificationsContent);
+      }
+    }
+
     const provider = getProvider();
     const plan = await generatePlan({
       specContent,
-      clarifications,
+      clarifications: clarificationsToUse,
       constitution,
       projectContext: ''
     });
 
     const planContent = generatePlanMarkdown(plan, name || 'Feature', featureId);
 
-    // Generate clarifications markdown and append to specContent (spec-kit format)
-    const clarificationsContent = generateClarificationsMarkdown(clarifications);
+    // Generate clarifications markdown and save standalone clarificationsContent
+    const clarificationsContent = generateClarificationsMarkdown(clarificationsToUse);
     const updatedSpecContent = specContent + '\n\n' + clarificationsContent;
 
     // Update feature in database - save plan content, updated spec with clarifications, and update stage
     const feature = await prisma.feature.update({
       where: { id: featureId },
       data: {
+        clarificationsContent, // Save standalone clarifications
         specContent: updatedSpecContent, // Append clarifications to spec
         planContent: planContent,
         stage: 'planning',
@@ -150,4 +164,31 @@ function generateClarificationsMarkdown(clarifications: { question: string; answ
   }
 
   return content;
+}
+
+// Parse clarificationsContent from database to extract Q&A pairs
+function parseClarificationsContent(content: string): { question: string; answer: string }[] {
+  const result: { question: string; answer: string }[] = [];
+
+  // Match pattern: ### Q: Question\n\n**A**: Answer
+  const qaPattern = /### Q: (.+?)\n\n\*\*A\*\*: (.+)/g;
+  let match;
+  while ((match = qaPattern.exec(content)) !== null) {
+    const question = match[1].trim();
+    const answer = match[2].replace('_Pending_', '').trim();
+    if (answer && answer !== '_Pending_') {
+      result.push({ question, answer });
+    }
+  }
+
+  // Also try simpler pattern: - Q: Question → A: Answer
+  const simplePattern = /- Q: (.+?) → A: (.+)/g;
+  while ((match = simplePattern.exec(content)) !== null) {
+    result.push({
+      question: match[1].trim(),
+      answer: match[2].trim()
+    });
+  }
+
+  return result;
 }

@@ -47,8 +47,9 @@ model Feature {
   order       Int      @default(0)
 
   // Content stored in database (database-first, no filesystem)
-  specContent        String?  @db.Text // Includes clarifications appended
-  planContent       String?  @db.Text
+  specContent         String?  @db.Text // Includes clarifications appended
+  clarificationsContent String? @db.Text // Standalone clarifications
+  planContent        String?  @db.Text
   tasksContent      String?  @db.Text
   analysisContent   String?  @db.Text
   researchContent   String?  @db.Text
