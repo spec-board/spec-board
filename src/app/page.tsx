@@ -2,36 +2,82 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useProjectStore, type RecentProject } from '@/lib/store';
+import { useProjectStore } from '@/lib/store';
 import { Header } from '@/components/header';
-import { RecentProjectsList } from '@/components/recent-projects-list';
+import { ProjectList } from '@/components/project-list';
 import { CreateProjectModal } from '@/components/create-project-modal';
+import { DeleteProjectModal } from '@/components/delete-project-modal';
+
+interface DbProject {
+  id: string;
+  name: string;
+  displayName: string;
+  description: string | null;
+  filePath: string | null;
+  isCloud: boolean;
+  createdAt: string;
+  updatedAt: string;
+  featureCount: number;
+}
 
 export default function Home() {
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const { recentProjects, loadRecentProjects } = useProjectStore();
+  const [projects, setProjects] = useState<DbProject[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deleteProject, setDeleteProject] = useState<DbProject | null>(null);
 
-  // Load recent projects from localStorage on mount
-  useEffect(() => {
-    loadRecentProjects();
-  }, [loadRecentProjects]);
-
-  // Handle selecting a recent project
-  const handleSelectRecent = useCallback((recentProject: RecentProject) => {
-    // Navigate using slug
-    if (recentProject.slug) {
-      router.push(`/projects/${recentProject.slug}`);
+  // Fetch projects from database on mount
+  const fetchProjects = useCallback(async () => {
+    try {
+      const response = await fetch('/api/projects');
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  // Handle selecting a project
+  const handleSelectProject = useCallback((project: DbProject) => {
+    // Navigate using slug (name field)
+    router.push(`/projects/${project.name}`);
   }, [router]);
 
-  // Handle removing a recent project
-  const handleRemoveRecent = useCallback((path: string) => {
-    const { recentProjects } = useProjectStore.getState();
-    const filtered = recentProjects.filter(p => p.path !== path);
-    localStorage.setItem('specboard-recent-projects', JSON.stringify(filtered));
-    useProjectStore.setState({ recentProjects: filtered });
+  // Handle delete - show confirmation modal
+  const handleDeleteClick = useCallback((project: DbProject) => {
+    setDeleteProject(project);
   }, []);
+
+  // Confirm deletion - delete from database
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteProject) return;
+
+    try {
+      const response = await fetch(`/api/projects/${deleteProject.name}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove from local list
+        setProjects(prev => prev.filter(p => p.id !== deleteProject.id));
+      } else {
+        console.error('Failed to delete project');
+      }
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+    } finally {
+      setDeleteProject(null);
+    }
+  }, [deleteProject]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -51,12 +97,17 @@ export default function Home() {
           paddingBottom: 'var(--space-8)',
         }}
       >
-        {/* Recent Projects */}
-        <RecentProjectsList
-          projects={recentProjects}
-          onSelect={handleSelectRecent}
-          onRemove={handleRemoveRecent}
-        />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--foreground)]" />
+          </div>
+        ) : (
+          <ProjectList
+            projects={projects}
+            onSelect={handleSelectProject}
+            onDelete={handleDeleteClick}
+          />
+        )}
       </main>
 
       {/* Create Project Modal */}
@@ -67,6 +118,17 @@ export default function Home() {
           router.push(`/projects/${project.name}`);
         }}
       />
+
+      {/* Delete Confirmation Modal */}
+      {deleteProject && (
+        <DeleteProjectModal
+          isOpen={true}
+          projectName={deleteProject.displayName}
+          projectPath={deleteProject.filePath || deleteProject.name}
+          onClose={() => setDeleteProject(null)}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
     </div>
   );
 }

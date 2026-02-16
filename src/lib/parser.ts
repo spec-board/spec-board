@@ -915,15 +915,10 @@ export async function parseProject(projectPath: string): Promise<Project | null>
   try {
     const specsDir = path.join(projectPath, 'specs');
 
-    // Check for constitution file in .specify/memory/constitution.md
-    const constitutionPath = path.join(projectPath, '.specify', 'memory', 'constitution.md');
-    let constitution: Constitution | null = null;
-    const hasConstitution = await fileExists(constitutionPath);
-
-    if (hasConstitution) {
-      const constitutionContent = await fs.readFile(constitutionPath, 'utf-8');
-      constitution = parseConstitution(constitutionContent);
-    }
+    // Constitution is now DB-only - handled by API route, not parser
+    // This ensures consistent behavior: DB is always the source of truth
+    const hasConstitution = false;
+    const constitution = null;
 
     const specsExists = await fileExists(specsDir);
     if (!specsExists) {
