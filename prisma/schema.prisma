@@ -46,11 +46,17 @@ model Feature {
   status      String   @default("backlog") // backlog, planning, in_progress, done
   order       Int      @default(0)
 
-  // Content stored in database (database-first)
-  specContent    String?  @db.Text // Includes clarifications appended
-  planContent   String?  @db.Text
-  tasksContent  String?  @db.Text
-  analysisContent String? @db.Text
+  // Content stored in database (database-first, no filesystem)
+  specContent        String?  @db.Text // Includes clarifications appended
+  planContent       String?  @db.Text
+  tasksContent      String?  @db.Text
+  analysisContent   String?  @db.Text
+  researchContent   String?  @db.Text
+  dataModelContent  String?  @db.Text
+  quickstartContent String?  @db.Text
+  // Multiple files - stored as JSON
+  contractsContent  String?  @db.Text // JSON array of {name, content}
+  checklistsContent String?  @db.Text // JSON array of {name, content}
 
   // Timestamps
   createdAt   DateTime @default(now()) @map("created_at")
