@@ -1,4 +1,4 @@
-export type FeatureStage = 'specify' | 'plan' | 'tasks' | 'implement' | 'complete';
+export type FeatureStage = 'backlog' | 'planning' | 'in_progress' | 'done';
 
 // User Story types for spec.md parsing (T001)
 export interface UserStory {

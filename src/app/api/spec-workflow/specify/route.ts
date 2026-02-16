@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         featureId,
         name,
         description: description || null,
-        stage: 'specify',
+        stage: 'backlog',
         status: 'backlog',
         order: featureCount,
         specContent, // Save spec markdown to database
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      step: 'specify',
+      step: 'backlog',
       spec,
       content: specContent,
       featureId: feature.id,
