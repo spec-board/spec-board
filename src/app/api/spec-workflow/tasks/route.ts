@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const provider = getProvider();
     const tasks = await generateTasks({ specContent, planContent });
 
-    const tasksContent = generateTasksMarkdown(tasks);
+    const tasksContent = generateTasksMarkdown(tasks, name || 'Feature');
 
     // Get feature to find existing user stories for mapping
     const feature = await prisma.feature.findUnique({
@@ -67,10 +67,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update feature stage to tasks
+    // Update feature stage and save tasksContent to database
     await prisma.feature.update({
       where: { id: featureId },
-      data: { stage: 'tasks' }
+      data: {
+        stage: 'tasks',
+        tasksContent
+      }
     });
 
     return NextResponse.json({
@@ -87,15 +90,44 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateTasksMarkdown(tasks: any): string {
-  let content = `# Tasks\n\n`;
-  content += `> **Input**: plan.md, spec.md\n`;
-  content += `> **Status**: Tasks\n\n`;
+function generateTasksMarkdown(tasks: any, featureName: string): string {
+  const date = new Date().toISOString().split('T')[0];
+  let content = `# Tasks: ${featureName}\n\n`;
+  content += `**Input**: Design documents from spec and plan\n`;
+  content += `**Prerequisites**: plan.md (required), spec.md (required for user stories)\n\n`;
 
-  for (const phase of tasks.phases || []) {
+  content += `## Format: \`[ID] [P?] [Story] Description\`\n\n`;
+  content += `- **[P]**: Can run in parallel (different files, no dependencies)\n`;
+  content += `- **[Story]**: Which user story this task belongs to (e.g., US1, US2)\n`;
+  content += `- Include exact file paths in descriptions\n\n`;
+
+  // Group phases into: Setup, Foundational, User Stories, Polish
+  const phases = tasks.phases || [];
+
+  for (const phase of phases) {
+    content += `---\n\n`;
     content += `## ${phase.name}\n\n`;
-    if (phase.purpose) content += `**Purpose**: ${phase.purpose}\n\n`;
-    if (phase.checkpoint) content += `> **Checkpoint**: ${phase.checkpoint}\n\n`;
+
+    if (phase.purpose) {
+      content += `**Purpose**: ${phase.purpose}\n\n`;
+    }
+
+    // Add goal if present (for user story phases)
+    if (phase.goal) {
+      content += `**Goal**: ${phase.goal}\n\n`;
+    }
+
+    // Add independent test if present
+    if (phase.independentTest) {
+      content += `**Independent Test**: ${phase.independentTest}\n\n`;
+    }
+
+    // Add checkpoint if present
+    if (phase.checkpoint) {
+      content += `> **Checkpoint**: ${phase.checkpoint}\n\n`;
+    }
+
+    // Add tasks
     for (const task of phase.tasks || []) {
       const usRef = task.userStory ? ` [${task.userStory}]` : '';
       const parallel = task.parallel ? ' [P]' : '';
@@ -103,6 +135,25 @@ function generateTasksMarkdown(tasks: any): string {
     }
     content += `\n`;
   }
+
+  // Add Dependencies & Execution Order section
+  content += `---\n\n`;
+  content += `## Dependencies & Execution Order\n\n`;
+  content += `### Phase Dependencies\n\n`;
+
+  // Infer from phases
+  content += `- **Setup**: No dependencies - can start immediately\n`;
+  content += `- **Foundational**: Depends on Setup - BLOCKS all user stories\n`;
+  content += `- **User Stories**: All depend on Foundational\n`;
+  content += `- **Polish**: Depends on all user stories\n\n`;
+
+  // Add Notes section
+  content += `## Notes\n\n`;
+  content += `- [P] tasks = different files, no dependencies\n`;
+  content += `- [Story] label maps task to specific user story\n`;
+  content += `- Each user story should be independently testable\n`;
+  content += `- Verify tests fail before implementing\n`;
+  content += `- Commit after each task or logical group\n\n`;
 
   return content;
 }
