@@ -97,7 +97,3 @@ tsconfig.tsbuildinfo
 # Playwright
 playwright-report/
 test-results/
-
-CLAUDE.md
-PROJECT_INDEX.md
-.claude
