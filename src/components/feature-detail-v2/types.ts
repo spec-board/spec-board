@@ -1,7 +1,7 @@
 import type { Feature, Task, UserStory, TaskGroup } from '@/types';
 
 // Document types available in the dropdown
-export type DocumentType = 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist' | 'constitution';
+export type DocumentType = 'spec' | 'plan' | 'clarifications' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist';
 
 export interface DocumentOption {
   type: DocumentType;
@@ -75,6 +75,12 @@ export function getDocumentOptions(feature: Feature): DocumentOption[] {
       content: feature.specContent,
     },
     {
+      type: 'clarifications',
+      label: 'Clarifications',
+      available: !!feature.clarificationsContent,
+      content: feature.clarificationsContent,
+    },
+    {
       type: 'plan',
       label: 'Plan',
       available: feature.hasPlan,
@@ -87,16 +93,6 @@ export function getDocumentOptions(feature: Feature): DocumentOption[] {
       content: feature.tasksContent,
     },
   ];
-
-  // Add constitution if feature has constitution version
-  if (feature.constitutionVersion) {
-    options.push({
-      type: 'constitution',
-      label: 'Constitution',
-      available: true,
-      content: feature.constitutionVersion.content,
-    });
-  }
 
   // Add additional files
   for (const file of feature.additionalFiles || []) {

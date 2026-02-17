@@ -14,6 +14,7 @@ export default function ProjectPage() {
 
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGeneratingConstitution, setIsGeneratingConstitution] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
@@ -54,6 +55,15 @@ export default function ProjectPage() {
     loadProject();
   }, [loadProject]);
 
+  // Listen for features-updated event from KanbanBoard (smooth refresh)
+  useEffect(() => {
+    const handleFeaturesUpdated = () => {
+      loadProject();
+    };
+    window.addEventListener('features-updated', handleFeaturesUpdated);
+    return () => window.removeEventListener('features-updated', handleFeaturesUpdated);
+  }, [loadProject]);
+
   // Navigate to feature detail page
   const handleFeatureClick = (feature: Feature) => {
     router.push('/projects/' + projectSlug + '/features/' + feature.id);
@@ -80,13 +90,47 @@ export default function ProjectPage() {
     }
   }, [projectSlug]);
 
-  // Save description and generate constitution
+  // Save description and generate constitution with AI
   const handleSaveAndGenerateConstitution = useCallback(async (description: string) => {
-    // First save the description
-    await handleDescriptionChange(description);
-    // Then navigate to constitution page to generate
-    router.push('/projects/' + projectSlug + '/constitution');
-  }, [projectSlug, handleDescriptionChange]);
+    if (!projectId) {
+      console.error('Project ID not available');
+      return;
+    }
+
+    setIsGeneratingConstitution(true);
+    try {
+      const response = await fetch('/api/spec-workflow/constitution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          name: project?.name || projectSlug,
+          description,
+          regenerateWithAI: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        console.error('Failed to generate constitution:', err.error || err.message);
+        return;
+      }
+
+      const result = await response.json();
+
+      // Update project state with new constitution
+      setProject(prev => prev ? {
+        ...prev,
+        description: result.description || description,
+        constitution: result.constitution,
+        hasConstitution: true,
+      } : null);
+    } catch (error) {
+      console.error('Failed to generate constitution:', error);
+    } finally {
+      setIsGeneratingConstitution(false);
+    }
+  }, [projectId, project?.name, projectSlug]);
 
   if (isLoading) {
     return (
@@ -140,6 +184,7 @@ export default function ProjectPage() {
               onDescriptionChange={handleDescriptionChange}
               onFeatureClick={handleFeatureClarificationsClick}
               onSaveAndGenerateConstitution={handleSaveAndGenerateConstitution}
+              isGeneratingConstitution={isGeneratingConstitution}
             />
           </div>
 

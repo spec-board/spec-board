@@ -288,49 +288,8 @@ export function SpecWorkflowWizard({
         <div className="flex-shrink-0 px-6 py-4 border-b border-[var(--border)]">
           <div className="text-center">
             <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Spec Workflow
+              Create Feature
             </h2>
-            <p className="text-sm text-[var(--muted-foreground)]">
-              specify → clarify → plan → tasks → analyze
-            </p>
-          </div>
-
-          {/* Step Indicator */}
-          <div className="flex items-center justify-between mt-4 px-2">
-            {STEPS.map((step, index) => {
-              const currentIndex = getStepIndex(currentStep);
-              const isActive = step.id === currentStep;
-              const isCompleted = index < currentIndex || currentStep === 'complete';
-
-              return (
-                <div key={step.id} className="flex items-center">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={cn(
-                        'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors',
-                        isCompleted && 'bg-green-500/20 text-green-500',
-                        isActive && 'bg-[var(--primary)] text-[var(--primary-foreground)]',
-                        !isActive && !isCompleted && 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
-                      )}
-                    >
-                      {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <step.icon className="w-4 h-4" />}
-                    </div>
-                    <span className={cn(
-                      'text-xs mt-1',
-                      isActive ? 'text-[var(--foreground)] font-medium' : 'text-[var(--muted-foreground)]'
-                    )}>
-                      {step.label}
-                    </span>
-                  </div>
-                  {index < STEPS.length - 1 && (
-                    <div className={cn(
-                      'w-8 h-0.5 mx-1',
-                      index < currentIndex ? 'bg-green-500' : 'bg-[var(--border)]'
-                    )} />
-                  )}
-                </div>
-              );
-            })}
           </div>
         </div>
 
@@ -345,6 +304,15 @@ export function SpecWorkflowWizard({
 
           {currentStep === 'specify' && (
             <div className="space-y-4">
+              {isLoading && (
+                <div className="mb-4 p-3 rounded-lg text-sm bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-2">
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Generating specification...
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-2 text-[var(--foreground)]">
                   Feature Name *
@@ -355,9 +323,11 @@ export function SpecWorkflowWizard({
                   value={featureName}
                   onChange={(e) => setFeatureName(e.target.value)}
                   placeholder="e.g., User Authentication"
+                  disabled={isLoading}
                   className={cn(
                     'w-full px-4 py-2.5 rounded-lg border bg-[var(--secondary)] text-[var(--foreground)]',
-                    'outline-none focus:border-[var(--ring)] transition-colors'
+                    'outline-none focus:border-[var(--ring)] transition-colors',
+                    isLoading && 'opacity-50 cursor-not-allowed'
                   )}
                 />
               </div>
@@ -370,9 +340,11 @@ export function SpecWorkflowWizard({
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe what this feature should do..."
                   rows={6}
+                  disabled={isLoading}
                   className={cn(
                     'w-full px-4 py-2.5 rounded-lg border bg-[var(--secondary)] text-[var(--foreground)]',
-                    'outline-none focus:border-[var(--ring)] transition-colors resize-none'
+                    'outline-none focus:border-[var(--ring)] transition-colors resize-none',
+                    isLoading && 'opacity-50 cursor-not-allowed'
                   )}
                 />
                 <p className="text-xs text-[var(--muted-foreground)] mt-1">
@@ -575,7 +547,11 @@ export function SpecWorkflowWizard({
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
+                  {currentStep === 'specify' && 'Generating Spec...'}
+                  {currentStep === 'clarify' && 'Generating Questions...'}
+                  {currentStep === 'plan' && 'Generating Plan...'}
+                  {currentStep === 'tasks' && 'Generating Tasks...'}
+                  {currentStep === 'analyze' && 'Analyzing...'}
                 </>
               ) : (
                 <>
