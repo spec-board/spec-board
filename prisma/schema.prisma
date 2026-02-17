@@ -6,9 +6,9 @@ generator client {
   seed = "tsx prisma/seed.ts"
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+// }
 
 datasource db {
   provider = "postgresql"
@@ -51,6 +51,9 @@ model Feature {
   status      String   @default("backlog") // backlog, planning, in_progress, done
   order       Int      @default(0)
 
+  // Constitution version at time of feature creation
+  constitutionVersionId String? @map("constitution_version_id")
+
   // Content stored in database (database-first, no filesystem)
   specContent         String?  @db.Text // Includes clarifications appended
   clarificationsContent String? @db.Text // Standalone clarifications
@@ -70,6 +73,7 @@ model Feature {
 
   // Relations
   project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  constitutionVersion ConstitutionVersion? @relation(fields: [constitutionVersionId], references: [id], onDelete: SetNull)
   userStories UserStory[]
   tasks       Task[]
 
@@ -147,8 +151,31 @@ model Constitution {
 
   // Relations
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versions ConstitutionVersion[]
 
   @@map("constitutions")
+}
+
+// Constitution Version History (read-only)
+model ConstitutionVersion {
+  id            String   @id @default(uuid())
+  constitutionId String @map("constitution_id")
+  version       String
+  content       String   @db.Text // Snapshot of full markdown content
+  principles    Json    // Array of {name, description} at this version
+
+  // Change info
+  changeType    String  @default("update") // "create", "update", "minor", "major"
+  changeNote    String? // Optional note about what changed
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  constitution Constitution @relation(fields: [constitutionId], references: [id], onDelete: Cascade)
+  features     Feature[]
+
+  @@map("constitution_versions")
 }
 
 // ============================================
