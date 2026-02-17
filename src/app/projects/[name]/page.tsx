@@ -54,34 +54,6 @@ export default function ProjectPage() {
     loadProject();
   }, [loadProject]);
 
-  // Set up SSE for real-time updates
-  useEffect(() => {
-    if (!projectPath) return;
-
-    const eventSource = new EventSource(
-      `/api/watch?path=${encodeURIComponent(projectPath)}`
-    );
-
-    eventSource.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        if (message.type === 'update' && message.data) {
-          setProject(message.data);
-        }
-      } catch (err) {
-        console.error('Error parsing SSE message:', err);
-      }
-    };
-
-    eventSource.onerror = () => {
-      console.error('SSE connection error');
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [projectPath]);
-
   // Navigate to feature detail page
   const handleFeatureClick = (feature: Feature) => {
     router.push('/projects/' + projectSlug + '/features/' + feature.id);

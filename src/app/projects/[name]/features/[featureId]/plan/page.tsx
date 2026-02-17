@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { PlanViewer } from '@/components/plan-viewer';
 import { PriorityBadge } from '@/components/priority-badge';
 import { cn, getStageColor, getStageLabel } from '@/lib/utils';
-import type { Project, Feature } from '@/types';
+import type { Feature } from '@/types';
 
 export default function PlanPage() {
   const params = useParams();
@@ -17,32 +17,25 @@ export default function PlanPage() {
   const [feature, setFeature] = useState<Feature | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [projectPath, setProjectPath] = useState<string | null>(null);
 
   const loadFeature = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Always lookup by slug from database
-      const projectRes = await fetch('/api/projects/' + projectSlug, { cache: 'no-store' });
-      if (!projectRes.ok) {
-        if (projectRes.status === 404) {
-          throw new Error('Project "' + projectSlug + '" not found. Please open it from the home page first.');
+      // Use unified database-first endpoint
+      const response = await fetch('/api/project/' + projectSlug + '/data', { cache: 'no-store' });
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Project "' + projectSlug + '" not found.');
         }
         throw new Error('Failed to load project');
       }
-      const projectData = await projectRes.json();
-      const filePath = projectData.filePath;
+      const data = await response.json();
 
-      setProjectPath(filePath);
-
-      const response = await fetch('/api/project?path=' + encodeURIComponent(filePath), { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error('Failed to load project files');
-      }
-      const data: Project = await response.json();
-
-      const foundFeature = data.features.find(f => f.id === featureId);
+      // Find the feature - match by id, featureId, or name
+      const foundFeature = data.features.find((f: Feature) =>
+        f.id === featureId || f.featureId === featureId || f.name === featureId
+      );
       if (!foundFeature) {
         throw new Error('Feature "' + featureId + '" not found');
       }
@@ -58,55 +51,13 @@ export default function PlanPage() {
     loadFeature();
   }, [loadFeature]);
 
-  // SSE for real-time updates
-  useEffect(() => {
-    if (!projectPath) return;
-
-    let parseFailureCount = 0;
-    const MAX_PARSE_FAILURES = 3;
-
-    const eventSource = new EventSource(
-      `/api/watch?path=${encodeURIComponent(projectPath)}`
-    );
-
-    eventSource.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        if (message.type === 'update' && message.data) {
-          const updatedFeature = message.data.features?.find(
-            (f: Feature) => f.id === featureId
-          );
-          if (updatedFeature) {
-            setFeature(updatedFeature);
-            parseFailureCount = 0; // Reset on success
-          }
-        }
-      } catch (err) {
-        parseFailureCount++;
-        console.error('Error parsing SSE message:', err);
-        if (parseFailureCount >= MAX_PARSE_FAILURES) {
-          setError('Real-time updates are experiencing issues. Data may be stale.');
-        }
-      }
-    };
-
-    eventSource.onerror = () => {
-      console.error('SSE connection error');
-      // Don't set error immediately - SSE will auto-reconnect
-    };
-
-    return () => eventSource.close();
-  }, [projectPath, featureId]);
-
   // Get highest priority from user stories
   const highestPriority = feature?.userStories?.length
     ? feature.userStories.reduce((highest, story) => {
         const priorityOrder = { P1: 1, P2: 2, P3: 3 };
-        return priorityOrder[story.priority] < priorityOrder[highest] ? story.priority : highest;
+        return priorityOrder[story.priority as keyof typeof priorityOrder] < priorityOrder[highest as keyof typeof priorityOrder] ? story.priority : highest;
       }, feature.userStories[0].priority)
     : null;
-
-  const planFilePath = feature?.path ? `${feature.path}/plan.md` : undefined;
 
   if (isLoading) {
     return (
@@ -155,7 +106,7 @@ export default function PlanPage() {
             )}>
               {getStageLabel(feature.stage)}
             </span>
-            {highestPriority && <PriorityBadge priority={highestPriority} />}
+            {highestPriority && <PriorityBadge priority={highestPriority as 'P1' | 'P2' | 'P3'} />}
           </div>
 
           <h1 className="text-2xl font-semibold capitalize">{feature.name}</h1>
