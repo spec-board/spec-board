@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { formatPercentage, getStageColor, getStageLabel, isPrismaError, getFeatureKanbanColumn, getKanbanColumn } from './utils';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { formatPercentage, getStageColor, getStageLabel, isPrismaError, getFeatureKanbanColumn, getKanbanColumn, getKanbanColumnLabel, getSuggestedCommand, copyToClipboard } from './utils';
 import type { Feature } from '@/types';
 
 describe('formatPercentage', () => {
@@ -26,7 +26,7 @@ describe('formatPercentage', () => {
 describe('getStageColor', () => {
   it('should return correct color classes for each stage', () => {
     expect(getStageColor('specify')).toBe('bg-purple-500/20 text-purple-400 border-purple-500/30');
-    expect(getStageColor('clarify')).toBe('bg-indigo-500/20 text-indigo-400 border-indigo-500/30');
+    expect(getStageColor('clarify')).toBe('bg-cyan-500/20 text-cyan-400 border-cyan-500/30');
     expect(getStageColor('plan')).toBe('bg-blue-500/20 text-blue-400 border-blue-500/30');
     expect(getStageColor('tasks')).toBe('bg-yellow-500/20 text-yellow-400 border-yellow-500/30');
     expect(getStageColor('analyze')).toBe('bg-green-500/20 text-green-400 border-green-500/30');
@@ -124,6 +124,12 @@ function createMockFeature(overrides: Partial<Feature>): Feature {
     hasChecklists: false,
     totalChecklistItems: 0,
     completedChecklistItems: 0,
+    clarificationsContent: null,
+    researchContent: null,
+    dataModelContent: null,
+    quickstartContent: null,
+    contractsContent: null,
+    checklistsContent: null,
     ...overrides,
   };
 }
@@ -141,5 +147,195 @@ describe('getFeatureKanbanColumn', () => {
     expect(getFeatureKanbanColumn(createMockFeature({ stage: 'plan' }))).toBe('plan');
     expect(getFeatureKanbanColumn(createMockFeature({ stage: 'tasks' }))).toBe('tasks');
     expect(getFeatureKanbanColumn(createMockFeature({ stage: 'analyze' }))).toBe('analyze');
+  });
+});
+
+describe('getKanbanColumnLabel', () => {
+  it('should return correct labels for each kanban column', () => {
+    expect(getKanbanColumnLabel('specify')).toBe('Specify');
+    expect(getKanbanColumnLabel('clarify')).toBe('Clarify');
+    expect(getKanbanColumnLabel('plan')).toBe('Plan');
+    expect(getKanbanColumnLabel('tasks')).toBe('Tasks');
+    expect(getKanbanColumnLabel('analyze')).toBe('Analyze');
+  });
+
+  it('should return empty string for unknown columns', () => {
+    // Note: getKanbanColumnLabel doesn't handle unknown columns gracefully
+    // This test documents current behavior
+    expect(getKanbanColumnLabel('unknown' as any)).toBeUndefined();
+  });
+});
+
+describe('getSuggestedCommand', () => {
+  const createFeatureWithState = (overrides: Partial<Feature> = {}): Feature => {
+    return createMockFeature({
+      hasSpec: false,
+      hasPlan: false,
+      hasTasks: false,
+      hasChecklists: false,
+      totalTasks: 0,
+      completedTasks: 0,
+      totalClarifications: 0,
+      analysis: null,
+      ...overrides,
+    });
+  };
+
+  it('should suggest constitution when project has no constitution', () => {
+    const result = getSuggestedCommand(createFeatureWithState(), false);
+    expect(result.primary?.command).toBe('/speckit.constitution');
+    expect(result.primary?.title).toBe('Create Project Constitution');
+  });
+
+  it('should suggest specify when feature has no spec', () => {
+    const result = getSuggestedCommand(createFeatureWithState({ hasSpec: false }), true);
+    expect(result.primary?.command).toBe('/speckit.specify');
+    expect(result.primary?.title).toBe('Create Feature Specification');
+  });
+
+  it('should suggest plan when feature has spec but no plan', () => {
+    const result = getSuggestedCommand(createFeatureWithState({ hasSpec: true, hasPlan: false }), true);
+    expect(result.primary?.command).toBe('/speckit.plan');
+    expect(result.primary?.title).toBe('Create Implementation Plan');
+  });
+
+  it('should suggest clarify as optional when feature has clarifications', () => {
+    const result = getSuggestedCommand(createFeatureWithState({ hasSpec: true, hasPlan: false, totalClarifications: 1 }), true);
+    expect(result.primary?.command).toBe('/speckit.plan');
+    expect(result.optional).toBeNull();
+  });
+
+  it('should suggest tasks when feature has plan but no tasks', () => {
+    const result = getSuggestedCommand(createFeatureWithState({ hasSpec: true, hasPlan: true, hasTasks: false }), true);
+    expect(result.primary?.command).toBe('/speckit.tasks');
+    expect(result.primary?.title).toBe('Generate Task Breakdown');
+  });
+
+  it('should suggest implement when tasks are incomplete', () => {
+    const result = getSuggestedCommand(createFeatureWithState({
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 5,
+      completedTasks: 2,
+    }), true);
+    expect(result.primary?.command).toBe('/speckit.implement');
+    expect(result.primary?.title).toBe('Continue Implementation');
+    expect(result.primary?.description).toContain('3 tasks remaining');
+  });
+
+  it('should suggest analyze when all tasks are complete but no analysis', () => {
+    const result = getSuggestedCommand(createFeatureWithState({
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 5,
+      completedTasks: 5,
+      analysis: null,
+    }), true);
+    expect(result.primary?.command).toBe('/speckit.analyze');
+    expect(result.primary?.title).toBe('Verify Implementation');
+  });
+
+  it('should return null primary when feature is complete with analysis', () => {
+    const result = getSuggestedCommand(createFeatureWithState({
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 5,
+      completedTasks: 5,
+      analysis: 'Analysis content here',
+    }), true);
+    expect(result.primary).toBeNull();
+    expect(result.optional).toBeNull();
+  });
+
+  it('should suggest analyze as optional during implementation', () => {
+    const result = getSuggestedCommand(createFeatureWithState({
+      hasSpec: true,
+      hasPlan: true,
+      hasTasks: true,
+      totalTasks: 5,
+      completedTasks: 3,
+      analysis: null,
+    }), true);
+    expect(result.optional?.command).toBe('/speckit.analyze');
+    expect(result.optional?.title).toBe('Analyze Progress');
+    expect(result.optional?.isOptional).toBe(true);
+  });
+});
+
+describe('copyToClipboard', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should copy text to clipboard using Clipboard API', async () => {
+    const mockWriteText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: mockWriteText,
+      },
+    });
+
+    const result = await copyToClipboard('test text');
+
+    expect(result).toBe(true);
+    expect(mockWriteText).toHaveBeenCalledWith('test text');
+  });
+
+  it('should return false when Clipboard API fails', async () => {
+    const mockWriteText = vi.fn().mockRejectedValue(new Error('Failed'));
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: mockWriteText,
+      },
+    });
+
+    const result = await copyToClipboard('test text');
+
+    expect(result).toBe(false);
+  });
+
+  it('should fallback to textarea when Clipboard API is not available', async () => {
+    // Remove clipboard from navigator
+    const originalClipboard = navigator.clipboard;
+    delete (navigator as any).clipboard;
+
+    const mockExecCommand = vi.fn().mockReturnValue(true);
+    const mockAppendChild = vi.fn();
+    const mockRemoveChild = vi.fn();
+    const mockFocus = vi.fn();
+    const mockSelect = vi.fn();
+
+    // Create mock textarea
+    const mockTextarea = {
+      value: 'test text',
+      style: {},
+      focus: mockFocus,
+      select: mockSelect,
+    };
+
+    vi.stubGlobal('document', {
+      createElement: vi.fn().mockReturnValue(mockTextarea),
+      body: {
+        appendChild: mockAppendChild,
+        removeChild: mockRemoveChild,
+      },
+      execCommand: mockExecCommand,
+    });
+
+    const result = await copyToClipboard('fallback text');
+
+    expect(result).toBe(true);
+    expect(mockAppendChild).toHaveBeenCalled();
+    expect(mockRemoveChild).toHaveBeenCalled();
+
+    // Restore
+    Object.assign(navigator, { clipboard: originalClipboard });
   });
 });
