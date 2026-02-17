@@ -147,11 +147,23 @@ export function SpecWorkflowWizard({
     const data = await response.json();
     setSpecContent(data.content);
 
-    // Also generate clarification questions
+    // Store feature ID for later use
+    const newFeatureId = data.featureId;
+    setCreatedFeature({
+      id: data.featureId,
+      featureId: data.featureIdDb,
+      name: featureName.trim()
+    });
+
+    // Also generate clarification questions - pass projectId and featureId to save to DB
     const clarifyResponse = await fetch('/api/spec-workflow/clarify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ specContent: data.content })
+      body: JSON.stringify({
+        projectId,
+        featureId: newFeatureId,
+        specContent: data.content
+      })
     });
 
     if (clarifyResponse.ok) {
@@ -177,6 +189,7 @@ export function SpecWorkflowWizard({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         projectId,
+        featureId: createdFeature?.id,
         name: featureName.trim(),
         specContent,
         clarifications: clarificationQuestions.filter(q => q.answer)
@@ -202,6 +215,7 @@ export function SpecWorkflowWizard({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         projectId,
+        featureId: createdFeature?.id,
         name: featureName.trim(),
         specContent,
         planContent
