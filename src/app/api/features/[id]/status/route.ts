@@ -20,7 +20,7 @@ export async function PATCH(
     }
 
     // Validate stage (now replaces status)
-    const validStages = ['backlog', 'planning', 'in_progress', 'done'];
+    const validStages = ['backlog', 'specify', 'clarify', 'plan', 'tasks', 'analyze', 'done'];
     if (!validStages.includes(stage)) {
       return NextResponse.json(
         { error: `Invalid stage. Must be one of: ${validStages.join(', ')}` },

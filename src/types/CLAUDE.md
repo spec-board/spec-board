@@ -29,8 +29,11 @@ This directory contains all shared TypeScript interfaces and types used througho
 | Stage | Description |
 |-------|-------------|
 | `backlog` | Not started |
-| `planning` | Being planned |
-| `in_progress` | Implementation in progress |
+| `specify` | Spec being generated |
+| `clarify` | Clarifications in progress |
+| `plan` | Implementation plan being created |
+| `tasks` | Tasks being generated |
+| `analyze` | Analyzing consistency |
 | `done` | Completed |
 
 ### Spec-Kit File Content Types
@@ -62,7 +65,7 @@ These are stored as string content in the database:
 
 ```typescript
 // Feature stages (database-first)
-type FeatureStage = 'backlog' | 'planning' | 'in_progress' | 'done';
+type FeatureStage = 'backlog' | 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze' | 'done';
 
 // Database-first Feature
 interface Feature {

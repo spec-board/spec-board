@@ -26,8 +26,11 @@ export function formatPercentage(value: number): string {
 export function getStageColor(stage: string): string {
   const colors: Record<string, string> = {
     backlog: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    planning: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    in_progress: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    specify: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+    clarify: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+    plan: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    tasks: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    analyze: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     done: 'bg-green-500/20 text-green-400 border-green-500/30',
   };
   return colors[stage] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
@@ -36,15 +39,18 @@ export function getStageColor(stage: string): string {
 export function getStageLabel(stage: string): string {
   const labels: Record<string, string> = {
     backlog: 'Backlog',
-    planning: 'Planning',
-    in_progress: 'In Progress',
+    specify: 'Specify',
+    clarify: 'Clarify',
+    plan: 'Plan',
+    tasks: 'Tasks',
+    analyze: 'Analyze',
     done: 'Done',
   };
   return labels[stage] || stage;
 }
 
-// Kanban column types for 4-column view
-export type KanbanColumn = 'backlog' | 'planning' | 'in_progress' | 'done';
+// Kanban column types for 6-column workflow view
+export type KanbanColumn = 'backlog' | 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze' | 'done';
 
 // Map feature stages to kanban columns
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
@@ -52,56 +58,46 @@ export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
 }
 
 /**
- * Get kanban column for a feature, considering plan/tasks state and checklist completion.
- * - Backlog: specify stage (no spec or no plan)
- * - Planning: has plan but no tasks
- * - In Progress: has tasks (incomplete tasks OR incomplete checklists)
- * - Done: all tasks complete AND all checklists complete (or no checklists)
+ * Get kanban column for a feature based on workflow stage.
+ * Maps FeatureStage directly to KanbanColumn for the 7-column workflow view.
  */
 export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
-  // No spec yet -> backlog
+  // Use the feature's stage directly
+  if (feature.stage) {
+    return feature.stage as KanbanColumn;
+  }
+
+  // Fallback to legacy logic for features without stage
   if (!feature.hasSpec) {
     return 'backlog';
   }
-
-  // Has spec but no plan -> backlog
   if (!feature.hasPlan) {
-    return 'backlog';
+    return 'specify';
   }
-
-  // Has plan but no tasks -> planning
   if (!feature.hasTasks) {
-    return 'planning';
+    return 'plan';
   }
-
-  // Has tasks - check if all complete
-  // If no tasks (totalTasks = 0), treat as backlog until tasks are added
-  const allTasksComplete = feature.totalTasks > 0 && feature.completedTasks === feature.totalTasks;
-
-  // No tasks yet -> backlog (not in_progress)
   if (feature.totalTasks === 0) {
-    return 'backlog';
+    return 'tasks';
   }
-
-  // Tasks not complete -> in_progress
+  const allTasksComplete = feature.completedTasks === feature.totalTasks;
   if (!allTasksComplete) {
-    return 'in_progress';
+    return 'tasks';
   }
-
-  // All tasks complete, but has incomplete checklists -> in_progress
   if (feature.hasChecklists && feature.completedChecklistItems < feature.totalChecklistItems) {
-    return 'in_progress';
+    return 'tasks';
   }
-
-  // All tasks complete and all checklists complete (or no checklists) -> done
   return 'done';
 }
 
 export function getKanbanColumnLabel(column: KanbanColumn): string {
   const labels: Record<KanbanColumn, string> = {
     backlog: 'Backlog',
-    planning: 'Planning',
-    in_progress: 'In Progress',
+    specify: 'Specify',
+    clarify: 'Clarify',
+    plan: 'Plan',
+    tasks: 'Tasks',
+    analyze: 'Analyze',
     done: 'Done',
   };
   return labels[column];

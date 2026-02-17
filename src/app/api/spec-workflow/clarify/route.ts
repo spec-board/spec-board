@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         where: { id: featureId },
         data: {
           clarificationsContent,
-          stage: 'clarifying'
+          stage: 'clarify'
         }
       });
     }

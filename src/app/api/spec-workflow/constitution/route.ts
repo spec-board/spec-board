@@ -88,8 +88,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Use default principles if not provided
-    const principlesToUse = principles || getDefaultPrinciples();
+    // Only create constitution if principles are explicitly provided or AI generation is requested
+    // Don't use default principles - if no context, don't create constitution
+    if (!principles && !generateWithAI) {
+      return NextResponse.json({
+        error: 'No principles provided and AI generation not requested',
+        message: 'Provide principles or set generateWithAI: true'
+      }, { status: 400 });
+    }
+
+    const principlesToUse = principles || [];
 
     // Generate markdown content
     const content = generateConstitutionMarkdown(

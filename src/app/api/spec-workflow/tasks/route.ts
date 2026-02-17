@@ -71,13 +71,13 @@ export async function POST(request: NextRequest) {
     await prisma.feature.update({
       where: { id: featureId },
       data: {
-        stage: 'in_progress',
+        stage: 'tasks',
         tasksContent
       }
     });
 
     return NextResponse.json({
-      step: 'in_progress',
+      step: 'tasks',
       tasks,
       content: tasksContent,
       featureId,
