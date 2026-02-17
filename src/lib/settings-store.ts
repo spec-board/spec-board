@@ -167,7 +167,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         theme: appData.theme || DEFAULT_SETTINGS.theme,
         resolvedTheme,
         aiSettings: {
-          provider: aiData.provider || DEFAULT_SETTINGS.aiSettings.provider,
+          provider: (aiData.provider || DEFAULT_SETTINGS.aiSettings.provider) as AIProvider,
           baseUrl: aiData.baseUrl,
           model: aiData.model,
           hasApiKey: aiData.hasApiKey,
