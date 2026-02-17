@@ -50,7 +50,8 @@ export function CreateFeatureModal({
     setError(null);
 
     try {
-      const response = await fetch('/api/spec-workflow/specify', {
+      // Save to backlog (no AI generation)
+      const response = await fetch('/api/features/backlog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -73,7 +74,7 @@ export function CreateFeatureModal({
       });
 
       toast.success('Feature created', {
-        description: `"${featureName}" has been created with spec`
+        description: `"${featureName}" has been added to backlog`
       });
 
       onFeatureCreated?.({
@@ -146,7 +147,7 @@ export function CreateFeatureModal({
                 Feature Created!
               </h3>
               <p className="text-[var(--muted-foreground)]">
-                "{featureName}" has been created with spec
+                "{featureName}" has been added to backlog
               </p>
             </div>
           ) : (
@@ -157,7 +158,7 @@ export function CreateFeatureModal({
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Generating specification...
+                  Adding to backlog...
                 </div>
               )}
               <div>
@@ -195,7 +196,7 @@ export function CreateFeatureModal({
                   )}
                 />
                 <p className="text-xs text-[var(--muted-foreground)] mt-1">
-                  AI will generate a specification based on this description
+                  Feature will be added to backlog. You can generate spec later.
                 </p>
               </div>
             </div>

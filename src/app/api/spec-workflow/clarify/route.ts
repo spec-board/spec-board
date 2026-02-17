@@ -10,7 +10,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { projectId, featureId, specContent, questions: existingQuestions } = body;
 
-    if (!specContent) {
+    // specContent is required only when generating new questions, not when saving existing Q&A
+    if (!specContent && !existingQuestions) {
       return NextResponse.json({ error: 'Spec content is required' }, { status: 400 });
     }
 
@@ -26,10 +27,13 @@ export async function POST(request: NextRequest) {
     const provider = await getProvider();
 
     // If existing questions provided (user answered them), use those
-    // Otherwise, generate new questions from AI
+    // Otherwise, generate new questions from AI (requires specContent)
     let questions = existingQuestions;
-    if (!questions) {
+    if (!questions && specContent) {
       questions = await generateClarify({ specContent });
+    } else if (!questions && !specContent) {
+      // Should not happen since we already validated above, but just in case
+      return NextResponse.json({ error: 'Either specContent or questions are required' }, { status: 400 });
     }
 
     // Generate clarifications markdown content

@@ -8,7 +8,7 @@ import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
 import { CreateFeatureModal } from './create-feature-modal';
 
-const COLUMNS: KanbanColumn[] = ['specify', 'clarify', 'plan', 'checklist', 'tasks', 'analyze'];
+const COLUMNS: KanbanColumn[] = ['backlog', 'specify', 'clarify', 'plan', 'checklist', 'tasks', 'analyze'];
 
 // Get status dot style based on progress percentage (Jira-style 3-state)
 // Uses CSS variables: --status-not-started (0%), --status-in-progress (1-79%), --status-complete (80%+)
@@ -177,6 +177,7 @@ interface EmptyColumnProps {
 
 function EmptyColumn({ column }: EmptyColumnProps) {
   const hints: Record<KanbanColumn, string> = {
+    backlog: 'Add feature ideas here',
     specify: 'Spec being generated',
     clarify: 'Clarifications in progress',
     plan: 'Implementation plan being created',
@@ -266,13 +267,12 @@ function KanbanColumnComponent({
           </span>
         </div>
         {/* Inline create feature button for Backlog column */}
-        {column === 'specify' && onCreateFeature && (
+        {column === 'backlog' && onCreateFeature && (
           <button
             onClick={onCreateFeature}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)] text-xs font-medium transition-colors"
+            className="px-2.5 py-1.5 rounded-md bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)] text-xs font-medium transition-colors"
             aria-label="Create new feature"
           >
-            <Plus className="w-3.5 h-3.5" />
             Create Feature
           </button>
         )}
@@ -405,6 +405,22 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
 
       // Call appropriate API based on transition
       setIsLoading(true);
+
+      // backlog -> specify: generate spec
+      if (currentColumn === 'backlog' && targetColumn === 'specify') {
+        setLoadingMessage('Generating specification...');
+        const response = await fetch('/api/spec-workflow/specify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            featureId: feature.id,
+            name: feature.name,
+            description: feature.description || '',
+          })
+        });
+        if (!response.ok) throw new Error('Failed to generate specification');
+      }
 
       // specify -> clarify: generate clarifications
       if (currentColumn === 'specify' && targetColumn === 'clarify') {
@@ -708,7 +724,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     >
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">
-        {totalFeatures} total features: {featuresByColumn['specify'].length} in specify, {featuresByColumn['clarify'].length} in clarify,
+        {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog, {featuresByColumn['specify'].length} in specify, {featuresByColumn['clarify'].length} in clarify,
         {featuresByColumn['plan'].length} in plan, {featuresByColumn['checklist'].length} in checklist, {featuresByColumn['tasks'].length} in tasks,
         {featuresByColumn['analyze'].length} in analyze
       </div>
@@ -726,7 +742,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
           onFeatureClick={onFeatureClick}
           focusedFeatureId={focusState.featureId}
           setCardRef={setCardRef}
-          onCreateFeature={column === 'specify' ? () => setIsModalOpen(true) : undefined}
+          onCreateFeature={column === 'backlog' ? () => setIsModalOpen(true) : undefined}
           onDragOver={handleDragOver(column)}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop(column)}

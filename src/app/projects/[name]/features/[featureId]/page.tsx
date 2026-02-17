@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ArrowLeft } from 'lucide-react';
 import type { Project, Feature, Constitution } from '@/types';
 import { deleteFeature } from '@/lib/api-client';
+import { useProjectStore } from '@/lib/store';
 
 export default function FeaturePage() {
   const params = useParams();
@@ -14,6 +15,9 @@ export default function FeaturePage() {
   const searchParams = useSearchParams();
   const projectSlug = params.name as string;
   const featureId = params.featureId as string;
+
+  // Zustand store for sharing project with feature detail modals
+  const setProjectStore = useProjectStore(state => state.setProject);
 
   const [feature, setFeature] = useState<Feature | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,6 +40,9 @@ export default function FeaturePage() {
         throw new Error('Failed to load project');
       }
       const data = await response.json();
+
+      // Set project in Zustand store for feature detail modals
+      setProjectStore(data);
 
       // Find the specific feature
       const foundFeature = data.features.find((f: Feature) => f.id === featureId || f.featureId === featureId || f.name === featureId);
@@ -131,6 +138,7 @@ export default function FeaturePage() {
       <FeatureDetailByStage
         feature={feature}
         onClose={handleClose}
+        onDelete={handleDelete}
       />
     </>
   );

@@ -6,11 +6,15 @@ import { KanbanBoard } from '@/components/kanban-board';
 import { ProjectInfoBubble } from '@/components/project-info-bubble';
 import { Header } from '@/components/header';
 import type { Project, Feature } from '@/types';
+import { useProjectStore } from '@/lib/store';
 
 export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
   const projectSlug = params.name as string;
+
+  // Zustand store for sharing project with feature detail modals
+  const setProjectStore = useProjectStore(state => state.setProject);
 
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +37,9 @@ export default function ProjectPage() {
       }
       const data: Project & { projectId?: string } = await response.json();
       setProject(data);
+
+      // Also set in Zustand store for feature detail modals
+      setProjectStore(data);
 
       // Set project ID if available (for database-first projects)
       if (data.projectId) {

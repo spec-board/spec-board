@@ -70,6 +70,7 @@ export async function GET(
       // Map tasks from database format
       tasks: feature.tasks.map((task) => ({
         id: task.taskId,
+        dbId: task.id, // Database UUID for API calls
         description: task.title,
         completed: task.status === 'completed',
         parallel: false,
