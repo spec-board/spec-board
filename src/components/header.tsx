@@ -2,20 +2,18 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FolderOpen, Github, Settings, Plus, Scale } from 'lucide-react';
+import { FolderOpen, Github, Settings, Plus } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
-import Link from 'next/link';
 
 interface HeaderProps {
   variant: 'home' | 'project';
   projectName?: string;
   projectPath?: string;
   projectSlug?: string;
-  hasConstitution?: boolean;
   onNewProject?: () => void;
 }
 
-export function Header({ variant, projectName, projectPath, projectSlug, hasConstitution, onNewProject }: HeaderProps) {
+export function Header({ variant, projectName, projectPath, projectSlug, onNewProject }: HeaderProps) {
   const router = useRouter();
 
   return (
@@ -60,16 +58,6 @@ export function Header({ variant, projectName, projectPath, projectSlug, hasCons
                     </span>
                   )}
                 </div>
-                {projectSlug && (
-                  <Link
-                    href={`/projects/${projectSlug}/constitution`}
-                    className="hover:bg-[var(--secondary)] rounded-lg transition-colors flex items-center"
-                    style={{ padding: 'var(--space-1)' }}
-                    title={hasConstitution ? 'View Constitution' : 'Create Constitution'}
-                  >
-                    <Scale className="w-4 h-4" />
-                  </Link>
-                )}
               </div>
             )}
           </div>
