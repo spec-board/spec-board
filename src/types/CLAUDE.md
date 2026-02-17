@@ -28,13 +28,29 @@ This directory contains all shared TypeScript interfaces and types used througho
 
 | Stage | Description |
 |-------|-------------|
-| `backlog` | Not started |
 | `specify` | Spec being generated |
 | `clarify` | Clarifications in progress |
 | `plan` | Implementation plan being created |
 | `tasks` | Tasks being generated |
 | `analyze` | Analyzing consistency |
-| `done` | Completed |
+
+### Constitution Types
+
+| Type | Purpose |
+|------|---------|
+| `Constitution` | Project principles with version tracking |
+| `ConstitutionPrinciple` | Single principle (name, description) |
+| `ConstitutionSection` | Additional sections with subsections |
+| `SyncImpactReport` | Version change impact tracking |
+
+### Project Types
+
+| Type | Purpose |
+|------|---------|
+| `Project` | Root project from database |
+| `Feature` | Feature with stage, content fields |
+| `Task` | Individual task item |
+| `UserStory` | User story linked to feature |
 
 ### Spec-Kit File Content Types
 
@@ -65,7 +81,20 @@ These are stored as string content in the database:
 
 ```typescript
 // Feature stages (database-first)
-type FeatureStage = 'backlog' | 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze' | 'done';
+type FeatureStage = 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze';
+
+// Constitution with version tracking
+interface Constitution {
+  rawContent: string;
+  title?: string;
+  description?: string;  // Project description at constitution creation
+  principles: ConstitutionPrinciple[];
+  sections: ConstitutionSection[];
+  version?: string;
+  ratifiedDate?: string;
+  lastAmendedDate?: string;
+  syncImpactReport?: SyncImpactReport;
+}
 
 // Database-first Feature
 interface Feature {

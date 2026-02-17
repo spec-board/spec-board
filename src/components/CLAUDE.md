@@ -60,7 +60,7 @@ This directory contains all React components used throughout the application. Co
 | `shortcuts-provider.tsx` | Keyboard shortcuts provider |
 | `shortcut-help-overlay.tsx` | Shortcuts help modal |
 | `confirm-dialog.tsx` | Confirmation dialog |
-| `project-info-bubble.tsx` | Project info tooltip |
+| `project-info-bubble.tsx` | Project info modal (description, Constitution, history) |
 
 ## Component Inventory
 

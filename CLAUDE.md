@@ -8,6 +8,17 @@ SpecBoard is a visual dashboard for spec-kit projects with a Kanban board interf
 
 **Legacy**: The `lib/parser.ts` module exists for parsing markdown files but is no longer used for the main data flow.
 
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Database**: PostgreSQL with Prisma ORM
+- **Auth**: Better Auth
+- **State**: Zustand
+- **UI**: Tailwind CSS v4, shadcn/ui components
+- **AI**: Anthropic Claude API via `AIService`
+- **Code Execution**: E2B sandbox
+- **Package Manager**: pnpm
+
 ## Commands
 
 ```bash
@@ -45,10 +56,28 @@ PostgreSQL → API Routes (/api/project/[name]/data) → Zustand Store → React
 | `/` | Home - project list from database |
 | `/projects/:slug` | Kanban board (slug from DB) |
 | `/projects/:slug/features/:id` | Feature detail modal |
+| `/projects/:slug/constitution` | Constitution editor |
 | `/cloud` | Cloud sync dashboard |
 | `/settings` | App settings |
 
 **Important**: URLs use database slugs, not filesystem paths.
+
+## Core Features
+
+### Constitution System
+Project-level principles stored in database with version tracking and history. Key files:
+- `src/components/constitution-editor.tsx` - Constitution editing UI
+- `src/components/project-info-bubble.tsx` - Project info modal with Constitution tabs
+- `src/app/projects/[name]/constitution/page.tsx` - Constitution page
+
+### Project Info Modal
+Modal accessible via "Project Info" button on project page showing:
+- Project description (editable)
+- Constitution principles, version, dates
+- Constitution history (version timeline)
+
+### Feature Detail V2
+The primary feature detail UI. Located at `src/components/feature-detail-v2/`. This is the ONLY supported feature detail UI.
 
 ## Core Patterns
 
@@ -109,3 +138,5 @@ Run specific test: `pnpm vitest run src/lib/parser.test.ts`
 | `src/lib/ai/client.ts` | AI service with real implementations |
 | `prisma/schema.prisma` | Database schema |
 | `src/components/feature-detail-v2/` | Feature detail UI (ONLY supported) |
+| `src/components/project-info-bubble.tsx` | Project info modal |
+| `src/components/constitution-editor.tsx` | Constitution editor |
