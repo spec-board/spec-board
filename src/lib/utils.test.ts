@@ -26,9 +26,11 @@ describe('formatPercentage', () => {
 describe('getStageColor', () => {
   it('should return correct color classes for each stage', () => {
     expect(getStageColor('backlog')).toBe('bg-purple-500/20 text-purple-400 border-purple-500/30');
-    expect(getStageColor('planning')).toBe('bg-blue-500/20 text-blue-400 border-blue-500/30');
-    expect(getStageColor('in_progress')).toBe('bg-orange-500/20 text-orange-400 border-orange-500/30');
-    expect(getStageColor('done')).toBe('bg-green-500/20 text-green-400 border-green-500/30');
+    expect(getStageColor('specify')).toBe('bg-indigo-500/20 text-indigo-400 border-indigo-500/30');
+    expect(getStageColor('clarify')).toBe('bg-cyan-500/20 text-cyan-400 border-cyan-500/30');
+    expect(getStageColor('plan')).toBe('bg-blue-500/20 text-blue-400 border-blue-500/30');
+    expect(getStageColor('tasks')).toBe('bg-yellow-500/20 text-yellow-400 border-yellow-500/30');
+    expect(getStageColor('analyze')).toBe('bg-green-500/20 text-green-400 border-green-500/30');
   });
 
   it('should return default gray color for unknown stages', () => {
@@ -41,9 +43,11 @@ describe('getStageColor', () => {
 describe('getStageLabel', () => {
   it('should return correct labels for each stage', () => {
     expect(getStageLabel('backlog')).toBe('Backlog');
-    expect(getStageLabel('planning')).toBe('Planning');
-    expect(getStageLabel('in_progress')).toBe('In Progress');
-    expect(getStageLabel('done')).toBe('Done');
+    expect(getStageLabel('specify')).toBe('Specify');
+    expect(getStageLabel('clarify')).toBe('Clarify');
+    expect(getStageLabel('plan')).toBe('Plan');
+    expect(getStageLabel('tasks')).toBe('Tasks');
+    expect(getStageLabel('analyze')).toBe('Analyze');
   });
 
   it('should return the input for unknown stages', () => {
@@ -129,120 +133,21 @@ function createMockFeature(overrides: Partial<Feature>): Feature {
 describe('getKanbanColumn', () => {
   it('should return the stage as-is', () => {
     expect(getKanbanColumn('backlog')).toBe('backlog');
-    expect(getKanbanColumn('planning')).toBe('planning');
-    expect(getKanbanColumn('in_progress')).toBe('in_progress');
-    expect(getKanbanColumn('done')).toBe('done');
+    expect(getKanbanColumn('specify')).toBe('specify');
+    expect(getKanbanColumn('clarify')).toBe('clarify');
+    expect(getKanbanColumn('plan')).toBe('plan');
+    expect(getKanbanColumn('tasks')).toBe('tasks');
+    expect(getKanbanColumn('analyze')).toBe('analyze');
   });
 });
 
 describe('getFeatureKanbanColumn', () => {
-  it('should return backlog when no spec exists', () => {
-    const feature = createMockFeature({ stage: 'backlog' });
-    expect(getFeatureKanbanColumn(feature)).toBe('backlog');
-  });
-
-  it('should return backlog when has spec but no plan', () => {
-    const feature = createMockFeature({ stage: 'planning' });
-    expect(getFeatureKanbanColumn(feature)).toBe('backlog');
-  });
-
-  it('should return in_progress when has tasks with incomplete tasks', () => {
-    const feature = createMockFeature({
-      stage: 'in_progress',
-      hasSpec: true,
-      hasPlan: true,
-      hasTasks: true,
-      totalTasks: 10,
-      completedTasks: 5, // Incomplete tasks
-    });
-    expect(getFeatureKanbanColumn(feature)).toBe('in_progress');
-  });
-
-  it('should return done when all tasks complete without checklists', () => {
-    const feature = createMockFeature({
-      stage: 'done',
-      hasSpec: true,
-      hasPlan: true,
-      hasTasks: true,
-      totalTasks: 10,
-      completedTasks: 10, // All tasks complete
-      hasChecklists: false,
-    });
-    expect(getFeatureKanbanColumn(feature)).toBe('done');
-  });
-
-  it('should return done when all tasks and checklists complete', () => {
-    const feature = createMockFeature({
-      stage: 'done',
-      hasSpec: true,
-      hasPlan: true,
-      hasTasks: true,
-      totalTasks: 10,
-      completedTasks: 10, // All tasks complete
-      hasChecklists: true,
-      totalChecklistItems: 5,
-      completedChecklistItems: 5, // All checklists complete
-    });
-    expect(getFeatureKanbanColumn(feature)).toBe('done');
-  });
-
-  it('should return in_progress when checklists incomplete', () => {
-    const feature = createMockFeature({
-      stage: 'done',
-      hasSpec: true,
-      hasPlan: true,
-      hasTasks: true,
-      totalTasks: 10,
-      completedTasks: 10, // All tasks complete
-      hasChecklists: true,
-      totalChecklistItems: 5,
-      completedChecklistItems: 3, // Incomplete checklists
-    });
-    expect(getFeatureKanbanColumn(feature)).toBe('in_progress');
-  });
-
-  it('should return in_progress when no checklist items completed', () => {
-    const feature = createMockFeature({
-      stage: 'done',
-      hasSpec: true,
-      hasPlan: true,
-      hasTasks: true,
-      totalTasks: 10,
-      completedTasks: 10, // All tasks complete
-      hasChecklists: true,
-      totalChecklistItems: 10,
-      completedChecklistItems: 0, // No checklists complete
-    });
-    expect(getFeatureKanbanColumn(feature)).toBe('in_progress');
-  });
-
-  it('should return done for empty checklists (0 items)', () => {
-    const feature = createMockFeature({
-      stage: 'done',
-      hasSpec: true,
-      hasPlan: true,
-      hasTasks: true,
-      totalTasks: 10,
-      completedTasks: 10, // All tasks complete
-      hasChecklists: true,
-      totalChecklistItems: 0, // No checklist items
-      completedChecklistItems: 0,
-    });
-    expect(getFeatureKanbanColumn(feature)).toBe('done');
-  });
-
-  it('should not affect non-done stages even with incomplete checklists', () => {
-    const feature = createMockFeature({
-      stage: 'in_progress',
-      hasSpec: true,
-      hasPlan: true,
-      hasTasks: true,
-      totalTasks: 10,
-      completedTasks: 5, // Incomplete tasks
-      hasChecklists: true,
-      totalChecklistItems: 5,
-      completedChecklistItems: 2,
-    });
-    expect(getFeatureKanbanColumn(feature)).toBe('in_progress');
+  it('should return the feature stage directly', () => {
+    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'backlog' }))).toBe('backlog');
+    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'specify' }))).toBe('specify');
+    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'clarify' }))).toBe('clarify');
+    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'plan' }))).toBe('plan');
+    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'tasks' }))).toBe('tasks');
+    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'analyze' }))).toBe('analyze');
   });
 });

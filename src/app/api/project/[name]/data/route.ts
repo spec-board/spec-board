@@ -94,6 +94,7 @@ export async function GET(
       projectId: project.id,
       path: '', // Database-first - no filesystem path
       name: project.displayName || project.name,
+      description: project.description,  // NEW: Include project description
       features,
       lastUpdated: project.updatedAt,
       constitution: project.constitution ? {

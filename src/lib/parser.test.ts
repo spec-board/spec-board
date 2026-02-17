@@ -279,28 +279,25 @@ describe('determineFeatureStage', () => {
     expect(determineFeatureStage(false, true, true, 5, 10)).toBe('backlog');
   });
 
-  it('should return "planning" when spec exists but no plan', () => {
-    expect(determineFeatureStage(true, false, false, 0, 0)).toBe('planning');
-    expect(determineFeatureStage(true, false, true, 0, 0)).toBe('planning');
+  it('should return "specify" when spec exists but no plan', () => {
+    expect(determineFeatureStage(true, false, false, 0, 0)).toBe('specify');
+    expect(determineFeatureStage(true, false, true, 0, 0)).toBe('specify');
   });
 
-  it('should return "backlog" when plan exists but no tasks file', () => {
-    expect(determineFeatureStage(true, true, false, 0, 0)).toBe('backlog');
+  it('should return "plan" when plan exists but no tasks', () => {
+    expect(determineFeatureStage(true, true, false, 0, 0)).toBe('plan');
   });
 
-  it('should return "backlog" when tasks file exists but no tasks completed', () => {
-    expect(determineFeatureStage(true, true, true, 0, 5)).toBe('backlog');
-    expect(determineFeatureStage(true, true, true, 0, 0)).toBe('backlog');
+  it('should return "tasks" when tasks exist but not all completed', () => {
+    expect(determineFeatureStage(true, true, true, 0, 5)).toBe('tasks');
+    expect(determineFeatureStage(true, true, true, 0, 0)).toBe('tasks');
+    expect(determineFeatureStage(true, true, true, 3, 10)).toBe('tasks');
+    expect(determineFeatureStage(true, true, true, 1, 5)).toBe('tasks');
   });
 
-  it('should return "in_progress" when some tasks are completed', () => {
-    expect(determineFeatureStage(true, true, true, 3, 10)).toBe('in_progress');
-    expect(determineFeatureStage(true, true, true, 1, 5)).toBe('in_progress');
-  });
-
-  it('should return "done" when all tasks are completed', () => {
-    expect(determineFeatureStage(true, true, true, 10, 10)).toBe('done');
-    expect(determineFeatureStage(true, true, true, 1, 1)).toBe('done');
+  it('should return "analyze" when all tasks are completed', () => {
+    expect(determineFeatureStage(true, true, true, 10, 10)).toBe('analyze');
+    expect(determineFeatureStage(true, true, true, 1, 1)).toBe('analyze');
   });
 
   it('should handle edge case of zero total tasks with tasks file', () => {
