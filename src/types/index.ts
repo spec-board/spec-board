@@ -1,11 +1,28 @@
 export type FeatureStage = 'backlog' | 'planning' | 'in_progress' | 'done';
 
+// Recent project type (used in store and components)
+export interface RecentProject {
+  path: string;
+  name: string;
+  slug?: string;
+  lastOpened: string;
+  summary: string | null;
+  featureCount: number;
+  completionPercentage: number;
+  stageBreakdown: Record<FeatureStage, number>;
+  activeFeature?: {
+    stage: FeatureStage;
+    featureName: string;
+  };
+}
+
 // User Story types for spec.md parsing (T001)
 export interface UserStory {
   id: string;           // 'US1', 'US2', etc.
   title: string;
   priority: 'P1' | 'P2' | 'P3';
   description: string;
+  status?: string;      // 'pending', 'in_progress', 'completed'
   acceptanceCriteria: string[];
 }
 
@@ -131,6 +148,7 @@ export interface Feature {
   id: string;
   featureId?: string;  // Database identifier (e.g., "001-user-login") - optional for backwards compatibility
   name: string;
+  description?: string;  // Feature description from database
   path: string;
   stage: FeatureStage;
   hasSpec: boolean;
@@ -153,6 +171,7 @@ export interface Feature {
   specContent: string | null;
   planContent: string | null;
   tasksContent: string | null;
+  clarificationsContent: string | null;  // Standalone clarifications content
   analysisContent: string | null;
   researchContent: string | null;
   dataModelContent: string | null;
