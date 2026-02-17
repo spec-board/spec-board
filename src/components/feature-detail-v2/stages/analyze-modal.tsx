@@ -1,13 +1,17 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2, BarChart3, AlertCircle, CheckCircle, AlertTriangle, FileText, List, ClipboardCheck } from 'lucide-react';
+import { Loader2, BarChart3, AlertCircle, CheckCircle, AlertTriangle, FileText, List, ClipboardCheck, ArrowRight } from 'lucide-react';
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
+import type { DocumentType } from '../types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { DocumentSelector } from '../document-selector';
+import { getDocumentOptions } from '../types';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { STAGES, getStageConfig } from '../base/types';
 
 interface AnalyzeModalProps extends BaseModalProps {
   onGenerateAnalysis?: () => Promise<void>;
@@ -15,7 +19,7 @@ interface AnalyzeModalProps extends BaseModalProps {
 
 type AnalyzeStatus = 'idle' | 'generating' | 'ready' | 'error';
 
-type DocType = 'spec' | 'plan' | 'tasks' | 'analysis';
+type DocType = DocumentType | 'analysis';
 
 interface AnalysisResult {
   specPlanScore?: number;
@@ -49,18 +53,20 @@ function parseAnalysisContent(content: string): AnalysisResult | null {
   result.isValid = content.includes('✅ Valid') || !content.includes('❌ Issues Found');
 
   // Extract issues
-  const issueMatches = content.matchAll(/🔴|🟡|🔵 \*\*(\w+)\*\*: (.+)/g);
+  const issueMatches = content.matchAll(/(?:🔴|🟡|🔵)\s*\*\*(\w+)\*\*:\s*(.+)/g);
   for (const match of issueMatches) {
-    result.issues?.push({
-      severity: match[1].toLowerCase(),
-      description: match[2],
-    });
+    if (match[1] && match[2]) {
+      result.issues?.push({
+        severity: match[1].toLowerCase(),
+        description: match[2],
+      });
+    }
   }
 
   return result;
 }
 
-export function AnalyzeModal({ feature, onClose, onStageChange, onGenerateAnalysis }: AnalyzeModalProps) {
+export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGenerateAnalysis }: AnalyzeModalProps) {
   const [status, setStatus] = useState<AnalyzeStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<DocType>('spec');
@@ -76,6 +82,22 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onGenerateAnalys
   const hasPlan = !!feature.planContent;
   const hasTasks = !!feature.tasksContent;
   const hasAllDocs = hasSpec && hasPlan && hasTasks;
+
+  // Get next stage config (analyze is the last stage, so no next stage)
+  const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
+  const hasNextStage = currentIndex >= 0 && currentIndex < STAGES.length - 1;
+  const nextStage = hasNextStage ? STAGES[currentIndex + 1] : undefined;
+  const nextStageConfig = nextStage ? getStageConfig(nextStage.stage) : null;
+
+  // Get available document options
+  const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
+
+  // Get content for selected document
+  const selectedDocContent = useMemo(() => {
+    if (selectedDoc === 'analysis') return localContent;
+    const option = documentOptions.find(o => o.type === selectedDoc);
+    return option?.content || null;
+  }, [documentOptions, selectedDoc, localContent]);
 
   // Set initial status
   useEffect(() => {
@@ -167,24 +189,55 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onGenerateAnalys
     }
   };
 
+  // Handle "Continue to Next Stage" button click
+  const handleContinueToNextStage = () => {
+    if (onStageChange && nextStageConfig && nextStage) {
+      onStageChange(nextStage.stage as any);
+    }
+  };
+
   return (
     <BaseModal
       feature={feature}
       onClose={onClose}
       onStageChange={onStageChange}
+      onDelete={onDelete}
       headerActions={
-        <div className="flex items-center gap-2">
-          {status !== 'generating' && (
-            <button
-              onClick={handleGenerateAnalysis}
-              disabled={!hasAllDocs}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
-            >
-              <BarChart3 className="w-4 h-4" />
-              Run Analysis
-            </button>
-          )}
-        </div>
+        hasNextStage ? (
+          <div className="flex items-center gap-2">
+            {hasAnalysis && nextStageConfig ? (
+              <button
+                onClick={handleContinueToNextStage}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+              >
+                {nextStageConfig.label}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : status !== 'generating' && (
+              <button
+                onClick={handleGenerateAnalysis}
+                disabled={!hasAllDocs}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Run Analysis
+              </button>
+            )}
+          </div>
+        ) : hasAnalysis ? (
+          <div className="text-sm text-green-500 font-medium">
+            Analysis Complete
+          </div>
+        ) : status !== 'generating' ? (
+          <button
+            onClick={handleGenerateAnalysis}
+            disabled={!hasAllDocs}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Run Analysis
+          </button>
+        ) : null
       }
       showNavigation={hasAllDocs}
     >
@@ -346,83 +399,25 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onGenerateAnalys
         </div>
 
         {/* Right: Document Viewer & Analysis */}
-        <div className="w-[65%] overflow-y-auto p-6">
+        <div className="w-[65%] flex flex-col overflow-hidden">
           {/* Document Tabs */}
-          <div className="flex gap-2 mb-4 border-b border-[var(--border)] pb-3">
-            <button
-              onClick={() => setSelectedDoc('spec')}
-              className={cn(
-                "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                selectedDoc === 'spec'
-                  ? "bg-blue-600 text-white"
-                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-              )}
-            >
-              Spec
-            </button>
-            <button
-              onClick={() => setSelectedDoc('plan')}
-              className={cn(
-                "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                selectedDoc === 'plan'
-                  ? "bg-blue-600 text-white"
-                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-              )}
-            >
-              Plan
-            </button>
-            <button
-              onClick={() => setSelectedDoc('tasks')}
-              className={cn(
-                "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                selectedDoc === 'tasks'
-                  ? "bg-blue-600 text-white"
-                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-              )}
-            >
-              Tasks
-            </button>
-            {(status === 'ready' || hasAnalysis) && (
-              <button
-                onClick={() => setSelectedDoc('analysis' as DocType)}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                  selectedDoc === 'analysis'
-                    ? "bg-blue-600 text-white"
-                    : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                )}
-              >
-                Analysis Report
-              </button>
-            )}
+          <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
+            <DocumentSelector
+              options={documentOptions}
+              selected={selectedDoc === 'analysis' ? 'spec' : selectedDoc}
+              onChange={(doc) => setSelectedDoc(doc as DocType)}
+            />
           </div>
 
           {/* Document Content */}
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            {selectedDoc === 'spec' && (
-              feature.specContent ? (
-                <MarkdownRenderer content={feature.specContent} />
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              {selectedDocContent ? (
+                <MarkdownRenderer content={selectedDocContent} />
               ) : (
-                <p className="text-[var(--muted-foreground)]">No spec content</p>
-              )
-            )}
-            {selectedDoc === 'plan' && (
-              feature.planContent ? (
-                <MarkdownRenderer content={feature.planContent} />
-              ) : (
-                <p className="text-[var(--muted-foreground)]">No plan content</p>
-              )
-            )}
-            {selectedDoc === 'tasks' && (
-              feature.tasksContent ? (
-                <MarkdownRenderer content={feature.tasksContent} />
-              ) : (
-                <p className="text-[var(--muted-foreground)]">No tasks content</p>
-              )
-            )}
-            {(selectedDoc === 'analysis') && localContent && (
-              <MarkdownRenderer content={localContent} />
-            )}
+                <p className="text-[var(--muted-foreground)]">No content available</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
