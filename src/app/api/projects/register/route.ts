@@ -103,8 +103,8 @@ export async function POST(request: NextRequest) {
 
     // Generate display name
     const finalDisplayName = displayName || (filePath
-      ? path.basename(filePath).replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-      : baseName.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+      ? path.basename(filePath).replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
+      : baseName.replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
     );
 
     // Create new project (filePath is optional - null for database-first)

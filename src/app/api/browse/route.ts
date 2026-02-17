@@ -1,81 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { isPathSafe, isSpecKitProject, normalizePath } from '@/lib/path-utils';
+import { prisma } from '@/lib/prisma';
 
-// Disable Next.js route caching - always read fresh data from filesystem
-export const dynamic = 'force-dynamic';
-
-interface DirectoryEntry {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  isSpecKitProject: boolean;
-}
-
+/**
+ * GET /api/browse
+ *
+ * Database-first: Returns list of all projects from database.
+ * Replaces filesystem-based directory browsing.
+ */
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  let dirPath = searchParams.get('path') || os.homedir();
-
-  // Normalize path (expand ~ to home directory)
-  dirPath = normalizePath(dirPath);
-
-  // Validate path is safe to browse
-  const { safe, resolvedPath } = isPathSafe(dirPath);
-  if (!safe) {
-    return NextResponse.json(
-      { error: 'Access denied: Path is outside allowed directories' },
-      { status: 403 }
-    );
-  }
-  dirPath = resolvedPath;
-
   try {
-    if (!fs.existsSync(dirPath)) {
-      return NextResponse.json(
-        { error: 'Directory does not exist' },
-        { status: 404 }
-      );
-    }
+    // Get all projects from database
+    const projects = await prisma.project.findMany({
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        displayName: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            features: true,
+          },
+        },
+      },
+    });
 
-    const stats = fs.statSync(dirPath);
-    if (!stats.isDirectory()) {
-      return NextResponse.json(
-        { error: 'Path is not a directory' },
-        { status: 400 }
-      );
-    }
-
-    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-    const directories: DirectoryEntry[] = entries
-      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
-      .map((entry) => {
-        const fullPath = path.join(dirPath, entry.name);
-        return {
-          name: entry.name,
-          path: fullPath,
-          isDirectory: true,
-          isSpecKitProject: isSpecKitProject(fullPath),
-        };
-      })
-      .sort((a, b) => {
-        // Sort spec-kit projects first, then alphabetically
-        if (a.isSpecKitProject && !b.isSpecKitProject) return -1;
-        if (!a.isSpecKitProject && b.isSpecKitProject) return 1;
-        return a.name.localeCompare(b.name);
-      });
+    // Transform to response format
+    const entries = projects.map((project) => ({
+      name: project.displayName || project.name,
+      path: '', // No filesystem path in database-first
+      isDirectory: true,
+      isSpecKitProject: true, // All DB projects are spec-kit projects
+      projectId: project.id,
+      featureCount: project._count.features,
+      lastUpdated: project.updatedAt,
+    }));
 
     return NextResponse.json({
-      currentPath: dirPath,
-      parentPath: path.dirname(dirPath),
-      entries: directories,
-      isSpecKitProject: isSpecKitProject(dirPath),
+      currentPath: '/',
+      parentPath: null,
+      entries,
+      isSpecKitProject: false,
+      source: 'database', // Indicate this is database-first
     });
   } catch (error) {
-    console.error('Error browsing directory:', error);
+    console.error('Error browsing projects:', error);
     return NextResponse.json(
-      { error: 'Failed to browse directory' },
+      { error: 'Failed to browse projects' },
       { status: 500 }
     );
   }
