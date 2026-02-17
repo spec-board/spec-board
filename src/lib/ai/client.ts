@@ -18,7 +18,7 @@ import type {
   AnalysisResult,
   GeneratedConstitution
 } from './types';
-import { getAISettingsSync } from './settings';
+import { getAISettings } from './settings';
 
 /**
  * AI Client - OpenAI-Compatible API only
@@ -50,44 +50,44 @@ class AIService {
   }
 
   // Get current provider
-  getProvider(): AIProvider {
-    const settings = getAISettingsSync();
+  async getProvider(): Promise<AIProvider> {
+    const settings = await getAISettings();
     return settings.provider as AIProvider;
   }
 
   // Check if using real AI
-  isRealAI(): boolean {
-    const settings = getAISettingsSync();
+  async isRealAI(): Promise<boolean> {
+    const settings = await getAISettings();
     return !!settings.apiKey;
   }
 
   // Base URL getter
-  private getBaseUrl(): string {
-    const settings = getAISettingsSync();
+  private async getBaseUrl(): Promise<string> {
+    const settings = await getAISettings();
     return settings.baseUrl || 'https://api.openai.com/v1';
   }
 
   // API key getter
-  private getApiKey(): string {
-    const settings = getAISettingsSync();
+  private async getApiKey(): Promise<string> {
+    const settings = await getAISettings();
     return settings.apiKey || OPENAI_API_KEY || '';
   }
 
   // Model getter
-  private getModel(): string {
-    const settings = getAISettingsSync();
+  private async getModel(): Promise<string> {
+    const settings = await getAISettings();
     return settings.model || this.config.model || 'gpt-4o';
   }
 
   // Internal API call helper
   private async callAPI(prompt: string, systemPrompt?: string, maxTokens: number = 4096): Promise<string> {
-    const apiKey = this.getApiKey();
+    const apiKey = await this.getApiKey();
     if (!apiKey) {
       throw new Error('No API key configured. Please configure an API key in settings.');
     }
 
-    const baseUrl = this.getBaseUrl();
-    const model = this.getModel();
+    const baseUrl = await this.getBaseUrl();
+    const model = await this.getModel();
 
     const messages = systemPrompt
       ? [{ role: 'system', content: systemPrompt }, { role: 'user', content: prompt }]
