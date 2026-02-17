@@ -15,6 +15,34 @@ interface ConstitutionSection {
 
 export const dynamic = 'force-dynamic';
 
+// Version increment based on speckit rules:
+// - MAJOR: Principle removal or incompatible redefinition
+// - MINOR: New principle or section added
+// - PATCH: Clarifications, wording improvements
+function incrementVersion(
+  currentVersion: string | null,
+  newPrinciples: ConstitutionPrinciples[],
+  newSections: ConstitutionSection[]
+): string {
+  if (!currentVersion) {
+    return '1.0.0';
+  }
+
+  const [major, minor, patch] = currentVersion.split('.').map(Number);
+
+  // Check if principles changed significantly
+  const hasNewPrinciple = newPrinciples.length > 0;
+  const hasNewSection = newSections.length > 0;
+
+  if (hasNewPrinciple || hasNewSection) {
+    // MINOR bump for new principles/sections
+    return `${major}.${minor + 1}.${patch}`;
+  }
+
+  // PATCH bump for content changes
+  return `${major}.${minor}.${patch + 1}`;
+}
+
 // POST /api/spec-workflow/constitution - Create, update, or generate constitution
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +62,11 @@ export async function POST(request: NextRequest) {
     // Handle: Description changed → Regenerate constitution with AI
     if (regenerateWithAI && description) {
       try {
+        // Get existing constitution for version calculation
+        const existingConstitution = await prisma.constitution.findUnique({
+          where: { projectId }
+        });
+
         // Update project description first
         await prisma.project.update({
           where: { id: projectId },
@@ -53,6 +86,14 @@ export async function POST(request: NextRequest) {
           result.suggestedSections
         );
 
+        // Calculate new version
+        const currentVersion = existingConstitution?.version || null;
+        const newVersion = incrementVersion(
+          currentVersion,
+          result.principles,
+          result.suggestedSections || []
+        );
+
         // Upsert constitution in database
         const constitution = await prisma.constitution.upsert({
           where: { projectId },
@@ -61,16 +102,30 @@ export async function POST(request: NextRequest) {
             title: `${project.displayName || name || 'Project'} Constitution`,
             content,
             principles: result.principles,
-            version: '1.0.0',
+            version: newVersion,
             ratifiedDate: new Date(),
             lastAmendedDate: new Date(),
           },
           update: {
             content,
             principles: result.principles,
+            version: newVersion,
             lastAmendedDate: new Date(),
           },
         });
+
+        // Create version snapshot for history (read-only)
+        const isNewConstitution = !existingConstitution;
+        await prisma.constitutionVersion.create({
+          data: {
+            constitutionId: constitution.id,
+            version: newVersion,
+            content: content,
+            principles: result.principles as any,
+            changeType: isNewConstitution ? 'create' : 'update',
+            changeNote: isNewConstitution ? 'Initial constitution created' : `Regenerated from description (${currentVersion} → ${newVersion})`,
+          },
+        }).catch(console.error); // Non-blocking - don't fail if version creation fails
 
         return NextResponse.json({
           success: true,
@@ -84,6 +139,7 @@ export async function POST(request: NextRequest) {
             lastAmendedDate: constitution.lastAmendedDate,
           },
           description,  // Return updated description
+          versionChange: currentVersion ? `${currentVersion} → ${newVersion}` : `1.0.0 → ${newVersion}`,
           message: 'Description updated and constitution regenerated with AI',
           provider
         });
@@ -159,6 +215,21 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      // Create version snapshot for history (read-only)
+      const existingVersion = await prisma.constitution.findUnique({ where: { projectId }, select: { version: true } });
+      const newVersion = existingVersion ? incrementVersion(existingVersion.version, principles, additionalSections || []) : '1.0.0';
+
+      await prisma.constitutionVersion.create({
+        data: {
+          constitutionId: constitution.id,
+          version: newVersion,
+          content: content,
+          principles: principles as any,
+          changeType: existingVersion ? 'update' : 'create',
+          changeNote: existingVersion ? 'Principles updated by user' : 'Initial constitution created',
+        },
+      }).catch(console.error);
+
       return NextResponse.json({
         success: true,
         constitution: {
@@ -209,6 +280,18 @@ export async function POST(request: NextRequest) {
             lastAmendedDate: new Date(),
           },
         });
+
+        // Create version snapshot for history (read-only)
+        await prisma.constitutionVersion.create({
+          data: {
+            constitutionId: constitution.id,
+            version: '1.0.0',
+            content: content,
+            principles: result.principles as any,
+            changeType: 'create',
+            changeNote: 'Initial constitution generated with AI',
+          },
+        }).catch(console.error);
 
         return NextResponse.json({
           success: true,
@@ -269,6 +352,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Create version snapshot for history (read-only)
+    const existingVersion = await prisma.constitution.findUnique({ where: { projectId }, select: { version: true } });
+    const newVersion = existingVersion ? incrementVersion(existingVersion.version, principlesToUse, additionalSections || []) : '1.0.0';
+
+    await prisma.constitutionVersion.create({
+      data: {
+        constitutionId: constitution.id,
+        version: newVersion,
+        content: content,
+        principles: principlesToUse as any,
+        changeType: existingVersion ? 'update' : 'create',
+        changeNote: existingVersion ? 'Principles updated by user' : 'Initial constitution created',
+      },
+    }).catch(console.error);
+
     return NextResponse.json({
       success: true,
       constitution: {
@@ -289,10 +387,12 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/spec-workflow/constitution - Get constitution for a project
+// GET /api/spec-workflow/constitution?projectId=xxx&versions=true - Get constitution with version history
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
+    const includeVersions = searchParams.get('versions') === 'true';
 
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
@@ -309,6 +409,24 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // If versions requested, fetch version history
+    let versions = null;
+    if (includeVersions) {
+      versions = await prisma.constitutionVersion.findMany({
+        where: { constitutionId: constitution.id },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          version: true,
+          content: true,
+          principles: true,
+          changeType: true,
+          changeNote: true,
+          createdAt: true,
+        }
+      });
+    }
+
     return NextResponse.json({
       exists: true,
       constitution: {
@@ -319,7 +437,8 @@ export async function GET(request: NextRequest) {
         version: constitution.version,
         ratifiedDate: constitution.ratifiedDate,
         lastAmendedDate: constitution.lastAmendedDate,
-      }
+      },
+      versions
     });
   } catch (error) {
     console.error('Error getting constitution:', error);

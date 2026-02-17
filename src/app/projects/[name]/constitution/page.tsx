@@ -16,6 +16,29 @@ interface Constitution {
   lastAmendedDate?: string;
 }
 
+interface ConstitutionVersion {
+  id: string;
+  version: string;
+  content: string;
+  principles: Array<{ name: string; description: string }>;
+  changeType: string;
+  changeNote: string | null;
+  createdAt: string;
+}
+
+// Browser notification helper
+function sendNotification(title: string, body: string, icon?: string) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: icon || '/favicon.ico' });
+  }
+}
+
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
 export default function ConstitutionPage() {
   const params = useParams();
   const router = useRouter();
@@ -25,10 +48,16 @@ export default function ConstitutionPage() {
   const [projectName, setProjectName] = useState<string>('');
   const [projectDescription, setProjectDescription] = useState<string>('');
   const [constitution, setConstitution] = useState<Constitution | null>(null);
+  const [versions, setVersions] = useState<ConstitutionVersion[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   // Load project and constitution data
   const loadData = useCallback(async () => {
@@ -55,6 +84,16 @@ export default function ConstitutionPage() {
           ratifiedDate: projectData.constitution.ratifiedDate,
           lastAmendedDate: projectData.constitution.lastAmendedDate,
         });
+
+        // Get version history
+        const versionsRes = await fetch(
+          `/api/spec-workflow/constitution?projectId=${projectData.projectId}&versions=true`,
+          { cache: 'no-store' }
+        );
+        if (versionsRes.ok) {
+          const versionsData = await versionsRes.json();
+          setVersions(versionsData.versions || null);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load');
@@ -102,12 +141,21 @@ export default function ConstitutionPage() {
       if (result.description) {
         setProjectDescription(result.description);
       }
-      setSuccess(data.regenerateWithAI
-        ? 'Description updated and principles regenerated!'
-        : 'Description saved!');
+      const versionInfo = result.versionChange ? ` (${result.versionChange})` : '';
+      const successMsg = data.regenerateWithAI
+        ? `Principles regenerated!${versionInfo}`
+        : 'Description saved!';
+      setSuccess(successMsg);
       setTimeout(() => setSuccess(null), 3000);
+
+      // Send browser notification (works even if user navigates away)
+      sendNotification('Constitution Updated', successMsg);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to save';
+      setError(errorMsg);
+
+      // Send error notification
+      sendNotification('Constitution Error', errorMsg);
     } finally {
       setIsSaving(false);
     }
@@ -177,6 +225,7 @@ export default function ConstitutionPage() {
         <ConstitutionEditor
           constitution={constitution}
           projectDescription={projectDescription}
+          versions={versions}
           onSave={handleSave}
           isSaving={isSaving}
         />
