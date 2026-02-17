@@ -2,8 +2,7 @@
 
 import { FolderOpen, Clock, Trash2, Rocket, FileText, ListTodo, Hammer, CheckCircle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { RecentProject } from '@/lib/store';
-import type { FeatureStage } from '@/types';
+import type { RecentProject, FeatureStage } from '@/types';
 
 // Get icon and label for active feature stage
 function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; cssVar: string; bgVar: string } {

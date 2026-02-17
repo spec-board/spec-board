@@ -96,7 +96,7 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
     }
   }, [isOpen, loadInitialData]);
 
-  // Fetch suggestions
+  // Fetch suggestions (now from database)
   const fetchSuggestions = useCallback(async (input: string) => {
     if (!input || input.length < 1) {
       setSuggestions([]);
@@ -104,25 +104,18 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
       return;
     }
 
-    const lastSlashIndex = input.lastIndexOf('/');
-    const parentDir = lastSlashIndex > 0
-      ? input.substring(0, lastSlashIndex)
-      : (input.startsWith('/') ? '/' : '~');
-    const partialName = lastSlashIndex >= 0
-      ? input.substring(lastSlashIndex + 1).toLowerCase()
-      : input.toLowerCase();
-
+    // For database-first, we search project names from the database
     setIsLoadingSuggestions(true);
     try {
-      const url = '/api/browse?path=' + encodeURIComponent(parentDir);
-      const response = await fetch(url);
+      const response = await fetch('/api/browse');
       if (!response.ok) {
         setSuggestions([]);
         return;
       }
       const data = await response.json();
+      const partialName = input.toLowerCase();
       const filtered = data.entries
-        .filter((entry: DirectoryEntry) => entry.name.toLowerCase().startsWith(partialName))
+        .filter((entry: DirectoryEntry) => entry.name.toLowerCase().includes(partialName))
         .slice(0, 6);
 
       setSuggestions(filtered);
@@ -141,14 +134,14 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
     debounceRef.current = setTimeout(() => fetchSuggestions(input), 150);
   }, [fetchSuggestions]);
 
-  // Load project preview
-  const loadPreview = useCallback(async (path: string) => {
+  // Load project preview (database-first - fetch by slug)
+  const loadPreview = useCallback(async (projectSlug: string) => {
     setIsLoadingPreview(true);
     setError(null);
     setPreview(null);
 
     try {
-      const url = '/api/project?path=' + encodeURIComponent(path);
+      const url = '/api/project/' + projectSlug + '/data';
       const response = await fetch(url);
       if (!response.ok) {
         const data = await response.json();
@@ -175,8 +168,8 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
         stageBreakdown,
       });
 
-      // Add to recent paths
-      addRecentPath(path);
+      // Add to recent slugs (for database-first, we store slug/name)
+      addRecentPath(projectSlug);
       setRecentPaths(getRecentPaths());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load project');
@@ -185,15 +178,16 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
     }
   }, []);
 
-  // Accept suggestion
+  // Accept suggestion (use name as slug for database-first)
   const acceptSuggestion = (suggestion: DirectoryEntry) => {
-    setPathInput(suggestion.path);
+    // In database-first mode, name is the project slug
+    setPathInput(suggestion.name);
     setSuggestions([]);
     setShowSuggestions(false);
     setSelectedIndex(-1);
 
     if (suggestion.isSpecKitProject) {
-      loadPreview(suggestion.path);
+      loadPreview(suggestion.name);
     } else {
       setPreview(null);
       setError(null);
