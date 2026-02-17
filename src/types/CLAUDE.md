@@ -14,77 +14,89 @@ This directory contains all shared TypeScript interfaces and types used througho
 
 ## Type Categories
 
-### Core Domain Types
+### Core Domain Types (Database-First)
 
 | Type | Purpose |
 |------|---------|
-| `Project` | Root project with features, constitution |
-| `Feature` | Single feature with tasks, specs, plans |
+| `Project` | Root project from database |
+| `Feature` | Feature with stage, content fields |
 | `Task` | Individual task item |
-| `TaskPhase` | Group of tasks in a phase |
-| `FeatureStage` | Stage enum: backlog, planning, in_progress, done |
+| `UserStory` | User story linked to feature |
+| `Constitution` | Project principles |
 
-### Spec-Kit File Types
+### Feature Stages
+
+| Stage | Description |
+|-------|-------------|
+| `backlog` | Not started |
+| `spec` | Being specified |
+| `planning` | Being planned |
+| `in_progress` | Implementation in progress |
+| `done` | Completed |
+
+### Spec-Kit File Content Types
+
+These are stored as string content in the database:
+
+| Field | Content Type |
+|-------|--------------|
+| `specContent` | spec.md |
+| `planContent` | plan.md |
+| `tasksContent` | tasks.md |
+| `clarificationsContent` | Q&A history |
+| `researchContent` | research.md |
+| `dataModelContent` | data-model.md |
+| `quickstartContent` | quickstart.md |
+| `contractsContent` | contracts/ |
+| `checklistsContent` | checklists/ |
+| `analysisContent` | analysis/ |
+
+### API Response Types
 
 | Type | Purpose |
 |------|---------|
-| `UserStory` | User story from spec.md |
-| `TechnicalContext` | Tech context from plan.md |
-| `TaskGroup` | Tasks grouped by user story |
-| `SpecKitFile` | Generic spec-kit file (research, data-model, etc.) |
-| `SpecKitFileType` | File type enum |
-
-### Clarification Types
-
-| Type | Purpose |
-|------|---------|
-| `Clarification` | Single Q&A pair |
-| `ClarificationSession` | Session with date and clarifications |
-
-### Constitution Types
-
-| Type | Purpose |
-|------|---------|
-| `Constitution` | Full constitution with title, principles, sections, version metadata |
-| `ConstitutionPrinciple` | Named principle with description |
-| `ConstitutionSection` | Named section with content and subsections |
-| `ConstitutionSubsection` | Named subsection within a section |
-| `SyncImpactReport` | Sync impact report from HTML comment in constitution.md |
-
-### Dashboard Types
-
-| Type | Purpose |
-|------|---------|
-| `DashboardMetrics` | Aggregated project metrics |
-| `WebSocketMessage` | Real-time update message |
+| `ProjectData` | Full project data from `/api/project/[name]/data` |
+| `BrowseEntry` | Project entry for browsing |
+| `FeatureWithDetails` | Feature with all content fields |
 
 ## Key Interfaces
 
 ```typescript
-// Feature stages (Kanban-style)
-type FeatureStage = 'backlog' | 'planning' | 'in_progress' | 'done';
+// Feature stages (database-first)
+type FeatureStage = 'backlog' | 'spec' | 'planning' | 'in_progress' | 'done';
 
-// Task with markers
-interface Task {
-  id: string;           // T001, T002, etc.
-  description: string;
-  completed: boolean;
-  parallel: boolean;    // [P] marker
-  userStory?: string;   // [US1] marker
-  filePath?: string;
-}
-
-// Full feature
+// Database-first Feature
 interface Feature {
   id: string;
   name: string;
-  path: string;
   stage: FeatureStage;
+  // Content fields (stored in DB, not filesystem)
+  specContent: string | null;
+  planContent: string | null;
+  tasksContent: string | null;
+  clarificationsContent: string | null;
+  researchContent: string | null;
+  dataModelContent: string | null;
+  quickstartContent: string | null;
+  contractsContent: string | null;
+  checklistsContent: string | null;
+  analysisContent: string | null;
+  // Relations
   tasks: Task[];
-  phases: TaskPhase[];
   userStories: UserStory[];
-  taskGroups: TaskGroup[];
-  // ... more fields
+  // Metadata
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Task with markers
+interface Task {
+  id: string;
+  description: string;
+  completed: boolean;
+  parallel: boolean;    // [P] marker
+  userStoryId?: string; // Linked user story
+  filePath?: string;
 }
 ```
 
@@ -94,6 +106,7 @@ interface Feature {
 - **Interfaces over Types**: Prefer `interface` for objects
 - **Optional Fields**: Use `?` for nullable/optional
 - **Enums as Unions**: Use string unions over enums
+- **Database-First**: Content stored as strings in database
 
 ## Dependencies
 
@@ -110,5 +123,5 @@ interface Feature {
 
 - Import types via `@/types` path alias
 - Types are used by both client and server code
-- Keep types in sync with parser output
+- Database-first: Content comes from PostgreSQL, not filesystem
 - Use `Record<K, V>` for dynamic keys
