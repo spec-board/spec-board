@@ -57,6 +57,8 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
         body: JSON.stringify(requestBody),
       });
 
+      const data = await response.json();
+
       // Check for warning (e.g., constitution skipped)
       if (data.warning) {
         setWarning(data.warning);
