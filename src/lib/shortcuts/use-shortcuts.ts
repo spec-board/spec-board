@@ -38,7 +38,7 @@ interface UseShortcutsOptions {
   featuresByColumn?: Record<KanbanColumnType, { id: string }[]>;
 }
 
-const COLUMNS: KanbanColumnType[] = ['backlog', 'planning', 'in_progress', 'done'];
+const COLUMNS: KanbanColumnType[] = ['backlog', 'specify', 'clarify', 'plan', 'tasks', 'analyze', 'done'];
 
 /**
  * Determine current shortcut context based on pathname and state
@@ -96,7 +96,7 @@ export function useShortcuts(options: UseShortcutsOptions) {
     onMoveCardRight,
     isHelpOpen = false,
     onToggleHelp,
-    featuresByColumn = { backlog: [], planning: [], in_progress: [], done: [] },
+    featuresByColumn = { backlog: [], specify: [], clarify: [], plan: [], tasks: [], analyze: [], done: [] },
   } = options;
 
   const router = useRouter();

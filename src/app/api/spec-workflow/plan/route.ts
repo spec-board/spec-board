@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
         clarificationsContent, // Save standalone clarifications
         specContent: updatedSpecContent, // Append clarifications to spec
         planContent: planContent,
-        stage: 'planning',
+        stage: 'plan',
       }
     });
 
     return NextResponse.json({
-      step: 'planning',
+      step: 'plan',
       plan,
       content: planContent,
       featureId: feature.id,

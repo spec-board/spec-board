@@ -766,6 +766,7 @@ export function parseConstitution(content: string): Constitution {
 
 /**
  * Determine feature stage based on available files and task completion
+ * This is for legacy filesystem parser - database-first uses explicit stages
  */
 export function determineFeatureStage(
   hasSpec: boolean,
@@ -775,11 +776,11 @@ export function determineFeatureStage(
   totalTasks: number
 ): FeatureStage {
   if (!hasSpec) return 'backlog';
-  if (!hasPlan) return 'planning';
-  if (!hasTasks) return 'backlog';
+  if (!hasPlan) return 'specify';
+  if (!hasTasks) return 'plan';
   if (totalTasks > 0 && completedTasks === totalTasks) return 'done';
-  if (totalTasks > 0 && completedTasks > 0) return 'in_progress';
-  return 'backlog';
+  if (totalTasks > 0 && completedTasks > 0) return 'tasks';
+  return 'plan';
 }
 
 /**
