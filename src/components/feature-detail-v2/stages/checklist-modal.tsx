@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2, CheckSquare, AlertCircle, CheckCircle, Circle } from 'lucide-react';
+import { Loader2, CheckSquare, AlertCircle, CheckCircle, Circle, ArrowRight } from 'lucide-react';
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
+import type { DocumentType } from '../types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { DocumentSelector } from '../document-selector';
+import { getDocumentOptions } from '../types';
 import { cn } from '@/lib/utils';
+import { STAGES, getStageConfig } from '../base/types';
 
 interface ChecklistModalProps extends BaseModalProps {
   onGenerateChecklist?: () => Promise<void>;
@@ -55,14 +59,29 @@ function parseChecklistContent(content: string): ChecklistSection[] {
   return sections;
 }
 
-export function ChecklistModal({ feature, onClose, onStageChange, onGenerateChecklist }: ChecklistModalProps) {
+export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGenerateChecklist }: ChecklistModalProps) {
   const [status, setStatus] = useState<ChecklistStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [localContent, setLocalContent] = useState<string>('');
+  const [selectedDoc, setSelectedDoc] = useState<DocumentType>('checklist');
 
   // Check state
   const hasChecklist = !!feature.checklistsContent;
   const hasPlan = !!feature.planContent;
+
+  // Get next stage config
+  const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
+  const nextStage = STAGES[currentIndex + 1];
+  const nextStageConfig = nextStage ? getStageConfig(nextStage.stage) : null;
+
+  // Get available document options
+  const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
+
+  // Get content for selected document
+  const selectedDocContent = useMemo(() => {
+    const option = documentOptions.find(o => o.type === selectedDoc);
+    return option?.content || null;
+  }, [documentOptions, selectedDoc]);
 
   // Set initial status
   useEffect(() => {
@@ -109,14 +128,30 @@ export function ChecklistModal({ feature, onClose, onStageChange, onGenerateChec
     }
   };
 
+  // Handle "Continue to Next Stage" button click
+  const handleContinueToNextStage = () => {
+    if (onStageChange && nextStageConfig) {
+      onStageChange(nextStage.stage as any);
+    }
+  };
+
   return (
     <BaseModal
       feature={feature}
       onClose={onClose}
       onStageChange={onStageChange}
+      onDelete={onDelete}
       headerActions={
         <div className="flex items-center gap-2">
-          {status !== 'generating' && (
+          {hasChecklist && nextStageConfig ? (
+            <button
+              onClick={handleContinueToNextStage}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+            >
+              {nextStageConfig.label}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : status !== 'generating' && (
             <button
               onClick={handleGenerateChecklist}
               disabled={!hasPlan}
@@ -252,52 +287,78 @@ export function ChecklistModal({ feature, onClose, onStageChange, onGenerateChec
           )}
         </div>
 
-        {/* Right: Checklist Items */}
-        <div className="w-[70%] overflow-y-auto p-6">
-          {(!hasChecklist && status === 'idle') && (
-            <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
-              <p>No checklist yet. Click "Generate Checklist" to create one.</p>
+        {/* Right: Document Viewer with Tabs */}
+        <div className="w-[70%] flex flex-col overflow-hidden">
+          {/* Horizontal tabs */}
+          <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
+            <DocumentSelector
+              options={documentOptions}
+              selected={selectedDoc}
+              onChange={setSelectedDoc}
+            />
+          </div>
+
+          {/* Document content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {/* Show checklist when selectedDoc is 'checklist' */}
+            {selectedDoc === 'checklist' && !hasChecklist && status === 'idle' && (
+              <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
+                <p>No checklist yet. Click "Generate Checklist" to create one.</p>
+              </div>
+            )}
+
+            {selectedDoc === 'checklist' && parsedChecklist.length > 0 && (
+              <div className="space-y-8">
+                {parsedChecklist.map((section, sectionIdx) => (
+                  <div key={sectionIdx}>
+                    <h3 className="text-md font-semibold text-[var(--foreground)] mb-3 pb-2 border-b border-[var(--border)]">
+                      {section.title}
+                    </h3>
+                    <div className="space-y-2">
+                      {section.items.map((item, itemIdx) => (
+                        <div
+                          key={itemIdx}
+                          className={cn(
+                            "flex items-start gap-3 p-3 rounded-lg transition-colors",
+                            item.checked
+                              ? "bg-green-500/10"
+                              : "hover:bg-[var(--muted)]/50"
+                          )}
+                        >
+                          {item.checked ? (
+                            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          ) : (
+                            <Circle className="w-5 h-5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
+                          )}
+                          <span className={cn(
+                            "text-sm",
+                            item.checked
+                              ? "text-[var(--foreground)] line-through opacity-70"
+                              : "text-[var(--foreground)]"
+                          )}>
+                            {item.text}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
             </div>
           )}
 
-          {parsedChecklist.length > 0 && (
-            <div className="space-y-8">
-              {parsedChecklist.map((section, sectionIdx) => (
-                <div key={sectionIdx}>
-                  <h3 className="text-md font-semibold text-[var(--foreground)] mb-3 pb-2 border-b border-[var(--border)]">
-                    {section.title}
-                  </h3>
-                  <div className="space-y-2">
-                    {section.items.map((item, itemIdx) => (
-                      <div
-                        key={itemIdx}
-                        className={cn(
-                          "flex items-start gap-3 p-3 rounded-lg transition-colors",
-                          item.checked
-                            ? "bg-green-500/10"
-                            : "hover:bg-[var(--muted)]/50"
-                        )}
-                      >
-                        {item.checked ? (
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        ) : (
-                          <Circle className="w-5 h-5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
-                        )}
-                        <span className={cn(
-                          "text-sm",
-                          item.checked
-                            ? "text-[var(--foreground)] line-through opacity-70"
-                            : "text-[var(--foreground)]"
-                        )}>
-                          {item.text}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+            {/* Show other document content */}
+            {selectedDoc !== 'checklist' && (
+              selectedDocContent ? (
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <MarkdownRenderer content={selectedDocContent} />
                 </div>
-              ))}
-            </div>
-          )}
+              ) : (
+                <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
+                  <p>No content available for this document.</p>
+                </div>
+              )
+            )}
+          </div>
         </div>
       </div>
     </BaseModal>

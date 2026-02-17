@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Loader2, Play, AlertCircle, CheckCircle } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Loader2, Play, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
+import type { DocumentType } from '../types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { DocumentSelector } from '../document-selector';
+import { getDocumentOptions } from '../types';
+import { STAGES, getStageConfig } from '../base/types';
 
 interface SpecifyModalProps extends BaseModalProps {
   onGenerate?: () => Promise<void>;
@@ -12,13 +16,28 @@ interface SpecifyModalProps extends BaseModalProps {
 
 type SpecifyStatus = 'idle' | 'generating' | 'complete' | 'error';
 
-export function SpecifyModal({ feature, onClose, onStageChange, onGenerate }: SpecifyModalProps) {
+export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGenerate }: SpecifyModalProps) {
   const [status, setStatus] = useState<SpecifyStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentType>('spec');
 
   // Check if feature already has spec content
   const hasSpec = !!feature.specContent;
+
+  // Get next stage config
+  const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
+  const nextStage = STAGES[currentIndex + 1];
+  const nextStageConfig = nextStage ? getStageConfig(nextStage.stage) : null;
+
+  // Get available document options
+  const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
+
+  // Get content for selected document
+  const selectedDocContent = useMemo(() => {
+    const option = documentOptions.find(o => o.type === selectedDoc);
+    return option?.content || null;
+  }, [documentOptions, selectedDoc]);
 
   const handleGenerate = async () => {
     if (!onGenerate) return;
@@ -55,49 +74,77 @@ export function SpecifyModal({ feature, onClose, onStageChange, onGenerate }: Sp
 
   const currentStep = steps.find(s => s.progress >= progress) || steps[steps.length - 1];
 
+  // Handle "Continue to Next Stage" button click
+  const handleContinueToNextStage = () => {
+    if (onStageChange && nextStageConfig) {
+      onStageChange(nextStage.stage as any);
+    }
+  };
+
   return (
     <BaseModal
       feature={feature}
       onClose={onClose}
       onStageChange={onStageChange}
+      onDelete={onDelete}
       headerActions={
-        <button
-          onClick={handleGenerate}
-          disabled={status === 'generating'}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-md font-medium transition-colors"
-        >
-          {status === 'generating' ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4" />
-              Generate Spec
-            </>
-          )}
-        </button>
+        hasSpec && nextStageConfig ? (
+          <button
+            onClick={handleContinueToNextStage}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+          >
+            {nextStageConfig.label}
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            onClick={handleGenerate}
+            disabled={status === 'generating'}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-md font-medium transition-colors"
+          >
+            {status === 'generating' ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                Generate Spec
+              </>
+            )}
+          </button>
+        )
       }
       showNavigation={hasSpec}
     >
       <div className="flex h-full">
-        {/* Left: Progress Panel */}
+        {/* Left: Feature Description + Progress Panel */}
         <div className="w-[40%] border-r border-[var(--border)] p-6 overflow-y-auto">
           <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
-            Spec Generation
+            Feature Details
           </h3>
 
+          {/* Feature Description - always visible */}
+          <div className="mb-6 p-4 bg-[var(--muted)]/30 rounded-lg">
+            <h4 className="text-sm font-medium text-[var(--muted-foreground)] mb-2">
+              Description
+            </h4>
+            <p className="text-[var(--foreground)]">
+              {feature.description || feature.name}
+            </p>
+          </div>
+
           {status === 'idle' && !hasSpec && (
-            <div className="text-center py-12">
+            <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
                 <Play className="w-8 h-8 text-blue-500" />
               </div>
-              <p className="text-[var(--muted-foreground)] mb-4">
-                Click "Generate Spec" to create a specification based on the feature description.
+              <p className="text-[var(--foreground)] mb-2 font-medium">
+                Ready to Generate
               </p>
               <p className="text-sm text-[var(--muted-foreground)]">
-                Feature: {feature.description || feature.name}
+                Click "Generate Spec" to create a specification based on the description above.
               </p>
             </div>
           )}
@@ -203,28 +250,26 @@ export function SpecifyModal({ feature, onClose, onStageChange, onGenerate }: Sp
           )}
         </div>
 
-        {/* Right: Spec Preview */}
-        <div className="w-[60%] overflow-y-auto p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-[var(--foreground)]">
-              Spec Preview
-            </h3>
-            {!feature.specContent && (
-              <span className="text-sm text-[var(--muted-foreground)]">
-                Generated spec will appear here
-              </span>
+        {/* Right: Document Viewer with Selector */}
+        <div className="w-[60%] overflow-hidden flex flex-col">
+          <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
+            <DocumentSelector
+              options={documentOptions}
+              selected={selectedDoc}
+              onChange={setSelectedDoc}
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto p-6">
+            {selectedDocContent ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <MarkdownRenderer content={selectedDocContent} />
+              </div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-[var(--muted-foreground)]">
+                <p>No content available for this document.</p>
+              </div>
             )}
           </div>
-
-          {feature.specContent ? (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <MarkdownRenderer content={feature.specContent} />
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center text-[var(--muted-foreground)]">
-              <p>No spec content yet. Click "Generate Spec" to create one.</p>
-            </div>
-          )}
         </div>
       </div>
     </BaseModal>
