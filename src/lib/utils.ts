@@ -25,8 +25,7 @@ export function formatPercentage(value: number): string {
 
 export function getStageColor(stage: string): string {
   const colors: Record<string, string> = {
-    backlog: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    specify: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+    specify: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     clarify: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
     plan: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     tasks: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
@@ -37,7 +36,6 @@ export function getStageColor(stage: string): string {
 
 export function getStageLabel(stage: string): string {
   const labels: Record<string, string> = {
-    backlog: 'Backlog',
     specify: 'Specify',
     clarify: 'Clarify',
     plan: 'Plan',
@@ -48,7 +46,7 @@ export function getStageLabel(stage: string): string {
 }
 
 // Kanban column types for 6-column workflow view
-export type KanbanColumn = 'backlog' | 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze';
+export type KanbanColumn = 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze';
 
 // Map feature stages to kanban columns
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
@@ -67,7 +65,7 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
 
   // Fallback to legacy logic for features without stage
   if (!feature.hasSpec) {
-    return 'backlog';
+    return 'specify';
   }
   if (!feature.hasPlan) {
     return 'specify';
@@ -90,7 +88,6 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
 
 export function getKanbanColumnLabel(column: KanbanColumn): string {
   const labels: Record<KanbanColumn, string> = {
-    backlog: 'Backlog',
     specify: 'Specify',
     clarify: 'Clarify',
     plan: 'Plan',

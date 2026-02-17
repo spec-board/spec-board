@@ -8,7 +8,7 @@ import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
 import { SpecWorkflowWizard } from './spec-workflow-wizard';
 
-const COLUMNS: KanbanColumn[] = ['backlog', 'specify', 'clarify', 'plan', 'tasks', 'analyze'];
+const COLUMNS: KanbanColumn[] = ['specify', 'clarify', 'plan', 'tasks', 'analyze'];
 
 // Get status dot style based on progress percentage (Jira-style 3-state)
 // Uses CSS variables: --status-not-started (0%), --status-in-progress (1-79%), --status-complete (80%+)
@@ -149,7 +149,6 @@ interface EmptyColumnProps {
 
 function EmptyColumn({ column }: EmptyColumnProps) {
   const hints: Record<KanbanColumn, string> = {
-    backlog: 'New features',
     specify: 'Spec being generated',
     clarify: 'Clarifications in progress',
     plan: 'Implementation plan being created',
@@ -226,7 +225,7 @@ function KanbanColumnComponent({
           </span>
         </div>
         {/* Inline create feature button for Backlog column */}
-        {column === 'backlog' && onCreateFeature && (
+        {column === 'specify' && onCreateFeature && (
           <button
             onClick={onCreateFeature}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)] text-xs font-medium transition-colors"
@@ -485,8 +484,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
     >
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">
-        {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog,
-        {featuresByColumn['specify'].length} in specify, {featuresByColumn['clarify'].length} in clarify,
+        {totalFeatures} total features: {featuresByColumn['specify'].length} in specify, {featuresByColumn['clarify'].length} in clarify,
         {featuresByColumn['plan'].length} in plan, {featuresByColumn['tasks'].length} in tasks,
         {featuresByColumn['analyze'].length} in analyze
       </div>
@@ -504,7 +502,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
           onFeatureClick={onFeatureClick}
           focusedFeatureId={focusState.featureId}
           setCardRef={setCardRef}
-          onCreateFeature={column === 'backlog' ? () => setIsModalOpen(true) : undefined}
+          onCreateFeature={column === 'specify' ? () => setIsModalOpen(true) : undefined}
         />
       ))}
     </section>

@@ -274,9 +274,9 @@ Some planning notes here.
 });
 
 describe('determineFeatureStage', () => {
-  it('should return "backlog" when no spec exists', () => {
-    expect(determineFeatureStage(false, false, false, 0, 0)).toBe('backlog');
-    expect(determineFeatureStage(false, true, true, 5, 10)).toBe('backlog');
+  it('should return "specify" when no spec exists', () => {
+    expect(determineFeatureStage(false, false, false, 0, 0)).toBe('specify');
+    expect(determineFeatureStage(false, true, true, 5, 10)).toBe('specify');
   });
 
   it('should return "specify" when spec exists but no plan', () => {
@@ -298,11 +298,6 @@ describe('determineFeatureStage', () => {
   it('should return "analyze" when all tasks are completed', () => {
     expect(determineFeatureStage(true, true, true, 10, 10)).toBe('analyze');
     expect(determineFeatureStage(true, true, true, 1, 1)).toBe('analyze');
-  });
-
-  it('should handle edge case of zero total tasks with tasks file', () => {
-    // When tasks file exists but is empty, should stay in backlog
-    expect(determineFeatureStage(true, true, true, 0, 0)).toBe('backlog');
   });
 });
 
