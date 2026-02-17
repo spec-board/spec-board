@@ -261,7 +261,7 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
   }
 
   // Check if we have structured content
-  const hasStructuredContent = constitution.principles.length > 0 || constitution.sections.length > 0;
+  const hasStructuredContent = (constitution.principles?.length ?? 0) > 0 || (constitution.sections?.length ?? 0) > 0;
 
   return (
     <div className={cn('flex flex-col', className)}>
@@ -344,11 +344,11 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
           )}
 
           {/* Core Principles */}
-          {constitution.principles.length > 0 && (
+          {(constitution.principles?.length ?? 0) > 0 && (
             <div>
               <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
                 <Scale className="w-4 h-4" />
-                Core Principles ({constitution.principles.length})
+                Core Principles ({constitution.principles?.length ?? 0})
               </h2>
               <div className="space-y-3">
                 {constitution.principles.map((principle, index) => (

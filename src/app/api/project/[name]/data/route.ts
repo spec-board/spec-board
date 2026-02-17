@@ -32,7 +32,13 @@ export async function GET(
             constitutionVersion: true,
           },
         },
-        constitution: true,
+        constitution: {
+          include: {
+            versions: {
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        },
       },
     });
 
@@ -51,6 +57,7 @@ export async function GET(
       path: '', // No filesystem path for database-first
       stage: feature.stage,
       hasSpec: !!feature.specContent,
+      hasClarifications: !!feature.clarificationsContent,
       hasPlan: !!feature.planContent,
       hasTasks: !!feature.tasksContent,
       description: feature.description,
@@ -112,6 +119,16 @@ export async function GET(
         version: project.constitution.version || undefined,
         ratifiedDate: project.constitution.ratifiedDate?.toISOString(),
         lastAmendedDate: project.constitution.lastAmendedDate?.toISOString(),
+        versions: project.constitution.versions.map(v => ({
+          id: v.id,
+          version: v.version,
+          content: v.content,
+          description: v.description,
+          principles: v.principles,
+          changeType: v.changeType,
+          changeNote: v.changeNote,
+          createdAt: v.createdAt.toISOString(),
+        })),
       } : null,
       hasConstitution: !!project.constitution,
     });
