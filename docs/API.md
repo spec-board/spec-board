@@ -1,13 +1,20 @@
 # SpecBoard API Documentation
 
-> **Version**: 1.1.0
-> **Last Updated**: 2026-02-15
+> **Version**: 1.2.0
+> **Last Updated**: 2026-02-17
 > **Base URL**: `http://localhost:3000/api`
 
 ## Table of Contents
 
 - [Authentication](#authentication)
 - [Project Management](#project-management)
+- [Features (Database)](#features-database)
+- [Kanban Board](#kanban-board)
+- [Tasks (Database)](#tasks-database)
+- [User Stories (Database)](#user-stories-database)
+- [Settings](#settings)
+- [E2B Driver (Code Execution)](#e2b-driver-code-execution)
+- [Import/Export](#importexport)
 - [Spec Data](#spec-data)
 - [File Operations](#file-operations)
 - [Spec Workflow](#spec-workflow)
@@ -103,6 +110,31 @@ Authorization: Bearer <session-token>
 ---
 
 ## Project Management
+
+### Health Check
+
+Health check endpoint for Docker/load balancers.
+
+```http
+GET /api/health
+```
+
+**Response** (200 OK):
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-01-08T10:00:00Z"
+}
+```
+
+**Response** (503 Service Unavailable):
+```json
+{
+  "status": "unhealthy",
+  "error": "Database connection failed",
+  "timestamp": "2026-01-08T10:00:00Z"
+}
+```
 
 ### List All Projects
 
@@ -252,6 +284,361 @@ DELETE /api/projects/:name
 **Response** (204 No Content)
 
 **Note**: Only deletes database record, not filesystem files.
+
+---
+
+## Features (Database)
+
+### List All Features
+
+```http
+GET /api/features?projectId=proj_123
+```
+
+**Query Parameters**:
+- `projectId` (optional): Filter by project
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": "feat_123",
+    "projectId": "proj_123",
+    "featureId": "001-user-auth",
+    "name": "User Authentication",
+    "description": "Add OAuth login",
+    "stage": "backlog",
+    "order": 0,
+    "userStories": [...],
+    "tasks": [...]
+  }
+]
+```
+
+### Create Feature
+
+```http
+POST /api/features
+Content-Type: application/json
+
+{
+  "projectId": "proj_123",
+  "featureId": "001-user-auth",
+  "name": "User Authentication",
+  "description": "Add OAuth login",
+  "stage": "backlog",
+  "order": 0
+}
+```
+
+**Response** (201 Created):
+```json
+{
+  "id": "feat_123",
+  "projectId": "proj_123",
+  "featureId": "001-user-auth",
+  "name": "User Authentication",
+  "description": "Add OAuth login",
+  "stage": "backlog",
+  "order": 0
+}
+```
+
+### Update Feature Stage
+
+```http
+PATCH /api/features/:id/status
+Content-Type: application/json
+
+{
+  "stage": "in_progress"
+}
+```
+
+**Valid Stages**: `backlog`, `planning`, `in_progress`, `done`
+
+---
+
+## Kanban Board
+
+### Get Kanban Data
+
+Get features grouped by stage for kanban display.
+
+```http
+GET /api/kanban?projectId=proj_123
+```
+
+**Query Parameters**:
+- `projectId` (required): Project ID
+
+**Response** (200 OK):
+```json
+{
+  "backlog": [...],
+  "planning": [...],
+  "in_progress": [...],
+  "done": [...]
+}
+```
+
+---
+
+## Tasks (Database)
+
+### List Tasks
+
+```http
+GET /api/tasks?featureId=feat_123
+```
+
+### Create Task
+
+```http
+POST /api/tasks
+Content-Type: application/json
+
+{
+  "featureId": "feat_123",
+  "taskId": "T001",
+  "description": "Create login form",
+  "userStoryId": "us_123",
+  "order": 0
+}
+```
+
+### Toggle Task
+
+```http
+POST /api/tasks/:id/toggle
+Content-Type: application/json
+
+{
+  "completed": true
+}
+```
+
+---
+
+## User Stories (Database)
+
+### List User Stories
+
+```http
+GET /api/stories?projectId=proj_123
+```
+
+### Create User Story
+
+```http
+POST /api/stories
+Content-Type: application/json
+
+{
+  "projectId": "proj_123",
+  "storyId": "US1",
+  "title": "User Login",
+  "description": "As a user, I want to log in...",
+  "priority": "P1",
+  "order": 0
+}
+```
+
+---
+
+## Settings
+
+### AI Settings
+
+#### Get AI Settings
+
+```http
+GET /api/settings/ai
+```
+
+**Response** (200 OK):
+```json
+{
+  "provider": "openai",
+  "baseUrl": "https://api.openai.com/v1",
+  "model": "gpt-4",
+  "hasApiKey": true
+}
+```
+
+#### Save AI Settings
+
+```http
+POST /api/settings/ai
+Content-Type: application/json
+
+{
+  "provider": "openai",
+  "baseUrl": "https://api.openai.com/v1",
+  "apiKey": "sk-...",
+  "model": "gpt-4"
+}
+```
+
+### App Settings
+
+#### Get App Settings
+
+```http
+GET /api/settings/app
+```
+
+#### Save App Settings
+
+```http
+POST /api/settings/app
+Content-Type: application/json
+
+{
+  "theme": "dark",
+  "recentProjectsLimit": 10
+}
+```
+
+---
+
+## E2B Driver (Code Execution)
+
+Execute code in isolated E2B cloud sandboxes.
+
+### Execute Code
+
+```http
+POST /api/drivers/execute
+Authorization: Bearer <session-token>
+Content-Type: application/json
+
+{
+  "configId": "e2b-default",
+  "code": "console.log('Hello World');",
+  "language": "javascript",
+  "timeout": 60000
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "sessionId": "sess_123",
+  "status": "running",
+  "output": "Hello World\n"
+}
+```
+
+### Connect Driver
+
+```http
+POST /api/drivers/connect
+Authorization: Bearer <session-token>
+Content-Type: application/json
+
+{
+  "driverType": "e2b",
+  "config": {
+    "apiKey": "e2b-..."
+  }
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "configId": "e2b_123",
+  "driverType": "e2b",
+  "connected": true
+}
+```
+
+### Disconnect Driver
+
+```http
+POST /api/drivers/disconnect
+Authorization: Bearer <session-token>
+Content-Type: application/json
+
+{
+  "configId": "e2b_123"
+}
+```
+
+### Get Driver Status (SSE)
+
+Stream session status updates.
+
+```http
+GET /api/drivers/status?sessionId=sess_123
+```
+
+**Event Stream**:
+```json
+{
+  "type": "status",
+  "status": "running",
+  "metrics": {
+    "cpuPercent": 45.2,
+    "memoryMB": 128
+  },
+  "timestamp": "2026-01-08T10:00:00Z"
+}
+```
+
+---
+
+## Import/Export
+
+### Import Markdown
+
+Import feature from markdown content.
+
+```http
+POST /api/import/markdown
+Content-Type: application/json
+
+{
+  "projectId": "proj_123",
+  "featureId": "001-new-feature",
+  "content": "# Feature Spec\n\n## User Stories\n..."
+}
+```
+
+### Export Markdown
+
+Export feature to markdown format.
+
+```http
+POST /api/export/markdown
+Content-Type: application/json
+
+{
+  "featureId": "feat_123",
+  "format": "spec"
+}
+```
+
+**Formats**: `spec`, `plan`, `tasks`, `full`
+
+#### Get App Settings
+
+```http
+GET /api/settings/app
+```
+
+#### Save App Settings
+
+```http
+POST /api/settings/app
+Content-Type: application/json
+
+{
+  "theme": "dark",
+  "recentProjectsLimit": 10
+}
+```
 
 ---
 
