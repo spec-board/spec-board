@@ -114,6 +114,24 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
 
         {/* Content */}
         <form onSubmit={handleSubmit}>
+          {/* Loading Overlay */}
+          {isLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--card)]/80 rounded-xl">
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                  <div className="absolute inset-0 w-8 h-8 border-2 border-blue-500/30 rounded-full animate-pulse" />
+                </div>
+                <p className="text-sm font-medium text-[var(--foreground)]">
+                  Creating project...
+                </p>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  Generating constitution with AI
+                </p>
+              </div>
+            </div>
+          )}
+
           <div style={{ padding: 'var(--space-4)' }}>
             {/* Name Input */}
             <div className="space-y-2">
@@ -133,11 +151,13 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
                   setError(null);
                 }}
                 placeholder="e.g., My Awesome Project"
+                disabled={isLoading}
                 className={cn(
                   'w-full px-3 py-2 rounded-lg border bg-[var(--secondary)]',
                   'outline-none focus:border-[var(--ring)] transition-colors',
                   'placeholder:text-[var(--muted-foreground)]',
-                  error && 'border-red-500/50'
+                  error && 'border-red-500/50',
+                  isLoading && 'opacity-50 cursor-not-allowed'
                 )}
                 style={{ fontSize: 'var(--text-sm)' }}
               />
@@ -160,10 +180,12 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="e.g., A project management tool for small teams to track tasks and collaborate in real-time..."
                 rows={3}
+                disabled={isLoading}
                 className={cn(
                   'w-full px-3 py-2 rounded-lg border bg-[var(--secondary)]',
                   'outline-none focus:border-[var(--ring)] transition-colors resize-none',
-                  'placeholder:text-[var(--muted-foreground)]'
+                  'placeholder:text-[var(--muted-foreground)]',
+                  isLoading && 'opacity-50 cursor-not-allowed'
                 )}
                 style={{ fontSize: 'var(--text-sm)' }}
               />
@@ -207,7 +229,12 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--secondary)] transition-colors"
+              disabled={isLoading}
+              className={cn(
+                'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                'hover:bg-[var(--secondary)]',
+                isLoading && 'opacity-50 cursor-not-allowed'
+              )}
             >
               Cancel
             </button>

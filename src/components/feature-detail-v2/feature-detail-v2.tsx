@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { X, ArrowLeft, Trash2, Scale } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Feature, Task } from '@/types';
 import type { FeatureDetailV2Props, DocumentType } from './types';
@@ -127,14 +127,6 @@ export function FeatureDetailV2({
       >
         {/* Header */}
         <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] flex items-center gap-3 bg-[var(--card)]">
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)]"
-            aria-label="Back to board"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
           <div className="flex-1 min-w-0">
             <h1
               id="feature-detail-title"
@@ -144,18 +136,8 @@ export function FeatureDetailV2({
             </h1>
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-xs text-[var(--muted-foreground)]">
-                Feature {feature.id} • {feature.stage}
+                {feature.featureId && `Feature ${feature.featureId} • `}{feature.stage}
               </p>
-              {feature.constitutionVersion && (
-                <button
-                  onClick={() => setSelectedDocument('constitution')}
-                  className="flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-500/10 text-blue-500 rounded-full hover:bg-blue-500/20 transition-colors"
-                  title="Constitution version at time of feature creation"
-                >
-                  <Scale className="w-3 h-3" />
-                  v{feature.constitutionVersion.version}
-                </button>
-              )}
             </div>
           </div>
 
@@ -166,15 +148,6 @@ export function FeatureDetailV2({
           >
             <X className="w-5 h-5" />
           </button>
-          {onDelete && (
-            <button
-              onClick={onDelete}
-              className="p-1.5 rounded-md hover:bg-red-500/10 transition-colors text-[var(--muted-foreground)] hover:text-red-500"
-              aria-label="Delete feature"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          )}
         </div>
 
         {/* Keyboard navigation hint */}
@@ -224,6 +197,20 @@ export function FeatureDetailV2({
             />
           </div>
         </div>
+
+        {/* Footer with delete button - absolute bottom left */}
+        {onDelete && (
+          <div className="absolute bottom-0 left-0 p-3">
+            <button
+              onClick={onDelete}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-red-500/10 transition-colors text-[var(--muted-foreground)] hover:text-red-500 text-sm"
+              aria-label="Delete feature"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Feature
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
