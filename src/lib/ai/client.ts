@@ -18,7 +18,16 @@ import type {
   GeneratedTasks,
   GeneratedChecklist,
   AnalysisResult,
-  GeneratedConstitution
+  GeneratedConstitution,
+  // Phase 1 artifacts
+  GenerateResearchOptions,
+  GenerateDataModelOptions,
+  GenerateQuickstartOptions,
+  GenerateContractsOptions,
+  GeneratedResearch,
+  GeneratedDataModel,
+  GeneratedQuickstart,
+  GeneratedContracts
 } from './types';
 import { getAISettings } from './settings';
 
@@ -218,6 +227,50 @@ class AIService {
       8192
     );
     return this.parseAnalyzeResponse(content);
+  }
+
+  // ============================================
+  // Phase 1 Artifacts: Research, Data Model, Quickstart, Contracts
+  // ============================================
+
+  // Phase 0: Generate research
+  async generateResearch(options: GenerateResearchOptions): Promise<GeneratedResearch> {
+    const content = await this.callAPI(
+      this.buildResearchPrompt(options.specContent, options.planContent, options.clarifications),
+      'You are a technical researcher that investigates technical decisions and best practices.',
+      8192
+    );
+    return this.parseResearchResponse(content);
+  }
+
+  // Phase 1: Generate data model
+  async generateDataModel(options: GenerateDataModelOptions): Promise<GeneratedDataModel> {
+    const content = await this.callAPI(
+      this.buildDataModelPrompt(options.specContent, options.planContent, options.researchContent),
+      'You are a data architect that designs data models and schemas.',
+      8192
+    );
+    return this.parseDataModelResponse(content);
+  }
+
+  // Phase 1: Generate quickstart
+  async generateQuickstart(options: GenerateQuickstartOptions): Promise<GeneratedQuickstart> {
+    const content = await this.callAPI(
+      this.buildQuickstartPrompt(options.specContent, options.planContent, options.dataModelContent),
+      'You are a technical writer that creates quickstart guides.',
+      8192
+    );
+    return this.parseQuickstartResponse(content);
+  }
+
+  // Phase 1: Generate contracts
+  async generateContracts(options: GenerateContractsOptions): Promise<GeneratedContracts> {
+    const content = await this.callAPI(
+      this.buildContractsPrompt(options.specContent, options.planContent, options.dataModelContent),
+      'You are an API designer that creates API contracts and documentation.',
+      8192
+    );
+    return this.parseContractsResponse(content);
   }
 
   // Generate Constitution
@@ -682,6 +735,209 @@ Return ONLY valid JSON, no other text.`;
       principles: [],
       suggestedSections: []
     };
+  }
+
+  // ============================================
+  // Phase 1 Build Prompts & Parse Methods
+  // ============================================
+
+  private buildResearchPrompt(
+    specContent: string,
+    planContent: string,
+    clarifications?: { question: string; answer: string }[]
+  ): string {
+    return `You are a technical researcher. Investigate technical decisions and provide research findings.
+
+Spec Content:
+${specContent}
+
+Plan Content:
+${planContent}
+${clarifications?.length ? `\nClarifications:\n${clarifications.map(c => `Q: ${c.question}\nA: ${c.answer}`).join('\n')}` : ''}
+
+Generate research findings in JSON format:
+{
+  "overview": "Brief overview of research scope",
+  "sections": [
+    {
+      "title": "Section Title",
+      "content": "Detailed research content",
+      "bullets": ["key point 1", "key point 2", "key point 3"]
+    }
+  ]
+}
+
+Return ONLY valid JSON, no other text.`;
+  }
+
+  private buildDataModelPrompt(
+    specContent: string,
+    planContent: string,
+    researchContent?: string
+  ): string {
+    const researchSection = researchContent ? `\nResearch Content:\n${researchContent}` : '';
+    return `You are a data architect. Design a data model based on the spec and plan.
+
+Spec Content:
+${specContent}
+
+Plan Content:
+${planContent}${researchSection}
+
+Generate data model in JSON format:
+{
+  "overview": "Brief overview of the data model",
+  "entities": [
+    {
+      "name": "EntityName",
+      "description": "What this entity represents",
+      "fields": [
+        {"name": "fieldName", "type": "string", "required": true, "description": "Field description"}
+      ]
+    }
+  ],
+  "relationships": [
+    {"from": "EntityA", "to": "EntityB", "type": "one-to-many", "description": "How entities relate"}
+  ]
+}
+
+Return ONLY valid JSON, no other text.`;
+  }
+
+  private buildQuickstartPrompt(
+    specContent: string,
+    planContent: string,
+    dataModelContent?: string
+  ): string {
+    const dataModelSection = dataModelContent ? `\nData Model:\n${dataModelContent}` : '';
+    return `You are a technical writer. Create a quickstart guide.
+
+Spec Content:
+${specContent}
+
+Plan Content:
+${planContent}${dataModelSection}
+
+Generate quickstart guide in JSON format:
+{
+  "overview": "Brief overview of what the user will build",
+  "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
+  "steps": [
+    {
+      "title": "Step 1: Do Something",
+      "content": "Detailed instructions",
+      "code": "optional code example",
+      "language": "javascript"
+    }
+  ]
+}
+
+Return ONLY valid JSON, no other text.`;
+  }
+
+  private buildContractsPrompt(
+    specContent: string,
+    planContent: string,
+    dataModelContent?: string
+  ): string {
+    const dataModelSection = dataModelContent ? `\nData Model:\n${dataModelContent}` : '';
+    return `You are an API designer. Create API contracts.
+
+Spec Content:
+${specContent}
+
+Plan Content:
+${planContent}${dataModelSection}
+
+Generate API contracts in JSON format:
+{
+  "contracts": [
+    {
+      "name": "GetUsers",
+      "description": "Get all users",
+      "endpoint": "/api/users",
+      "method": "GET",
+      "request": {
+        "headers": {"Authorization": "Bearer token"},
+        "queryParams": {"page": "page number"}
+      },
+      "response": {
+        "status": 200,
+        "body": {"users": []}
+      },
+      "errors": [
+        {"status": 401, "message": "Unauthorized"}
+      ]
+    }
+  ]
+}
+
+Return ONLY valid JSON, no other text.`;
+  }
+
+  private parseResearchResponse(content: string): GeneratedResearch {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          overview: parsed.overview || '',
+          sections: parsed.sections || []
+        };
+      }
+    } catch {
+      console.error('Failed to parse research response');
+    }
+    return { overview: '', sections: [] };
+  }
+
+  private parseDataModelResponse(content: string): GeneratedDataModel {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          overview: parsed.overview || '',
+          entities: parsed.entities || [],
+          relationships: parsed.relationships || []
+        };
+      }
+    } catch {
+      console.error('Failed to parse data model response');
+    }
+    return { overview: '', entities: [], relationships: [] };
+  }
+
+  private parseQuickstartResponse(content: string): GeneratedQuickstart {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          overview: parsed.overview || '',
+          prerequisites: parsed.prerequisites || [],
+          steps: parsed.steps || []
+        };
+      }
+    } catch {
+      console.error('Failed to parse quickstart response');
+    }
+    return { overview: '', prerequisites: [], steps: [] };
+  }
+
+  private parseContractsResponse(content: string): GeneratedContracts {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          contracts: parsed.contracts || []
+        };
+      }
+    } catch {
+      console.error('Failed to parse contracts response');
+    }
+    return { contracts: [] };
   }
 }
 
