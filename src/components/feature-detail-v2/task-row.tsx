@@ -5,7 +5,7 @@ import { Check, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TaskRowProps } from './types';
 
-export function TaskRow({ task, onClick, isSelected, featurePath }: TaskRowProps) {
+export function TaskRow({ task, onClick, isSelected }: TaskRowProps) {
   const [isToggling, setIsToggling] = useState(false);
   const [optimisticCompleted, setOptimisticCompleted] = useState<boolean | null>(null);
 
@@ -21,27 +21,21 @@ export function TaskRow({ task, onClick, isSelected, featurePath }: TaskRowProps
     setOptimisticCompleted(!isCompleted);
 
     try {
-      const response = await fetch('/api/checklist', {
-        method: 'POST',
+      const response = await fetch(`/api/tasks/${task.dbId}/toggle`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filePath: `${featurePath}/tasks.md`,
-          taskId: task.id,
-          expectedState: isCompleted, // Current state before toggle
-        }),
       });
 
       if (!response.ok) {
         // Revert optimistic update on error
         setOptimisticCompleted(null);
       }
+      // On success, keep optimistic state until parent refreshes data
     } catch {
       // Revert optimistic update on error
       setOptimisticCompleted(null);
     } finally {
       setIsToggling(false);
-      // Clear optimistic state after a short delay to allow SSE update
-      setTimeout(() => setOptimisticCompleted(null), 1000);
     }
   };
 
@@ -50,7 +44,7 @@ export function TaskRow({ task, onClick, isSelected, featurePath }: TaskRowProps
       onClick={onClick}
       className={cn(
         'flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors',
-        'hover:bg-[var(--muted)]',
+        'hover:bg-black/20 dark:hover:bg-white/10',
         isSelected && 'bg-[var(--primary)]/10 ring-1 ring-[var(--primary)]/20'
       )}
       role="button"

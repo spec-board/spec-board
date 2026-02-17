@@ -13,7 +13,6 @@ export function UserStoryCard({
   selectedTaskId,
   isExpanded,
   onToggleExpand,
-  featurePath,
   isFocused,
 }: UserStoryCardProps) {
   const completedCount = tasks.filter(t => t.completed).length;
@@ -68,7 +67,7 @@ export function UserStoryCard({
 
           {/* Progress bar */}
           <div className="mt-2 flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-[var(--muted)] rounded-full overflow-hidden">
+            <div className="flex-1 h-1.5 bg-black/20 dark:bg-white/10 rounded-full overflow-hidden">
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-300',
@@ -97,7 +96,6 @@ export function UserStoryCard({
               task={task}
               onClick={() => onTaskClick(task)}
               isSelected={selectedTaskId === task.id}
-              featurePath={featurePath}
             />
           ))}
         </div>

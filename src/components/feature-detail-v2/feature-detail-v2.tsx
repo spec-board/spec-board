@@ -26,7 +26,8 @@ export function FeatureDetailV2({
 
   // Get project from store for API calls
   const project = useProjectStore(state => state.project);
-  const projectId = project?.projectId || project?.name;
+  // Use project name (slug) for API calls like /api/project/${name}/data
+  const projectSlug = project?.name;
 
   // Update local feature when prop changes
   useEffect(() => {
@@ -126,8 +127,18 @@ export function FeatureDetailV2({
     }
   }, [focusedPanel]);
 
+  // Handle click outside to close modal
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
+      onClick={handleBackdropClick}
+    >
       <div
         className={cn(
           'bg-[var(--card)] rounded-lg shadow-2xl overflow-hidden',
@@ -137,6 +148,7 @@ export function FeatureDetailV2({
         role="dialog"
         aria-modal="true"
         aria-labelledby="feature-detail-title"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] flex items-center gap-3 bg-[var(--card)]">
@@ -240,7 +252,7 @@ export function FeatureDetailV2({
           onRefresh={async () => {
             // Refresh feature data from database after saving
             try {
-              const response = await fetch(`/api/project/${projectId}/data`);
+              const response = await fetch(`/api/project/${projectSlug}/data`);
               if (response.ok) {
                 const data = await response.json();
                 const updatedFeature = data.features.find((f: Feature) => f.id === localFeature.id);

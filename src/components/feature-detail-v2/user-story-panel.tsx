@@ -141,7 +141,6 @@ export function UserStoryPanel({
               selectedTaskId={selectedTaskId}
               isExpanded={expandedCards.has(us.id)}
               onToggleExpand={() => toggleExpand(us.id)}
-              featurePath={feature.path}
               isFocused={focusedCardIndex === index}
             />
           </div>
@@ -193,7 +192,6 @@ export function UserStoryPanel({
                     task={task}
                     onClick={() => onTaskClick(task, null)}
                     isSelected={selectedTaskId === task.id}
-                    featurePath={feature.path}
                   />
                 ))}
               </div>

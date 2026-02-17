@@ -4,12 +4,13 @@ import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
 
 // Placeholder modal for stages not yet implemented
-export function PlaceholderModal({ feature, onClose, onStageChange, stageLabel }: BaseModalProps & { stageLabel: string }) {
+export function PlaceholderModal({ feature, onClose, onStageChange, onDelete, stageLabel }: BaseModalProps & { stageLabel: string }) {
   return (
     <BaseModal
       feature={feature}
       onClose={onClose}
       onStageChange={onStageChange}
+      onDelete={onDelete}
       showNavigation
     >
       <div className="flex items-center justify-center h-full">
@@ -28,12 +29,13 @@ export function PlaceholderModal({ feature, onClose, onStageChange, stageLabel }
 
 // Convenience functions to create placeholder modals
 export function createPlaceholderModal(stageLabel: string) {
-  return function PlaceholderModal({ feature, onClose, onStageChange }: BaseModalProps) {
+  return function PlaceholderModal({ feature, onClose, onStageChange, onDelete }: BaseModalProps) {
     return (
       <BaseModal
         feature={feature}
         onClose={onClose}
         onStageChange={onStageChange}
+        onDelete={onDelete}
         showNavigation
       >
         <div className="flex items-center justify-center h-full">

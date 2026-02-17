@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Feature, Task } from '@/types';
 import type { BaseModalProps } from '../base/types';
@@ -8,8 +9,9 @@ import { BaseModal } from '../base/base-modal';
 import { groupTasksByUserStory } from '../types';
 import { UserStoryPanel } from '../user-story-panel';
 import { DocumentPanel } from '../document-panel';
+import { STAGES, getStageConfig } from '../base/types';
 
-export function TasksModal({ feature, onClose, onStageChange }: BaseModalProps) {
+export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseModalProps) {
   const [selectedDocument, setSelectedDocument] = useState<string>('tasks');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [highlightTaskId, setHighlightTaskId] = useState<string | null>(null);
@@ -28,6 +30,18 @@ export function TasksModal({ feature, onClose, onStageChange }: BaseModalProps) 
   );
 
   const totalCards = feature.userStories.length + (orphanTasks.length > 0 ? 1 : 0);
+
+  // Get next stage config
+  const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
+  const nextStage = STAGES[currentIndex + 1];
+  const nextStageConfig = nextStage ? getStageConfig(nextStage.stage) : null;
+
+  // Handle continue to next stage
+  const handleContinueToNextStage = useCallback(() => {
+    if (onStageChange && nextStageConfig) {
+      onStageChange(nextStage.stage as any);
+    }
+  }, [onStageChange, nextStageConfig, nextStage]);
 
   // Handle task click
   const handleTaskClick = useCallback((task: Task, userStoryId: string | null) => {
@@ -94,7 +108,18 @@ export function TasksModal({ feature, onClose, onStageChange }: BaseModalProps) 
       feature={feature}
       onClose={onClose}
       onStageChange={onStageChange}
-      showNavigation
+      onDelete={onDelete}
+      headerActions={
+        nextStageConfig ? (
+          <button
+            onClick={handleContinueToNextStage}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+          >
+            {nextStageConfig.label}
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        ) : null
+      }
     >
       <div className="flex h-full">
         {/* Left panel - User Stories & Tasks (40%) */}
