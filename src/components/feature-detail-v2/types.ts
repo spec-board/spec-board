@@ -37,7 +37,6 @@ export interface UserStoryCardProps {
   selectedTaskId: string | null;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  featurePath: string;
   isFocused?: boolean; // Keyboard navigation: is this card focused
 }
 
@@ -46,7 +45,6 @@ export interface TaskRowProps {
   task: Task;
   onClick: () => void;
   isSelected: boolean;
-  featurePath: string;
 }
 
 // Props for DocumentPanel

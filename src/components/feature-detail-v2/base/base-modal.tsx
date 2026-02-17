@@ -1,6 +1,7 @@
 'use client';
 
-import { X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
+import { useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import type { BaseModalProps, StageConfig } from './types';
 import { getStageConfig, STAGES } from './types';
@@ -15,6 +16,7 @@ interface BaseModalComponentProps extends BaseModalProps {
 // Stage badge component
 function StageBadge({ stage }: { stage: string }) {
   const colors: Record<string, string> = {
+    backlog: 'bg-gray-500/20 text-gray-400',
     specify: 'bg-blue-500/20 text-blue-400',
     clarify: 'bg-purple-500/20 text-purple-400',
     plan: 'bg-orange-500/20 text-orange-400',
@@ -68,33 +70,32 @@ export function BaseModal({
   feature,
   onClose,
   onStageChange,
+  onDelete,
   children,
   headerActions,
   footerActions,
   showNavigation = false,
 }: BaseModalComponentProps) {
-  const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
   const config = getStageConfig(feature.stage);
 
-  const handlePrev = () => {
-    if (currentIndex > 0 && onStageChange) {
-      onStageChange(STAGES[currentIndex - 1].stage);
+  // Handle click outside to close modal
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
     }
-  };
-
-  const handleNext = () => {
-    if (currentIndex < STAGES.length - 1 && onStageChange) {
-      onStageChange(STAGES[currentIndex + 1].stage);
-    }
-  };
+  }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
+      onClick={handleBackdropClick}
+    >
       <div
-        className="w-[1400px] h-[900px] bg-[var(--card)] rounded-lg shadow-2xl overflow-hidden flex flex-col"
+        className="w-[1600px] h-[900px] bg-[var(--card)] rounded-lg shadow-2xl overflow-hidden flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-labelledby="feature-modal-title"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex-shrink-0 px-6 py-4 border-b border-[var(--border)]">
@@ -143,34 +144,21 @@ export function BaseModal({
         </div>
 
         {/* Footer */}
-        {(footerActions || showNavigation) && (
+        {(footerActions || onDelete) && (
           <div className="flex-shrink-0 px-6 py-3 border-t border-[var(--border)] flex items-center justify-between">
             <div>
-              {/* Previous button */}
-              {showNavigation && currentIndex > 0 && (
-                <button
-                  onClick={handlePrev}
-                  className="flex items-center gap-1 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  {STAGES[currentIndex - 1].label}
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
               {footerActions}
             </div>
 
-            <div>
-              {/* Next button */}
-              {showNavigation && currentIndex < STAGES.length - 1 && (
+            <div className="flex items-center gap-2">
+              {/* Delete button */}
+              {onDelete && (
                 <button
-                  onClick={handleNext}
-                  className="flex items-center gap-1 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                  onClick={onDelete}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                 >
-                  {STAGES[currentIndex + 1].label}
-                  <ChevronRight className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
+                  Delete Feature
                 </button>
               )}
             </div>

@@ -10,6 +10,7 @@ export interface BaseModalProps {
   feature: Feature;
   onClose: () => void;
   onStageChange?: (stage: FeatureStage) => void;
+  onDelete?: () => void;
 }
 
 // Props for left panel in each stage
@@ -31,6 +32,7 @@ export interface StageConfig {
 
 // All stages configuration
 export const STAGES: StageConfig[] = [
+  { stage: 'backlog', label: 'Backlog', description: 'Feature ideas and descriptions' },
   { stage: 'specify', label: 'Specify', description: 'Creating specification' },
   { stage: 'clarify', label: 'Clarify', description: 'Answering questions' },
   { stage: 'plan', label: 'Plan', description: 'Creating implementation plan' },

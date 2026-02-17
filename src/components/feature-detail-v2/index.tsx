@@ -32,6 +32,7 @@ import { AnalyzeModal } from './stages/analyze-modal';
 
 // Router based on feature stage
 const STAGE_MODALS = {
+  backlog: SpecifyModal, // Use SpecifyModal for backlog - shows name/description and allows generating spec
   specify: SpecifyModal,
   clarify: ClarifyModal,
   plan: PlanModal,
@@ -43,7 +44,7 @@ const STAGE_MODALS = {
 type StageModalKey = keyof typeof STAGE_MODALS;
 
 // Main exported component - routes to correct stage modal
-export function FeatureDetailByStage({ feature, onClose, initialDocument }: FeatureDetailV2Props) {
+export function FeatureDetailByStage({ feature, onClose, onDelete, initialDocument }: FeatureDetailV2Props) {
   const StageModal = STAGE_MODALS[feature.stage as StageModalKey] || TasksModal;
-  return <StageModal feature={feature} onClose={onClose} />;
+  return <StageModal feature={feature} onClose={onClose} onDelete={onDelete} />;
 }
