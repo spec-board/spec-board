@@ -142,8 +142,8 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
       {/* Compact task count and checklist - Jira style, or description for early stages */}
       <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          {/* Show description for early stages (specify, clarify, plan) - not for checklist since tasks aren't generated yet */}
-          {['specify', 'clarify', 'plan'].includes(feature.stage) && feature.description ? (
+          {/* Show description if available, otherwise show task count */}
+          {feature.description ? (
             <span className="truncate flex-1" title={feature.description}>
               {feature.description}
             </span>
@@ -152,7 +152,7 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
               {feature.completedTasks}/{feature.totalTasks} tasks
             </span>
           )}
-          {/* Checklist count - show for checklist, tasks, and analyze stages */}
+          {/* Checklist count - show for checklist, tasks and analyze stages */}
           {checklistCount > 0 && ['checklist', 'tasks', 'analyze'].includes(feature.stage) && (
             <span className="tabular-nums text-[var(--color-active)]">
               {checklistCount} {checklistCount === 1 ? 'checklist' : 'checklists'}

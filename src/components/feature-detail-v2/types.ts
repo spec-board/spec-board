@@ -56,6 +56,7 @@ export interface DocumentPanelProps {
   onDocumentChange: (doc: DocumentType) => void;
   highlightTaskId: string | null;
   contentRef: React.RefObject<HTMLDivElement | null>;
+  onEditClarifications?: () => void;
 }
 
 // Props for DocumentSelector
@@ -92,11 +93,42 @@ export function getDocumentOptions(feature: Feature): DocumentOption[] {
       available: feature.hasTasks,
       content: feature.tasksContent,
     },
+    // Phase 1 artifacts - stored directly in feature fields
+    {
+      type: 'research',
+      label: 'Research',
+      available: !!feature.researchContent,
+      content: feature.researchContent,
+    },
+    {
+      type: 'data-model',
+      label: 'Data Model',
+      available: !!feature.dataModelContent,
+      content: feature.dataModelContent,
+    },
+    {
+      type: 'quickstart',
+      label: 'Quickstart',
+      available: !!feature.quickstartContent,
+      content: feature.quickstartContent,
+    },
+    {
+      type: 'contract',
+      label: 'Contracts',
+      available: !!feature.contractsContent,
+      content: feature.contractsContent,
+    },
+    {
+      type: 'checklist',
+      label: 'Checklist',
+      available: !!feature.checklistsContent,
+      content: feature.checklistsContent,
+    },
   ];
 
-  // Add additional files
+  // Legacy: Add additional files from additionalFiles array (for backwards compatibility)
   for (const file of feature.additionalFiles || []) {
-    if (file.exists) {
+    if (file.exists && !options.find(o => o.type === file.type)) {
       const typeToLabel: Record<string, string> = {
         'research': 'Research',
         'data-model': 'Data Model',

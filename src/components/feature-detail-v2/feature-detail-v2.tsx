@@ -8,6 +8,8 @@ import type { FeatureDetailV2Props, DocumentType } from './types';
 import { groupTasksByUserStory } from './types';
 import { UserStoryPanel } from './user-story-panel';
 import { DocumentPanel } from './document-panel';
+import { ClarifyModal } from './stages/clarify-modal';
+import { useProjectStore } from '@/lib/store';
 
 export function FeatureDetailV2({
   feature,
@@ -18,7 +20,18 @@ export function FeatureDetailV2({
   const [selectedDocument, setSelectedDocument] = useState<DocumentType>(initialDocument);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [highlightTaskId, setHighlightTaskId] = useState<string | null>(null);
+  const [showClarifyModal, setShowClarifyModal] = useState(false);
+  const [localFeature, setLocalFeature] = useState(feature);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Get project from store for API calls
+  const project = useProjectStore(state => state.project);
+  const projectId = project?.projectId || project?.name;
+
+  // Update local feature when prop changes
+  useEffect(() => {
+    setLocalFeature(feature);
+  }, [feature]);
   
   // Keyboard navigation state
   const [focusedPanel, setFocusedPanel] = useState<'left' | 'right'>('left');
@@ -189,11 +202,12 @@ export function FeatureDetailV2({
             aria-label="Document panel"
           >
             <DocumentPanel
-              feature={feature}
+              feature={localFeature}
               selectedDocument={selectedDocument}
               onDocumentChange={handleDocumentChange}
               highlightTaskId={highlightTaskId}
               contentRef={contentRef}
+              onEditClarifications={() => setShowClarifyModal(true)}
             />
           </div>
         </div>
@@ -212,6 +226,34 @@ export function FeatureDetailV2({
           </div>
         )}
       </div>
+
+      {/* Clarify Modal for editing clarifications */}
+      {showClarifyModal && (
+        <ClarifyModal
+          feature={localFeature}
+          onClose={() => setShowClarifyModal(false)}
+          onStageChange={(stage) => {
+            // Update local feature stage when stage changes
+            setLocalFeature(prev => ({ ...prev, stage }));
+            setShowClarifyModal(false);
+          }}
+          onRefresh={async () => {
+            // Refresh feature data from database after saving
+            try {
+              const response = await fetch(`/api/project/${projectId}/data`);
+              if (response.ok) {
+                const data = await response.json();
+                const updatedFeature = data.features.find((f: Feature) => f.id === localFeature.id);
+                if (updatedFeature) {
+                  setLocalFeature(updatedFeature);
+                }
+              }
+            } catch (error) {
+              console.error('Failed to refresh feature:', error);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { FileText } from 'lucide-react';
+import { FileText, Edit3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentPanelProps } from './types';
 import { DocumentSelector } from './document-selector';
@@ -14,6 +14,7 @@ export function DocumentPanel({
   onDocumentChange,
   highlightTaskId,
   contentRef,
+  onEditClarifications,
 }: DocumentPanelProps) {
   const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
 
@@ -81,12 +82,23 @@ export function DocumentPanel({
   return (
     <div className="h-full flex flex-col bg-[var(--card)]">
       {/* Header with selector */}
-      <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)]">
-        <DocumentSelector
-          options={documentOptions}
-          selected={selectedDocument}
-          onChange={onDocumentChange}
-        />
+      <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+        <div className="flex-1">
+          <DocumentSelector
+            options={documentOptions}
+            selected={selectedDocument}
+            onChange={onDocumentChange}
+          />
+        </div>
+        {selectedDocument === 'clarifications' && onEditClarifications && (
+          <button
+            onClick={onEditClarifications}
+            className="ml-3 flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 transition-colors"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            Edit
+          </button>
+        )}
       </div>
 
       {/* Document content */}
