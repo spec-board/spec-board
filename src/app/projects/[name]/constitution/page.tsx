@@ -67,11 +67,10 @@ export default function ConstitutionPage() {
     loadData();
   }, [loadData]);
 
-  // Handle save - also update description from principles
+  // Handle save - supports both regenerate and save-only modes
   const handleSave = async (data: {
-    name?: string;
-    principles?: Array<{ name: string; description: string }>;
-    additionalSections?: Array<{ name: string; content: string }>;
+    description?: string;
+    regenerateWithAI?: boolean;
   }) => {
     if (!projectId) return;
 
@@ -80,15 +79,15 @@ export default function ConstitutionPage() {
     setSuccess(null);
 
     try {
+      // Use constitution API with regenerateWithAI flag
       const response = await fetch('/api/spec-workflow/constitution', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId,
           name: projectName,
-          principles: data.principles,
-          additionalSections: data.additionalSections,
-          updateDescriptionFromPrinciples: true,  // NEW: Auto-generate description from principles
+          description: data.description,
+          regenerateWithAI: data.regenerateWithAI,
         }),
       });
 
@@ -99,44 +98,16 @@ export default function ConstitutionPage() {
 
       const result = await response.json();
       setConstitution(result.constitution);
+      // Always update description from result
       if (result.description) {
-        setProjectDescription(result.description);  // NEW: Update description from AI-generated
+        setProjectDescription(result.description);
       }
-      setSuccess('Constitution saved successfully!');
+      setSuccess(data.regenerateWithAI
+        ? 'Description updated and principles regenerated!'
+        : 'Description saved!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Handle description change - save description without regenerating constitution
-  const handleDescriptionChange = async (description: string) => {
-    if (!projectId) return;
-
-    setIsSaving(true);
-    setError(null);
-
-    try {
-      // Simply update project description (no AI regeneration)
-      const response = await fetch(`/api/projects/${projectSlug}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          description,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update description');
-      }
-
-      setProjectDescription(description);
-      setSuccess('Description saved!');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update description');
     } finally {
       setIsSaving(false);
     }
@@ -206,7 +177,6 @@ export default function ConstitutionPage() {
         <ConstitutionEditor
           constitution={constitution}
           projectDescription={projectDescription}
-          onDescriptionChange={handleDescriptionChange}
           onSave={handleSave}
           isSaving={isSaving}
         />
