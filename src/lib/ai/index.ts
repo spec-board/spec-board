@@ -5,7 +5,7 @@ export * from './settings';
 export { AIService, aiService } from './client';
 
 import { aiService } from './client';
-import { getAISettingsSync } from './settings';
+import { getAISettings } from './settings';
 import type {
   GenerateUserStoriesOptions,
   GenerateSpecKitOptions,
@@ -28,8 +28,8 @@ import type {
  * Get current AI provider from settings
  * @throws Error if no API key is configured
  */
-export function getProvider(): AIProvider {
-  const settings = getAISettingsSync();
+export async function getProvider(): Promise<AIProvider> {
+  const settings = await getAISettings();
 
   // Only OpenAI-compatible API supported
   if (settings.provider === 'openai' && settings.apiKey) {
@@ -43,14 +43,14 @@ export function getProvider(): AIProvider {
 
 // Wrapper functions that use AIService
 export async function generateUserStories(options: GenerateUserStoriesOptions): Promise<GeneratedUserStory[]> {
-  const provider = getProvider();
+  const provider = await getProvider();
   console.log(`[AI] Generating user stories with ${provider}`);
 
   return aiService.generateUserStories(options);
 }
 
 export async function generateSpecKit(options: GenerateSpecKitOptions): Promise<GeneratedSpecKit> {
-  const provider = getProvider();
+  const provider = await getProvider();
   console.log(`[AI] Generating spec-kit with ${provider}`);
 
   return aiService.generateSpecKit(options);
@@ -65,7 +65,7 @@ export async function generateSpecKit(options: GenerateSpecKitOptions): Promise<
  * Creates spec.md with user stories, edge cases, requirements, success criteria
  */
 export async function generateSpec(options: GenerateSpecOptions): Promise<GeneratedSpec> {
-  const provider = getProvider();
+  const provider = await getProvider();
   console.log(`[AI] Generating spec with ${provider}`);
 
   // Use AIService for generation - throws if no API key
@@ -77,7 +77,7 @@ export async function generateSpec(options: GenerateSpecOptions): Promise<Genera
  * Identifies ambiguities and generates targeted questions
  */
 export async function generateClarify(options: GenerateClarifyOptions): Promise<ClarificationQuestion[]> {
-  const provider = getProvider();
+  const provider = await getProvider();
   console.log(`[AI] Generating clarifications with ${provider}`);
 
   // Use AIService for generation - throws if no API key
@@ -89,7 +89,7 @@ export async function generateClarify(options: GenerateClarifyOptions): Promise<
  * Creates plan.md with technical context and project structure
  */
 export async function generatePlan(options: GeneratePlanOptions): Promise<GeneratedPlan> {
-  const provider = getProvider();
+  const provider = await getProvider();
   console.log(`[AI] Generating plan with ${provider}`);
 
   // Use AIService for generation - throws if no API key
@@ -101,7 +101,7 @@ export async function generatePlan(options: GeneratePlanOptions): Promise<Genera
  * Creates tasks.md with phased task list
  */
 export async function generateTasks(options: GenerateTasksOptions): Promise<GeneratedTasks> {
-  const provider = getProvider();
+  const provider = await getProvider();
   console.log(`[AI] Generating tasks with ${provider}`);
 
   // Use AIService for generation - throws if no API key
@@ -113,7 +113,7 @@ export async function generateTasks(options: GenerateTasksOptions): Promise<Gene
  * Returns analysis report with issues and scores
  */
 export async function analyzeDocuments(options: AnalyzeOptions): Promise<AnalysisResult> {
-  const provider = getProvider();
+  const provider = await getProvider();
   console.log(`[AI] Analyzing documents with ${provider}`);
 
   // Use AIService for analysis - throws if no API key
@@ -132,7 +132,7 @@ export async function generateConstitution(options: {
   principles: Array<{ name: string; description: string }>;
   suggestedSections: Array<{ name: string; content: string }>;
 }> {
-  const provider = getProvider();
+  const provider = await getProvider();
   console.log(`[AI] Generating constitution with ${provider}`);
 
   return aiService.generateConstitution(options);
