@@ -232,7 +232,7 @@ function KanbanColumnComponent({
             aria-label="Create new feature"
           >
             <Plus className="w-3.5 h-3.5" />
-            Add Feature
+            Create Feature
           </button>
         )}
       </div>
