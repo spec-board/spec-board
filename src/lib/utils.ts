@@ -30,8 +30,7 @@ export function getStageColor(stage: string): string {
     clarify: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
     plan: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     tasks: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    analyze: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    done: 'bg-green-500/20 text-green-400 border-green-500/30',
+    analyze: 'bg-green-500/20 text-green-400 border-green-500/30',
   };
   return colors[stage] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
 }
@@ -44,13 +43,12 @@ export function getStageLabel(stage: string): string {
     plan: 'Plan',
     tasks: 'Tasks',
     analyze: 'Analyze',
-    done: 'Done',
   };
   return labels[stage] || stage;
 }
 
 // Kanban column types for 6-column workflow view
-export type KanbanColumn = 'backlog' | 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze' | 'done';
+export type KanbanColumn = 'backlog' | 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze';
 
 // Map feature stages to kanban columns
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
@@ -87,7 +85,7 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
   if (feature.hasChecklists && feature.completedChecklistItems < feature.totalChecklistItems) {
     return 'tasks';
   }
-  return 'done';
+  return 'analyze';
 }
 
 export function getKanbanColumnLabel(column: KanbanColumn): string {
@@ -98,7 +96,6 @@ export function getKanbanColumnLabel(column: KanbanColumn): string {
     plan: 'Plan',
     tasks: 'Tasks',
     analyze: 'Analyze',
-    done: 'Done',
   };
   return labels[column];
 }

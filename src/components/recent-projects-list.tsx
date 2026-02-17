@@ -1,6 +1,6 @@
 'use client';
 
-import { FolderOpen, Clock, Trash2, Rocket, FileText, ListTodo, Hammer, CheckCircle, ChevronRight } from 'lucide-react';
+import { FolderOpen, Clock, Trash2, Rocket, FileText, ListTodo, CheckCircle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RecentProject, FeatureStage } from '@/types';
 
@@ -18,9 +18,7 @@ function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: s
     case 'tasks':
       return { icon: <ListTodo className="w-3 h-3" />, label: 'Tasks', cssVar: 'var(--tag-text-yellow)', bgVar: 'var(--tag-bg-yellow)' };
     case 'analyze':
-      return { icon: <Hammer className="w-3 h-3" />, label: 'Analyze', cssVar: 'var(--tag-text-orange)', bgVar: 'var(--tag-bg-orange)' };
-    case 'done':
-      return { icon: <CheckCircle className="w-3 h-3" />, label: 'Done', cssVar: 'var(--tag-text-success)', bgVar: 'var(--tag-bg-success)' };
+      return { icon: <CheckCircle className="w-3 h-3" />, label: 'Analyze', cssVar: 'var(--tag-text-success)', bgVar: 'var(--tag-bg-success)' };
   }
 }
 
@@ -50,8 +48,7 @@ function getStageLabel(stageBreakdown: RecentProject['stageBreakdown']): string 
   if (total === 0) return 'No features';
 
   const parts: string[] = [];
-  if (stageBreakdown.done > 0) parts.push(`${stageBreakdown.done} done`);
-  if (stageBreakdown.analyze > 0) parts.push(`${stageBreakdown.analyze} analyzing`);
+  if (stageBreakdown.analyze > 0) parts.push(`${stageBreakdown.analyze} analyzed`);
   if (stageBreakdown.tasks > 0) parts.push(`${stageBreakdown.tasks} tasks`);
   if (stageBreakdown.plan > 0) parts.push(`${stageBreakdown.plan} planning`);
   if (stageBreakdown.clarify > 0) parts.push(`${stageBreakdown.clarify} clarifying`);
@@ -143,8 +140,8 @@ export function RecentProjectsList({ projects, onSelect, onRemove }: RecentProje
                     {stageInfo.icon}
                     <span>
                       {stageInfo.label}
-                      {project.activeFeature && project.activeFeature.stage !== 'done' && ': '}
-                      {project.activeFeature && project.activeFeature.stage !== 'done' && (
+                      {project.activeFeature && project.activeFeature.stage !== 'analyze' && ': '}
+                      {project.activeFeature && project.activeFeature.stage !== 'analyze' && (
                         <span className="text-[var(--foreground)]">{project.activeFeature.featureName}</span>
                       )}
                     </span>

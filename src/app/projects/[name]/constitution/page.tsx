@@ -67,7 +67,7 @@ export default function ConstitutionPage() {
     loadData();
   }, [loadData]);
 
-  // Handle save
+  // Handle save - also update description from principles
   const handleSave = async (data: {
     name?: string;
     principles?: Array<{ name: string; description: string }>;
@@ -88,6 +88,7 @@ export default function ConstitutionPage() {
           name: projectName,
           principles: data.principles,
           additionalSections: data.additionalSections,
+          updateDescriptionFromPrinciples: true,  // NEW: Auto-generate description from principles
         }),
       });
 
@@ -98,6 +99,9 @@ export default function ConstitutionPage() {
 
       const result = await response.json();
       setConstitution(result.constitution);
+      if (result.description) {
+        setProjectDescription(result.description);  // NEW: Update description from AI-generated
+      }
       setSuccess('Constitution saved successfully!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -244,6 +248,8 @@ export default function ConstitutionPage() {
         {/* Constitution Editor */}
         <ConstitutionEditor
           constitution={constitution}
+          projectDescription={projectDescription}
+          onDescriptionChange={handleDescriptionChange}
           onSave={handleSave}
           onAIGenerate={handleAIGenerate}
           isSaving={isSaving}
