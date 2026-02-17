@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { generatePlan, getProvider } from '@/lib/ai';
+import { generatePlan, generateResearch, generateDataModel, generateQuickstart, generateContracts, getProvider } from '@/lib/ai';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,13 +51,50 @@ export async function POST(request: NextRequest) {
     const clarificationsContent = generateClarificationsMarkdown(clarificationsToUse);
     const updatedSpecContent = specContent + '\n\n' + clarificationsContent;
 
-    // Update feature in database - save plan content, updated spec with clarifications, and update stage
+    // Generate design artifacts (Phase 0 & Phase 1 - like /speckit.plan)
+    // Phase 0: Research
+    const research = await generateResearch({
+      specContent,
+      planContent: planContent,
+      clarifications: clarificationsToUse
+    });
+    const researchContent = generateResearchMarkdown(research);
+
+    // Phase 1: Data Model
+    const dataModel = await generateDataModel({
+      specContent,
+      planContent: planContent,
+      researchContent: researchContent
+    });
+    const dataModelContent = generateDataModelMarkdown(dataModel);
+
+    // Phase 1: Quickstart
+    const quickstart = await generateQuickstart({
+      specContent,
+      planContent: planContent,
+      dataModelContent
+    });
+    const quickstartContent = generateQuickstartMarkdown(quickstart);
+
+    // Phase 1: Contracts
+    const contracts = await generateContracts({
+      specContent,
+      planContent: planContent,
+      dataModelContent
+    });
+    const contractsContent = generateContractsMarkdown(contracts);
+
+    // Update feature in database - save plan + all design artifacts, and update stage
     const feature = await prisma.feature.update({
       where: { id: featureId },
       data: {
         clarificationsContent, // Save standalone clarifications
         specContent: updatedSpecContent, // Append clarifications to spec
         planContent: planContent,
+        researchContent,
+        dataModelContent,
+        quickstartContent,
+        contractsContent,
         stage: 'plan',
       }
     });
@@ -66,6 +103,12 @@ export async function POST(request: NextRequest) {
       step: 'plan',
       plan,
       content: planContent,
+      designArtifacts: {
+        research: research,
+        dataModel: dataModel,
+        quickstart: quickstart,
+        contracts: contracts
+      },
       featureId: feature.id,
       provider
     });
@@ -191,4 +234,97 @@ function parseClarificationsContent(content: string): { question: string; answer
   }
 
   return result;
+}
+
+// Generate markdown for research
+function generateResearchMarkdown(research: any): string {
+  const date = new Date().toISOString().split('T')[0];
+  let content = `# Research: ${research.overview || 'Technical Research'}\n\n`;
+  content += `**Date**: ${date}\n\n`;
+  content += `## Overview\n\n${research.overview || ''}\n\n`;
+
+  if (research.sections?.length) {
+    for (const section of research.sections) {
+      content += `## ${section.title}\n\n`;
+      content += `${section.content}\n\n`;
+      if (section.bullets?.length) {
+        content += `### Key Points\n\n`;
+        for (const bullet of section.bullets) {
+          content += `- ${bullet}\n`;
+        }
+        content += '\n';
+      }
+    }
+  }
+
+  return content;
+}
+
+// Generate markdown for data model
+function generateDataModelMarkdown(dataModel: any): string {
+  const date = new Date().toISOString().split('T')[0];
+  let content = `# Data Model\n\n`;
+  content += `**Date**: ${date}\n\n`;
+  content += `## Overview\n\n${dataModel.overview || ''}\n\n`;
+
+  if (dataModel.entities?.length) {
+    content += `## Entities\n\n`;
+    for (const entity of dataModel.entities) {
+      content += `### ${entity.name}\n\n`;
+      content += `${entity.description}\n\n`;
+      content += `| Field | Type | Required | Description |\n`;
+      content += `|-------|------|----------|-------------|\n`;
+      for (const field of entity.fields) {
+        content += `| ${field.name} | \`${field.type}\` | ${field.required ? 'Yes' : 'No'} | ${field.description || '-'} |\n`;
+      }
+      content += '\n';
+    }
+  }
+
+  if (dataModel.relationships?.length) {
+    content += `## Relationships\n\n`;
+    content += `| From | To | Type | Description |\n`;
+    content += `|------|-----|------|-------------|\n`;
+    for (const rel of dataModel.relationships) {
+      content += `| ${rel.from} | ${rel.to} | ${rel.type} | ${rel.description || '-'} |\n`;
+    }
+    content += '\n';
+  }
+
+  return content;
+}
+
+// Generate markdown for quickstart
+function generateQuickstartMarkdown(quickstart: any): string {
+  const date = new Date().toISOString().split('T')[0];
+  let content = `# Quickstart Guide\n\n`;
+  content += `**Date**: ${date}\n\n`;
+  content += `## Overview\n\n${quickstart.overview || ''}\n\n`;
+
+  if (quickstart.prerequisites?.length) {
+    content += `## Prerequisites\n\n`;
+    for (const prereq of quickstart.prerequisites) {
+      content += `- ${prereq}\n`;
+    }
+    content += '\n';
+  }
+
+  if (quickstart.steps?.length) {
+    content += `## Steps\n\n`;
+    for (let i = 0; i < quickstart.steps.length; i++) {
+      const step = quickstart.steps[i];
+      content += `### ${i + 1}. ${step.title}\n\n`;
+      content += `${step.content}\n\n`;
+      if (step.code) {
+        content += `\`\`\`${step.language || ''}\n${step.code}\n\`\`\`\n\n`;
+      }
+    }
+  }
+
+  return content;
+}
+
+// Generate markdown for contracts
+function generateContractsMarkdown(contracts: any): string {
+  return JSON.stringify(contracts.contracts || [], null, 2);
 }
