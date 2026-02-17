@@ -43,7 +43,7 @@ export async function PUT(
   try {
     const { name } = await params;
     const body = await request.json();
-    const { displayName, filePath } = body;
+    const { displayName, filePath, description } = body;
 
     // Validate filePath if provided
     if (filePath && !isValidDirectoryPath(filePath)) {
@@ -53,12 +53,15 @@ export async function PUT(
       );
     }
 
+    // Build update data - only include fields that are provided
+    const updateData: { displayName?: string; filePath?: string | null; description?: string | null } = {};
+    if (displayName !== undefined) updateData.displayName = displayName;
+    if (filePath !== undefined) updateData.filePath = filePath || null;
+    if (description !== undefined) updateData.description = description || null;
+
     const project = await prisma.project.update({
       where: { name },
-      data: {
-        ...(displayName && { displayName }),
-        ...(filePath && { filePath }),
-      },
+      data: updateData,
     });
 
     return NextResponse.json(project);

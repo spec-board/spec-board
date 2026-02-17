@@ -7,10 +7,8 @@ import type { RecentProject, FeatureStage } from '@/types';
 // Get icon and label for active feature stage
 function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; cssVar: string; bgVar: string } {
   switch (stage) {
-    case 'backlog':
-      return { icon: <Rocket className="w-3 h-3" />, label: 'Backlog', cssVar: 'var(--tag-text-orange)', bgVar: 'var(--tag-bg-orange)' };
     case 'specify':
-      return { icon: <FileText className="w-3 h-3" />, label: 'Specify', cssVar: 'var(--tag-text-info)', bgVar: 'var(--tag-bg-info)' };
+      return { icon: <Rocket className="w-3 h-3" />, label: 'Specify', cssVar: 'var(--tag-text-purple)', bgVar: 'var(--tag-bg-purple)' };
     case 'clarify':
       return { icon: <FileText className="w-3 h-3" />, label: 'Clarify', cssVar: 'var(--tag-text-cyan)', bgVar: 'var(--tag-bg-cyan)' };
     case 'plan':
@@ -53,7 +51,6 @@ function getStageLabel(stageBreakdown: RecentProject['stageBreakdown']): string 
   if (stageBreakdown.plan > 0) parts.push(`${stageBreakdown.plan} planning`);
   if (stageBreakdown.clarify > 0) parts.push(`${stageBreakdown.clarify} clarifying`);
   if (stageBreakdown.specify > 0) parts.push(`${stageBreakdown.specify} specifying`);
-  if (stageBreakdown.backlog > 0) parts.push(`${stageBreakdown.backlog} backlog`);
 
   return parts.slice(0, 2).join(', ') || 'No features';
 }
