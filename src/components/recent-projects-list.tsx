@@ -13,6 +13,8 @@ function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: s
       return { icon: <FileText className="w-3 h-3" />, label: 'Clarify', cssVar: 'var(--tag-text-cyan)', bgVar: 'var(--tag-bg-cyan)' };
     case 'plan':
       return { icon: <FileText className="w-3 h-3" />, label: 'Plan', cssVar: 'var(--tag-text-warning)', bgVar: 'var(--tag-bg-warning)' };
+    case 'checklist':
+      return { icon: <ListTodo className="w-3 h-3" />, label: 'Checklist', cssVar: 'var(--tag-text-orange)', bgVar: 'var(--tag-bg-orange)' };
     case 'tasks':
       return { icon: <ListTodo className="w-3 h-3" />, label: 'Tasks', cssVar: 'var(--tag-text-yellow)', bgVar: 'var(--tag-bg-yellow)' };
     case 'analyze':

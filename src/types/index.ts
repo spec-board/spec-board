@@ -1,4 +1,4 @@
-export type FeatureStage = 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze';
+export type FeatureStage = 'specify' | 'clarify' | 'plan' | 'checklist' | 'tasks' | 'analyze';
 
 // Recent project type (used in store and components)
 export interface RecentProject {
@@ -112,6 +112,17 @@ export interface SyncImpactReport {
   followUpTodos?: string;
 }
 
+export interface ConstitutionVersion {
+  id: string;
+  version: string;
+  content: string;
+  description?: string;
+  principles: ConstitutionPrinciple[];
+  changeType: string;
+  changeNote?: string;
+  createdAt: string;
+}
+
 export interface Constitution {
   rawContent: string;
   title?: string;
@@ -122,6 +133,7 @@ export interface Constitution {
   ratifiedDate?: string;
   lastAmendedDate?: string;
   syncImpactReport?: SyncImpactReport;
+  versions?: ConstitutionVersion[];  // Version history from database
 }
 
 export interface Task {
@@ -153,6 +165,7 @@ export interface Feature {
   path: string;
   stage: FeatureStage;
   hasSpec: boolean;
+  hasClarifications?: boolean;  // Has clarifications Q&A
   hasPlan: boolean;
   hasTasks: boolean;
   tasks: Task[];
