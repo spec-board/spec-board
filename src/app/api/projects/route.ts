@@ -46,9 +46,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, displayName, filePath, description, generateConstitution } = body;
+    const { name, displayName, filePath, description, generateConstitution: shouldGenerateConstitution } = body;
 
-    console.log('[API/Projects] POST received:', { name, displayName, hasDescription: !!description, generateConstitution });
+    console.log('[API/Projects] POST received:', { name, displayName, hasDescription: !!description, shouldGenerateConstitution });
 
     // name is always required
     if (!name || typeof name !== 'string') {
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     // Skip if no API key configured - graceful fallback
     let constitutionSkipped = false;
     let constitutionError: string | null = null;
-    if (generateConstitution && description) {
+    if (shouldGenerateConstitution && description) {
       // Check if AI API key is available before attempting generation
       let hasApiKey = false;
       try {

@@ -162,6 +162,7 @@ model ConstitutionVersion {
   constitutionId String @map("constitution_id")
   version       String
   content       String   @db.Text // Snapshot of full markdown content
+  description   String?  // Project description at this version
   principles    Json    // Array of {name, description} at this version
 
   // Change info

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatRelativeTime, formatLocaleDate } from '@/lib/utils';
 import type { Constitution, Feature } from '@/types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
 import {
@@ -31,6 +31,7 @@ interface ProjectInfoBubbleProps {
   onDescriptionChange?: (description: string) => void;
   onFeatureClick?: (feature: Feature) => void;
   onSaveAndGenerateConstitution?: (description: string) => void;
+  isGeneratingConstitution?: boolean;
 }
 
 export function ProjectInfoBubble({
@@ -42,6 +43,7 @@ export function ProjectInfoBubble({
   onDescriptionChange,
   onFeatureClick,
   onSaveAndGenerateConstitution,
+  isGeneratingConstitution = false,
 }: ProjectInfoBubbleProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'history'>('info');
@@ -136,11 +138,23 @@ export function ProjectInfoBubble({
                     {onSaveAndGenerateConstitution && (
                       <button
                         onClick={handleSaveAndGenerate}
-                        disabled={!editDescription.trim()}
+                        disabled={!editDescription.trim() || isGeneratingConstitution}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
                       >
-                        <Wand2 className="w-4 h-4" />
-                        Save & Generate Constitution
+                        {isGeneratingConstitution ? (
+                          <>
+                            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Generating Constitution...
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="w-4 h-4" />
+                            Save & Generate Constitution
+                          </>
+                        )}
                       </button>
                     )}
                   </div>
@@ -191,8 +205,8 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
       )}
       {(constitution.ratifiedDate || constitution.lastAmendedDate) && (
         <div className="flex flex-wrap gap-4 text-xs text-[var(--muted-foreground)]">
-          {constitution.ratifiedDate && <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /><span>Ratified: {constitution.ratifiedDate}</span></div>}
-          {constitution.lastAmendedDate && <div className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /><span>Last Amended: {constitution.lastAmendedDate}</span></div>}
+          {constitution.ratifiedDate && <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /><span>Ratified: {formatLocaleDate(constitution.ratifiedDate)}</span></div>}
+          {constitution.lastAmendedDate && <div className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /><span>Last Amended: {formatLocaleDate(constitution.lastAmendedDate)}</span></div>}
         </div>
       )}
       {/* Project Description */}
@@ -202,7 +216,7 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
           <p className="text-sm bg-[var(--secondary)]/30 p-3 rounded-lg">{constitution.description}</p>
         </div>
       )}
-      {constitution.principles.length > 0 && (
+      {constitution.principles?.length > 0 && (
         <div>
           <h4 className="text-sm font-medium mb-2 flex items-center gap-2"><Shield className="w-4 h-4 text-[var(--muted-foreground)]" />Core Principles</h4>
           <div className="space-y-2">
@@ -218,7 +232,7 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
           </div>
         </div>
       )}
-      {constitution.sections.length > 0 && (
+      {constitution.sections?.length > 0 && (
         <div>
           <h4 className="text-sm font-medium mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-[var(--muted-foreground)]" />Additional Sections</h4>
           <div className="space-y-2">
@@ -241,23 +255,37 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
 function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
   const [expandedVersions, setExpandedVersions] = useState<Set<string>>(new Set());
 
-  const toggleVersion = (version: string) => {
+  const toggleVersion = (id: string) => {
     const newExpanded = new Set(expandedVersions);
-    if (newExpanded.has(version)) newExpanded.delete(version);
-    else newExpanded.add(version);
+    if (newExpanded.has(id)) newExpanded.delete(id);
+    else newExpanded.add(id);
     setExpandedVersions(newExpanded);
   };
 
-  // Build version history from constitution data
-  const versions = [];
-  if (constitution.version) {
-    versions.push({
-      version: constitution.version,
-      date: constitution.lastAmendedDate || constitution.ratifiedDate || 'Unknown',
-      type: constitution.ratifiedDate === constitution.lastAmendedDate ? 'Initial' : 'Amendment',
-      description: constitution.description,
-    });
-  }
+  // Build version history from constitution data - use versions array from API if available
+  const versions = constitution.versions && constitution.versions.length > 0
+    ? constitution.versions.map(v => ({
+        id: v.id,
+        version: v.version,
+        date: v.createdAt,
+        type: v.changeType === 'create' ? 'Initial' : v.changeType === 'major' ? 'Major' : v.changeType === 'minor' ? 'Minor' : 'Amendment',
+        projectDescription: v.description,
+        content: v.content,
+        principles: v.principles,
+        changeNote: v.changeNote,
+      }))
+    : constitution.version
+      ? [{
+          id: 'current',
+          version: constitution.version,
+          date: constitution.lastAmendedDate || constitution.ratifiedDate || 'Unknown',
+          type: constitution.ratifiedDate === constitution.lastAmendedDate ? 'Initial' : 'Amendment',
+          projectDescription: constitution.description,
+          content: constitution.rawContent,
+          principles: constitution.principles,
+          changeNote: undefined,
+        }]
+      : [];
 
   return (
     <div className="space-y-4">
@@ -271,9 +299,9 @@ function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
       {versions.length > 0 ? (
         <div className="space-y-2">
           {versions.map((v) => (
-            <div key={v.version} className="rounded-lg border border-[var(--border)] overflow-hidden">
+            <div key={v.id} className="rounded-lg border border-[var(--border)] overflow-hidden">
               <button
-                onClick={() => toggleVersion(v.version)}
+                onClick={() => toggleVersion(v.id)}
                 className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left"
               >
                 <div className="flex items-center gap-3">
@@ -281,46 +309,43 @@ function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
                   <span className="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">{v.type}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[var(--muted-foreground)]">{v.date}</span>
-                  {expandedVersions.has(v.version) ? (
+                  <span className="text-xs text-[var(--muted-foreground)]">{formatRelativeTime(v.date)}</span>
+                  {expandedVersions.has(v.id) ? (
                     <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" />
                   ) : (
                     <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)]" />
                   )}
                 </div>
               </button>
-              {expandedVersions.has(v.version) && (
+              {expandedVersions.has(v.id) && (
                 <div className="px-3 pb-3 space-y-3">
                   {/* Project Description at this version */}
-                  {constitution.description && (
+                  {v.projectDescription && (
                     <div>
                       <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Project Description</h4>
                       <p className="text-sm text-[var(--foreground)] bg-[var(--secondary)]/30 p-2 rounded">
-                        {constitution.description}
+                        {v.projectDescription}
                       </p>
                     </div>
                   )}
-                  {constitution.principles.length > 0 && (
+                  {/* Change note if available */}
+                  {v.changeNote && (
                     <div>
-                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Principles ({constitution.principles.length})</h4>
+                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Change Note</h4>
+                      <p className="text-sm text-[var(--foreground)] bg-[var(--secondary)]/30 p-2 rounded">
+                        {v.changeNote}
+                      </p>
+                    </div>
+                  )}
+                  {/* Principles from this version */}
+                  {v.principles && v.principles.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Principles ({v.principles.length})</h4>
                       <ul className="text-sm space-y-1">
-                        {constitution.principles.map((p, i) => (
+                        {v.principles.map((p: any, i: number) => (
                           <li key={i} className="flex items-start gap-2">
                             <Shield className="w-3.5 h-3.5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
                             <span>{p.name}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {constitution.sections.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Sections ({constitution.sections.length})</h4>
-                      <ul className="text-sm space-y-1">
-                        {constitution.sections.map((s, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <FileText className="w-3.5 h-3.5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
-                            <span>{s.name}</span>
                           </li>
                         ))}
                       </ul>
@@ -393,7 +418,7 @@ function ClarityContent({ features, onFeatureClick }: { features: Feature[]; onF
                     <button onClick={() => toggleSession(sessionKey)} className="w-full flex items-center justify-between p-2 bg-[var(--secondary)]/30 hover:bg-[var(--secondary)] transition-colors">
                       <div className="flex items-center gap-2 text-xs">
                         <Calendar className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
-                        <span className="text-[var(--muted-foreground)]">{session.date}</span>
+                        <span className="text-[var(--muted-foreground)]">{formatRelativeTime(session.date)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-[var(--muted-foreground)]">{session.clarifications.length} Q&A</span>
