@@ -29,7 +29,6 @@ This directory contains all shared TypeScript interfaces and types used througho
 | Stage | Description |
 |-------|-------------|
 | `backlog` | Not started |
-| `spec` | Being specified |
 | `planning` | Being planned |
 | `in_progress` | Implementation in progress |
 | `done` | Completed |
@@ -63,7 +62,7 @@ These are stored as string content in the database:
 
 ```typescript
 // Feature stages (database-first)
-type FeatureStage = 'backlog' | 'spec' | 'planning' | 'in_progress' | 'done';
+type FeatureStage = 'backlog' | 'planning' | 'in_progress' | 'done';
 
 // Database-first Feature
 interface Feature {
