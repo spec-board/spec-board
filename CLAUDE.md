@@ -56,7 +56,7 @@ PostgreSQL → API Routes (/api/project/[name]/data) → Zustand Store → React
 | `/` | Home - project list from database |
 | `/projects/:slug` | Kanban board (slug from DB) |
 | `/projects/:slug/features/:id` | Feature detail modal |
-| `/projects/:slug/constitution` | Constitution editor |
+| `/projects/:slug` | Constitution via Project Info modal |
 | `/cloud` | Cloud sync dashboard |
 | `/settings` | App settings |
 
@@ -65,10 +65,9 @@ PostgreSQL → API Routes (/api/project/[name]/data) → Zustand Store → React
 ## Core Features
 
 ### Constitution System
-Project-level principles stored in database with version tracking and history. Key files:
-- `src/components/constitution-editor.tsx` - Constitution editing UI
+Project-level principles stored in database with version tracking and history. All editing is done via Project Info modal. Key files:
+- `src/components/constitution-editor.tsx` - Constitution editing UI (used in modal)
 - `src/components/project-info-bubble.tsx` - Project info modal with Constitution tabs
-- `src/app/projects/[name]/constitution/page.tsx` - Constitution page
 
 ### Project Info Modal
 Modal accessible via "Project Info" button on project page showing:
