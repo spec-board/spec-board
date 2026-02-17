@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Loader2, Sparkles, Plus, Trash2, GripVertical, Eye, Edit3, Save } from 'lucide-react';
+import { Loader2, Plus, Trash2, GripVertical, Eye, Edit3, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Principle {
@@ -30,7 +30,6 @@ interface ConstitutionEditorProps {
     additionalSections?: Section[];
   }) => Promise<void>;
   onDescriptionChange?: (description: string) => Promise<void>;
-  onAIGenerate?: () => Promise<void>;
   isSaving: boolean;
 }
 
@@ -39,7 +38,6 @@ export function ConstitutionEditor({
   projectDescription = '',
   onSave,
   onDescriptionChange,
-  onAIGenerate,
   isSaving,
 }: ConstitutionEditorProps) {
   const [activeTab, setActiveTab] = useState<'description' | 'principles' | 'sections' | 'preview'>('description');
@@ -169,16 +167,6 @@ export function ConstitutionEditor({
         </button>
 
         <div className="ml-auto flex items-center gap-2">
-          {onAIGenerate && (
-            <button
-              onClick={onAIGenerate}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors disabled:opacity-50"
-            >
-              <Sparkles className="w-4 h-4" />
-              AI Suggest
-            </button>
-          )}
           <button
             onClick={handleSave}
             disabled={isSaving}
@@ -201,13 +189,20 @@ export function ConstitutionEditor({
             <h4 className="text-sm font-medium">Project Description</h4>
             <textarea
               value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                if (onDescriptionChange) onDescriptionChange(e.target.value);
-              }}
+              onChange={(e) => setDescription(e.target.value)}
               className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm min-h-[80px]"
               placeholder="Project description"
             />
+            {onDescriptionChange && (
+              <button
+                onClick={() => onDescriptionChange(description)}
+                disabled={isSaving || description === projectDescription}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md transition-colors disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                Save Description
+              </button>
+            )}
           </div>
         </div>
       )}

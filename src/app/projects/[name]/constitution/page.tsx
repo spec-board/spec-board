@@ -111,7 +111,7 @@ export default function ConstitutionPage() {
     }
   };
 
-  // Handle description change - update project and regenerate constitution with AI
+  // Handle description change - save description without regenerating constitution
   const handleDescriptionChange = async (description: string) => {
     if (!projectId) return;
 
@@ -119,67 +119,24 @@ export default function ConstitutionPage() {
     setError(null);
 
     try {
-      // Update project description and regenerate constitution with AI
-      const response = await fetch('/api/spec-workflow/constitution', {
-        method: 'POST',
+      // Simply update project description (no AI regeneration)
+      const response = await fetch(`/api/projects/${projectSlug}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          projectId,
-          name: projectName,
-          description,  // Send new description
-          regenerateWithAI: true,  // Flag to regenerate constitution
+          description,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update description and regenerate constitution');
+        throw new Error('Failed to update description');
       }
 
-      const result = await response.json();
-      if (result.constitution) {
-        setConstitution(result.constitution);
-      }
       setProjectDescription(description);
-      setSuccess('Description updated and constitution regenerated!');
+      setSuccess('Description saved!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update description');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Handle AI generate
-  const handleAIGenerate = async () => {
-    if (!projectId) return;
-
-    setIsSaving(true);
-    setError(null);
-
-    try {
-      // Call constitution API to generate
-      const response = await fetch('/api/spec-workflow/constitution', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          name: projectName,
-          generateWithAI: true,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate constitution');
-      }
-
-      const result = await response.json();
-      if (result.constitution) {
-        setConstitution(result.constitution);
-        setSuccess('Constitution generated with AI!');
-        setTimeout(() => setSuccess(null), 3000);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate');
     } finally {
       setIsSaving(false);
     }
@@ -251,7 +208,6 @@ export default function ConstitutionPage() {
           projectDescription={projectDescription}
           onDescriptionChange={handleDescriptionChange}
           onSave={handleSave}
-          onAIGenerate={handleAIGenerate}
           isSaving={isSaving}
         />
       </div>

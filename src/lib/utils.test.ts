@@ -25,9 +25,8 @@ describe('formatPercentage', () => {
 
 describe('getStageColor', () => {
   it('should return correct color classes for each stage', () => {
-    expect(getStageColor('backlog')).toBe('bg-purple-500/20 text-purple-400 border-purple-500/30');
-    expect(getStageColor('specify')).toBe('bg-indigo-500/20 text-indigo-400 border-indigo-500/30');
-    expect(getStageColor('clarify')).toBe('bg-cyan-500/20 text-cyan-400 border-cyan-500/30');
+    expect(getStageColor('specify')).toBe('bg-purple-500/20 text-purple-400 border-purple-500/30');
+    expect(getStageColor('clarify')).toBe('bg-indigo-500/20 text-indigo-400 border-indigo-500/30');
     expect(getStageColor('plan')).toBe('bg-blue-500/20 text-blue-400 border-blue-500/30');
     expect(getStageColor('tasks')).toBe('bg-yellow-500/20 text-yellow-400 border-yellow-500/30');
     expect(getStageColor('analyze')).toBe('bg-green-500/20 text-green-400 border-green-500/30');
@@ -42,7 +41,6 @@ describe('getStageColor', () => {
 
 describe('getStageLabel', () => {
   it('should return correct labels for each stage', () => {
-    expect(getStageLabel('backlog')).toBe('Backlog');
     expect(getStageLabel('specify')).toBe('Specify');
     expect(getStageLabel('clarify')).toBe('Clarify');
     expect(getStageLabel('plan')).toBe('Plan');
@@ -132,18 +130,12 @@ function createMockFeature(overrides: Partial<Feature>): Feature {
 
 describe('getKanbanColumn', () => {
   it('should return the stage as-is', () => {
-    expect(getKanbanColumn('backlog')).toBe('backlog');
     expect(getKanbanColumn('specify')).toBe('specify');
-    expect(getKanbanColumn('clarify')).toBe('clarify');
-    expect(getKanbanColumn('plan')).toBe('plan');
-    expect(getKanbanColumn('tasks')).toBe('tasks');
-    expect(getKanbanColumn('analyze')).toBe('analyze');
   });
 });
 
 describe('getFeatureKanbanColumn', () => {
   it('should return the feature stage directly', () => {
-    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'backlog' }))).toBe('backlog');
     expect(getFeatureKanbanColumn(createMockFeature({ stage: 'specify' }))).toBe('specify');
     expect(getFeatureKanbanColumn(createMockFeature({ stage: 'clarify' }))).toBe('clarify');
     expect(getFeatureKanbanColumn(createMockFeature({ stage: 'plan' }))).toBe('plan');
