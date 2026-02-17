@@ -64,6 +64,30 @@ export default function ProjectPage() {
     router.push('/projects/' + projectSlug + '/features/' + feature.id + '?section=clarifications');
   };
 
+  // Update project description
+  const handleDescriptionChange = useCallback(async (description: string) => {
+    try {
+      const response = await fetch('/api/projects/' + projectSlug, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description }),
+      });
+      if (response.ok) {
+        setProject(prev => prev ? { ...prev, description } : null);
+      }
+    } catch (error) {
+      console.error('Failed to update description:', error);
+    }
+  }, [projectSlug]);
+
+  // Save description and generate constitution
+  const handleSaveAndGenerateConstitution = useCallback(async (description: string) => {
+    // First save the description
+    await handleDescriptionChange(description);
+    // Then navigate to constitution page to generate
+    router.push('/projects/' + projectSlug + '/constitution');
+  }, [projectSlug, handleDescriptionChange]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -100,7 +124,6 @@ export default function ProjectPage() {
         projectName={project?.name}
         projectPath={projectPath || undefined}
         projectSlug={projectSlug}
-        hasConstitution={project.hasConstitution}
       />
 
       {/* Main content */}
@@ -111,9 +134,12 @@ export default function ProjectPage() {
             <ProjectInfoBubble
               constitution={project.constitution}
               hasConstitution={project.hasConstitution}
+              description={project.description}
               features={project.features}
               totalClarifications={project.features.reduce((sum, f) => sum + f.totalClarifications, 0)}
+              onDescriptionChange={handleDescriptionChange}
               onFeatureClick={handleFeatureClarificationsClick}
+              onSaveAndGenerateConstitution={handleSaveAndGenerateConstitution}
             />
           </div>
 

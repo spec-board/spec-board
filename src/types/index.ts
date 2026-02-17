@@ -115,6 +115,7 @@ export interface SyncImpactReport {
 export interface Constitution {
   rawContent: string;
   title?: string;
+  description?: string;  // Project description at time of constitution creation
   principles: ConstitutionPrinciple[];
   sections: ConstitutionSection[];
   version?: string;
@@ -185,12 +186,20 @@ export interface Feature {
   hasChecklists: boolean;
   totalChecklistItems: number;
   completedChecklistItems: number;
+  // Constitution version at time of feature creation
+  constitutionVersion: {
+    id: string;
+    version: string;
+    content: string;
+    principles: Array<{ name: string; description: string }>;
+  } | null;
 }
 
 export interface Project {
   projectId?: string;
   path: string;
   name: string;
+  description?: string;
   features: Feature[];
   lastUpdated: Date;
   // Project-level constitution
