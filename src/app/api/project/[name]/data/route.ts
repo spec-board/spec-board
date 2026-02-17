@@ -29,6 +29,7 @@ export async function GET(
                 userStory: true,
               },
             },
+            constitutionVersion: true,
           },
         },
         constitution: true,
@@ -53,6 +54,12 @@ export async function GET(
       hasPlan: !!feature.planContent,
       hasTasks: !!feature.tasksContent,
       description: feature.description,
+      constitutionVersion: feature.constitutionVersion ? {
+        id: feature.constitutionVersion.id,
+        version: feature.constitutionVersion.version,
+        content: feature.constitutionVersion.content,
+        principles: feature.constitutionVersion.principles,
+      } : null,
       // Map tasks from database format
       tasks: feature.tasks.map((task) => ({
         id: task.taskId,

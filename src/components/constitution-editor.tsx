@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Loader2, Eye, Edit3, Save, RefreshCw } from 'lucide-react';
+import { Loader2, Eye, Edit3, RefreshCw, History, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Principle {
@@ -14,6 +14,16 @@ interface Section {
   content: string;
 }
 
+interface ConstitutionVersion {
+  id: string;
+  version: string;
+  content: string;
+  principles: Principle[];
+  changeType: string;
+  changeNote: string | null;
+  createdAt: string;
+}
+
 interface ConstitutionEditorProps {
   constitution?: {
     title?: string;
@@ -24,6 +34,7 @@ interface ConstitutionEditorProps {
     lastAmendedDate?: string;
   } | null;
   projectDescription?: string;
+  versions?: ConstitutionVersion[] | null;
   onSave: (data: {
     description?: string;
     regenerateWithAI?: boolean;
@@ -34,10 +45,11 @@ interface ConstitutionEditorProps {
 export function ConstitutionEditor({
   constitution,
   projectDescription = '',
+  versions,
   onSave,
   isSaving,
 }: ConstitutionEditorProps) {
-  const [activeTab, setActiveTab] = useState<'description' | 'preview'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'preview' | 'history'>('description');
   const [description, setDescription] = useState<string>(projectDescription);
   const [principles, setPrinciples] = useState<Principle[]>(constitution?.principles || []);
 
@@ -62,15 +74,10 @@ export function ConstitutionEditor({
   }, [constitution?.content, constitution?.title, principles]);
 
   // Handler: Save description and regenerate principles with AI
-  const handleRegenerate = async () => {
+  // Handler: Save description and generate principles
+  const handleSaveAndGenerate = async () => {
     if (!description.trim()) return;
     await onSave({ description, regenerateWithAI: true });
-  };
-
-  // Handler: Just save description without regeneration
-  const handleSaveDescription = async () => {
-    if (description === projectDescription) return;
-    await onSave({ description, regenerateWithAI: false });
   };
 
   return (
@@ -107,13 +114,33 @@ export function ConstitutionEditor({
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
           )}
         </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={cn(
+            "pb-3 px-1 text-sm font-medium transition-colors relative",
+            activeTab === 'history'
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <History className="w-4 h-4 inline-block mr-2" />
+          History
+          {versions && versions.length > 0 && (
+            <span className="ml-1 text-xs bg-secondary px-1.5 py-0.5 rounded-full">
+              {versions.length}
+            </span>
+          )}
+          {activeTab === 'history' && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+          )}
+        </button>
       </div>
 
       {/* Description Tab */}
       {activeTab === 'description' && (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Describe your project. When you save, AI will generate principles based on this description.
+            Describe your project. AI will generate principles based on this description.
           </p>
 
           <div className="p-4 bg-card border border-border rounded-lg space-y-3">
@@ -125,24 +152,14 @@ export function ConstitutionEditor({
               placeholder="Describe your project, its goals, and requirements..."
             />
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleRegenerate}
-                disabled={isSaving || !description.trim()}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-md transition-colors disabled:opacity-50"
-              >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                Regenerate Principles
-              </button>
-              <button
-                onClick={handleSaveDescription}
-                disabled={isSaving || description === projectDescription}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md transition-colors disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                Save Only
-              </button>
-            </div>
+            <button
+              onClick={handleSaveAndGenerate}
+              disabled={isSaving || !description.trim()}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-md transition-colors disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Save & Generate Principles
+            </button>
           </div>
 
           {/* Current Principles Display (Read-only) */}
@@ -180,6 +197,72 @@ export function ConstitutionEditor({
           >
             Copy to Clipboard
           </button>
+        </div>
+      )}
+
+      {/* History Tab */}
+      {activeTab === 'history' && (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Read-only history of constitution changes. View past versions and their principles.
+          </p>
+
+          {versions && versions.length > 0 ? (
+            <div className="space-y-3">
+              {versions.map((version, index) => (
+                <div
+                  key={version.id}
+                  className="p-4 bg-card border border-border rounded-lg space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-medium">v{version.version}</span>
+                      {index === 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-500">
+                          latest
+                        </span>
+                      )}
+                      <span className={cn(
+                        "text-xs px-2 py-0.5 rounded-full",
+                        version.changeType === 'create' && "bg-green-500/20 text-green-500",
+                        version.changeType === 'update' && "bg-blue-500/20 text-blue-500",
+                        version.changeType === 'minor' && "bg-yellow-500/20 text-yellow-500",
+                        version.changeType === 'major' && "bg-red-500/20 text-red-500"
+                      )}>
+                        {version.changeType}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="w-3 h-3" />
+                      {new Date(version.createdAt).toLocaleDateString()} {new Date(version.createdAt).toLocaleTimeString()}
+                    </div>
+                  </div>
+
+                  {version.changeNote && (
+                    <p className="text-sm text-muted-foreground">{version.changeNote}</p>
+                  )}
+
+                  {version.principles && version.principles.length > 0 && (
+                    <div className="space-y-2 pt-2 border-t border-border">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Principles at this version:</p>
+                      {version.principles.map((principle, pIndex) => (
+                        <div key={pIndex} className="text-sm">
+                          <span className="font-medium">{principle.name}</span>
+                          <p className="text-muted-foreground text-xs mt-0.5">{principle.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No version history yet.</p>
+              <p className="text-xs">Save and generate principles to create the first version.</p>
+            </div>
+          )}
         </div>
       )}
     </div>

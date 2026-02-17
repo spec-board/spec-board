@@ -37,6 +37,18 @@ export async function POST(request: NextRequest) {
     const featureCount = await prisma.feature.count({ where: { projectId } });
     const featureId = `${String(featureCount + 1).padStart(3, '0')}-${name.toLowerCase().replace(/\s+/g, '-')}`;
 
+    // Get latest constitution version for this project
+    const latestConstitution = await prisma.constitution.findUnique({
+      where: { projectId },
+      include: {
+        versions: {
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
+      }
+    });
+    const constitutionVersionId = latestConstitution?.versions[0]?.id || null;
+
     // Create feature in database with specContent
     const feature = await prisma.feature.create({
       data: {
@@ -47,6 +59,7 @@ export async function POST(request: NextRequest) {
         stage: 'specify',
         order: featureCount,
         specContent, // Save spec markdown to database
+        constitutionVersionId // Track which constitution version was active
       }
     });
 
