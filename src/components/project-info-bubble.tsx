@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 import type { Constitution, Feature } from '@/types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
 import {
-  ScrollText,
   MessageCircleQuestion,
   ChevronDown,
   ChevronRight,
@@ -18,164 +17,144 @@ import {
   HelpCircle,
   CheckCircle2,
   ExternalLink,
+  Info,
+  Wand2,
+  ScrollText,
 } from 'lucide-react';
 
 interface ProjectInfoBubbleProps {
   constitution: Constitution | null;
   hasConstitution: boolean;
+  description?: string;
   features: Feature[];
   totalClarifications: number;
+  onDescriptionChange?: (description: string) => void;
   onFeatureClick?: (feature: Feature) => void;
+  onSaveAndGenerateConstitution?: (description: string) => void;
 }
 
 export function ProjectInfoBubble({
   constitution,
   hasConstitution,
+  description,
   features,
   totalClarifications,
+  onDescriptionChange,
   onFeatureClick,
+  onSaveAndGenerateConstitution,
 }: ProjectInfoBubbleProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'constitution' | 'clarity'>('constitution');
-  const popupRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'info' | 'history'>('info');
+  const [editDescription, setEditDescription] = useState(description || '');
 
-  // Close popup when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      setEditDescription(description || '');
+      setActiveTab('info');
     }
-  }, [isOpen]);
+  }, [isOpen, description]);
 
-  // Close on Escape
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         setIsOpen(false);
       }
     }
-
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
     }
   }, [isOpen]);
 
+  const handleSaveAndGenerate = () => {
+    onDescriptionChange?.(editDescription);
+    onSaveAndGenerateConstitution?.(editDescription);
+  };
+
   const principleCount = constitution?.principles.length ?? 0;
   const featuresWithClarifications = features.filter(f => f.totalClarifications > 0);
-
-  // Build summary text
-  const summaryParts: string[] = [];
-  if (hasConstitution && principleCount > 0) {
-    summaryParts.push(`${principleCount} principles`);
-  }
-  if (totalClarifications > 0) {
-    summaryParts.push(`${totalClarifications} Q&A`);
-  }
-
-  const hasSomething = hasConstitution || totalClarifications > 0;
+  const hasSomething = hasConstitution || totalClarifications > 0 || !!description;
 
   if (!hasSomething) {
     return null;
   }
 
   return (
-    <div className="relative" ref={popupRef}>
-      {/* Bubble Button */}
+    <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          'flex items-center gap-2 px-4 py-2 rounded-full',
-          'bg-[var(--secondary)] border border-[var(--border)]',
-          'hover:bg-[var(--secondary)]/80 transition-colors',
-          'text-sm text-[var(--foreground)]',
-          isOpen && 'ring-2 ring-[var(--foreground)]/20'
-        )}
+        className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--secondary)] border border-[var(--border)] hover:bg-[var(--secondary)]/80 transition-colors text-sm text-[var(--foreground)]"
       >
-        <div className="flex items-center gap-1.5">
-          {hasConstitution && <ScrollText className="w-4 h-4" />}
-          {totalClarifications > 0 && <MessageCircleQuestion className="w-4 h-4" />}
-        </div>
-        <span className="text-[var(--muted-foreground)]">
-          {summaryParts.join(' • ')}
-        </span>
-        <ChevronDown className={cn(
-          'w-4 h-4 text-[var(--muted-foreground)] transition-transform',
-          isOpen && 'rotate-180'
-        )} />
+        <Info className="w-4 h-4" />
+        <span className="text-[var(--muted-foreground)]">Project Info</span>
+        <ChevronDown className={cn('w-4 h-4 text-[var(--muted-foreground)]', isOpen && 'rotate-180')} />
       </button>
 
-      {/* Popup */}
       {isOpen && (
-        <div className={cn(
-          'absolute top-full left-0 mt-2 z-50',
-          'w-[500px] max-h-[70vh] overflow-hidden',
-          'rounded-lg border border-[var(--border)] bg-[var(--card)]',
-          'shadow-lg'
-        )}>
-          {/* Tabs */}
-          <div className="flex border-b border-[var(--border)]">
-            {hasConstitution && (
-              <button
-                onClick={() => setActiveTab('constitution')}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors',
-                  activeTab === 'constitution'
-                    ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]'
-                    : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-                )}
-              >
-                <ScrollText className="w-4 h-4" />
-                Constitution
-                {constitution?.version && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--secondary)]">
-                    v{constitution.version}
-                  </span>
-                )}
+        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setIsOpen(false)}>
+          <div className="fixed inset-0 bg-black/50" />
+          <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl z-10" onClick={e => e.stopPropagation()}>
+            <div className="relative flex items-center justify-center border-b border-[var(--border)] px-6 py-4">
+              <h2 className="text-lg font-semibold">Project Info</h2>
+              <button onClick={() => setIsOpen(false)} className="absolute right-4 p-1 hover:bg-[var(--secondary)] rounded-lg">
+                <X className="w-5 h-5" />
               </button>
-            )}
-            {totalClarifications > 0 && (
-              <button
-                onClick={() => setActiveTab('clarity')}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors',
-                  activeTab === 'clarity'
-                    ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]'
-                    : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-                )}
-              >
-                <MessageCircleQuestion className="w-4 h-4" />
-                Clarity History
-                <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--secondary)]">
-                  {totalClarifications}
-                </span>
-              </button>
-            )}
-            <button
-              onClick={() => setIsOpen(false)}
-              className="px-3 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+            </div>
 
-          {/* Content */}
-          <div className="overflow-y-auto max-h-[calc(70vh-50px)]">
-            {activeTab === 'constitution' && hasConstitution && constitution && (
-              <ConstitutionContent constitution={constitution} />
-            )}
-            {activeTab === 'clarity' && totalClarifications > 0 && (
-              <ClarityContent
-                features={featuresWithClarifications}
-                onFeatureClick={onFeatureClick}
-              />
-            )}
+            <div className="flex border-b border-[var(--border)]">
+              <button
+                onClick={() => setActiveTab('info')}
+                className={cn('flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors', activeTab === 'info' ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]')}
+              >
+                <Info className="w-4 h-4" /> Project Info
+              </button>
+              {hasConstitution && (
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={cn('flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors', activeTab === 'history' ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]')}
+                >
+                  <ScrollText className="w-4 h-4" /> Constitution History
+                  {constitution?.version && <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--secondary)]">v{constitution.version}</span>}
+                </button>
+              )}
+            </div>
+
+            <div className="overflow-y-auto max-h-[calc(80vh-120px)] p-6">
+              {activeTab === 'info' && (
+                <div className="space-y-6">
+                  {/* Project Description - Always visible as textarea */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium">Project Description</h3>
+                    </div>
+                    <textarea
+                      value={editDescription}
+                      onChange={e => setEditDescription(e.target.value)}
+                      placeholder="Describe your project purpose, goals, and key requirements..."
+                      className="w-full h-32 px-3 py-2 rounded-lg border bg-[var(--secondary)] outline-none focus:border-[var(--ring)] resize-none text-sm"
+                    />
+                    {onSaveAndGenerateConstitution && (
+                      <button
+                        onClick={handleSaveAndGenerate}
+                        disabled={!editDescription.trim()}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        <Wand2 className="w-4 h-4" />
+                        Save & Generate Constitution
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Constitution - Principles & Version */}
+                  {hasConstitution && constitution && (
+                    <ConstitutionContent constitution={constitution} />
+                  )}
+                </div>
+              )}
+              {activeTab === 'history' && hasConstitution && constitution && (
+                <ConstitutionHistory constitution={constitution} />
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -183,115 +162,73 @@ export function ProjectInfoBubble({
   );
 }
 
-// Constitution content component
 function ConstitutionContent({ constitution }: { constitution: Constitution }) {
   const [expandedPrinciples, setExpandedPrinciples] = useState<Set<number>>(new Set());
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
 
   const togglePrinciple = (index: number) => {
     const newExpanded = new Set(expandedPrinciples);
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
-    } else {
-      newExpanded.add(index);
-    }
+    if (newExpanded.has(index)) newExpanded.delete(index);
+    else newExpanded.add(index);
     setExpandedPrinciples(newExpanded);
   };
 
   const toggleSection = (index: number) => {
     const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
-    } else {
-      newExpanded.add(index);
-    }
+    if (newExpanded.has(index)) newExpanded.delete(index);
+    else newExpanded.add(index);
     setExpandedSections(newExpanded);
   };
 
   return (
     <div className="p-4 space-y-4">
-      {/* Metadata */}
-      {(constitution.ratifiedDate || constitution.lastAmendedDate) && (
-        <div className="flex flex-wrap gap-4 text-xs text-[var(--muted-foreground)]">
-          {constitution.ratifiedDate && (
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" />
-              <span>Ratified: {constitution.ratifiedDate}</span>
-            </div>
-          )}
-          {constitution.lastAmendedDate && (
-            <div className="flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5" />
-              <span>Last Amended: {constitution.lastAmendedDate}</span>
-            </div>
-          )}
+      {/* Version display */}
+      {constitution.version && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Constitution</span>
+          <span className="text-xs px-2 py-0.5 rounded bg-blue-500 text-white">v{constitution.version}</span>
         </div>
       )}
-
-      {/* Principles */}
+      {(constitution.ratifiedDate || constitution.lastAmendedDate) && (
+        <div className="flex flex-wrap gap-4 text-xs text-[var(--muted-foreground)]">
+          {constitution.ratifiedDate && <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /><span>Ratified: {constitution.ratifiedDate}</span></div>}
+          {constitution.lastAmendedDate && <div className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /><span>Last Amended: {constitution.lastAmendedDate}</span></div>}
+        </div>
+      )}
+      {/* Project Description */}
+      {constitution.description && (
+        <div>
+          <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Project Description</h4>
+          <p className="text-sm bg-[var(--secondary)]/30 p-3 rounded-lg">{constitution.description}</p>
+        </div>
+      )}
       {constitution.principles.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-            <Shield className="w-4 h-4 text-[var(--muted-foreground)]" />
-            Core Principles
-          </h4>
+          <h4 className="text-sm font-medium mb-2 flex items-center gap-2"><Shield className="w-4 h-4 text-[var(--muted-foreground)]" />Core Principles</h4>
           <div className="space-y-2">
             {constitution.principles.map((principle, index) => (
-              <div
-                key={index}
-                className="rounded-lg border border-[var(--border)] overflow-hidden"
-              >
-                <button
-                  onClick={() => togglePrinciple(index)}
-                  className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left"
-                >
+              <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden">
+                <button onClick={() => togglePrinciple(index)} className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left">
                   <span className="font-medium text-sm">{principle.name}</span>
-                  {expandedPrinciples.has(index) ? (
-                    <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)]" />
-                  )}
+                  {expandedPrinciples.has(index) ? <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" /> : <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)]" />}
                 </button>
-                {expandedPrinciples.has(index) && principle.description && (
-                  <div className="px-3 pb-3 text-sm">
-                    <MarkdownRenderer content={principle.description} />
-                  </div>
-                )}
+                {expandedPrinciples.has(index) && principle.description && <div className="px-3 pb-3 text-sm"><MarkdownRenderer content={principle.description} /></div>}
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Other Sections */}
       {constitution.sections.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[var(--muted-foreground)]" />
-            Additional Sections
-          </h4>
+          <h4 className="text-sm font-medium mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-[var(--muted-foreground)]" />Additional Sections</h4>
           <div className="space-y-2">
             {constitution.sections.map((section, index) => (
-              <div
-                key={index}
-                className="rounded-lg border border-[var(--border)] overflow-hidden"
-              >
-                <button
-                  onClick={() => toggleSection(index)}
-                  className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left"
-                >
+              <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden">
+                <button onClick={() => toggleSection(index)} className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left">
                   <span className="font-medium text-sm">{section.name}</span>
-                  {expandedSections.has(index) ? (
-                    <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)]" />
-                  )}
+                  {expandedSections.has(index) ? <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" /> : <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)]" />}
                 </button>
-                {expandedSections.has(index) && section.content && (
-                  <div className="px-3 pb-3 text-sm">
-                    <MarkdownRenderer content={section.content} />
-                  </div>
-                )}
+                {expandedSections.has(index) && section.content && <div className="px-3 pb-3 text-sm"><MarkdownRenderer content={section.content} /></div>}
               </div>
             ))}
           </div>
@@ -301,34 +238,130 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
   );
 }
 
-// Clarity content component
-function ClarityContent({
-  features,
-  onFeatureClick,
-}: {
-  features: Feature[];
-  onFeatureClick?: (feature: Feature) => void;
-}) {
+function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
+  const [expandedVersions, setExpandedVersions] = useState<Set<string>>(new Set());
+
+  const toggleVersion = (version: string) => {
+    const newExpanded = new Set(expandedVersions);
+    if (newExpanded.has(version)) newExpanded.delete(version);
+    else newExpanded.add(version);
+    setExpandedVersions(newExpanded);
+  };
+
+  // Build version history from constitution data
+  const versions = [];
+  if (constitution.version) {
+    versions.push({
+      version: constitution.version,
+      date: constitution.lastAmendedDate || constitution.ratifiedDate || 'Unknown',
+      type: constitution.ratifiedDate === constitution.lastAmendedDate ? 'Initial' : 'Amendment',
+      description: constitution.description,
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium">Constitution Version History</h3>
+        <span className="text-xs px-2 py-1 rounded bg-[var(--secondary)] text-[var(--muted-foreground)]">
+          {versions.length} version{versions.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {versions.length > 0 ? (
+        <div className="space-y-2">
+          {versions.map((v) => (
+            <div key={v.version} className="rounded-lg border border-[var(--border)] overflow-hidden">
+              <button
+                onClick={() => toggleVersion(v.version)}
+                className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-medium text-sm">v{v.version}</span>
+                  <span className="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">{v.type}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[var(--muted-foreground)]">{v.date}</span>
+                  {expandedVersions.has(v.version) ? (
+                    <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)]" />
+                  )}
+                </div>
+              </button>
+              {expandedVersions.has(v.version) && (
+                <div className="px-3 pb-3 space-y-3">
+                  {/* Project Description at this version */}
+                  {constitution.description && (
+                    <div>
+                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Project Description</h4>
+                      <p className="text-sm text-[var(--foreground)] bg-[var(--secondary)]/30 p-2 rounded">
+                        {constitution.description}
+                      </p>
+                    </div>
+                  )}
+                  {constitution.principles.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Principles ({constitution.principles.length})</h4>
+                      <ul className="text-sm space-y-1">
+                        {constitution.principles.map((p, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <Shield className="w-3.5 h-3.5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
+                            <span>{p.name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {constitution.sections.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Sections ({constitution.sections.length})</h4>
+                      <ul className="text-sm space-y-1">
+                        {constitution.sections.map((s, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <FileText className="w-3.5 h-3.5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
+                            <span>{s.name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-[var(--muted-foreground)]">No version history available.</p>
+      )}
+
+      {constitution.syncImpactReport && (
+        <div className="mt-4 p-3 rounded-lg bg-[var(--secondary)]/50">
+          <h4 className="text-xs font-medium mb-2">Sync Impact Report</h4>
+          {constitution.syncImpactReport.versionChange && (
+            <p className="text-sm text-[var(--muted-foreground)]">{constitution.syncImpactReport.versionChange}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClarityContent({ features, onFeatureClick }: { features: Feature[]; onFeatureClick?: (feature: Feature) => void }) {
   const [expandedFeatures, setExpandedFeatures] = useState<Set<string>>(new Set());
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
 
   const toggleFeature = (featureId: string) => {
     const newExpanded = new Set(expandedFeatures);
-    if (newExpanded.has(featureId)) {
-      newExpanded.delete(featureId);
-    } else {
-      newExpanded.add(featureId);
-    }
+    if (newExpanded.has(featureId)) newExpanded.delete(featureId);
+    else newExpanded.add(featureId);
     setExpandedFeatures(newExpanded);
   };
 
   const toggleSession = (sessionKey: string) => {
     const newExpanded = new Set(expandedSessions);
-    if (newExpanded.has(sessionKey)) {
-      newExpanded.delete(sessionKey);
-    } else {
-      newExpanded.add(sessionKey);
-    }
+    if (newExpanded.has(sessionKey)) newExpanded.delete(sessionKey);
+    else newExpanded.add(sessionKey);
     setExpandedSessions(newExpanded);
   };
 
@@ -336,90 +369,43 @@ function ClarityContent({
     <div className="divide-y divide-[var(--border)]">
       {features.map((feature) => (
         <div key={feature.id}>
-          {/* Feature Header */}
           <div className="flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors">
-            <button
-              onClick={() => toggleFeature(feature.id)}
-              className="flex items-center gap-2 flex-1 min-w-0"
-            >
-              {expandedFeatures.has(feature.id) ? (
-                <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
-              )}
+            <button onClick={() => toggleFeature(feature.id)} className="flex items-center gap-2 flex-1 min-w-0">
+              {expandedFeatures.has(feature.id) ? <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" /> : <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />}
               <div className="flex flex-col items-start min-w-0">
-                <span className="font-medium text-sm capitalize truncate">
-                  {feature.name}
-                </span>
-                {feature.branch && (
-                  <span className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
-                    <GitBranch className="w-3 h-3" />
-                    <span className="truncate">{feature.branch}</span>
-                  </span>
-                )}
+                <span className="font-medium text-sm capitalize truncate">{feature.name}</span>
+                {feature.branch && <span className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]"><GitBranch className="w-3 h-3" /><span className="truncate">{feature.branch}</span></span>}
               </div>
             </button>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-xs text-[var(--muted-foreground)]">
-                {feature.totalClarifications} Q&A
-              </span>
-              <button
-                onClick={() => onFeatureClick?.(feature)}
-                className="p-1.5 hover:bg-[var(--secondary)] rounded transition-colors"
-                title="Open feature details"
-              >
+              <span className="text-xs text-[var(--muted-foreground)]">{feature.totalClarifications} Q&A</span>
+              <button onClick={() => onFeatureClick?.(feature)} className="p-1.5 hover:bg-[var(--secondary)] rounded transition-colors" title="Open feature details">
                 <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)]" />
               </button>
             </div>
           </div>
-
-          {/* Feature Sessions */}
           {expandedFeatures.has(feature.id) && (
             <div className="pl-6 pr-3 pb-3">
               {feature.clarificationSessions.map((session) => {
                 const sessionKey = `${feature.id}-${session.date}`;
                 return (
-                  <div
-                    key={sessionKey}
-                    className="mt-2 rounded-lg border border-[var(--border)] overflow-hidden"
-                  >
-                    <button
-                      onClick={() => toggleSession(sessionKey)}
-                      className="w-full flex items-center justify-between p-2 bg-[var(--secondary)]/30 hover:bg-[var(--secondary)] transition-colors"
-                    >
+                  <div key={sessionKey} className="mt-2 rounded-lg border border-[var(--border)] overflow-hidden">
+                    <button onClick={() => toggleSession(sessionKey)} className="w-full flex items-center justify-between p-2 bg-[var(--secondary)]/30 hover:bg-[var(--secondary)] transition-colors">
                       <div className="flex items-center gap-2 text-xs">
                         <Calendar className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
-                        <span className="text-[var(--muted-foreground)]">
-                          {session.date}
-                        </span>
+                        <span className="text-[var(--muted-foreground)]">{session.date}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-[var(--muted-foreground)]">
-                          {session.clarifications.length} Q&A
-                        </span>
-                        {expandedSessions.has(sessionKey) ? (
-                          <ChevronDown className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
-                        ) : (
-                          <ChevronRight className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
-                        )}
+                        <span className="text-xs text-[var(--muted-foreground)]">{session.clarifications.length} Q&A</span>
+                        {expandedSessions.has(sessionKey) ? <ChevronDown className="w-3.5 h-3.5 text-[var(--muted-foreground)]" /> : <ChevronRight className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />}
                       </div>
                     </button>
-
                     {expandedSessions.has(sessionKey) && (
                       <div className="p-2 space-y-2">
                         {session.clarifications.map((qa, qaIndex) => (
-                          <div
-                            key={qaIndex}
-                            className="rounded-lg bg-[var(--secondary)]/20 p-2 text-sm"
-                          >
-                            <div className="flex items-start gap-2">
-                              <HelpCircle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
-                              <p className="text-[var(--muted-foreground)]">{qa.question}</p>
-                            </div>
-                            <div className="flex items-start gap-2 mt-2 pl-6">
-                              <CheckCircle2 className="w-4 h-4 text-[var(--foreground)] mt-0.5 flex-shrink-0" />
-                              <p className="text-[var(--foreground)]">{qa.answer}</p>
-                            </div>
+                          <div key={qaIndex} className="rounded-lg bg-[var(--secondary)]/20 p-2 text-sm">
+                            <div className="flex items-start gap-2"><HelpCircle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" /><p className="text-[var(--muted-foreground)]">{qa.question}</p></div>
+                            <div className="flex items-start gap-2 mt-2 pl-6"><CheckCircle2 className="w-4 h-4 text-[var(--foreground)] mt-0.5 flex-shrink-0" /><p className="text-[var(--foreground)]">{qa.answer}</p></div>
                           </div>
                         ))}
                       </div>
