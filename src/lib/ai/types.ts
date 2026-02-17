@@ -252,3 +252,115 @@ export interface GeneratedSpecKit {
     }>;
   };
 }
+
+// ============================================
+// Phase 1 Artifacts: Research, Data Model, Quickstart, Contracts
+// ============================================
+
+// Generate Research - Phase 0 of plan workflow
+export interface GenerateResearchOptions {
+  specContent: string;
+  planContent: string;
+  clarifications?: ClarificationAnswer[];
+}
+
+export interface GeneratedResearch {
+  overview: string;
+  sections: ResearchSection[];
+}
+
+export interface ResearchSection {
+  title: string;
+  content: string;
+  bullets: string[];
+}
+
+// Generate Data Model - Phase 1 of plan workflow
+export interface GenerateDataModelOptions {
+  specContent: string;
+  planContent: string;
+  researchContent?: string;
+}
+
+export interface GeneratedDataModel {
+  overview: string;
+  entities: DataModelEntity[];
+  relationships: DataModelRelationship[];
+}
+
+export interface DataModelEntity {
+  name: string;
+  description: string;
+  fields: DataModelField[];
+}
+
+export interface DataModelField {
+  name: string;
+  type: string;
+  required: boolean;
+  description?: string;
+}
+
+export interface DataModelRelationship {
+  from: string;
+  to: string;
+  type: 'one-to-one' | 'one-to-many' | 'many-to-many';
+  description?: string;
+}
+
+// Generate Quickstart - Phase 1 of plan workflow
+export interface GenerateQuickstartOptions {
+  specContent: string;
+  planContent: string;
+  dataModelContent?: string;
+}
+
+export interface GeneratedQuickstart {
+  overview: string;
+  prerequisites: string[];
+  steps: QuickstartStep[];
+}
+
+export interface QuickstartStep {
+  title: string;
+  content: string;
+  code?: string;
+  language?: string;
+}
+
+// Generate Contracts - Phase 1 of plan workflow
+export interface GenerateContractsOptions {
+  specContent: string;
+  planContent: string;
+  dataModelContent?: string;
+}
+
+export interface GeneratedContracts {
+  contracts: ApiContract[];
+}
+
+export interface ApiContract {
+  name: string;
+  description: string;
+  endpoint: string;
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  request: ContractRequest;
+  response: ContractResponse;
+  errors: ContractError[];
+}
+
+export interface ContractRequest {
+  headers?: Record<string, string>;
+  body?: Record<string, unknown>;
+  queryParams?: Record<string, string>;
+}
+
+export interface ContractResponse {
+  status: number;
+  body?: Record<string, unknown>;
+}
+
+export interface ContractError {
+  status: number;
+  message: string;
+}

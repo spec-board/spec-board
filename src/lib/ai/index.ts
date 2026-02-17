@@ -23,7 +23,16 @@ import type {
   GeneratedTasks,
   GeneratedChecklist,
   AnalysisResult,
-  AIProvider
+  AIProvider,
+  // Phase 1 artifacts
+  GenerateResearchOptions,
+  GenerateDataModelOptions,
+  GenerateQuickstartOptions,
+  GenerateContractsOptions,
+  GeneratedResearch,
+  GeneratedDataModel,
+  GeneratedQuickstart,
+  GeneratedContracts
 } from './types';
 
 /**
@@ -151,4 +160,52 @@ export async function generateConstitution(options: {
   console.log(`[AI] Generating constitution with ${provider}`);
 
   return aiService.generateConstitution(options);
+}
+
+// ============================================================================
+// Phase 1 Artifacts: Research, Data Model, Quickstart, Contracts
+// ============================================================================
+
+/**
+ * Phase 0: Research - Investigate technical decisions and best practices
+ * Creates research.md with findings and recommendations
+ */
+export async function generateResearch(options: GenerateResearchOptions): Promise<GeneratedResearch> {
+  const provider = await getProvider();
+  console.log(`[AI] Generating research with ${provider}`);
+
+  return aiService.generateResearch(options);
+}
+
+/**
+ * Phase 1: Data Model - Design data schema and relationships
+ * Creates data-model.md with entity definitions
+ */
+export async function generateDataModel(options: GenerateDataModelOptions): Promise<GeneratedDataModel> {
+  const provider = await getProvider();
+  console.log(`[AI] Generating data model with ${provider}`);
+
+  return aiService.generateDataModel(options);
+}
+
+/**
+ * Phase 1: Quickstart - Create getting started guide
+ * Creates quickstart.md with installation and setup steps
+ */
+export async function generateQuickstart(options: GenerateQuickstartOptions): Promise<GeneratedQuickstart> {
+  const provider = await getProvider();
+  console.log(`[AI] Generating quickstart with ${provider}`);
+
+  return aiService.generateQuickstart(options);
+}
+
+/**
+ * Phase 1: Contracts - Design API contracts
+ * Creates contracts (JSON) with endpoint definitions
+ */
+export async function generateContracts(options: GenerateContractsOptions): Promise<GeneratedContracts> {
+  const provider = await getProvider();
+  console.log(`[AI] Generating contracts with ${provider}`);
+
+  return aiService.generateContracts(options);
 }
