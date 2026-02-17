@@ -874,6 +874,7 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
     return {
       id: featureName,
       name: featureName.replace(/^\d+-/, '').replace(/-/g, ' '),
+      description: undefined,
       path: featurePath,
       stage,
       hasSpec,
@@ -894,6 +895,13 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
       specContent,
       planContent,
       tasksContent,
+      clarificationsContent: null,
+      analysisContent: null,
+      researchContent: null,
+      dataModelContent: null,
+      quickstartContent: null,
+      contractsContent: null,
+      checklistsContent: null,
       additionalFiles,
       // Analysis data for spec alignment
       analysis: analysis.markdownContent ? analysis : null,

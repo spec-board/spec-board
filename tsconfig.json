@@ -37,6 +37,9 @@
   ],
   "exclude": [
     "node_modules",
+    "packages",
+    "e2e",
+    "playwright.config.ts",
     "**/*.test.ts",
     "**/*.test.tsx",
     "vitest.config.ts"

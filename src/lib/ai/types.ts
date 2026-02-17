@@ -136,6 +136,7 @@ export interface TaskItem {
   description: string;
   userStory?: string;
   parallel?: boolean;
+  priority?: string;
 }
 
 // Step 5: Analyze - Validate consistency
