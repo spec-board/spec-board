@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { FeatureDetailV2 } from '@/components/feature-detail-v2';
+import { FeatureDetailByStage } from '@/components/feature-detail-v2';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ArrowLeft } from 'lucide-react';
 import type { Project, Feature, Constitution } from '@/types';
@@ -128,10 +128,9 @@ export default function FeaturePage() {
         onCancel={handleDeleteCancel}
         isLoading={isDeleting}
       />
-      <FeatureDetailV2
+      <FeatureDetailByStage
         feature={feature}
         onClose={handleClose}
-        onDelete={handleDelete}
       />
     </>
   );
