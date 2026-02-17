@@ -3,6 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  seed = "tsx prisma/seed.ts"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
 }
 
 datasource db {
