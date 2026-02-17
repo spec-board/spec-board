@@ -7,6 +7,7 @@ import type {
   GenerateClarifyOptions,
   GeneratePlanOptions,
   GenerateTasksOptions,
+  GenerateChecklistOptions,
   AnalyzeOptions,
   GenerateConstitutionOptions,
   GeneratedUserStory,
@@ -15,6 +16,7 @@ import type {
   ClarificationQuestion,
   GeneratedPlan,
   GeneratedTasks,
+  GeneratedChecklist,
   AnalysisResult,
   GeneratedConstitution
 } from './types';
@@ -196,6 +198,16 @@ class AIService {
       8192
     );
     return this.parseTasksResponse(content);
+  }
+
+  // Step 4.5: Generate checklist - "Unit Tests for Requirements"
+  async generateChecklist(options: GenerateChecklistOptions): Promise<GeneratedChecklist> {
+    const content = await this.callAPI(
+      this.buildChecklistPrompt(options.specContent, options.planContent, options.tasksContent, options.theme),
+      'You are a QA analyst that validates requirement quality. Create checklists that test the REQUIREMENTS themselves, not the implementation.',
+      8192
+    );
+    return this.parseChecklistResponse(content);
   }
 
   // Step 5: Analyze documents
@@ -401,6 +413,79 @@ Generate task breakdown in JSON format:
 }
 
 Return ONLY valid JSON, no other text.`;
+  }
+
+  private buildChecklistPrompt(
+    specContent: string,
+    planContent: string,
+    tasksContent?: string,
+    theme?: string
+  ): string {
+    const themeSection = theme ? `\nFocus on ${theme} requirements quality.` : '';
+    const tasksSection = tasksContent ? `\n\nTasks Content:\n${tasksContent}` : '';
+
+    return `You are a QA analyst that validates requirement quality. Create a checklist as "Unit Tests for Requirements" - validate the QUALITY of requirements, NOT the implementation.
+
+CRITICAL: Each item must test whether the REQUIREMENTS are well-written, NOT whether the code works.
+
+${themeSection}
+
+## Spec Content:
+${specContent}
+
+## Plan Content:
+${planContent}${tasksSection}
+
+## Checklist Guidelines - "Unit Tests for Requirements":
+
+**Quality Dimensions to Test:**
+- Completeness: Are all necessary requirements present?
+- Clarity: Are requirements unambiguous and specific?
+- Consistency: Do requirements align with each other?
+- Measurability: Can requirements be objectively verified?
+- Coverage: Are all scenarios/edge cases addressed?
+
+**PROHIBITED Patterns (testing implementation, NOT requirements):**
+- ❌ "Verify landing page displays 3 cards"
+- ❌ "Test hover states work"
+- ❌ "Confirm logo click navigates home"
+- ❌ Any item starting with "Verify", "Test", "Confirm", "Check"
+
+**REQUIRED Patterns (testing requirements quality):**
+- ✅ "Are the exact number and layout specified?" [Completeness]
+- ✅ "Is 'prominent display' quantified with specific sizing?" [Clarity]
+- ✅ "Are hover state requirements consistent across elements?" [Consistency]
+- ✅ "Is fallback behavior defined when image fails to load?" [Edge Case]
+
+Generate checklist in JSON format:
+{
+  "theme": "${theme || 'general'}",
+  "items": [
+    {"id": "CHK001", "question": "Are error handling requirements defined for all API failure modes? [Completeness]", "category": "Completeness", "reference": "[Gap]"},
+    {"id": "CHK002", "question": "Is 'fast loading' quantified with specific timing thresholds? [Clarity, Spec §NFR-1]", "category": "Clarity", "reference": "Spec §NFR-1"}
+  ]
+}
+
+Return ONLY valid JSON, no other text.`;
+  }
+
+  private parseChecklistResponse(content: string): GeneratedChecklist {
+    try {
+      // Extract JSON from response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
+      }
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        theme: parsed.theme || 'general',
+        items: parsed.items || []
+      };
+    } catch (error) {
+      console.error('[AI] Failed to parse checklist response:', error);
+      // Return empty checklist on parse error
+      return { theme: 'general', items: [] };
+    }
   }
 
   private buildAnalyzePrompt(
