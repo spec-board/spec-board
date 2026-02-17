@@ -124,7 +124,6 @@ export default function Home() {
         <DeleteProjectModal
           isOpen={true}
           projectName={deleteProject.displayName}
-          projectPath={deleteProject.filePath || deleteProject.name}
           onClose={() => setDeleteProject(null)}
           onConfirm={handleConfirmDelete}
         />

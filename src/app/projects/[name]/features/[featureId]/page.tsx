@@ -18,7 +18,6 @@ export default function FeaturePage() {
   const [feature, setFeature] = useState<Feature | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [projectPath, setProjectPath] = useState<string | null>(null);
   const [hasConstitution, setHasConstitution] = useState(false);
   const [constitution, setConstitution] = useState<Constitution | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -28,8 +27,7 @@ export default function FeaturePage() {
     setIsLoading(true);
     setError(null);
     try {
-      // Use unified endpoint to maintain consistency with project page
-      // This ensures feature IDs match (database or filesystem)
+      // Use unified endpoint - database-first only
       const response = await fetch('/api/project/' + projectSlug + '/data', { cache: 'no-store' });
       if (!response.ok) {
         if (response.status === 404) {
@@ -39,32 +37,8 @@ export default function FeaturePage() {
       }
       const data = await response.json();
 
-      // For database-first projects, we need to load full feature content from filesystem
-      const projectPath = data.path;
-
-      // If we have a filesystem path, load full content
-      if (projectPath && data.source === 'database') {
-        const fullResponse = await fetch('/api/project?path=' + encodeURIComponent(projectPath), { cache: 'no-store' });
-        if (fullResponse.ok) {
-          const fullData: Project = await fullResponse.json();
-          // Merge full content into database features
-          const featuresWithContent = data.features.map((f: Feature) => {
-            const matching = fullData.features.find(ff => ff.id === f.id || ff.id === f.name);
-            if (matching) {
-              return { ...f, ...matching };
-            }
-            return f;
-          });
-          data.features = featuresWithContent;
-          data.hasConstitution = fullData.hasConstitution;
-          data.constitution = fullData.constitution;
-        }
-      }
-
-      setProjectPath(projectPath || '');
-
       // Find the specific feature
-      const foundFeature = data.features.find((f: Feature) => f.id === featureId || f.name === featureId);
+      const foundFeature = data.features.find((f: Feature) => f.id === featureId || f.featureId === featureId || f.name === featureId);
       if (!foundFeature) {
         throw new Error('Feature "' + featureId + '" not found');
       }
@@ -82,39 +56,6 @@ export default function FeaturePage() {
   useEffect(() => {
     loadFeature();
   }, [loadFeature]);
-
-  // Set up SSE for real-time updates
-  useEffect(() => {
-    if (!projectPath) return;
-
-    const eventSource = new EventSource(
-      `/api/watch?path=${encodeURIComponent(projectPath)}`
-    );
-
-    eventSource.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        if (message.type === 'update' && message.data) {
-          const updatedFeature = message.data.features.find(
-            (f: Feature) => f.id === featureId
-          );
-          if (updatedFeature) {
-            setFeature(updatedFeature);
-          }
-        }
-      } catch (err) {
-        console.error('Error parsing SSE message:', err);
-      }
-    };
-
-    eventSource.onerror = () => {
-      console.error('SSE connection error');
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [projectPath, featureId]);
 
   const handleClose = () => {
     router.push('/projects/' + projectSlug);
