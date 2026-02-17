@@ -7,12 +7,11 @@ import { cn } from '@/lib/utils';
 interface DeleteProjectModalProps {
   isOpen: boolean;
   projectName: string;
-  projectPath: string;
   onClose: () => void;
   onConfirm: () => void;
 }
 
-export function DeleteProjectModal({ isOpen, projectName, projectPath, onClose, onConfirm }: DeleteProjectModalProps) {
+export function DeleteProjectModal({ isOpen, projectName, onClose, onConfirm }: DeleteProjectModalProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Reset state when modal opens
@@ -73,17 +72,8 @@ export function DeleteProjectModal({ isOpen, projectName, projectPath, onClose, 
             Are you sure you want to delete <strong>{projectName}</strong>?
           </p>
           <p className="text-xs text-[var(--muted-foreground)] mt-2">
-            This will remove the project from the database. Your spec-kit files (spec.md, plan.md, tasks.md, etc.) will remain unchanged.
+            This will permanently delete the project and all its data from the database. This action cannot be undone.
           </p>
-          <div
-            className="mt-4 p-3 rounded-lg text-xs font-mono"
-            style={{
-              backgroundColor: 'var(--secondary)',
-              color: 'var(--muted-foreground)',
-            }}
-          >
-            {projectPath}
-          </div>
         </div>
 
         {/* Footer */}
