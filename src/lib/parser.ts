@@ -910,6 +910,8 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
       hasChecklists,
       totalChecklistItems,
       completedChecklistItems,
+      // Constitution version - null for parser-based features (legacy)
+      constitutionVersion: null,
     };
   } catch (error) {
     console.error(`Error parsing feature at ${featurePath}:`, error);

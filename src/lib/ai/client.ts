@@ -89,11 +89,32 @@ class AIService {
     const baseUrl = await this.getBaseUrl();
     const model = await this.getModel();
 
+    // Debug logging
+    console.log('[AI Client] baseUrl:', baseUrl);
+    console.log('[AI Client] model:', model);
+    console.log('[AI Client] apiKey length:', apiKey?.length);
+    console.log('[AI Client] apiKey prefix:', apiKey?.substring(0, 5));
+
     const messages = systemPrompt
       ? [{ role: 'system', content: systemPrompt }, { role: 'user', content: prompt }]
       : [{ role: 'user', content: prompt }];
 
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    // Handle baseUrl - support both OpenAI-compatible formats:
+    // - /v1/chat/completions (new format)
+    // - /v1/completions (legacy OpenAI format)
+    let fetchUrl = baseUrl;
+    if (fetchUrl.includes('/chat/completions')) {
+      // Already has full endpoint, use as-is
+    } else if (fetchUrl.endsWith('/completions')) {
+      // Legacy format: /v1/completions → add /chat
+      fetchUrl = `${fetchUrl}/chat`;
+    } else {
+      // Standard format: /v1 → add /chat/completions
+      fetchUrl = `${fetchUrl}/chat/completions`;
+    }
+    console.log('[AI Client] fetchUrl:', fetchUrl);
+
+    const response = await fetch(fetchUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -108,7 +129,9 @@ class AIService {
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.log('[AI Client] Error response:', errorText);
+      throw new Error(`API error: ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { X, ArrowLeft, Trash2 } from 'lucide-react';
+import { X, ArrowLeft, Trash2, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Feature, Task } from '@/types';
 import type { FeatureDetailV2Props, DocumentType } from './types';
@@ -142,9 +142,21 @@ export function FeatureDetailV2({
             >
               {feature.name}
             </h1>
-            <p className="text-xs text-[var(--muted-foreground)]">
-              Feature {feature.id} • {feature.stage}
-            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Feature {feature.id} • {feature.stage}
+              </p>
+              {feature.constitutionVersion && (
+                <button
+                  onClick={() => setSelectedDocument('constitution')}
+                  className="flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-500/10 text-blue-500 rounded-full hover:bg-blue-500/20 transition-colors"
+                  title="Constitution version at time of feature creation"
+                >
+                  <Scale className="w-3 h-3" />
+                  v{feature.constitutionVersion.version}
+                </button>
+              )}
+            </div>
           </div>
 
           <button
