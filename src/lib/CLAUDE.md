@@ -92,6 +92,12 @@ General utilities:
 | `getKanbanColumn()` | Map stage to Kanban column |
 | `isPrismaError()` | Type guard for Prisma errors |
 | `openInEditor()` | Open file in VS Code via URI |
+| `formatRelativeTime()` | Format date to relative time (e.g., "5m ago") |
+| `formatLocaleDate()` | Format date to locale string (e.g., "Feb 17, 2026") |
+| `formatLocaleDateTime()` | Format date with time (e.g., "Feb 17, 2026, 6:33 PM") |
+| `formatLocaleTime()` | Format time only (e.g., "6:33 PM") |
+
+**Note:** All datetime functions automatically use browser's local timezone. Database stores UTC ISO 8601 format (e.g., `2026-02-17T11:33:30.128Z`). Use `undefined` as locale to let browser detect user preference.
 
 ## Subdirectories
 

@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All tests updated to reflect new stage values
 
 ### Added
+- **DateTime Formatting Utilities** - Unified datetime display with local timezone:
+  - `formatRelativeTime()` - "5m ago", "2h ago", "3d ago"
+  - `formatLocaleDate()` - "Feb 17, 2026"
+  - `formatLocaleDateTime()` - "Feb 17, 2026, 6:33 PM"
+  - `formatLocaleTime()` - "6:33 PM"
+  - Automatically uses browser's local timezone (database stores UTC)
+  - Use instead of inline `new Date().toLocaleString()` calls
+
 - **AI Feature Creation** - Generate spec-kit documents automatically:
   - User enters feature name and description
   - AI generates spec.md, plan.md, and tasks.md using speckit
