@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const provider = getProvider();
+    const provider = await getProvider();
     const analysis = await analyzeDocuments({
       specContent,
       planContent,

@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const provider = getProvider();
+    const provider = await getProvider();
     const spec = await generateSpec({
       featureName: name,
       description: description || name,

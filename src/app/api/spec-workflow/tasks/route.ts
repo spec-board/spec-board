@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const provider = getProvider();
+    const provider = await getProvider();
     const tasks = await generateTasks({ specContent, planContent });
 
     const tasksContent = generateTasksMarkdown(tasks, name || 'Feature');

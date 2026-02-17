@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const provider = getProvider();
+    const provider = await getProvider();
 
     // If existing questions provided (user answered them), use those
     // Otherwise, generate new questions from AI
