@@ -20,7 +20,7 @@ This directory contains the backend logic for executing AI-generated code in iso
 ## Patterns & Conventions
 - All drivers implement a common interface defined in `base.ts`
 - Sessions are managed through `Manager` class
-- API keys stored securely via keychain (uses system keytar)
+- Credentials stored via environment variables (E2B_API_KEY)
 
 ## Dependencies
 - **Internal**: `@/lib/*`, `@/types`
@@ -33,4 +33,4 @@ This directory contains the backend logic for executing AI-generated code in iso
 ## Important Notes
 - Server-side only (uses Node.js APIs)
 - E2B provides isolated sandbox for code execution
-- Keys stored in system keychain (never in code)
+- Credentials via environment variables (E2B_API_KEY), never in code
