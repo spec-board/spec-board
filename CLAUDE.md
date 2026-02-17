@@ -4,517 +4,108 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-SpecBoard is a visual dashboard for spec-kit projects that provides a Kanban board interface for tracking feature development. It parses spec-kit markdown files (spec.md, plan.md, tasks.md) and displays them in an interactive web interface with real-time updates.
+SpecBoard is a visual dashboard for spec-kit projects with a Kanban board interface for tracking feature development. It uses a **database-first** architecture - all project content (specs, plans, tasks, clarifications) is stored in PostgreSQL.
+
+**Legacy**: The `lib/parser.ts` module exists for parsing markdown files but is no longer used for the main data flow.
 
 ## Commands
 
-### Development
 ```bash
-pnpm dev              # Start development server (default port 3000)
+pnpm dev              # Start development server (port 3000)
 pnpm build            # Build for production
 pnpm start            # Start production server
-```
-
-### Testing
-```bash
 pnpm test             # Run tests in watch mode
-pnpm test:run         # Run tests once
-pnpm test:coverage    # Run tests with coverage report
-```
-
-### E2B Cloud Sandbox Testing
-```bash
-# Run tests in E2B cloud sandbox (requires E2B_API_KEY)
-node scripts/e2b-run-tests.js [test-pattern]
-
-# Example: Run specific test file
-node scripts/e2b-run-tests.js src/app/api/spec-workflow/route.test.ts
-```
-
-**E2B Configuration:**
-- Uses `/home/user` as writable directory (not `/workspace`)
-- Uploads files via `sandbox.files.write()`
-- Creates directories with placeholder files (`.dir`)
-- Node.js available by default (no template needed)
-
-### Type Checking
-```bash
-pnpm tsc --noEmit     # Type check without emitting files
-```
-
-### Database
-```bash
-pnpm prisma studio           # Open Prisma Studio GUI
-pnpm prisma migrate dev      # Run migrations in development
-pnpm prisma generate         # Regenerate Prisma client
-pnpm prisma db push          # Push schema changes (dev only)
-pnpm prisma migrate reset    # Reset database
-```
-
-### Linting
-```bash
-pnpm lint             # Run Next.js linter
+pnpm test:run        # Run tests once
+pnpm test:coverage   # Run tests with coverage
+pnpm tsc --noEmit    # Type check
+pnpm lint            # Run linter
+pnpm prisma studio   # Open Prisma Studio
+pnpm prisma migrate dev --name migration_name  # Create migration
 ```
 
 ## Architecture
 
-### High-Level Structure
+### Database-First
 
-SpecBoard follows a three-layer architecture:
-
-1. **Filesystem Layer**: Reads spec-kit markdown files from local filesystem
-2. **Database Layer**: PostgreSQL stores project metadata (slugs, paths, user accounts for cloud sync)
-3. **Application Layer**: Next.js App Router with React 19, Zustand state management
-
-### Key Architectural Patterns
-
-**Slug-Based Routing**: Projects are accessed via database-generated slugs (e.g., `/projects/my-todolist`) rather than filesystem paths. This provides clean URLs and decouples routing from filesystem structure.
-
-**Parser-Driven Data Model**: The `parser.ts` module is the heart of the application. It reads markdown files and extracts structured data (tasks, user stories, phases, clarifications, etc.) which drives the entire UI.
-
-**Real-Time Updates**: Server-Sent Events (SSE) via `/api/watch` provide live updates when spec files change on disk using `chokidar` file watching.
-
-**Client-Side State**: Zustand store manages project state, recent projects list (persisted to localStorage), and keyboard navigation focus state.
+All content is stored in PostgreSQL. The Feature model contains content fields:
+- `specContent`, `planContent`, `tasksContent`, `clarificationsContent`
+- `researchContent`, `dataModelContent`, `quickstartContent`
+- `contractsContent`, `checklistsContent`, `analysisContent`
 
 ### Data Flow
 
 ```
-Filesystem (spec-kit files)
-    ↓
-Parser (lib/parser.ts) → Structured data
-    ↓
-API Routes (/api/project, /api/watch)
-    ↓
-Zustand Store (lib/store.ts)
-    ↓
-React Components (Kanban board, feature detail modal)
+PostgreSQL → API Routes (/api/project/[name]/data) → Zustand Store → React UI
 ```
 
 ### URL Structure
 
-| Route | Description |
-|-------|-------------|
-| `/` | Home page with recent projects |
-| `/projects/:slug` | Project Kanban board (slug from database) |
+| Route | Purpose |
+|-------|---------|
+| `/` | Home - project list from database |
+| `/projects/:slug` | Kanban board (slug from DB) |
 | `/projects/:slug/features/:id` | Feature detail modal |
-| `/projects/:slug/features/:id/spec` | Spec viewer |
-| `/projects/:slug/features/:id/plan` | Plan viewer |
-| `/cloud` | Cloud sync dashboard (OAuth authentication) |
-| `/settings` | Application settings |
-| `/shortcuts` | Keyboard shortcuts reference |
+| `/cloud` | Cloud sync dashboard |
+| `/settings` | App settings |
 
-**Important**: URLs use database slugs (e.g., `my-project`), not filesystem paths. Projects are auto-registered via `/api/projects/register` which generates unique slugs from folder names.
+**Important**: URLs use database slugs, not filesystem paths.
 
-## Project Structure
-
-```
-spec-board/
-├── prisma/
-│   ├── schema.prisma          # Database schema (Project, User, CloudProject, etc.)
-│   └── migrations/            # Database migration history
-├── src/
-│   ├── app/
-│   │   ├── page.tsx           # Home page
-│   │   ├── layout.tsx         # Root layout
-│   │   ├── projects/[name]/   # Dynamic project routes
-│   │   ├── cloud/             # Cloud sync UI
-│   │   └── api/               # API routes
-│   │       ├── projects/      # Project CRUD (register, list, update, delete)
-│   │       ├── project/       # Load and parse spec-kit files
-│   │       ├── watch/         # SSE real-time updates
-│   │       ├── browse/        # File browser for project selection
-│   │       ├── checklist/     # Toggle checklist items
-│   │       ├── analysis/      # Save AI analysis reports
-│   │       ├── sync/          # Cloud sync operations
-│   │       ├── auth/          # Better Auth OAuth
-│   │       └── tokens/        # API token management
-│   ├── components/
-│   │   ├── feature-detail/    # Feature modal (split-view, navigation)
-│   │   ├── kanban-board.tsx   # Main Kanban board
-│   │   ├── *-viewer.tsx       # Content viewers (spec, plan, research, etc.)
-│   │   ├── sync/              # Cloud sync UI components
-│   │   └── ...
-│   ├── lib/
-│   │   ├── parser.ts          # Core markdown parser (spec-kit files)
-│   │   ├── store.ts           # Zustand state management
-│   │   ├── path-utils.ts      # Path validation and security
-│   │   ├── prisma.ts          # Prisma client singleton
-│   │   ├── utils.ts           # General utilities (cn, colors, etc.)
-│   │   ├── checklist-utils.ts # Checklist parsing and toggling
-│   │   ├── markdown/          # Specialized parsers (plan, research, data-model, etc.)
-│   │   ├── accessibility/     # Focus trap, announcements
-│   │   ├── auth/              # Better Auth configuration
-│   │   ├── services/          # Cloud sync services
-│   │   └── sync/              # Sync utilities (checksum, diff)
-│   └── types/
-│       └── index.ts           # All TypeScript type definitions
-├── scripts/
-│   └── e2b-run-tests.js       # E2B cloud sandbox test runner
-├── .env                       # Environment variables (DATABASE_URL, PORT)
-└── vitest.config.ts           # Vitest configuration
-```
-
-## Core Components
-
-### Parser System (lib/parser.ts)
-
-The parser is the most critical component. It reads spec-kit markdown files and extracts structured data:
-
-**Key Functions**:
-- `parseTaskLine()`: Parse task format `- [ ] T001 [P] [US1] Description`
-- `parseTasksFile()`: Parse tasks.md into tasks and phases
-- `parseUserStories()`: Extract user stories from spec.md
-- `parseTechnicalContext()`: Extract tech context from plan.md
-- `parseClarifications()`: Extract Q&A history from spec.md
-- `parseConstitution()`: Parse constitution.md principles and sections
-- `parseFeature()`: Parse entire feature directory (spec, plan, tasks, research, etc.)
-- `parseProject()`: Parse entire project with all features
-
-**Task Format**:
-```markdown
-- [ ] T001 [P] [US1] Description with file path
-```
-- `T001`: Task ID
-- `[P]`: Parallel marker (optional)
-- `[US1]`: User story reference (optional)
-
-**Feature Stages**: `specify` → `clarifying` → `planning` → `in_progress` → `done`
-
-### State Management (lib/store.ts)
-
-Zustand store with localStorage persistence:
-
-**State**:
-- `project`: Current loaded project
-- `selectedFeature`: Currently selected feature
-- `recentProjects`: Recently opened projects (max 10, with slugs cached)
-- `focusState`: Keyboard navigation focus (column, cardIndex, featureId)
-
-**Key Actions**:
-- `addRecentProject(project, slug?)`: Add/update project in recent list with metadata
-- `loadRecentProjects()`: Load from localStorage
-- `setFocusState()`: Update keyboard navigation focus
-
-**RecentProject Structure**:
-```typescript
-{
-  path: string;              // Filesystem path
-  name: string;              // Project name
-  slug?: string;             // Database slug for routing
-  lastOpened: string;        // ISO date
-  summary: string | null;    // From constitution.md
-  activeFeature: { stage, featureName } | null;
-  featureCount: number;
-  completionPercentage: number;
-  stageBreakdown: Record<FeatureStage, number>;
-}
-```
-
-### Database Schema (prisma/schema.prisma)
-
-**Local Projects**:
-- `Project`: Stores project metadata (id, name/slug, displayName, filePath)
-
-**Cloud Sync** (Feature 011):
-- `User`: User accounts with OAuth support
-- `CloudProject`: Cloud-hosted projects
-- `SyncedSpec`: Spec files stored in cloud
-- `ProjectMember`: Project membership with roles (VIEW, EDIT, ADMIN)
-- `SyncEvent`: Audit log for sync operations
-- `ConflictRecord`: Conflict resolution tracking
-- `SpecVersion`: Version history for conflict resolution
+## Core Patterns
 
 ### API Routes
 
-**Project Management**:
-- `POST /api/projects/register`: Auto-register project from filesystem path
-- `GET /api/projects`: List all projects
-- `GET /api/projects/:name`: Get project by slug
-- `PUT /api/projects/:name`: Update project
-- `DELETE /api/projects/:name`: Delete project
+- `/api/projects` - CRUD for projects (name/slug stored in DB)
+- `/api/project/:name/data` - Load project data from database
+- `/api/browse` - List all projects from database
+- `/api/spec-workflow/*` - AI workflow endpoints (save to DB)
+- `/api/checklist` - Toggle checklist items
+- `/api/sync/*` - Cloud sync operations
+- `/api/auth/*` - Better Auth OAuth
 
-**Spec Data**:
-- `GET /api/project?path=...`: Load and parse spec-kit project
-- `GET /api/watch?path=...`: SSE stream for real-time updates
-- `GET /api/browse?path=...`: Browse filesystem directories
+### State Management
 
-**Checklist Interaction**:
-- `POST /api/checklist`: Toggle checklist item in markdown file
+Zustand store (`lib/store.ts`) manages:
+- `project`: Current loaded project
+- `selectedFeature`: Currently selected feature
+- `focusState`: Keyboard navigation (column, cardIndex, featureId)
 
-**Analysis Reports**:
-- `POST /api/analysis`: Save AI analysis report to feature directory
+### AI Integration
 
-**Spec Workflow** (AI-powered feature generation):
-- `POST /api/spec-workflow/specify`: Generate spec from feature description
-- `POST /api/spec-workflow/clarify`: Generate clarification questions
-- `POST /api/spec-workflow/plan`: Generate implementation plan
-- `POST /api/spec-workflow/tasks`: Generate actionable tasks
-- `POST /api/spec-workflow/analyze`: Analyze consistency across artifacts
-- `POST /api/spec-workflow/constitution`: Create project constitution
-
-**Cloud Sync**:
-- `POST /api/cloud-projects`: Create cloud project
-- `GET /api/cloud-projects`: List user's cloud projects
-- `POST /api/cloud-projects/connect`: Connect local project to cloud
-- `POST /api/sync/:projectId/push`: Push local changes to cloud
-- `GET /api/sync/:projectId/status`: Get sync status
-- `GET /api/sync/:projectId/conflicts`: List conflicts
-- `POST /api/sync/:projectId/conflicts/:id/resolve`: Resolve conflict
-
-## Key Features
-
-### Keyboard Navigation
-
-Comprehensive keyboard shortcuts for accessibility:
-
-**Kanban Board**:
-- `Tab`: Navigate cards
-- `Enter`: Open feature detail
-- `Arrow keys`: Navigate within columns
-
-**Feature Modal**:
-- `Escape`: Close split view or modal
-- `1-9`: Jump to section
-- `Shift+1-9`: Open section in right pane (split view)
-- `Ctrl+\`: Toggle split view
-- `Tab`: Switch focus between panes
-- `↑/↓`: Navigate sections
-- `Enter`: Open selected section
-- `Shift+Enter`: Open in split view
-
-### Checklist Interaction
-
-Users can toggle checklist items by clicking or pressing `Space`/`Enter`. The system:
-1. Sends toggle request to `/api/checklist` with file path and line index
-2. Server validates path, reads file, toggles checkbox
-3. Writes updated content back to disk
-4. File watcher triggers SSE update to refresh UI
-
-### Real-Time Updates
-
-File watching via `chokidar` monitors spec-kit directories. When files change:
-1. Parser re-parses affected files
-2. SSE connection sends updated project data to client
-3. Zustand store updates
-4. React components re-render
-
-### Cloud Sync (Feature 011)
-
-OAuth-based authentication with Better Auth. Users can:
-- Create cloud projects
-- Connect local projects to cloud via 6-character link codes
-- Push/pull changes with conflict detection
-- Resolve conflicts with 3-way merge UI
-- Invite team members with role-based access (VIEW, EDIT, ADMIN)
-
-## Code Conventions
-
-### Naming Conventions
-
-| Type | Convention | Example |
-|------|------------|---------|
-| Files | `kebab-case.ts` | `kanban-board.tsx` |
-| Components | `PascalCase` | `FeatureDetail` |
-| Functions | `camelCase` | `parseTaskLine` |
-| Types/Interfaces | `PascalCase` | `Feature`, `Task` |
-| Constants | `UPPER_SNAKE_CASE` | `RECENT_PROJECTS_KEY` |
-
-### Import Aliases
-
-Use `@/` for all imports:
-```typescript
-import { parseProject } from '@/lib/parser';
-import type { Feature } from '@/types';
-import { cn } from '@/lib/utils';
-```
-
-### Component Structure
-
-```typescript
-'use client';
-
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import type { Feature } from '@/types';
-
-interface Props {
-  feature: Feature;
-  onClose: () => void;
-}
-
-export function FeatureDetail({ feature, onClose }: Props) {
-  // Implementation
-}
-```
-
-### Styling
-
-- **Tailwind CSS v4**: Use utility classes with `cn()` for conditional classes
-- **CSS Variables**: Theme colors via `var(--foreground)`, `var(--border)`, etc.
-- **Dark Mode**: Automatic via CSS custom properties
-- **Icons**: `lucide-react` library
-
-## Security
-
-### Path Validation
-
-All filesystem operations use `path-utils.ts` for security:
-- `isPathSafe()`: Prevents directory traversal attacks
-- `isValidDirectoryPath()`: Verifies path exists and is directory
-- `normalizePath()`: Expands `~` to home directory
-
-### Input Validation
-
-- Project names validated against URL-safe slug pattern
-- File paths validated before read/write operations
-- Markdown content sanitized with DOMPurify before rendering
-
-### Authentication
-
-Better Auth with OAuth providers (Google, GitHub). API tokens for MCP server authentication.
-
-## Testing
-
-### Test Files
-
-Tests are co-located with source files:
-- `src/lib/parser.test.ts`
-- `src/lib/path-utils.test.ts`
-- `src/lib/utils.test.ts`
-- `src/lib/markdown/*.test.ts`
-- `src/app/api/**/*.test.ts`
-
-### Running Tests
-
-```bash
-pnpm test              # Watch mode
-pnpm test:run          # Single run
-pnpm test:coverage     # With coverage
-```
-
-### Test Coverage
-
-Vitest configured to cover:
-- `src/lib/**/*.ts`
-- `src/app/api/**/*.ts`
-
-## Environment Variables
-
-```bash
-# Required
-DATABASE_URL="postgresql://user:password@localhost:5432/specboard"
-
-# Optional
-PORT=3000                    # Default: 3000
-
-# For Docker deployment
-POSTGRES_USER=specboard
-POSTGRES_PASSWORD=specboard
-POSTGRES_DB=specboard
-POSTGRES_PORT=5432
-APP_PORT=3000
-```
-
-## Common Development Tasks
-
-### Adding a New API Route
-
-1. Create `src/app/api/your-route/route.ts`
-2. Export `GET`, `POST`, `PUT`, or `DELETE` functions
-3. Use `NextRequest` and `NextResponse` types
-4. Validate inputs and handle errors
-
-### Adding a New Parser
-
-1. Create parser in `src/lib/markdown/your-parser.ts`
-2. Export parsing function that returns structured data
-3. Add types to `src/types/index.ts`
-4. Write tests in `src/lib/markdown/your-parser.test.ts`
-5. Integrate into `parseFeature()` in `lib/parser.ts`
-
-### Adding a New Component
-
-1. Create component in `src/components/your-component.tsx`
-2. Use `'use client'` directive if interactive
-3. Import types from `@/types`
-4. Use `cn()` for conditional Tailwind classes
-5. Follow accessibility best practices (ARIA labels, keyboard navigation)
-
-### Modifying Database Schema
-
-1. Edit `prisma/schema.prisma`
-2. Run `pnpm prisma migrate dev --name your-migration-name`
-3. Prisma client auto-regenerates
-4. Update TypeScript types if needed
-
-## Important Notes
-
-- **Parser is server-only**: Uses Node.js `fs` module, cannot run in browser
-- **URLs use slugs**: Never expose filesystem paths in URLs
-- **Store persists to localStorage**: Recent projects cached client-side
-- **Real-time via SSE**: Not WebSockets (simpler, more reliable)
-- **Markdown is source of truth**: Database only stores metadata, not content
-- **Path security is critical**: Always validate paths before filesystem operations
-- **TypeScript strict mode**: All code must pass strict type checking
-- **Accessibility first**: WCAG 2.2 AA compliance required
+All AI operations use `AIService` from `src/lib/ai/client.ts`. AI settings stored in database, retrieved via `getAISettings()`.
 
 ## Mandatory Policies
 
 ### UI Requirements
-- **ALWAYS use FeatureDetailV2**: The new UI component at `src/components/feature-detail-v2/` is the ONLY supported UI. Never use the legacy `FeatureDetail` component.
-- **No legacy mode**: Never use `?legacy=true` query parameter to access old UI.
+- **ALWAYS use FeatureDetailV2** (`src/components/feature-detail-v2/`) - the only supported UI
+- Never use `?legacy=true` to access old UI
 
-### AI API Requirements
-- **ALWAYS use real AI**: AI functions MUST call actual AI APIs (Anthropic Claude or OpenAI). Never return mock data.
-- **AI settings from database**: Use `getAISettings()` to retrieve API keys from the database (not hardcoded).
-- **AIService from client.ts**: All AI operations MUST use the `AIService` class from `src/lib/ai/client.ts` which contains real implementations.
-- **No mock fallback**: Do NOT use mock implementations. If no API key is configured, throw an error instead of returning fake data.
+### AI Requirements
+- **ALWAYS use real AI** - call actual AI APIs, never mock data
+- Use `getAISettings()` to retrieve API keys from database
+- Use `AIService` from `src/lib/ai/client.ts` for all AI operations
+- If no API key configured, throw an error - do NOT fallback to fake data
 
-## Troubleshooting
+## Code Conventions
 
-### Database Connection Issues
+- **Imports**: Use `@/` alias (e.g., `import from '@/lib/store'`)
+- **Components**: `'use client'` directive, PascalCase, `cn()` for conditional classes
+- **Types**: Import from `@/types`
+- **Styling**: Tailwind CSS v4 with CSS variables (`var(--foreground)`, etc.)
 
-```bash
-# Check PostgreSQL is running
-docker compose -f docker-compose.db.yml ps
+## Testing
 
-# Reset database
-pnpm prisma migrate reset
-```
+Tests co-located with source files:
+- `src/lib/*.test.ts`
+- `src/app/api/**/*.test.ts`
 
-### Parser Errors
+Run specific test: `pnpm vitest run src/lib/parser.test.ts`
 
-- Check markdown file format matches expected structure
-- Verify file paths are absolute, not relative
-- Check for malformed task lines (missing `T001` ID)
+## Key Files
 
-### Real-Time Updates Not Working
-
-- Verify file watcher has permissions to watch directory
-- Check SSE connection in browser DevTools Network tab
-- Ensure project path is valid and accessible
-
-┌─────────────────────────────────────────────────┐
-│ Tóm tắt: Đã tạo file CLAUDE.md toàn diện với    │
-│ thông tin về kiến trúc, lệnh phát triển, cấu    │
-│ trúc dự án, các thành phần chính (parser, state │
-│ management, database), API routes, quy ước code,│
-│ bảo mật, testing và các tác vụ phát triển thông │
-│ dụng. File này giúp Claude Code hiểu rõ codebase│
-│ và làm việc hiệu quả hơn.                        │
-└─────────────────────────────────────────────────┘
-
-## Active Technologies
-- TypeScript 5.9.x (strict mode) + Next.js 16.x, React 19.x, Tailwind CSS 4.x
-- Better Auth (OAuth)
-- OpenAI-compatible AI client
-
-## Recent Changes
-- FeatureDetailV2: Jira-like layout with user story panel
-- AI Integration: spec-workflow API endpoints with real AI
-- Cloud Sync: OAuth-based sync with Better Auth
-- SpecKitFileType: 9 file types (spec, plan, tasks, research, data-model, quickstart, contract, checklist, analysis)
-- Clarify to DB: Clarifications saved to `clarificationsContent` field in Feature model
-
-## Generated CLAUDE.md Files
-- `src/lib/ai/CLAUDE.md` - NEW: AI client documentation
+| File | Purpose |
+|------|---------|
+| `src/app/api/project/[name]/data/route.ts` | Main DB-first data endpoint |
+| `src/lib/store.ts` | Zustand state management |
+| `src/lib/ai/client.ts` | AI service with real implementations |
+| `prisma/schema.prisma` | Database schema |
+| `src/components/feature-detail-v2/` | Feature detail UI (ONLY supported) |

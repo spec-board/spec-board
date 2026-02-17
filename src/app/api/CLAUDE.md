@@ -4,19 +4,20 @@
 RESTful API routes for project management and spec data.
 
 ## Overview
-This directory contains all Next.js API routes using the App Router convention. Each folder represents an endpoint, with `route.ts` files containing HTTP method handlers. Routes handle project CRUD, auto-registration, filesystem browsing, spec data loading, and real-time updates.
+This directory contains all Next.js API routes using the App Router convention. Each folder represents an endpoint, with `route.ts` files containing HTTP method handlers. Routes handle project CRUD, database-first project data loading, and AI-powered spec workflow.
+
+**Architecture Note**: SpecBoard now uses a **database-first** approach - all project content (specs, plans, tasks) is stored in PostgreSQL. Filesystem operations have been removed.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
 | `projects/route.ts` | List and create projects |
-| `projects/register/route.ts` | Auto-register project from filesystem path |
+| `projects/register/route.ts` | Auto-register project (optional filePath) |
 | `projects/[name]/route.ts` | Get, update, delete specific project |
-| `project/route.ts` | Load spec data from filesystem path |
-| `browse/route.ts` | Directory browser with autocomplete |
-| `watch/route.ts` | Server-Sent Events for real-time updates |
-| `checklist/route.ts` | Toggle checklist items in markdown files |
+| `project/[name]/data/route.ts` | Load project data from database |
+| `browse/route.ts` | List projects from database |
+| `checklist/route.ts` | Toggle checklist items (DB-first) |
 | `app-info/route.ts` | App metadata (version, readme, changelog) |
 | `analysis/route.ts` | Save analysis reports |
 | `spec-workflow/specify/route.ts` | Generate spec from feature description |
@@ -40,60 +41,80 @@ This directory contains all Next.js API routes using the App Router convention. 
 **Request/Response:**
 ```typescript
 // POST /api/projects
-{ name: string, displayName: string, filePath: string }
+{ name: string, displayName: string, description?: string }
 
 // Response
-{ id, name, displayName, filePath, createdAt, updatedAt }
+{ id, name, displayName, description, createdAt, updatedAt }
 ```
 
 ### Project Auto-Registration (`/api/projects/register`)
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `POST` | `/api/projects/register` | Auto-register project from filesystem path |
+| `POST` | `/api/projects/register` | Auto-register project (optional filePath for legacy) |
 
 **Request/Response:**
 ```typescript
 // POST /api/projects/register
-{ filePath: string }
+{ name?: string, displayName?: string, filePath?: string }
 
 // Response (existing or newly created)
 { id, name, displayName, filePath, createdAt, updatedAt }
 ```
 
 **Behavior:**
-- Validates path exists and is a spec-kit project (has `specs/` or `.specify/`)
-- Returns existing project if path already registered
-- Generates unique slug from folder name (e.g., `/Users/paul/my-todolist` → `my-todolist`)
+- Creates project in database with name/slug
+- `filePath` is optional (null for database-first projects)
+- Generates unique slug from folder name or provided name
 - Handles slug conflicts by appending numbers (`my-todolist-2`, `my-todolist-3`)
-- Used by home page to auto-register projects when opened
 
-### Spec Data (`/api/project`)
-
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| `GET` | `/api/project?path=...` | Load and parse spec-kit project |
-
-**Response:** Full `Project` object with features, tasks, constitution, etc.
-
-### File Browser (`/api/browse`)
+### Project Data (`/api/project/[name]/data`) - **Database-First**
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `GET` | `/api/browse?path=...` | List directory contents |
+| `GET` | `/api/project/:name/data` | Load project data from database |
+
+**Response:** Full `Project` object with features, tasks, constitution from database.
+
+```typescript
+{
+  projectId: string,
+  path: '',  // Always empty - database-first
+  name: string,
+  features: Feature[],
+  lastUpdated: Date,
+  constitution: Constitution | null,
+  hasConstitution: boolean
+}
+```
+
+**Note:** This endpoint replaces the old `/api/project?path=...` filesystem-based endpoint.
+
+### Project Browser (`/api/browse`) - **Database-First**
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/browse` | List all projects from database |
 
 **Response:**
 ```typescript
 {
-  path: string,
+  currentPath: '/',
+  parentPath: null,
   entries: Array<{
     name: string,
-    path: string,
+    path: '',  // Empty - no filesystem path
     isDirectory: boolean,
-    isSpecKit: boolean  // Has specs/ or .specify/
-  }>
+    isSpecKitProject: boolean,
+    projectId: string,
+    featureCount: number,
+    lastUpdated: Date
+  }>,
+  source: 'database'
 }
 ```
+
+**Note:** Replaces filesystem-based directory browsing.
 
 ### Real-time Updates (`/api/watch`)
 
