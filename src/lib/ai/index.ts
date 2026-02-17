@@ -13,6 +13,7 @@ import type {
   GenerateClarifyOptions,
   GeneratePlanOptions,
   GenerateTasksOptions,
+  GenerateChecklistOptions,
   AnalyzeOptions,
   GeneratedUserStory,
   GeneratedSpecKit,
@@ -20,6 +21,7 @@ import type {
   ClarificationQuestion,
   GeneratedPlan,
   GeneratedTasks,
+  GeneratedChecklist,
   AnalysisResult,
   AIProvider
 } from './types';
@@ -106,6 +108,19 @@ export async function generateTasks(options: GenerateTasksOptions): Promise<Gene
 
   // Use AIService for generation - throws if no API key
   return aiService.generateTasks(options);
+}
+
+/**
+ * Step 4.5: Checklist - Generate requirements quality checklist
+ * Creates checklist items as "Unit Tests for Requirements"
+ * Validates spec/plan/tasks quality: completeness, clarity, consistency
+ */
+export async function generateChecklist(options: GenerateChecklistOptions): Promise<GeneratedChecklist> {
+  const provider = await getProvider();
+  console.log(`[AI] Generating checklist with ${provider}`);
+
+  // Use AIService for generation - throws if no API key
+  return aiService.generateChecklist(options);
 }
 
 /**

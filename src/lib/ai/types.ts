@@ -139,6 +139,26 @@ export interface TaskItem {
   priority?: string;
 }
 
+// Step 4.5: Checklist - Generate requirements quality checklist
+export interface GenerateChecklistOptions {
+  specContent: string;
+  planContent: string;
+  tasksContent?: string;
+  theme?: string; // Optional theme like 'security', 'ux', 'api'
+}
+
+export interface GeneratedChecklist {
+  items: ChecklistItem[];
+  theme: string;
+}
+
+export interface ChecklistItem {
+  id: string; // CHK001, CHK002, etc.
+  question: string;
+  category: string; // Completeness, Clarity, Consistency, etc.
+  reference?: string; // Spec §X.Y or [Gap], [Ambiguity], etc.
+}
+
 // Step 5: Analyze - Validate consistency
 export interface AnalyzeOptions {
   specContent: string;
