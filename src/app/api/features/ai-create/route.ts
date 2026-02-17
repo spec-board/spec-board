@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         featureId,
         name: name.trim(),
         description: description?.trim() || null,
-        stage: 'backlog',
+        stage: 'specify',
         order: newOrder,
       },
     });

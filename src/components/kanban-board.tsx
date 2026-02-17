@@ -8,7 +8,7 @@ import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
 import { SpecWorkflowWizard } from './spec-workflow-wizard';
 
-const COLUMNS: KanbanColumn[] = ['backlog', 'specify', 'clarify', 'plan', 'tasks', 'analyze', 'done'];
+const COLUMNS: KanbanColumn[] = ['backlog', 'specify', 'clarify', 'plan', 'tasks', 'analyze'];
 
 // Get status dot style based on progress percentage (Jira-style 3-state)
 // Uses CSS variables: --status-not-started (0%), --status-in-progress (1-79%), --status-complete (80%+)
@@ -154,8 +154,7 @@ function EmptyColumn({ column }: EmptyColumnProps) {
     clarify: 'Clarifications in progress',
     plan: 'Implementation plan being created',
     tasks: 'Tasks being generated',
-    analyze: 'Analyzing consistency',
-    done: 'Completed features',
+    analyze: 'Analyzing complete',
   };
 
   return (
@@ -298,7 +297,6 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
 
   // Calculate totals for screen reader summary
   const totalFeatures = features.length;
-  const doneCount = featuresByColumn['done'].length;
 
   // Initialize focus to first card if no focus and user starts navigating
   const initializeFocus = useCallback(() => {
@@ -490,7 +488,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
         {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog,
         {featuresByColumn['specify'].length} in specify, {featuresByColumn['clarify'].length} in clarify,
         {featuresByColumn['plan'].length} in plan, {featuresByColumn['tasks'].length} in tasks,
-        {featuresByColumn['analyze'].length} in analyze, {doneCount} done
+        {featuresByColumn['analyze'].length} in analyze
       </div>
 
       {/* Keyboard navigation hint */}
