@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         constitutionSkipped = true;
       } else {
         try {
-          const provider = getProvider();
+          const provider = await getProvider();
           // Insert user description into AI prompt as context
           const result = await generateConstitution({
             projectName: project.displayName || name,

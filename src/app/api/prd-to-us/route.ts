@@ -108,9 +108,10 @@ export async function POST(request: NextRequest) {
       ? `Generated full spec-kit for ${featureName}`
       : `Generated ${result.userStories?.length || 0} user stories from PRD`;
 
+    const provider = await getProvider();
     return NextResponse.json({
       success: true,
-      provider: getProvider(),
+      provider,
       ...result,
       message
     });

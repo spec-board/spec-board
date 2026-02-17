@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const provider = getProvider();
+    const provider = await getProvider();
     const plan = await generatePlan({
       specContent,
       clarifications: clarificationsToUse,

@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
           data: { description }
         });
 
-        const provider = getProvider();
+        const provider = await getProvider();
         const result = await generateConstitution({
           projectName: project.displayName || name || 'Project',
           projectDescription: description,
@@ -93,6 +93,35 @@ export async function POST(request: NextRequest) {
           error: aiError instanceof Error ? aiError.message : 'Failed to generate with AI'
         }, { status: 500 });
       }
+    }
+
+    // Handle: Save description only (no regeneration) - update project description
+    if (description && regenerateWithAI === false) {
+      // Update project description only
+      await prisma.project.update({
+        where: { id: projectId },
+        data: { description }
+      });
+
+      // Get existing constitution if any
+      const existingConstitution = await prisma.constitution.findUnique({
+        where: { projectId }
+      });
+
+      return NextResponse.json({
+        success: true,
+        constitution: existingConstitution ? {
+          id: existingConstitution.id,
+          title: existingConstitution.title,
+          content: existingConstitution.content,
+          principles: existingConstitution.principles,
+          version: existingConstitution.version,
+          ratifiedDate: existingConstitution.ratifiedDate,
+          lastAmendedDate: existingConstitution.lastAmendedDate,
+        } : null,
+        description,
+        message: 'Description saved (principles unchanged)'
+      });
     }
 
     // Handle: Principles changed → Auto-generate description from principles
@@ -149,7 +178,7 @@ export async function POST(request: NextRequest) {
     // Handle AI generation request (basic)
     if (generateWithAI) {
       try {
-        const provider = getProvider();
+        const provider = await getProvider();
         const result = await generateConstitution({
           projectName: project.displayName || name || 'Project',
           projectDescription: project.description || undefined,
