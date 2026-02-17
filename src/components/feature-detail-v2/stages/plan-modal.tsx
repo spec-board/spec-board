@@ -1,22 +1,28 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { Loader2, FileText, AlertCircle } from 'lucide-react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { Loader2, FileText, AlertCircle, ArrowRight } from 'lucide-react';
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
+import type { DocumentType } from '../types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { DocumentSelector } from '../document-selector';
+import { getDocumentOptions } from '../types';
 import { useProjectStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { STAGES, getStageConfig } from '../base/types';
 
 interface PlanModalProps extends BaseModalProps {
   onGeneratePlan?: () => Promise<void>;
+  onRefresh?: () => void;
 }
 
 type PlanStatus = 'idle' | 'generating' | 'ready' | 'error';
 
-export function PlanModal({ feature, onClose, onStageChange, onGeneratePlan }: PlanModalProps) {
+export function PlanModal({ feature, onClose, onStageChange, onDelete, onGeneratePlan, onRefresh }: PlanModalProps) {
   const [status, setStatus] = useState<PlanStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentType>('plan');
 
   // Get project from store for API calls
   const project = useProjectStore(state => state.project);
@@ -26,6 +32,20 @@ export function PlanModal({ feature, onClose, onStageChange, onGeneratePlan }: P
   const hasPlan = !!feature.planContent;
   const hasSpec = !!feature.specContent;
   const hasClarifications = !!feature.clarificationsContent;
+
+  // Get next stage config
+  const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
+  const nextStage = STAGES[currentIndex + 1];
+  const nextStageConfig = nextStage ? getStageConfig(nextStage.stage) : null;
+
+  // Get available document options
+  const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
+
+  // Get content for selected document
+  const selectedDocContent = useMemo(() => {
+    const option = documentOptions.find(o => o.type === selectedDoc);
+    return option?.content || null;
+  }, [documentOptions, selectedDoc]);
 
   // Set initial status
   useEffect(() => {
@@ -44,7 +64,7 @@ export function PlanModal({ feature, onClose, onStageChange, onGeneratePlan }: P
     }
 
     if (!onGeneratePlan) {
-      // Call API directly
+      // Call Plan API (includes design generation - like /speckit.plan)
       try {
         setStatus('generating');
         setError(null);
@@ -64,9 +84,9 @@ export function PlanModal({ feature, onClose, onStageChange, onGeneratePlan }: P
           throw new Error('Failed to generate plan');
         }
 
-        const data = await response.json();
         setStatus('ready');
-        toast.success('Implementation plan generated');
+        toast.success('Plan and design artifacts generated');
+        onRefresh?.();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate plan');
         setStatus('error');
@@ -80,33 +100,44 @@ export function PlanModal({ feature, onClose, onStageChange, onGeneratePlan }: P
     try {
       await onGeneratePlan();
       setStatus('ready');
+      onRefresh?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate plan');
       setStatus('error');
     }
   };
 
-  // Combine spec and clarifications for reference
-  const referenceContent = [
-    feature.specContent,
-    feature.clarificationsContent ? `\n\n---\n\n## Clarifications\n\n${feature.clarificationsContent}` : null
-  ].filter(Boolean).join('\n\n');
+  // Handle "Continue to Next Stage" button click
+  const handleContinueToNextStage = () => {
+    if (onStageChange && nextStageConfig) {
+      onStageChange(nextStage.stage as any);
+    }
+  };
 
   return (
     <BaseModal
       feature={feature}
       onClose={onClose}
       onStageChange={onStageChange}
+      onDelete={onDelete}
       headerActions={
         <div className="flex items-center gap-2">
-          {status !== 'generating' && (
+          {hasPlan && nextStageConfig ? (
+            <button
+              onClick={handleContinueToNextStage}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+            >
+              {nextStageConfig.label}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : status !== 'generating' && (
             <button
               onClick={handleGeneratePlan}
               disabled={!hasSpec}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
             >
               <FileText className="w-4 h-4" />
-              Generate Plan
+              Generate Plan + Design
             </button>
           )}
         </div>
@@ -114,37 +145,17 @@ export function PlanModal({ feature, onClose, onStageChange, onGeneratePlan }: P
       showNavigation={hasSpec}
     >
       <div className="flex h-full">
-        {/* Left: Spec + Clarifications Reference */}
-        <div className="w-[40%] border-r border-[var(--border)] overflow-hidden flex flex-col">
-          <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
-            <h3 className="font-medium text-sm text-[var(--foreground)]">
-              Spec & Clarifications
-            </h3>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            {hasSpec ? (
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <MarkdownRenderer content={referenceContent} />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
-                <p>No spec content available. Go back to Specify stage.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right: Plan Content */}
-        <div className="w-[60%] overflow-hidden flex flex-col">
+        {/* Left: Interactive Panel - Generation UI & Plan Content */}
+        <div className="w-[40%] border-r border-[var(--border)] p-6 overflow-y-auto">
           {status === 'generating' && (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <Loader2 className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin" />
                 <p className="text-[var(--foreground)] font-medium mb-2">
-                  Generating Implementation Plan
+                  Generating Plan + Design
                 </p>
                 <p className="text-sm text-[var(--muted-foreground)]">
-                  Analyzing spec and clarifications to create technical plan...
+                  Creating plan, research, data model, quickstart, and contracts...
                 </p>
               </div>
             </div>
@@ -171,7 +182,7 @@ export function PlanModal({ feature, onClose, onStageChange, onGeneratePlan }: P
           )}
 
           {status === 'idle' && !hasPlan && (
-            <div className="flex-1 flex items-center justify-center p-4">
+            <div className="flex items-center justify-center h-full">
               <div className="text-center max-w-md">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
                   <FileText className="w-8 h-8 text-blue-500" />
@@ -187,7 +198,7 @@ export function PlanModal({ feature, onClose, onStageChange, onGeneratePlan }: P
           )}
 
           {(status === 'ready' || hasPlan) && (
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="h-full">
               {feature.planContent ? (
                 <div className="prose prose-sm max-w-none dark:prose-invert">
                   <MarkdownRenderer content={feature.planContent} />
@@ -199,6 +210,28 @@ export function PlanModal({ feature, onClose, onStageChange, onGeneratePlan }: P
               )}
             </div>
           )}
+        </div>
+
+        {/* Right: Document Viewer with Selector */}
+        <div className="w-[60%] overflow-hidden flex flex-col">
+          <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
+            <DocumentSelector
+              options={documentOptions}
+              selected={selectedDoc}
+              onChange={setSelectedDoc}
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {selectedDocContent ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <MarkdownRenderer content={selectedDocContent} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
+                <p>No content available for this document.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </BaseModal>

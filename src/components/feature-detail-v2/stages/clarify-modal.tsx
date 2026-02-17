@@ -1,13 +1,17 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { Loader2, HelpCircle, Save, Play, AlertCircle, CheckCircle } from 'lucide-react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { Loader2, HelpCircle, Save, Play, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
+import type { DocumentType } from '../types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
 import { ClarificationForm } from '../clarification-form';
+import { DocumentSelector } from '../document-selector';
+import { getDocumentOptions } from '../types';
 import { toast } from 'sonner';
 import { useProjectStore } from '@/lib/store';
+import { STAGES, getStageConfig } from '../base/types';
 
 interface ClarifyModalProps extends BaseModalProps {
   onGenerateQuestions?: () => Promise<void>;
@@ -16,17 +20,33 @@ interface ClarifyModalProps extends BaseModalProps {
 
 type ClarifyStatus = 'idle' | 'generating' | 'ready' | 'error';
 
-export function ClarifyModal({ feature, onClose, onStageChange, onGenerateQuestions, onRefresh }: ClarifyModalProps) {
+export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGenerateQuestions, onRefresh }: ClarifyModalProps) {
   const [status, setStatus] = useState<ClarifyStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentType>('clarifications');
 
-  // Get project from store for API calls
+  // Get project from store for API calls (projectId is optional - clarify API mainly uses featureId)
   const project = useProjectStore(state => state.project);
+  // Use projectId if available, otherwise will use featureId for API calls
   const projectId = project?.projectId;
 
   // Check if clarifications already exist
   const hasClarifications = !!feature.clarificationsContent;
   const hasSpec = !!feature.specContent;
+
+  // Get next stage config
+  const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
+  const nextStage = STAGES[currentIndex + 1];
+  const nextStageConfig = nextStage ? getStageConfig(nextStage.stage) : null;
+
+  // Get available document options
+  const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
+
+  // Get content for selected document
+  const selectedDocContent = useMemo(() => {
+    const option = documentOptions.find(o => o.type === selectedDoc);
+    return option?.content || null;
+  }, [documentOptions, selectedDoc]);
 
   // Set initial status based on existing content
   useEffect(() => {
@@ -38,11 +58,8 @@ export function ClarifyModal({ feature, onClose, onStageChange, onGenerateQuesti
   }, [hasClarifications, hasSpec]);
 
   const handleGenerateQuestions = async () => {
-    if (!projectId) {
-      setError('Project not found');
-      setStatus('error');
-      return;
-    }
+    // Note: projectId is optional - clarify API mainly uses featureId
+    // The API doesn't actually require projectId
 
     if (!onGenerateQuestions) {
       // If no callback, call API directly
@@ -94,14 +111,30 @@ export function ClarifyModal({ feature, onClose, onStageChange, onGenerateQuesti
     onRefresh?.();
   }, [onRefresh]);
 
+  // Handle "Continue to Next Stage" button click
+  const handleContinueToNextStage = () => {
+    if (onStageChange && nextStageConfig) {
+      onStageChange(nextStage.stage as any);
+    }
+  };
+
   return (
     <BaseModal
       feature={feature}
       onClose={onClose}
       onStageChange={onStageChange}
+      onDelete={onDelete}
       headerActions={
         <div className="flex items-center gap-2">
-          {status !== 'generating' && (
+          {hasClarifications && nextStageConfig ? (
+            <button
+              onClick={handleContinueToNextStage}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+            >
+              {nextStageConfig.label}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : status !== 'generating' && (
             <button
               onClick={handleGenerateQuestions}
               disabled={!hasSpec}
@@ -116,30 +149,10 @@ export function ClarifyModal({ feature, onClose, onStageChange, onGenerateQuesti
       showNavigation={hasSpec}
     >
       <div className="flex h-full">
-        {/* Left: Spec Reference */}
-        <div className="w-[40%] border-r border-[var(--border)] overflow-hidden flex flex-col">
-          <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
-            <h3 className="font-medium text-sm text-[var(--foreground)]">
-              Spec Reference
-            </h3>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            {hasSpec ? (
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <MarkdownRenderer content={feature.specContent || ''} />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
-                <p>No spec content available. Go back to Specify stage.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right: Clarification Form */}
-        <div className="w-[60%] overflow-hidden flex flex-col">
+        {/* Left: Interactive Panel - Clarification Form */}
+        <div className="w-[40%] border-r border-[var(--border)] p-6 overflow-y-auto">
           {status === 'generating' && (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <Loader2 className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin" />
                 <p className="text-[var(--foreground)] font-medium mb-2">
@@ -153,7 +166,7 @@ export function ClarifyModal({ feature, onClose, onStageChange, onGenerateQuesti
           )}
 
           {status === 'error' && (
-            <div className="flex-1 flex items-center justify-center p-4">
+            <div className="flex items-center justify-center p-4">
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 max-w-md">
                 <div className="flex items-center gap-2 text-red-500 mb-2">
                   <AlertCircle className="w-5 h-5" />
@@ -173,7 +186,7 @@ export function ClarifyModal({ feature, onClose, onStageChange, onGenerateQuesti
           )}
 
           {status === 'idle' && !hasClarifications && (
-            <div className="flex-1 flex items-center justify-center p-4">
+            <div className="flex items-center justify-center h-full">
               <div className="text-center max-w-md">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
                   <HelpCircle className="w-8 h-8 text-blue-500" />
@@ -188,14 +201,36 @@ export function ClarifyModal({ feature, onClose, onStageChange, onGenerateQuesti
             </div>
           )}
 
-          {(status === 'ready' || hasClarifications) && projectId && (
+          {(status === 'ready' || hasClarifications) && (
             <ClarificationForm
               content={feature.clarificationsContent || ''}
               featureId={feature.id}
-              projectId={projectId}
+              projectId={projectId || ''}
               onSaved={handleSaveSuccess}
             />
           )}
+        </div>
+
+        {/* Right: Document Viewer with Selector */}
+        <div className="w-[60%] overflow-hidden flex flex-col">
+          <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
+            <DocumentSelector
+              options={documentOptions}
+              selected={selectedDoc}
+              onChange={setSelectedDoc}
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {selectedDocContent ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <MarkdownRenderer content={selectedDocContent} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
+                <p>No content available for this document.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </BaseModal>
