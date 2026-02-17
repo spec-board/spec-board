@@ -47,8 +47,8 @@ export function getStageLabel(stage: string): string {
   return labels[stage] || stage;
 }
 
-// Kanban column types for 6-column workflow view
-export type KanbanColumn = 'specify' | 'clarify' | 'plan' | 'checklist' | 'tasks' | 'analyze';
+// Kanban column types for 7-column workflow view (backlog + 6 stages)
+export type KanbanColumn = 'backlog' | 'specify' | 'clarify' | 'plan' | 'checklist' | 'tasks' | 'analyze';
 
 // Map feature stages to kanban columns
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
@@ -63,6 +63,11 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
   // Use the feature's stage directly
   if (feature.stage) {
     return feature.stage as KanbanColumn;
+  }
+
+  // Backlog is the default for features without content
+  if (!feature.hasSpec) {
+    return 'backlog';
   }
 
   // Fallback to legacy logic for features without stage
@@ -90,6 +95,7 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
 
 export function getKanbanColumnLabel(column: KanbanColumn): string {
   const labels: Record<KanbanColumn, string> = {
+    backlog: 'Backlog',
     specify: 'Specify',
     clarify: 'Clarify',
     plan: 'Plan',
