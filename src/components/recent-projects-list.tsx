@@ -7,6 +7,8 @@ import type { RecentProject, FeatureStage } from '@/types';
 // Get icon and label for active feature stage
 function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; cssVar: string; bgVar: string } {
   switch (stage) {
+    case 'backlog':
+      return { icon: <FolderOpen className="w-3 h-3" />, label: 'Backlog', cssVar: 'var(--tag-text-muted)', bgVar: 'var(--tag-bg-muted)' };
     case 'specify':
       return { icon: <Rocket className="w-3 h-3" />, label: 'Specify', cssVar: 'var(--tag-text-purple)', bgVar: 'var(--tag-bg-purple)' };
     case 'clarify':

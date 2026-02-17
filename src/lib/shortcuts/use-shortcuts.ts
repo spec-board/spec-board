@@ -38,7 +38,7 @@ interface UseShortcutsOptions {
   featuresByColumn?: Record<KanbanColumnType, { id: string }[]>;
 }
 
-const COLUMNS: KanbanColumnType[] = ['specify', 'clarify', 'plan', 'tasks', 'analyze'];
+const COLUMNS: KanbanColumnType[] = ['backlog', 'specify', 'clarify', 'plan', 'checklist', 'tasks', 'analyze'];
 
 /**
  * Determine current shortcut context based on pathname and state
@@ -105,9 +105,14 @@ export function useShortcuts(options: UseShortcutsOptions) {
   const sequenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Navigation helpers
+  const getFeatures = (column: KanbanColumnType): { id: string }[] => {
+    if (!featuresByColumn) return [];
+    return (featuresByColumn as Record<KanbanColumnType, { id: string }[]>)[column] || [];
+  };
+
   const navigateUp = useCallback(() => {
-    if (!focusState.column) return;
-    const features = featuresByColumn[focusState.column];
+    if (!focusState.column || !featuresByColumn) return;
+    const features = getFeatures(focusState.column);
     if (!features.length) return;
 
     const currentIndex = focusState.cardIndex ?? 0;
@@ -123,8 +128,8 @@ export function useShortcuts(options: UseShortcutsOptions) {
   }, [focusState, featuresByColumn, setFocusState]);
 
   const navigateDown = useCallback(() => {
-    if (!focusState.column) return;
-    const features = featuresByColumn[focusState.column];
+    if (!focusState.column || !featuresByColumn) return;
+    const features = getFeatures(focusState.column);
     if (!features.length) return;
 
     const currentIndex = focusState.cardIndex ?? 0;
@@ -140,10 +145,11 @@ export function useShortcuts(options: UseShortcutsOptions) {
   }, [focusState, featuresByColumn, setFocusState]);
 
   const navigateLeft = useCallback(() => {
+    if (!featuresByColumn) return;
     const currentColIndex = focusState.column ? COLUMNS.indexOf(focusState.column) : 0;
     const newColIndex = Math.max(0, currentColIndex - 1);
     const newColumn = COLUMNS[newColIndex];
-    const features = featuresByColumn[newColumn];
+    const features = getFeatures(newColumn);
 
     if (newColumn !== focusState.column) {
       setFocusState({
@@ -156,10 +162,11 @@ export function useShortcuts(options: UseShortcutsOptions) {
   }, [focusState, featuresByColumn, setFocusState]);
 
   const navigateRight = useCallback(() => {
+    if (!featuresByColumn) return;
     const currentColIndex = focusState.column ? COLUMNS.indexOf(focusState.column) : -1;
     const newColIndex = Math.min(COLUMNS.length - 1, currentColIndex + 1);
     const newColumn = COLUMNS[newColIndex];
-    const features = featuresByColumn[newColumn];
+    const features = getFeatures(newColumn);
 
     if (newColumn !== focusState.column) {
       setFocusState({
