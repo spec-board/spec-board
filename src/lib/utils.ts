@@ -28,6 +28,7 @@ export function getStageColor(stage: string): string {
     specify: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     clarify: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
     plan: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    checklist: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     tasks: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
     analyze: 'bg-green-500/20 text-green-400 border-green-500/30',
   };
@@ -39,6 +40,7 @@ export function getStageLabel(stage: string): string {
     specify: 'Specify',
     clarify: 'Clarify',
     plan: 'Plan',
+    checklist: 'Checklist',
     tasks: 'Tasks',
     analyze: 'Analyze',
   };
@@ -46,7 +48,7 @@ export function getStageLabel(stage: string): string {
 }
 
 // Kanban column types for 6-column workflow view
-export type KanbanColumn = 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze';
+export type KanbanColumn = 'specify' | 'clarify' | 'plan' | 'checklist' | 'tasks' | 'analyze';
 
 // Map feature stages to kanban columns
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
@@ -74,14 +76,14 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
     return 'plan';
   }
   if (feature.totalTasks === 0) {
-    return 'tasks';
+    return 'checklist';
   }
   const allTasksComplete = feature.completedTasks === feature.totalTasks;
   if (!allTasksComplete) {
     return 'tasks';
   }
   if (feature.hasChecklists && feature.completedChecklistItems < feature.totalChecklistItems) {
-    return 'tasks';
+    return 'checklist';
   }
   return 'analyze';
 }
@@ -91,6 +93,7 @@ export function getKanbanColumnLabel(column: KanbanColumn): string {
     specify: 'Specify',
     clarify: 'Clarify',
     plan: 'Plan',
+    checklist: 'Checklist',
     tasks: 'Tasks',
     analyze: 'Analyze',
   };
@@ -228,6 +231,70 @@ export function getSuggestedCommand(feature: Feature, hasConstitution: boolean):
     primary: null,
     optional: null,
   };
+}
+
+/**
+ * Format date to relative time (e.g., "5m ago", "2h ago", "3d ago")
+ * Automatically uses browser's local timezone
+ */
+export function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
+}
+
+/**
+ * Format date to locale date string (e.g., "Feb 17, 2026")
+ * Automatically uses browser's local timezone
+ */
+export function formatLocaleDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+/**
+ * Format date to locale datetime string (e.g., "Feb 17, 2026, 6:33 PM")
+ * Automatically uses browser's local timezone
+ */
+export function formatLocaleDateTime(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+/**
+ * Format date to locale time string (e.g., "6:33 PM")
+ * Automatically uses browser's local timezone
+ */
+export function formatLocaleTime(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 /**

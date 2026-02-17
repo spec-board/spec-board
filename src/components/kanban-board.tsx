@@ -6,9 +6,9 @@ import type { Feature, KanbanColumnType } from '@/types';
 import { GitBranch, CheckCircle2, Plus } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
-import { SpecWorkflowWizard } from './spec-workflow-wizard';
+import { CreateFeatureModal } from './create-feature-modal';
 
-const COLUMNS: KanbanColumn[] = ['specify', 'clarify', 'plan', 'tasks', 'analyze'];
+const COLUMNS: KanbanColumn[] = ['specify', 'clarify', 'plan', 'checklist', 'tasks', 'analyze'];
 
 // Get status dot style based on progress percentage (Jira-style 3-state)
 // Uses CSS variables: --status-not-started (0%), --status-in-progress (1-79%), --status-complete (80%+)
@@ -29,6 +29,8 @@ interface FeatureCardProps {
   feature: Feature;
   onClick: () => void;
   isFocused?: boolean;
+  onDragStart?: (feature: Feature) => void;
+  onDragEnd?: () => void;
 }
 
 // Extract spec number from feature id (e.g., "012" from "012-ui-ux-rebrand")
@@ -52,7 +54,7 @@ function toTitleCase(str: string | undefined | null): string {
 }
 
 const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function FeatureCard(
-  { feature, onClick, isFocused },
+  { feature, onClick, isFocused, onDragStart, onDragEnd },
   ref
 ) {
   const progressPercentage = feature.totalTasks > 0
@@ -68,17 +70,36 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
   const specNumber = getSpecNumber(feature.featureId || feature.id);
   const checklistCount = getChecklistCount(feature);
 
-  // Build accessible label
+  // Build accessible label - show description only in specify/clarify/plan, show task count in checklist/tasks/analyze
+  const isEarlyStage = ['specify', 'clarify', 'plan'].includes(feature.stage);
   const ariaLabel = [
     specNumber ? `${specNumber} ${feature.name}` : feature.name,
-    feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null,
+    isEarlyStage && feature.description ? feature.description : (feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null),
     checklistCount > 0 ? `${checklistCount} checklists` : null,
   ].filter(Boolean).join(', ');
+
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      featureId: feature.id,
+      featureName: feature.name,
+      currentColumn: feature.stage
+    }));
+    e.dataTransfer.effectAllowed = 'move';
+    onDragStart?.(feature);
+  };
+
+  const handleDragEnd = () => {
+    // Clear drag state when drag ends - call the callback prop
+    onDragEnd?.();
+  };
 
   return (
     <button
       ref={ref}
       onClick={onClick}
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       aria-label={ariaLabel}
       className={cn(
         'w-full text-left rounded-md transition-all',
@@ -118,14 +139,21 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
         )}
       </div>
 
-      {/* Compact task count and checklist - Jira style */}
+      {/* Compact task count and checklist - Jira style, or description for early stages */}
       <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
-        <div className="flex items-center gap-3">
-          <span className="tabular-nums">
-            {feature.completedTasks}/{feature.totalTasks} tasks
-          </span>
-          {/* Checklist count */}
-          {checklistCount > 0 && (
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          {/* Show description for early stages (specify, clarify, plan) - not for checklist since tasks aren't generated yet */}
+          {['specify', 'clarify', 'plan'].includes(feature.stage) && feature.description ? (
+            <span className="truncate flex-1" title={feature.description}>
+              {feature.description}
+            </span>
+          ) : (
+            <span className="tabular-nums">
+              {feature.completedTasks}/{feature.totalTasks} tasks
+            </span>
+          )}
+          {/* Checklist count - show for checklist, tasks, and analyze stages */}
+          {checklistCount > 0 && ['checklist', 'tasks', 'analyze'].includes(feature.stage) && (
             <span className="tabular-nums text-[var(--color-active)]">
               {checklistCount} {checklistCount === 1 ? 'checklist' : 'checklists'}
             </span>
@@ -152,6 +180,7 @@ function EmptyColumn({ column }: EmptyColumnProps) {
     specify: 'Spec being generated',
     clarify: 'Clarifications in progress',
     plan: 'Implementation plan being created',
+    checklist: 'Checklists being completed',
     tasks: 'Tasks being generated',
     analyze: 'Analyzing complete',
   };
@@ -170,6 +199,12 @@ interface KanbanColumnComponentProps {
   focusedFeatureId: string | null;
   setCardRef: (featureId: string, element: HTMLButtonElement | null) => void;
   onCreateFeature?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: (e: React.DragEvent) => void;
+  isDropTarget?: boolean;
+  onDragStartCard?: (feature: Feature) => void;
+  onDragEndCard?: () => void;
 }
 
 function KanbanColumnComponent({
@@ -179,6 +214,12 @@ function KanbanColumnComponent({
   focusedFeatureId,
   setCardRef,
   onCreateFeature,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  isDropTarget,
+  onDragStartCard,
+  onDragEndCard,
 }: KanbanColumnComponentProps) {
   const columnLabel = getKanbanColumnLabel(column);
 
@@ -239,10 +280,16 @@ function KanbanColumnComponent({
 
       {/* Column content */}
       <div
-        className="flex-1 min-h-[200px]"
+        className={cn(
+          'flex-1 min-h-[200px]',
+          isDropTarget && 'ring-2 ring-blue-500 ring-inset bg-blue-500/5'
+        )}
         role="list"
         aria-labelledby={`column-${column}-heading`}
         aria-label={`${columnLabel} features, ${features.length} items`}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
         style={{
           paddingTop: 'var(--space-3)', // 12px
           gap: 'var(--space-3)', // 12px between cards
@@ -265,6 +312,7 @@ function KanbanColumnComponent({
                     onFeatureClick(feature);
                   }}
                   isFocused={isFocused}
+                  onDragStart={onDragStartCard}
                 />
               </div>
             );
@@ -278,15 +326,180 @@ function KanbanColumnComponent({
 interface KanbanBoardProps {
   features: Feature[];
   onFeatureClick: (feature: Feature) => void;
-  projectPath?: string;
+  projectPath: string;
   projectId?: string;
+  onFeaturesChange?: (features: Feature[]) => void;  // Callback for parent to update features
 }
 
-export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }: KanbanBoardProps) {
+export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, onFeaturesChange }: KanbanBoardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [dropTargetColumn, setDropTargetColumn] = useState<KanbanColumn | null>(null);
+  const [dragSourceColumn, setDragSourceColumn] = useState<KanbanColumn | null>(null);
   const { focusState, setFocusState, clearFocusState } = useProjectStore();
   const cardRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map());
   const boardRef = useRef<HTMLElement>(null);
+
+  // Get column index for ordering
+  const getColumnIndex = (column: KanbanColumn) => COLUMNS.indexOf(column);
+
+  // Handle card drag start - track source column
+  const handleCardDragStart = useCallback((feature: Feature) => {
+    const sourceColumn = getFeatureKanbanColumn(feature);
+    setDragSourceColumn(sourceColumn);
+  }, []);
+
+  // Handle drag over column - only allow next step
+  const handleDragOver = useCallback((column: KanbanColumn) => (e: React.DragEvent) => {
+    if (!dragSourceColumn) return;
+
+    const sourceIndex = getColumnIndex(dragSourceColumn);
+    const targetIndex = getColumnIndex(column);
+    const isNextStep = targetIndex === sourceIndex + 1;
+
+    if (isNextStep) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      setDropTargetColumn(column);
+    }
+    // If not next step, don't set drop target (won't highlight)
+  }, [dragSourceColumn]);
+
+  // Handle drag leave
+  const handleDragLeave = useCallback(() => {
+    setDropTargetColumn(null);
+  }, []);
+
+  // Handle drop - call appropriate API based on transition
+  const handleDrop = useCallback((targetColumn: KanbanColumn) => async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDropTargetColumn(null);
+    setDragSourceColumn(null);
+
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      const { featureId, currentColumn } = data;
+
+      const sourceIndex = getColumnIndex(currentColumn as KanbanColumn);
+      const targetIndex = getColumnIndex(targetColumn);
+
+      // Only allow forward movement to the NEXT step (no skipping)
+      const isNextStep = targetIndex === sourceIndex + 1;
+
+      if (!isNextStep) {
+        // Can only move to the next step, not skip
+        alert('Can only move to the next step. Please complete this step first.');
+        return;
+      }
+
+      // Backward movement (targetIndex < sourceIndex) - just reload
+      if (targetIndex < sourceIndex) {
+        refreshData();
+        return;
+      }
+
+      // Find the feature
+      const feature = features.find(f => f.id === featureId);
+      if (!feature) return;
+
+      // Call appropriate API based on transition
+      setIsLoading(true);
+
+      // specify -> clarify: generate clarifications
+      if (currentColumn === 'specify' && targetColumn === 'clarify') {
+        setLoadingMessage('Generating clarifications...');
+        const response = await fetch('/api/spec-workflow/clarify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            featureId: feature.id,
+            specContent: feature.specContent || '',
+          })
+        });
+        if (!response.ok) throw new Error('Failed to generate clarifications');
+      }
+
+      // clarify -> plan: generate plan
+      else if (currentColumn === 'clarify' && targetColumn === 'plan') {
+        setLoadingMessage('Generating plan...');
+        const response = await fetch('/api/spec-workflow/plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            featureId: feature.id,
+            specContent: feature.specContent || '',
+            // Don't parse clarificationsContent here - let API handle parsing from database
+            // API plan/route.ts has parseClarificationsContent() to handle markdown format
+          })
+        });
+        if (!response.ok) throw new Error('Failed to generate plan');
+      }
+
+      // plan -> checklist: generate checklist using AI
+      else if (currentColumn === 'plan' && targetColumn === 'checklist') {
+        setLoadingMessage('Generating checklist...');
+        const response = await fetch('/api/spec-workflow/checklist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            featureId: feature.id,
+            name: feature.name,
+            specContent: feature.specContent || '',
+            planContent: feature.planContent || '',
+            tasksContent: feature.tasksContent || '',
+          })
+        });
+        if (!response.ok) throw new Error('Failed to generate checklist');
+      }
+
+      // checklist -> tasks: generate tasks
+      else if ((currentColumn === 'plan' && targetColumn === 'tasks') ||
+               (currentColumn === 'checklist' && targetColumn === 'tasks')) {
+        setLoadingMessage('Generating tasks...');
+        const response = await fetch('/api/spec-workflow/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            featureId: feature.id,
+            specContent: feature.specContent || '',
+            planContent: feature.planContent || '',
+          })
+        });
+        if (!response.ok) throw new Error('Failed to generate tasks');
+      }
+
+      // tasks -> analyze: run analysis
+      else if (currentColumn === 'tasks' && targetColumn === 'analyze') {
+        setLoadingMessage('Running analysis...');
+        const response = await fetch('/api/spec-workflow/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            featureId: feature.id,
+            specContent: feature.specContent || '',
+            planContent: feature.planContent || '',
+            tasksContent: feature.tasksContent || '',
+          })
+        });
+        if (!response.ok) throw new Error('Failed to run analysis');
+      }
+
+      // Reload to get updated data - use smooth refresh
+      refreshData();
+    } catch (err) {
+      console.error('Drop error:', err);
+      alert(err instanceof Error ? err.message : 'Failed to process drop');
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage('');
+    }
+  }, [features, projectId]);
 
   // Group features by kanban column (using new function that considers checklists)
   const featuresByColumn = COLUMNS.reduce((acc, column) => {
@@ -470,6 +683,17 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
     }
   }, []);
 
+  // Helper to refresh data after drop - prefer smooth callback, fallback to reload
+  const refreshData = useCallback(() => {
+    if (onFeaturesChange) {
+      // Callback to parent - parent can re-fetch and update
+      // For now, trigger a custom event that parent can listen to
+      window.dispatchEvent(new CustomEvent('features-updated'));
+    } else {
+      window.location.reload();
+    }
+  }, [onFeaturesChange]);
+
   return (
     <>
     <section
@@ -485,7 +709,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">
         {totalFeatures} total features: {featuresByColumn['specify'].length} in specify, {featuresByColumn['clarify'].length} in clarify,
-        {featuresByColumn['plan'].length} in plan, {featuresByColumn['tasks'].length} in tasks,
+        {featuresByColumn['plan'].length} in plan, {featuresByColumn['checklist'].length} in checklist, {featuresByColumn['tasks'].length} in tasks,
         {featuresByColumn['analyze'].length} in analyze
       </div>
 
@@ -503,22 +727,43 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
           focusedFeatureId={focusState.featureId}
           setCardRef={setCardRef}
           onCreateFeature={column === 'specify' ? () => setIsModalOpen(true) : undefined}
+          onDragOver={handleDragOver(column)}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop(column)}
+          isDropTarget={dropTargetColumn === column}
+          onDragStartCard={handleCardDragStart}
+          onDragEndCard={() => setDragSourceColumn(null)}
         />
       ))}
     </section>
 
     {projectId && (
-      <SpecWorkflowWizard
+      <CreateFeatureModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         projectId={projectId}
         projectPath={projectPath}
         onFeatureCreated={(feature) => {
           console.log('Feature created:', feature);
-          // Reload the page to fetch new data
-          window.location.reload();
+          // Reload the page to fetch new data - use smooth refresh
+          refreshData();
         }}
       />
+    )}
+
+    {/* Loading overlay during drag-drop generation */}
+    {isLoading && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] transition-opacity duration-200">
+        <div className="bg-[var(--card)] rounded-lg px-8 py-6 flex flex-col items-center gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative">
+            <svg className="animate-spin w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-[var(--foreground)]">{loadingMessage}</p>
+        </div>
+      </div>
     )}
     </>
   );
