@@ -23,6 +23,7 @@ export default function ConstitutionPage() {
 
   const [projectId, setProjectId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState<string>('');
+  const [projectDescription, setProjectDescription] = useState<string>('');
   const [constitution, setConstitution] = useState<Constitution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -42,6 +43,7 @@ export default function ConstitutionPage() {
       const projectData = await projectRes.json();
       setProjectId(projectData.projectId);
       setProjectName(projectData.name);
+      setProjectDescription(projectData.description || '');
 
       // Get constitution if exists
       if (projectData.constitution?.rawContent) {
@@ -100,6 +102,44 @@ export default function ConstitutionPage() {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle description change - update project and regenerate constitution with AI
+  const handleDescriptionChange = async (description: string) => {
+    if (!projectId) return;
+
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      // Update project description and regenerate constitution with AI
+      const response = await fetch('/api/spec-workflow/constitution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          name: projectName,
+          description,  // Send new description
+          regenerateWithAI: true,  // Flag to regenerate constitution
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update description and regenerate constitution');
+      }
+
+      const result = await response.json();
+      if (result.constitution) {
+        setConstitution(result.constitution);
+      }
+      setProjectDescription(description);
+      setSuccess('Description updated and constitution regenerated!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update description');
     } finally {
       setIsSaving(false);
     }

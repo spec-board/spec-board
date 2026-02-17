@@ -8,7 +8,7 @@ import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
 import { SpecWorkflowWizard } from './spec-workflow-wizard';
 
-const COLUMNS: KanbanColumn[] = ['backlog', 'planning', 'in_progress', 'done'];
+const COLUMNS: KanbanColumn[] = ['backlog', 'specify', 'clarify', 'plan', 'tasks', 'analyze', 'done'];
 
 // Get status dot style based on progress percentage (Jira-style 3-state)
 // Uses CSS variables: --status-not-started (0%), --status-in-progress (1-79%), --status-complete (80%+)
@@ -149,10 +149,13 @@ interface EmptyColumnProps {
 
 function EmptyColumn({ column }: EmptyColumnProps) {
   const hints: Record<KanbanColumn, string> = {
-    backlog: 'Features being specified',
-    planning: 'Features with plan, awaiting tasks',
-    in_progress: 'Features being worked on',
-    done: 'Fully completed features',
+    backlog: 'New features',
+    specify: 'Spec being generated',
+    clarify: 'Clarifications in progress',
+    plan: 'Implementation plan being created',
+    tasks: 'Tasks being generated',
+    analyze: 'Analyzing consistency',
+    done: 'Completed features',
   };
 
   return (
@@ -295,8 +298,6 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
 
   // Calculate totals for screen reader summary
   const totalFeatures = features.length;
-  const planningCount = featuresByColumn['planning'].length;
-  const inProgressCount = featuresByColumn['in_progress'].length;
   const doneCount = featuresByColumn['done'].length;
 
   // Initialize focus to first card if no focus and user starts navigating
@@ -487,7 +488,9 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId }
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">
         {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog,
-        {planningCount} in planning, {inProgressCount} in progress, {doneCount} done
+        {featuresByColumn['specify'].length} in specify, {featuresByColumn['clarify'].length} in clarify,
+        {featuresByColumn['plan'].length} in plan, {featuresByColumn['tasks'].length} in tasks,
+        {featuresByColumn['analyze'].length} in analyze, {doneCount} done
       </div>
 
       {/* Keyboard navigation hint */}

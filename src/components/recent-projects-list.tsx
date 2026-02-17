@@ -7,12 +7,18 @@ import type { RecentProject, FeatureStage } from '@/types';
 // Get icon and label for active feature stage
 function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: string; cssVar: string; bgVar: string } {
   switch (stage) {
-    case 'in_progress':
-      return { icon: <Hammer className="w-3 h-3" />, label: 'In Progress', cssVar: 'var(--tag-text-info)', bgVar: 'var(--tag-bg-info)' };
     case 'backlog':
       return { icon: <Rocket className="w-3 h-3" />, label: 'Backlog', cssVar: 'var(--tag-text-orange)', bgVar: 'var(--tag-bg-orange)' };
-    case 'planning':
-      return { icon: <FileText className="w-3 h-3" />, label: 'Planning', cssVar: 'var(--tag-text-warning)', bgVar: 'var(--tag-bg-warning)' };
+    case 'specify':
+      return { icon: <FileText className="w-3 h-3" />, label: 'Specify', cssVar: 'var(--tag-text-info)', bgVar: 'var(--tag-bg-info)' };
+    case 'clarify':
+      return { icon: <FileText className="w-3 h-3" />, label: 'Clarify', cssVar: 'var(--tag-text-cyan)', bgVar: 'var(--tag-bg-cyan)' };
+    case 'plan':
+      return { icon: <FileText className="w-3 h-3" />, label: 'Plan', cssVar: 'var(--tag-text-warning)', bgVar: 'var(--tag-bg-warning)' };
+    case 'tasks':
+      return { icon: <ListTodo className="w-3 h-3" />, label: 'Tasks', cssVar: 'var(--tag-text-yellow)', bgVar: 'var(--tag-bg-yellow)' };
+    case 'analyze':
+      return { icon: <Hammer className="w-3 h-3" />, label: 'Analyze', cssVar: 'var(--tag-text-orange)', bgVar: 'var(--tag-bg-orange)' };
     case 'done':
       return { icon: <CheckCircle className="w-3 h-3" />, label: 'Done', cssVar: 'var(--tag-text-success)', bgVar: 'var(--tag-bg-success)' };
   }
@@ -45,8 +51,11 @@ function getStageLabel(stageBreakdown: RecentProject['stageBreakdown']): string 
 
   const parts: string[] = [];
   if (stageBreakdown.done > 0) parts.push(`${stageBreakdown.done} done`);
-  if (stageBreakdown.in_progress > 0) parts.push(`${stageBreakdown.in_progress} in progress`);
-  if (stageBreakdown.planning > 0) parts.push(`${stageBreakdown.planning} planning`);
+  if (stageBreakdown.analyze > 0) parts.push(`${stageBreakdown.analyze} analyzing`);
+  if (stageBreakdown.tasks > 0) parts.push(`${stageBreakdown.tasks} tasks`);
+  if (stageBreakdown.plan > 0) parts.push(`${stageBreakdown.plan} planning`);
+  if (stageBreakdown.clarify > 0) parts.push(`${stageBreakdown.clarify} clarifying`);
+  if (stageBreakdown.specify > 0) parts.push(`${stageBreakdown.specify} specifying`);
   if (stageBreakdown.backlog > 0) parts.push(`${stageBreakdown.backlog} backlog`);
 
   return parts.slice(0, 2).join(', ') || 'No features';

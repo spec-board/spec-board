@@ -25,11 +25,14 @@ export async function GET(request: NextRequest) {
       orderBy: { order: 'asc' },
     });
 
-    // Group by stage for kanban (stage now replaces status)
+    // Group by stage for kanban (7-column workflow)
     const kanbanData = {
       backlog: features.filter(f => f.stage === 'backlog'),
-      planning: features.filter(f => f.stage === 'planning'),
-      in_progress: features.filter(f => f.stage === 'in_progress'),
+      specify: features.filter(f => f.stage === 'specify'),
+      clarify: features.filter(f => f.stage === 'clarify'),
+      plan: features.filter(f => f.stage === 'plan'),
+      tasks: features.filter(f => f.stage === 'tasks'),
+      analyze: features.filter(f => f.stage === 'analyze'),
       done: features.filter(f => f.stage === 'done'),
     };
 

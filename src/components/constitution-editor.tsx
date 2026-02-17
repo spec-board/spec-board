@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Loader2, Sparkles, Plus, Trash2, GripVertical, Eye, Edit3, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,22 +23,27 @@ interface ConstitutionEditorProps {
     ratifiedDate?: string;
     lastAmendedDate?: string;
   } | null;
+  projectDescription?: string;
   onSave: (data: {
     name?: string;
     principles?: Principle[];
     additionalSections?: Section[];
   }) => Promise<void>;
+  onDescriptionChange?: (description: string) => Promise<void>;
   onAIGenerate?: () => Promise<void>;
   isSaving: boolean;
 }
 
 export function ConstitutionEditor({
   constitution,
+  projectDescription = '',
   onSave,
+  onDescriptionChange,
   onAIGenerate,
   isSaving,
 }: ConstitutionEditorProps) {
-  const [activeTab, setActiveTab] = useState<'principles' | 'sections' | 'preview'>('principles');
+  const [activeTab, setActiveTab] = useState<'description' | 'principles' | 'sections' | 'preview'>('description');
+  const [description, setDescription] = useState<string>(projectDescription);
   const [principles, setPrinciples] = useState<Principle[]>(
     constitution?.principles || getDefaultPrinciples()
   );
@@ -48,6 +53,11 @@ export function ConstitutionEditor({
   const [editingPrinciple, setEditingPrinciple] = useState<number | null>(null);
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionContent, setNewSectionContent] = useState('');
+
+  // Sync description when projectDescription changes from parent
+  useEffect(() => {
+    setDescription(projectDescription);
+  }, [projectDescription]);
 
   // Generate markdown preview
   const markdownContent = useMemo(() => {
@@ -97,6 +107,21 @@ export function ConstitutionEditor({
     <div className="space-y-6">
       {/* Tabs */}
       <div className="flex items-center gap-4 border-b border-border">
+        <button
+          onClick={() => setActiveTab('description')}
+          className={cn(
+            "pb-3 px-1 text-sm font-medium transition-colors relative",
+            activeTab === 'description'
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Edit3 className="w-4 h-4 inline-block mr-2" />
+          Description
+          {activeTab === 'description' && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+          )}
+        </button>
         <button
           onClick={() => setActiveTab('principles')}
           className={cn(
@@ -164,6 +189,28 @@ export function ConstitutionEditor({
           </button>
         </div>
       </div>
+
+      {/* Description Tab */}
+      {activeTab === 'description' && (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Project description that provides context for the constitution.
+          </p>
+
+          <div className="p-4 bg-card border border-dashed border-border rounded-lg space-y-3">
+            <h4 className="text-sm font-medium">Project Description</h4>
+            <textarea
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                if (onDescriptionChange) onDescriptionChange(e.target.value);
+              }}
+              className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm min-h-[80px]"
+              placeholder="Project description"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Principles Tab */}
       {activeTab === 'principles' && (
