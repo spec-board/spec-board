@@ -29,7 +29,7 @@ Generate complete feature specifications from natural language. Configure your p
 
 ### Spec Workflow Wizard
 
-AI-powered 5-step workflow: specify → clarify → plan → tasks → analyze
+AI-powered 5-stage workflow: backlog → specs → plan → tasks → analyze
 
 <p align="center">
   <img src="https://github.com/paulpham157/spec-board/blob/main/public/assests/suggestion-next-action.png" alt="Next Action Suggestions" width="400" />
@@ -39,9 +39,9 @@ AI-powered 5-step workflow: specify → clarify → plan → tasks → analyze
 ## Features
 
 ### Core Features
-- **Kanban Board** — 4-column pipeline (Backlog → Planning → In Progress → Done)
+- **Kanban Board** — 5-column pipeline (Backlog → Specs → Plan → Tasks → Analyze)
 - **AI Feature Creation** — Enter feature name and description, AI generates spec/plan/tasks automatically
-- **Spec Workflow Wizard** — 5-step AI workflow: specify → clarify → plan → tasks → analyze
+- **Spec Workflow Wizard** — 5-stage AI workflow: backlog → specs → plan → tasks → analyze
 - **Real-Time Updates** — Live file watching via Server-Sent Events (SSE)
 - **Interactive Checklists** — Click or keyboard to toggle checklist items with optimistic UI
 - **Deep Linking** — Shareable URLs for projects and features
@@ -73,15 +73,16 @@ https://youtu.be/WQXb2-dj9zQ
 │              │      │              │      │                  │
 │  spec-kit    │ ───▶ │  SpecBoard   │ ───▶ │   Kanban Board   │
 │  project     │      │  parses      │      │                  │
-│              │      │              │      │  ┌──┐┌──┐┌──┐┌──┐│
-│  specs/      │      │  spec.md     │      │  │B ││P ││I ││D ││
+│              │      │              │      │  ┌──┐┌──┐┌──┐┌──┐┌──┐│
+│  specs/      │      │  spec.md     │      │  │B ││S ││P ││T ││A ││
 │  ├─ feature/ │      │  plan.md     │      │  └──┘└──┘└──┘└──┘│
 │  │  ├─ spec  │      │  tasks.md    │      │                  │
 │  │  ├─ plan  │      │              │      │                  │
-│  │  └─ tasks │      │              │      │                  │
+│  │  ├─ tasks │      │              │      │                  │
+│  │  └─ analysis │   │              │      │                  │
 └──────────────┘      └──────────────┘      └──────────────────┘
 
-B = Backlog | P = Planning | I = In Progress | D = Done
+B = Backlog | S = Specs | P = Plan | T = Tasks | A = Analyze
 ```
 
 ## Quick Start
@@ -194,7 +195,7 @@ See [packages/spec-board-mcp/README.md](packages/spec-board-mcp/README.md) for f
 │  FRONTEND                                               │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐     │
 │  │ Next.js │  │Tailwind │  │ Zustand │  │Recharts │     │
-│  │   16    │  │  CSS v4 │  │  State  │  │ Charts  │     │
+│  │   15    │  │  CSS v4 │  │  State  │  │ Charts  │     │
 │  └─────────┘  └─────────┘  └─────────┘  └─────────┘     │
 ├─────────────────────────────────────────────────────────┤
 │  BACKEND                                                │

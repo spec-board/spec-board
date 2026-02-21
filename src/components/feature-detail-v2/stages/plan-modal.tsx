@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Loader2, FileText, AlertCircle, ArrowRight } from 'lucide-react';
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
-import { MarkdownRenderer } from '@/components/markdown-renderer';
 import { ChecklistPanel } from '../checklist-panel';
+import { DocumentPanel } from '../document-panel';
 import { useProjectStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { STAGES, getStageConfig } from '../base/types';
@@ -20,6 +20,8 @@ type PlanStatus = 'idle' | 'generating' | 'ready' | 'error';
 export function PlanModal({ feature, onClose, onStageChange, onDelete, onGeneratePlan, onRefresh }: PlanModalProps) {
   const [status, setStatus] = useState<PlanStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<string>('plan');
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Get project from store for API calls
   const project = useProjectStore(state => state.project);
@@ -124,6 +126,11 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
     }
   };
 
+  // Handle document change
+  const handleDocumentChange = useCallback((doc: string) => {
+    setSelectedDocument(doc);
+  }, []);
+
   return (
     <BaseModal
       feature={feature}
@@ -210,22 +217,15 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
           )}
         </div>
 
-        {/* Right: Plan Document */}
-        <div className="w-[60%] overflow-hidden flex flex-col">
-          <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
-            <h3 className="font-medium text-sm">Implementation Plan</h3>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            {feature.planContent ? (
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <MarkdownRenderer content={feature.planContent} />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
-                <p>No plan content available.</p>
-              </div>
-            )}
-          </div>
+        {/* Right: Document Panel with tabs */}
+        <div className="w-[60%] overflow-hidden">
+          <DocumentPanel
+            feature={feature}
+            selectedDocument={selectedDocument as any}
+            onDocumentChange={handleDocumentChange as any}
+            highlightTaskId={null}
+            contentRef={contentRef}
+          />
         </div>
       </div>
     </BaseModal>

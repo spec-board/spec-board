@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **5-Stage Workflow** - New Kanban pipeline replacing old 5-step workflow:
+  - `backlog` → `specs` → `plan` → `tasks` → `analyze`
+  - SPECS stage merges old Specify + Clarify stages (single modal with Q&A + User Stories)
+  - PLAN stage now includes checklist generation automatically
+  - API `/api/spec-workflow/checklist` for generating checklist content
+  - Stage transitions auto-trigger multiple APIs:
+    - backlog → specs: calls `specify` + `clarify`
+    - specs → plan: calls `plan` + `checklist`
+    - plan → tasks: calls `tasks`
+    - tasks → analyze: calls `analyze`
+  - Database migration script available at `scripts/migrate-stages.ts`
+
 ### Changed
 - **Feature Stage Consolidation** - Simplified feature status model:
   - Removed duplicate `status` field from Feature model (kept only `stage`)

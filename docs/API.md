@@ -840,11 +840,14 @@ Content-Type: application/json
 
 ## Spec Workflow
 
-AI-powered 5-step feature generation workflow.
+AI-powered 5-stage feature generation workflow:
+- `backlog` → `specs` → `plan` → `tasks` → `analyze`
+
+**Note:** SPECS stage merges old Specify + Clarify stages. PLAN stage includes checklist generation.
 
 ### Generate Spec
 
-Create feature specification from description.
+Create feature specification from description (backlog → specs).
 
 ```http
 POST /api/spec-workflow/specify
@@ -867,7 +870,7 @@ Content-Type: application/json
 
 ### Generate Clarifications
 
-Generate clarification questions for ambiguous specs.
+Generate clarification questions for specs (part of SPECS stage).
 
 ```http
 POST /api/spec-workflow/clarify
@@ -900,6 +903,29 @@ Content-Type: application/json
   "projectId": "proj_123",
   "name": "User Authentication",
   "specContent": "# User Authentication\n..."
+}
+```
+
+### Generate Checklist
+
+Generate checklist from plan content (part of PLAN stage).
+
+```http
+POST /api/spec-workflow/checklist
+Content-Type: application/json
+
+{
+  "projectId": "proj_123",
+  "featureId": "feat_456",
+  "planContent": "# Implementation Plan\n..."
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "checklistContent": "- [ ] Task 1\n- [ ] Task 2\n..."
 }
 ```
 
