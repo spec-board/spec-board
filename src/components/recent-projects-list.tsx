@@ -9,14 +9,10 @@ function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: s
   switch (stage) {
     case 'backlog':
       return { icon: <FolderOpen className="w-3 h-3" />, label: 'Backlog', cssVar: 'var(--tag-text-muted)', bgVar: 'var(--tag-bg-muted)' };
-    case 'specify':
-      return { icon: <Rocket className="w-3 h-3" />, label: 'Specify', cssVar: 'var(--tag-text-purple)', bgVar: 'var(--tag-bg-purple)' };
-    case 'clarify':
-      return { icon: <FileText className="w-3 h-3" />, label: 'Clarify', cssVar: 'var(--tag-text-cyan)', bgVar: 'var(--tag-bg-cyan)' };
+    case 'specs':
+      return { icon: <Rocket className="w-3 h-3" />, label: 'Specs', cssVar: 'var(--tag-text-purple)', bgVar: 'var(--tag-bg-purple)' };
     case 'plan':
       return { icon: <FileText className="w-3 h-3" />, label: 'Plan', cssVar: 'var(--tag-text-warning)', bgVar: 'var(--tag-bg-warning)' };
-    case 'checklist':
-      return { icon: <ListTodo className="w-3 h-3" />, label: 'Checklist', cssVar: 'var(--tag-text-orange)', bgVar: 'var(--tag-bg-orange)' };
     case 'tasks':
       return { icon: <ListTodo className="w-3 h-3" />, label: 'Tasks', cssVar: 'var(--tag-text-yellow)', bgVar: 'var(--tag-bg-yellow)' };
     case 'analyze':
@@ -53,8 +49,7 @@ function getStageLabel(stageBreakdown: RecentProject['stageBreakdown']): string 
   if (stageBreakdown.analyze > 0) parts.push(`${stageBreakdown.analyze} analyzed`);
   if (stageBreakdown.tasks > 0) parts.push(`${stageBreakdown.tasks} tasks`);
   if (stageBreakdown.plan > 0) parts.push(`${stageBreakdown.plan} planning`);
-  if (stageBreakdown.clarify > 0) parts.push(`${stageBreakdown.clarify} clarifying`);
-  if (stageBreakdown.specify > 0) parts.push(`${stageBreakdown.specify} specifying`);
+  if (stageBreakdown.specs > 0) parts.push(`${stageBreakdown.specs} in specs`);
 
   return parts.slice(0, 2).join(', ') || 'No features';
 }

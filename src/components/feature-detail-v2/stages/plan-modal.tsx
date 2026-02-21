@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Loader2, FileText, AlertCircle, ArrowRight } from 'lucide-react';
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
-import type { DocumentType } from '../types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
-import { DocumentSelector } from '../document-selector';
-import { getDocumentOptions } from '../types';
+import { ChecklistPanel } from '../checklist-panel';
 import { useProjectStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { STAGES, getStageConfig } from '../base/types';
@@ -22,7 +20,6 @@ type PlanStatus = 'idle' | 'generating' | 'ready' | 'error';
 export function PlanModal({ feature, onClose, onStageChange, onDelete, onGeneratePlan, onRefresh }: PlanModalProps) {
   const [status, setStatus] = useState<PlanStatus>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [selectedDoc, setSelectedDoc] = useState<DocumentType>('plan');
 
   // Get project from store for API calls
   const project = useProjectStore(state => state.project);
@@ -31,21 +28,12 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
   // Check state
   const hasPlan = !!feature.planContent;
   const hasSpec = !!feature.specContent;
-  const hasClarifications = !!feature.clarificationsContent;
+  const hasChecklist = !!feature.checklistsContent;
 
   // Get next stage config
   const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
   const nextStage = STAGES[currentIndex + 1];
   const nextStageConfig = nextStage ? getStageConfig(nextStage.stage) : null;
-
-  // Get available document options
-  const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
-
-  // Get content for selected document
-  const selectedDocContent = useMemo(() => {
-    const option = documentOptions.find(o => o.type === selectedDoc);
-    return option?.content || null;
-  }, [documentOptions, selectedDoc]);
 
   // Set initial status
   useEffect(() => {
@@ -55,6 +43,28 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
       setStatus('idle');
     }
   }, [hasPlan, hasSpec]);
+
+  // Handle saving checklist content
+  const handleSaveChecklist = useCallback(async (content: string) => {
+    if (!projectId) return;
+
+    try {
+      const response = await fetch(`/api/features/${feature.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checklistsContent: content }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save checklist');
+      }
+
+      toast.success('Checklist saved');
+      onRefresh?.();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save checklist');
+    }
+  }, [projectId, feature.id, onRefresh]);
 
   const handleGeneratePlan = async () => {
     if (!projectId) {
@@ -145,10 +155,10 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
       showNavigation={hasSpec}
     >
       <div className="flex h-full">
-        {/* Left: Interactive Panel - Generation UI & Plan Content */}
-        <div className="w-[40%] border-r border-[var(--border)] p-6 overflow-y-auto">
-          {status === 'generating' && (
-            <div className="flex items-center justify-center h-full">
+        {/* Left: Interactive Checklist Panel */}
+        <div className="w-[40%] border-r border-[var(--border)] overflow-y-auto">
+          {status === 'generating' ? (
+            <div className="flex items-center justify-center h-full p-6">
               <div className="text-center">
                 <Loader2 className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin" />
                 <p className="text-[var(--foreground)] font-medium mb-2">
@@ -159,10 +169,8 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
                 </p>
               </div>
             </div>
-          )}
-
-          {status === 'error' && (
-            <div className="flex-1 flex items-center justify-center p-4">
+          ) : status === 'error' ? (
+            <div className="flex-1 flex items-center justify-center p-6">
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 max-w-md">
                 <div className="flex items-center gap-2 text-red-500 mb-2">
                   <AlertCircle className="w-5 h-5" />
@@ -179,10 +187,8 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
                 </button>
               </div>
             </div>
-          )}
-
-          {status === 'idle' && !hasPlan && (
-            <div className="flex items-center justify-center h-full">
+          ) : !feature.checklistsContent ? (
+            <div className="flex items-center justify-center h-full p-6">
               <div className="text-center max-w-md">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
                   <FileText className="w-8 h-8 text-blue-500" />
@@ -195,40 +201,28 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
                 </p>
               </div>
             </div>
-          )}
-
-          {(status === 'ready' || hasPlan) && (
-            <div className="h-full">
-              {feature.planContent ? (
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <MarkdownRenderer content={feature.planContent} />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
-                  <p>No plan content available.</p>
-                </div>
-              )}
-            </div>
+          ) : (
+            <ChecklistPanel
+              feature={feature}
+              checklistsContent={feature.checklistsContent}
+              onSave={handleSaveChecklist}
+            />
           )}
         </div>
 
-        {/* Right: Document Viewer with Selector */}
+        {/* Right: Plan Document */}
         <div className="w-[60%] overflow-hidden flex flex-col">
           <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
-            <DocumentSelector
-              options={documentOptions}
-              selected={selectedDoc}
-              onChange={setSelectedDoc}
-            />
+            <h3 className="font-medium text-sm">Implementation Plan</h3>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
-            {selectedDocContent ? (
+            {feature.planContent ? (
               <div className="prose prose-sm max-w-none dark:prose-invert">
-                <MarkdownRenderer content={selectedDocContent} />
+                <MarkdownRenderer content={feature.planContent} />
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
-                <p>No content available for this document.</p>
+                <p>No plan content available.</p>
               </div>
             )}
           </div>

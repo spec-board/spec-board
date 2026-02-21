@@ -23,20 +23,16 @@ export type {
 import type { Feature } from '@/types';
 import type { FeatureDetailV2Props } from './types';
 import { TasksModal } from './stages/tasks-modal';
-import { SpecifyModal } from './stages/specify-modal';
+import { SpecsModal } from './stages/specs-modal';
 import { createPlaceholderModal } from './stages/placeholder-modal';
-import { ClarifyModal } from './stages/clarify-modal';
 import { PlanModal } from './stages/plan-modal';
-import { ChecklistModal } from './stages/checklist-modal';
 import { AnalyzeModal } from './stages/analyze-modal';
 
 // Router based on feature stage
 const STAGE_MODALS = {
-  backlog: SpecifyModal, // Use SpecifyModal for backlog - shows name/description and allows generating spec
-  specify: SpecifyModal,
-  clarify: ClarifyModal,
+  backlog: SpecsModal, // Auto-generate spec + questions on transition
+  specs: SpecsModal,
   plan: PlanModal,
-  checklist: ChecklistModal,
   tasks: TasksModal,
   analyze: AnalyzeModal,
 } as const;
