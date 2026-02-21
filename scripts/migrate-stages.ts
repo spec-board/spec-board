@@ -30,6 +30,12 @@ async function main() {
       `;
       console.log(`Updated ${clarifyResult} from 'clarify' to 'specs'`);
 
+      // Migrate 'checklist' -> 'plan'
+      const checklistResult = await prisma.$executeRaw`
+        UPDATE features SET stage = 'plan' WHERE stage = 'checklist'
+      `;
+      console.log(`Updated ${checklistResult} from 'checklist' to 'plan'`);
+
       // Show current distribution
       const stages = await prisma.$queryRaw<{stage: string, count: bigint}[]>`
         SELECT stage, COUNT(*) as count FROM features GROUP BY stage
