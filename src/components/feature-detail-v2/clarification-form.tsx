@@ -16,6 +16,7 @@ interface ClarificationFormProps {
   projectId: string;
   onSaved?: () => void;
   readOnly?: boolean;
+  onAllAnsweredChange?: (allAnswered: boolean) => void;
 }
 
 export function ClarificationForm({
@@ -24,6 +25,7 @@ export function ClarificationForm({
   projectId,
   onSaved,
   readOnly = false,
+  onAllAnsweredChange,
 }: ClarificationFormProps) {
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
   const [saving, setSaving] = useState(false);
@@ -34,6 +36,12 @@ export function ClarificationForm({
     const parsed = parseClarificationsMarkdown(content);
     setQuestions(parsed);
   }, [content]);
+
+  // Notify parent when all questions are answered
+  useEffect(() => {
+    const allAnswered = questions.length > 0 && questions.every(q => q.answer && q.answer.trim() !== '');
+    onAllAnsweredChange?.(allAnswered);
+  }, [questions, onAllAnsweredChange]);
 
   const handleAnswerChange = (index: number, answer: string) => {
     setQuestions(prev => {
@@ -160,7 +168,10 @@ function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
 
     // Extract question and answer
     const lines = section.trim().split('\n');
-    const question = lines[0]?.trim() || '';
+    let question = lines[0]?.trim() || '';
+
+    // Skip header sections (e.g., "# Clarifications", "## Questions & Answers")
+    if (!question || question.startsWith('#')) continue;
 
     // Find answer line
     let answer = '';
@@ -175,9 +186,7 @@ function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
     // Filter out "_Pending_" as empty answer
     const filteredAnswer = answer === '_Pending_' ? '' : answer;
 
-    if (question) {
-      questions.push({ question, answer: filteredAnswer });
-    }
+    questions.push({ question, answer: filteredAnswer });
   }
 
   return questions;
