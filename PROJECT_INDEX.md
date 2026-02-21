@@ -1,13 +1,13 @@
 # PROJECT_INDEX.md
 
 > Auto-generated codebase index for SpecBoard
-> Last updated: 2026-02-17
+> Last updated: 2026-02-21
 
 ## Overview
 
 **SpecBoard** is a visual dashboard for spec-kit projects with a Kanban board interface for tracking feature development. It uses a **database-first** architecture - all project content (specs, plans, tasks, clarifications) is stored in PostgreSQL.
 
-**Version:** 1.1.0
+**Version:** 1.2.0 (5-stage workflow)
 **License:** AGPL-3.0 (with commercial licensing available)
 **Package Manager:** pnpm 10.26.0
 
@@ -15,7 +15,7 @@
 
 | Category | Technology |
 |----------|------------|
-| **Framework** | Next.js 16.1.1 (App Router) |
+| **Framework** | Next.js 15.x (App Router) |
 | **Language** | TypeScript 5.9.3 (strict mode) |
 | **UI** | React 19.2.3, Tailwind CSS v4.x, Lucide Icons |
 | **Database** | PostgreSQL via Prisma ORM |
@@ -83,6 +83,23 @@ spec-board/
 └── .claude/                    # SoupSpec configuration
 ```
 
+## 5-Stage Workflow
+
+```
+backlog ──(generate spec + questions)──► specs ──(generate plan + checklist)──► plan ──(generate tasks)──► tasks ──(analyze)──► analyze
+```
+
+### Stage Transitions
+
+| Transition | APIs Called | Description |
+|------------|-------------|-------------|
+| **backlog → specs** | `specify` + `clarify` | Generate spec document AND clarification questions |
+| **specs → plan** | `plan` + `checklist` | Generate implementation plan AND checklist |
+| **plan → tasks** | `tasks` | Generate task breakdown from plan |
+| **tasks → analyze** | `analyze` | Cross-document consistency analysis |
+
+**Note:** SPECS stage merges the old Specify + Clarify stages. PLAN stage includes checklist generation.
+
 ## Database-First Architecture
 
 ```
@@ -139,11 +156,12 @@ spec-board/
 ### Spec Workflow (AI)
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/api/spec-workflow/specify` | POST | Generate spec |
-| `/api/spec-workflow/clarify` | POST | Generate clarifications |
-| `/api/spec-workflow/plan` | POST | Generate plan |
-| `/api/spec-workflow/tasks` | POST | Generate tasks |
-| `/api/spec-workflow/analyze` | POST | Analyze consistency |
+| `/api/spec-workflow/specify` | POST | Generate spec (backlog → specs) |
+| `/api/spec-workflow/clarify` | POST | Generate clarifications (part of specs) |
+| `/api/spec-workflow/plan` | POST | Generate plan (specs → plan) |
+| `/api/spec-workflow/checklist` | POST | Generate checklist (plan stage) |
+| `/api/spec-workflow/tasks` | POST | Generate tasks (plan → tasks) |
+| `/api/spec-workflow/analyze` | POST | Analyze consistency (tasks → analyze) |
 
 ### Feature Management
 | Endpoint | Method | Purpose |
@@ -181,8 +199,8 @@ spec-board/
 ## Core Types
 
 ```typescript
-// Feature stages (Kanban columns)
-type FeatureStage = 'backlog' | 'spec' | 'planning' | 'in_progress' | 'done';
+// Feature stages (Kanban columns) - 5-stage workflow
+type FeatureStage = 'backlog' | 'specs' | 'plan' | 'tasks' | 'analyze';
 
 // Spec-Kit file types
 type SpecKitFileType = 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist' | 'analysis';
@@ -229,6 +247,11 @@ App
 │       │   └── SectionIcon
 │       └── SplitView
 │           └── ContentPane
+│               ├── BacklogContent      (backlog stage)
+│               ├── SpecsModal          (specs stage - Q&A + User Stories)
+│               ├── PlanModal           (plan stage - plan + checklist)
+│               ├── TasksModal          (tasks stage)
+│               └── AnalysisModal       (analyze stage)
 │
 ├── Feature Pages
 │   ├── Spec Viewer
