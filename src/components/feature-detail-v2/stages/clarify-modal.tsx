@@ -24,6 +24,7 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
   const [status, setStatus] = useState<ClarifyStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<DocumentType>('clarifications');
+  const [allAnswered, setAllAnswered] = useState(false);
 
   // Get project from store for API calls (projectId is optional - clarify API mainly uses featureId)
   const project = useProjectStore(state => state.project);
@@ -33,6 +34,15 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
   // Check if clarifications already exist
   const hasClarifications = !!feature.clarificationsContent;
   const hasSpec = !!feature.specContent;
+
+  // Determine if form should be editable
+  // Allow editing as long as feature is still in clarify stage
+  const isEditable = feature.stage === 'clarify';
+
+  // Handle all answered state change from ClarificationForm
+  const handleAllAnsweredChange = useCallback((answered: boolean) => {
+    setAllAnswered(answered);
+  }, []);
 
   // Get next stage config
   const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
@@ -129,7 +139,9 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
           {hasClarifications && nextStageConfig ? (
             <button
               onClick={handleContinueToNextStage}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+              disabled={!allAnswered}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+              title={!allAnswered ? 'Please answer all questions before continuing' : undefined}
             >
               {nextStageConfig.label}
               <ArrowRight className="w-4 h-4" />
@@ -207,6 +219,8 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
               featureId={feature.id}
               projectId={projectId || ''}
               onSaved={handleSaveSuccess}
+              readOnly={!isEditable}
+              onAllAnsweredChange={handleAllAnsweredChange}
             />
           )}
         </div>
