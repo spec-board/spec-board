@@ -194,7 +194,12 @@ This directory contains all Next.js API routes using the App Router convention. 
 
 ### Spec Workflow (`/api/spec-workflow`)
 
-AI-powered workflow for generating spec-kit documents. Flow: specify → clarify → plan → tasks → analyze
+AI-powered workflow for generating spec-kit documents.
+
+**Current 5-stage workflow**: backlog → specs → plan → tasks → analyze
+
+The SPECS stage merges specify + clarify.
+The PLAN stage includes checklist generation.
 
 #### Specify (`/api/spec-workflow/specify`)
 

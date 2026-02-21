@@ -49,6 +49,17 @@ All content is stored in PostgreSQL. The Feature model contains content fields:
 PostgreSQL → API Routes (/api/project/[name]/data) → Zustand Store → React UI
 ```
 
+### Workflow Stages
+
+Current feature workflow (5 stages):
+| Stage | Description |
+|-------|-------------|
+| `backlog` | Feature ideas and descriptions |
+| `specs` | Spec + Clarifications (merged from specify + clarify) |
+| `plan` | Implementation plan with checklist (merged from plan + checklist) |
+| `tasks` | Task breakdown |
+| `analyze` | Consistency analysis |
+
 ### URL Structure
 
 | Route | Purpose |
@@ -63,6 +74,16 @@ PostgreSQL → API Routes (/api/project/[name]/data) → Zustand Store → React
 **Important**: URLs use database slugs, not filesystem paths.
 
 ## Core Features
+
+### SPECS Stage (New)
+The SPECS stage merges the old Specify and Clarify stages into one:
+- **Left panel**: Interactive Q&A (ClarificationForm)
+- **Right panel**: Document viewer with User Stories
+- **Auto-generate**: When transitioning from backlog → specs, both spec AND questions are generated
+
+### Plan Stage (Updated)
+The Plan stage now includes checklist:
+- When transitioning from specs → plan, both plan AND checklist are generated
 
 ### Constitution System
 Project-level principles stored in database with version tracking and history. All editing is done via Project Info modal. Key files:
@@ -85,7 +106,12 @@ The primary feature detail UI. Located at `src/components/feature-detail-v2/`. T
 - `/api/projects` - CRUD for projects (name/slug stored in DB)
 - `/api/project/:name/data` - Load project data from database
 - `/api/browse` - List all projects from database
-- `/api/spec-workflow/*` - AI workflow endpoints (save to DB)
+- `/api/spec-workflow/specify` - Generate spec from description
+- `/api/spec-workflow/clarify` - Generate clarification questions
+- `/api/spec-workflow/plan` - Generate implementation plan
+- `/api/spec-workflow/checklist` - Generate quality checklist
+- `/api/spec-workflow/tasks` - Generate task breakdown
+- `/api/spec-workflow/analyze` - Analyze consistency
 - `/api/checklist` - Toggle checklist items
 - `/api/sync/*` - Cloud sync operations
 - `/api/auth/*` - Better Auth OAuth
@@ -139,3 +165,17 @@ Run specific test: `pnpm vitest run src/lib/parser.test.ts`
 | `src/components/feature-detail-v2/` | Feature detail UI (ONLY supported) |
 | `src/components/project-info-bubble.tsx` | Project info modal |
 | `src/components/constitution-editor.tsx` | Constitution editor |
+| `src/components/kanban-board.tsx` | Kanban board with stage transitions |
+| `scripts/migrate-stages.ts` | Migration script for stage updates |
+
+## Migration Scripts
+
+When stages change, run migration scripts:
+```bash
+pnpm tsx scripts/migrate-stages.ts
+```
+
+This handles transitions like:
+- `specify` → `specs`
+- `clarify` → `specs`
+- `checklist` → `plan`
