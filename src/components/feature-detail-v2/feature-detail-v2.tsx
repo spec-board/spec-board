@@ -33,7 +33,36 @@ export function FeatureDetailV2({
   useEffect(() => {
     setLocalFeature(feature);
   }, [feature]);
-  
+
+  // Ref to always get latest localFeature for callbacks
+  const localFeatureRef = useRef(localFeature);
+  localFeatureRef.current = localFeature;
+
+  // Callback to refresh feature data from database after saving
+  const handleRefreshFeature = useCallback(async () => {
+    if (!projectSlug) return;
+    // Use ref to get latest values to avoid stale closure
+    const featureIdToFind = localFeatureRef.current.id;
+    const featureIdDbToFind = localFeatureRef.current.featureId;
+    try {
+      const response = await fetch(`/api/project/${projectSlug}/data`);
+      if (response.ok) {
+        const data = await response.json();
+        // Find feature by both id and featureId for robustness
+        const updatedFeature = data.features.find((f: Feature) =>
+          f.id === featureIdToFind || f.featureId === featureIdDbToFind
+        );
+        if (updatedFeature) {
+          setLocalFeature(updatedFeature);
+        } else {
+          console.warn('Updated feature not found in response', { featureIdToFind, featureIdDbToFind });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh feature:', error);
+    }
+  }, [projectSlug]);
+
   // Keyboard navigation state
   const [focusedPanel, setFocusedPanel] = useState<'left' | 'right'>('left');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
@@ -249,21 +278,7 @@ export function FeatureDetailV2({
             setLocalFeature(prev => ({ ...prev, stage }));
             setShowClarifyModal(false);
           }}
-          onRefresh={async () => {
-            // Refresh feature data from database after saving
-            try {
-              const response = await fetch(`/api/project/${projectSlug}/data`);
-              if (response.ok) {
-                const data = await response.json();
-                const updatedFeature = data.features.find((f: Feature) => f.id === localFeature.id);
-                if (updatedFeature) {
-                  setLocalFeature(updatedFeature);
-                }
-              }
-            } catch (error) {
-              console.error('Failed to refresh feature:', error);
-            }
-          }}
+          onRefresh={handleRefreshFeature}
         />
       )}
     </div>
