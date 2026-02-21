@@ -33,10 +33,8 @@ export interface StageConfig {
 // All stages configuration
 export const STAGES: StageConfig[] = [
   { stage: 'backlog', label: 'Backlog', description: 'Feature ideas and descriptions' },
-  { stage: 'specify', label: 'Specify', description: 'Creating specification' },
-  { stage: 'clarify', label: 'Clarify', description: 'Answering questions' },
-  { stage: 'plan', label: 'Plan', description: 'Creating implementation plan' },
-  { stage: 'checklist', label: 'Checklist', description: 'Quality checklist' },
+  { stage: 'specs', label: 'Specs', description: 'Spec + Clarifications' },
+  { stage: 'plan', label: 'Plan', description: 'Implementation plan with checklist' },
   { stage: 'tasks', label: 'Tasks', description: 'Task breakdown' },
   { stage: 'analyze', label: 'Analyze', description: 'Consistency analysis' },
 ];

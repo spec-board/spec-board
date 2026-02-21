@@ -47,7 +47,7 @@ model Feature {
   featureId   String   // e.g., "001-user-login" (from spec)
   name        String
   description String?
-  stage       String   @default("backlog") // backlog, specify, clarify, plan, checklist, tasks, analyze
+  stage       String   @default("backlog") // backlog, specs, plan, tasks, analyze
   status      String   @default("backlog") // backlog, planning, in_progress, done
   order       Int      @default(0)
 

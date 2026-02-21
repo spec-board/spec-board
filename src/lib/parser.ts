@@ -775,8 +775,8 @@ export function determineFeatureStage(
   completedTasks: number,
   totalTasks: number
 ): FeatureStage {
-  if (!hasSpec) return 'specify';
-  if (!hasPlan) return 'specify';
+  if (!hasSpec) return 'specs';
+  if (!hasPlan) return 'specs';
   if (!hasTasks) return 'plan';
   if (totalTasks > 0 && completedTasks === totalTasks) return 'analyze';
   if (totalTasks > 0 && completedTasks > 0) return 'tasks';

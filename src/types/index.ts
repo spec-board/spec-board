@@ -1,4 +1,4 @@
-export type FeatureStage = 'backlog' | 'specify' | 'clarify' | 'plan' | 'checklist' | 'tasks' | 'analyze';
+export type FeatureStage = 'backlog' | 'specs' | 'plan' | 'tasks' | 'analyze';
 
 // Recent project type (used in store and components)
 export interface RecentProject {
@@ -506,7 +506,7 @@ export interface Shortcut {
 }
 
 /** Kanban column type for focus tracking */
-export type KanbanColumnType = 'backlog' | 'specify' | 'clarify' | 'plan' | 'checklist' | 'tasks' | 'analyze';
+export type KanbanColumnType = 'backlog' | 'specs' | 'plan' | 'tasks' | 'analyze';
 
 /** Focus state for keyboard navigation on Kanban board */
 export interface FocusState {

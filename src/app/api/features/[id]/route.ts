@@ -41,12 +41,18 @@ export async function PUT(
 
     const { name, description, stage, order } = body;
 
+    // Migration logic: handle stage transitions from old stages to 'specs'
+    let finalStage = stage;
+    if (stage === 'specify' || stage === 'clarify') {
+      finalStage = 'specs';
+    }
+
     const feature = await prisma.feature.update({
       where: { id },
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
-        ...(stage && { stage }),
+        ...(finalStage && { stage: finalStage }),
         ...(order !== undefined && { order }),
       },
       include: {

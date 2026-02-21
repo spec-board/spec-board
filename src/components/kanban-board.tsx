@@ -8,7 +8,7 @@ import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
 import { CreateFeatureModal } from './create-feature-modal';
 
-const COLUMNS: KanbanColumn[] = ['backlog', 'specify', 'clarify', 'plan', 'checklist', 'tasks', 'analyze'];
+const COLUMNS: KanbanColumn[] = ['backlog', 'specs', 'plan', 'tasks', 'analyze'];
 
 // Get status dot style based on progress percentage (Jira-style 3-state)
 // Uses CSS variables: --status-not-started (0%), --status-in-progress (1-79%), --status-complete (80%+)
@@ -70,8 +70,8 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
   const specNumber = getSpecNumber(feature.featureId || feature.id);
   const checklistCount = getChecklistCount(feature);
 
-  // Build accessible label - show description only in specify/clarify/plan, show task count in checklist/tasks/analyze
-  const isEarlyStage = ['specify', 'clarify', 'plan'].includes(feature.stage);
+  // Build accessible label - show description only in specs/plan, show task count in tasks/analyze
+  const isEarlyStage = ['specs', 'plan'].includes(feature.stage);
   const ariaLabel = [
     specNumber ? `${specNumber} ${feature.name}` : feature.name,
     isEarlyStage && feature.description ? feature.description : (feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null),
@@ -152,8 +152,8 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
               {feature.completedTasks}/{feature.totalTasks} tasks
             </span>
           )}
-          {/* Checklist count - show for checklist, tasks and analyze stages */}
-          {checklistCount > 0 && ['checklist', 'tasks', 'analyze'].includes(feature.stage) && (
+          {/* Checklist count - show for plan, tasks and analyze stages (checklist is now part of plan) */}
+          {checklistCount > 0 && ['plan', 'tasks', 'analyze'].includes(feature.stage) && (
             <span className="tabular-nums text-[var(--color-active)]">
               {checklistCount} {checklistCount === 1 ? 'checklist' : 'checklists'}
             </span>
@@ -178,10 +178,8 @@ interface EmptyColumnProps {
 function EmptyColumn({ column }: EmptyColumnProps) {
   const hints: Record<KanbanColumn, string> = {
     backlog: 'Add feature ideas here',
-    specify: 'Spec being generated',
-    clarify: 'Clarifications in progress',
-    plan: 'Implementation plan being created',
-    checklist: 'Checklists being completed',
+    specs: 'Spec and clarifications in progress',
+    plan: 'Plan and checklist being created',
     tasks: 'Tasks being generated',
     analyze: 'Analyzing complete',
   };
@@ -406,10 +404,11 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       // Call appropriate API based on transition
       setIsLoading(true);
 
-      // backlog -> specify: generate spec
-      if (currentColumn === 'backlog' && targetColumn === 'specify') {
-        setLoadingMessage('Generating specification...');
-        const response = await fetch('/api/spec-workflow/specify', {
+      // backlog -> specs: generate spec + questions (both)
+      if (currentColumn === 'backlog' && targetColumn === 'specs') {
+        setLoadingMessage('Generating specification and clarifications...');
+        // Generate spec first
+        const specResponse = await fetch('/api/spec-workflow/specify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -419,13 +418,9 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
             description: feature.description || '',
           })
         });
-        if (!response.ok) throw new Error('Failed to generate specification');
-      }
-
-      // specify -> clarify: generate clarifications
-      if (currentColumn === 'specify' && targetColumn === 'clarify') {
-        setLoadingMessage('Generating clarifications...');
-        const response = await fetch('/api/spec-workflow/clarify', {
+        if (!specResponse.ok) throw new Error('Failed to generate specification');
+        // Then generate questions
+        const clarifyResponse = await fetch('/api/spec-workflow/clarify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -434,11 +429,11 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
             specContent: feature.specContent || '',
           })
         });
-        if (!response.ok) throw new Error('Failed to generate clarifications');
+        if (!clarifyResponse.ok) throw new Error('Failed to generate clarifications');
       }
 
-      // clarify -> plan: generate plan
-      else if (currentColumn === 'clarify' && targetColumn === 'plan') {
+      // specs -> plan: generate plan
+      else if (currentColumn === 'specs' && targetColumn === 'plan') {
         setLoadingMessage('Generating plan...');
         const response = await fetch('/api/spec-workflow/plan', {
           method: 'POST',
@@ -454,27 +449,8 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
         if (!response.ok) throw new Error('Failed to generate plan');
       }
 
-      // plan -> checklist: generate checklist using AI
-      else if (currentColumn === 'plan' && targetColumn === 'checklist') {
-        setLoadingMessage('Generating checklist...');
-        const response = await fetch('/api/spec-workflow/checklist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            featureId: feature.id,
-            name: feature.name,
-            specContent: feature.specContent || '',
-            planContent: feature.planContent || '',
-            tasksContent: feature.tasksContent || '',
-          })
-        });
-        if (!response.ok) throw new Error('Failed to generate checklist');
-      }
-
-      // checklist -> tasks: generate tasks
-      else if ((currentColumn === 'plan' && targetColumn === 'tasks') ||
-               (currentColumn === 'checklist' && targetColumn === 'tasks')) {
+      // plan -> tasks: generate tasks (checklist is now part of plan stage)
+      else if (currentColumn === 'plan' && targetColumn === 'tasks') {
         setLoadingMessage('Generating tasks...');
         const response = await fetch('/api/spec-workflow/tasks', {
           method: 'POST',
@@ -724,8 +700,8 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     >
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">
-        {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog, {featuresByColumn['specify'].length} in specify, {featuresByColumn['clarify'].length} in clarify,
-        {featuresByColumn['plan'].length} in plan, {featuresByColumn['checklist'].length} in checklist, {featuresByColumn['tasks'].length} in tasks,
+        {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog, {featuresByColumn['specs'].length} in specs,
+        {featuresByColumn['plan'].length} in plan, {featuresByColumn['tasks'].length} in tasks,
         {featuresByColumn['analyze'].length} in analyze
       </div>
 

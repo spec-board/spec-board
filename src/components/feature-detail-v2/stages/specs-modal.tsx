@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Loader2, HelpCircle, Save, Play, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
+import { Loader2, HelpCircle, Play, AlertCircle, ArrowRight } from 'lucide-react';
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
 import type { DocumentType } from '../types';
@@ -9,72 +9,105 @@ import { MarkdownRenderer } from '@/components/markdown-renderer';
 import { ClarificationForm } from '../clarification-form';
 import { DocumentSelector } from '../document-selector';
 import { getDocumentOptions } from '../types';
+import { STAGES, getStageConfig } from '../base/types';
 import { toast } from 'sonner';
 import { useProjectStore } from '@/lib/store';
-import { STAGES, getStageConfig } from '../base/types';
 
-interface ClarifyModalProps extends BaseModalProps {
+interface SpecsModalProps extends BaseModalProps {
+  onGenerateSpec?: () => Promise<void>;
   onGenerateQuestions?: () => Promise<void>;
   onRefresh?: () => Promise<void>;
 }
 
-type ClarifyStatus = 'idle' | 'generating' | 'ready' | 'error';
+type SpecsStatus = 'idle' | 'generating_spec' | 'generating_questions' | 'ready' | 'error';
 
-export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGenerateQuestions, onRefresh }: ClarifyModalProps) {
-  const [status, setStatus] = useState<ClarifyStatus>('idle');
+export function SpecsModal({
+  feature,
+  onClose,
+  onStageChange,
+  onDelete,
+  onGenerateSpec,
+  onGenerateQuestions,
+  onRefresh
+}: SpecsModalProps) {
+  const [specStatus, setSpecStatus] = useState<SpecsStatus>('idle');
+  const [questionStatus, setQuestionStatus] = useState<SpecsStatus>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [selectedDoc, setSelectedDoc] = useState<DocumentType>('clarifications');
+  const [selectedDoc, setSelectedDoc] = useState<DocumentType>('spec');
   const [allAnswered, setAllAnswered] = useState(false);
 
-  // Get project from store for API calls (projectId is optional - clarify API mainly uses featureId)
   const project = useProjectStore(state => state.project);
-  // Use projectId if available, otherwise will use featureId for API calls
   const projectId = project?.projectId;
 
-  // Check if clarifications already exist
-  const hasClarifications = !!feature.clarificationsContent;
   const hasSpec = !!feature.specContent;
-
-  // Determine if form should be editable
-  // Allow editing as long as feature is still in specs stage (merged from clarify)
+  const hasClarifications = !!feature.clarificationsContent;
   const isEditable = feature.stage === 'specs';
 
-  // Handle all answered state change from ClarificationForm
+  // Set initial status based on existing content
+  useEffect(() => {
+    if (hasSpec) setSpecStatus('ready');
+    if (hasClarifications) setQuestionStatus('ready');
+  }, [hasSpec, hasClarifications]);
+
   const handleAllAnsweredChange = useCallback((answered: boolean) => {
     setAllAnswered(answered);
   }, []);
 
-  // Get next stage config
   const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
   const nextStage = STAGES[currentIndex + 1];
   const nextStageConfig = nextStage ? getStageConfig(nextStage.stage) : null;
 
-  // Get available document options
   const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
 
-  // Get content for selected document
   const selectedDocContent = useMemo(() => {
     const option = documentOptions.find(o => o.type === selectedDoc);
     return option?.content || null;
   }, [documentOptions, selectedDoc]);
 
-  // Set initial status based on existing content
-  useEffect(() => {
-    if (hasClarifications) {
-      setStatus('ready');
-    } else if (hasSpec) {
-      setStatus('idle');
+  const handleGenerateSpec = async () => {
+    if (!onGenerateSpec) {
+      try {
+        setSpecStatus('generating_spec');
+        setError(null);
+
+        const response = await fetch('/api/spec-workflow/specify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            featureId: feature.id,
+            name: feature.name,
+            description: feature.description,
+          }),
+        });
+
+        if (!response.ok) throw new Error('Failed to generate spec');
+
+        setSpecStatus('ready');
+        toast.success('Spec generated');
+        onRefresh?.();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to generate spec');
+        setSpecStatus('error');
+      }
+      return;
     }
-  }, [hasClarifications, hasSpec]);
+
+    setSpecStatus('generating_spec');
+    try {
+      await onGenerateSpec();
+      setSpecStatus('ready');
+      onRefresh?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate spec');
+      setSpecStatus('error');
+    }
+  };
 
   const handleGenerateQuestions = async () => {
-    // Note: projectId is optional - clarify API mainly uses featureId
-    // The API doesn't actually require projectId
-
     if (!onGenerateQuestions) {
-      // If no callback, call API directly
       try {
-        setStatus('generating');
+        setQuestionStatus('generating_questions');
         setError(null);
 
         const response = await fetch('/api/spec-workflow/clarify', {
@@ -87,46 +120,41 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
           }),
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to generate clarification questions');
-        }
+        if (!response.ok) throw new Error('Failed to generate questions');
 
-        const data = await response.json();
-        setStatus('ready');
-        toast.success('Clarification questions generated');
+        setQuestionStatus('ready');
+        toast.success('Questions generated');
         onRefresh?.();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate questions');
-        setStatus('error');
+        setQuestionStatus('error');
       }
       return;
     }
 
-    setStatus('generating');
-    setError(null);
-
+    setQuestionStatus('generating_questions');
     try {
       await onGenerateQuestions();
-      setStatus('ready');
+      setQuestionStatus('ready');
       onRefresh?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate questions');
-      setStatus('error');
+      setQuestionStatus('error');
     }
   };
 
   const handleSaveSuccess = useCallback(() => {
-    // Could trigger a refresh or notify parent
     toast.success('Clarifications saved');
     onRefresh?.();
   }, [onRefresh]);
 
-  // Handle "Continue to Next Stage" button click
   const handleContinueToNextStage = () => {
     if (onStageChange && nextStageConfig) {
-      onStageChange(nextStage.stage as any);
+      onStageChange(nextStageConfig.stage as any);
     }
   };
+
+  const isGenerating = specStatus === 'generating_spec' || questionStatus === 'generating_questions';
 
   return (
     <BaseModal
@@ -136,7 +164,32 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
       onDelete={onDelete}
       headerActions={
         <div className="flex items-center gap-2">
-          {hasClarifications && nextStageConfig ? (
+          <button
+            onClick={handleGenerateSpec}
+            disabled={isGenerating}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium text-sm transition-colors"
+          >
+            {specStatus === 'generating_spec' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+            Generate Spec
+          </button>
+          <button
+            onClick={handleGenerateQuestions}
+            disabled={isGenerating || !hasSpec}
+            className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:cursor-not-allowed text-white rounded-md font-medium text-sm transition-colors"
+            title={!hasSpec ? 'Generate spec first' : undefined}
+          >
+            {questionStatus === 'generating_questions' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <HelpCircle className="w-4 h-4" />
+            )}
+            Generate Questions
+          </button>
+          {hasSpec && nextStageConfig && (
             <button
               onClick={handleContinueToNextStage}
               disabled={!allAnswered}
@@ -146,74 +199,38 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
               {nextStageConfig.label}
               <ArrowRight className="w-4 h-4" />
             </button>
-          ) : status !== 'generating' && (
-            <button
-              onClick={handleGenerateQuestions}
-              disabled={!hasSpec}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
-            >
-              <HelpCircle className="w-4 h-4" />
-              Generate Questions
-            </button>
           )}
         </div>
       }
       showNavigation={hasSpec}
     >
       <div className="flex h-full">
-        {/* Left: Interactive Panel - Clarification Form */}
+        {/* Left: Interactive Q&A Panel */}
         <div className="w-[40%] border-r border-[var(--border)] p-6 overflow-y-auto">
-          {status === 'generating' && (
+          {isGenerating && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <Loader2 className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin" />
                 <p className="text-[var(--foreground)] font-medium mb-2">
-                  Generating Clarification Questions
-                </p>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  Analyzing spec to identify areas needing clarification...
+                  {specStatus === 'generating_spec' ? 'Generating Spec...' : 'Generating Questions...'}
                 </p>
               </div>
             </div>
           )}
 
-          {status === 'error' && (
+          {error && (
             <div className="flex items-center justify-center p-4">
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 max-w-md">
                 <div className="flex items-center gap-2 text-red-500 mb-2">
                   <AlertCircle className="w-5 h-5" />
                   <span className="font-medium">Generation Failed</span>
                 </div>
-                <p className="text-sm text-[var(--muted-foreground)] mb-4">
-                  {error || 'An error occurred while generating clarification questions.'}
-                </p>
-                <button
-                  onClick={handleGenerateQuestions}
-                  className="text-sm text-blue-500 hover:text-blue-400"
-                >
-                  Try again →
-                </button>
+                <p className="text-sm text-[var(--muted-foreground)] mb-4">{error}</p>
               </div>
             </div>
           )}
 
-          {status === 'idle' && !hasClarifications && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-md">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <HelpCircle className="w-8 h-8 text-blue-500" />
-                </div>
-                <p className="text-[var(--foreground)] font-medium mb-2">
-                  Clarify Your Requirements
-                </p>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  Click "Generate Questions" to get clarification questions based on your spec, then answer them to ensure requirements are clear.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {(status === 'ready' || hasClarifications) && (
+          {!isGenerating && !error && (
             <ClarificationForm
               content={feature.clarificationsContent || ''}
               featureId={feature.id}
@@ -225,7 +242,7 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
           )}
         </div>
 
-        {/* Right: Document Viewer with Selector */}
+        {/* Right: Document Viewer */}
         <div className="w-[60%] overflow-hidden flex flex-col">
           <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] bg-[var(--muted)]/30">
             <DocumentSelector
@@ -241,7 +258,7 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
-                <p>No content available for this document.</p>
+                <p>No content available. Click "Generate Spec" to start.</p>
               </div>
             )}
           </div>

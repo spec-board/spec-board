@@ -12,7 +12,7 @@ export interface SuggestedCommand {
 
 export interface CommandSuggestion {
   primary: SuggestedCommand | null;
-  optional: SuggestedCommand | null;
+  optional?: SuggestedCommand | null;
 }
 
 export function cn(...inputs: ClassValue[]) {
@@ -28,7 +28,6 @@ export function getStageColor(stage: string): string {
     specify: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     clarify: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
     plan: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    checklist: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     tasks: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
     analyze: 'bg-green-500/20 text-green-400 border-green-500/30',
   };
@@ -40,15 +39,14 @@ export function getStageLabel(stage: string): string {
     specify: 'Specify',
     clarify: 'Clarify',
     plan: 'Plan',
-    checklist: 'Checklist',
     tasks: 'Tasks',
     analyze: 'Analyze',
   };
   return labels[stage] || stage;
 }
 
-// Kanban column types for 7-column workflow view (backlog + 6 stages)
-export type KanbanColumn = 'backlog' | 'specify' | 'clarify' | 'plan' | 'checklist' | 'tasks' | 'analyze';
+// Kanban column types for 5-column workflow view (backlog + 4 stages)
+export type KanbanColumn = 'backlog' | 'specs' | 'plan' | 'tasks' | 'analyze';
 
 // Map feature stages to kanban columns
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
@@ -72,23 +70,17 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
 
   // Fallback to legacy logic for features without stage
   if (!feature.hasSpec) {
-    return 'specify';
+    return 'specs';
   }
   if (!feature.hasPlan) {
-    return 'specify';
+    return 'specs';
   }
   if (!feature.hasTasks) {
     return 'plan';
   }
-  if (feature.totalTasks === 0) {
-    return 'checklist';
-  }
   const allTasksComplete = feature.completedTasks === feature.totalTasks;
   if (!allTasksComplete) {
     return 'tasks';
-  }
-  if (feature.hasChecklists && feature.completedChecklistItems < feature.totalChecklistItems) {
-    return 'checklist';
   }
   return 'analyze';
 }
@@ -96,10 +88,8 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
 export function getKanbanColumnLabel(column: KanbanColumn): string {
   const labels: Record<KanbanColumn, string> = {
     backlog: 'Backlog',
-    specify: 'Specify',
-    clarify: 'Clarify',
+    specs: 'Specs',
     plan: 'Plan',
-    checklist: 'Checklist',
     tasks: 'Tasks',
     analyze: 'Analyze',
   };
@@ -125,7 +115,7 @@ export function isPrismaError(error: unknown, code?: string): error is { code: s
  * Follows the spec-kit workflow:
  * /speckit.constitution → /speckit.specify → /speckit.clarify (optional)
  *         ↓
- * /speckit.plan → /speckit.checklist (optional) → /speckit.tasks
+ * /speckit.plan → /speckit.tasks
  *         ↓
  * /speckit.analyze (optional) → /speckit.implement
  */
@@ -183,12 +173,6 @@ export function getSuggestedCommand(feature: Feature, hasConstitution: boolean):
         description: 'Break down the implementation plan into actionable, trackable tasks.',
         isOptional: false,
       },
-      optional: !feature.hasChecklists ? {
-        command: '/speckit.checklist',
-        title: 'Create QA Checklist',
-        description: 'Generate quality assurance checklists for testing and review.',
-        isOptional: true,
-      } : null,
     };
   }
 
