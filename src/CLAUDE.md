@@ -58,9 +58,17 @@ src/
 
 1. **Home Page** → User opens project → `/api/projects/register`
 2. **Registration** → Validates path, creates/returns slug
-3. **Navigation** → `/projects/{slug}` → Fetch project data
-4. **Project Page** → `/api/project?path=...` → Parse spec-kit files
-5. **Real-time** → `/api/watch` → SSE updates on file changes
+3. **Navigation** → `/projects/{slug}` → Fetch project data from database
+4. **Project Page** → `/api/project/{name}/data` → Load from PostgreSQL (database-first)
+5. **Stage Transitions** → Kanban board triggers AI workflow APIs
+
+## Workflow Stages
+
+Current 5-stage workflow:
+- **backlog** → **specs** → **plan** → **tasks** → **analyze**
+
+The SPECS stage merges the old Specify + Clarify stages.
+The PLAN stage now includes checklist generation.
 
 ## Patterns & Conventions
 

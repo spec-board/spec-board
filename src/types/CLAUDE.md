@@ -28,11 +28,11 @@ This directory contains all shared TypeScript interfaces and types used througho
 
 | Stage | Description |
 |-------|-------------|
-| `specify` | Spec being generated |
-| `clarify` | Clarifications in progress |
-| `plan` | Implementation plan being created |
-| `tasks` | Tasks being generated |
-| `analyze` | Analyzing consistency |
+| `backlog` | Feature ideas and descriptions |
+| `specs` | Spec + Clarifications (merged from specify + clarify) |
+| `plan` | Implementation plan with checklist |
+| `tasks` | Task breakdown |
+| `analyze` | Consistency analysis |
 
 ### Constitution Types
 
@@ -80,8 +80,8 @@ These are stored as string content in the database:
 ## Key Interfaces
 
 ```typescript
-// Feature stages (database-first)
-type FeatureStage = 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze';
+// Feature stages (database-first) - CURRENT 5-stage workflow
+type FeatureStage = 'backlog' | 'specs' | 'plan' | 'tasks' | 'analyze';
 
 // Constitution with version tracking
 interface Constitution {
