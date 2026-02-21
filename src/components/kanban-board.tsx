@@ -432,10 +432,11 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
         if (!clarifyResponse.ok) throw new Error('Failed to generate clarifications');
       }
 
-      // specs -> plan: generate plan
+      // specs -> plan: generate plan AND checklist (both)
       else if (currentColumn === 'specs' && targetColumn === 'plan') {
-        setLoadingMessage('Generating plan...');
-        const response = await fetch('/api/spec-workflow/plan', {
+        setLoadingMessage('Generating plan and checklist...');
+        // Generate plan first
+        const planResponse = await fetch('/api/spec-workflow/plan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -446,7 +447,21 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
             // API plan/route.ts has parseClarificationsContent() to handle markdown format
           })
         });
-        if (!response.ok) throw new Error('Failed to generate plan');
+        if (!planResponse.ok) throw new Error('Failed to generate plan');
+        // Then generate checklist
+        const planData = await planResponse.json();
+        const checklistResponse = await fetch('/api/spec-workflow/checklist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            featureId: feature.id,
+            name: feature.name,
+            specContent: feature.specContent || '',
+            planContent: planData.content || '',
+          })
+        });
+        if (!checklistResponse.ok) throw new Error('Failed to generate checklist');
       }
 
       // plan -> tasks: generate tasks (checklist is now part of plan stage)
