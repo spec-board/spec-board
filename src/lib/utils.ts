@@ -55,11 +55,14 @@ export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
 
 /**
  * Get kanban column for a feature based on workflow stage.
- * Maps FeatureStage directly to KanbanColumn for the 7-column workflow view.
+ * Maps FeatureStage directly to KanbanColumn for the 4-column workflow view.
  */
 export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
-  // Use the feature's stage directly
-  if (feature.stage) {
+  // Valid stages for 4-column workflow
+  const validStages: KanbanColumn[] = ['backlog', 'specs', 'plan', 'tasks'];
+
+  // Use the feature's stage if it's valid
+  if (feature.stage && validStages.includes(feature.stage as KanbanColumn)) {
     return feature.stage as KanbanColumn;
   }
 
@@ -68,17 +71,14 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
     return 'backlog';
   }
 
-  // Fallback to legacy logic for features without stage
-  if (!feature.hasSpec) {
-    return 'specs';
-  }
+  // Fallback logic for features without valid stage
   if (!feature.hasPlan) {
     return 'specs';
   }
   if (!feature.hasTasks) {
     return 'plan';
   }
-  // Tasks is now the final stage
+  // Tasks is the final stage
   return 'tasks';
 }
 

@@ -478,6 +478,22 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
           })
         });
         if (!tasksResponse.ok) throw new Error('Failed to generate tasks');
+
+        // Then run analysis (after tasks is generated, we need the tasks content)
+        const tasksData = await tasksResponse.json();
+        setLoadingMessage('Running analysis...');
+        const analyzeResponse = await fetch('/api/spec-workflow/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            featureId: feature.id,
+            specContent: feature.specContent || '',
+            planContent: feature.planContent || '',
+            tasksContent: tasksData.content || '',
+          })
+        });
+        if (!analyzeResponse.ok) throw new Error('Failed to run analysis');
       }
 
       // Reload to get updated data - use smooth refresh
