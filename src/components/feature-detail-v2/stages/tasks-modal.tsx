@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2, BarChart3, AlertCircle, CheckCircle, AlertTriangle, FileText, List, ClipboardCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Feature, Task } from '@/types';
 import type { BaseModalProps } from '../base/types';
@@ -10,6 +10,10 @@ import { groupTasksByUserStory } from '../types';
 import { UserStoryPanel } from '../user-story-panel';
 import { DocumentPanel } from '../document-panel';
 import { STAGES, getStageConfig } from '../base/types';
+import { useProjectStore } from '@/lib/store';
+import { toast } from 'sonner';
+
+type TasksStatus = 'idle' | 'generating' | 'ready' | 'error';
 
 export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseModalProps) {
   const [selectedDocument, setSelectedDocument] = useState<string>('tasks');
@@ -17,11 +21,26 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
   const [highlightTaskId, setHighlightTaskId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Analysis state
+  const [analysisStatus, setAnalysisStatus] = useState<TasksStatus>('idle');
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
   // Keyboard navigation state
   const [focusedPanel, setFocusedPanel] = useState<'left' | 'right'>('left');
   const [focusedCardIndex, setFocusedCardIndex] = useState<number>(0);
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
+
+  // Get project from store
+  const project = useProjectStore(state => state.project);
+  const projectId = project?.projectId;
+
+  // Check state
+  const hasAnalysis = !!feature.analysisContent;
+  const hasSpec = !!feature.specContent;
+  const hasPlan = !!feature.planContent;
+  const hasTasks = !!feature.tasksContent;
+  const hasAllDocs = hasSpec && hasPlan && hasTasks;
 
   // Group tasks by user story
   const { orphans: orphanTasks } = useMemo(
@@ -31,14 +50,60 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
 
   const totalCards = feature.userStories.length + (orphanTasks.length > 0 ? 1 : 0);
 
-  // Get next stage config
+  // Get next stage config (tasks is now the final stage, no next stage)
   const currentIndex = STAGES.findIndex(s => s.stage === feature.stage);
-  const nextStage = STAGES[currentIndex + 1];
+  const hasNextStage = currentIndex >= 0 && currentIndex < STAGES.length - 1;
+  const nextStage = hasNextStage ? STAGES[currentIndex + 1] : undefined;
   const nextStageConfig = nextStage ? getStageConfig(nextStage.stage) : null;
+
+  // Set initial analysis status
+  useEffect(() => {
+    if (hasAnalysis) {
+      setAnalysisStatus('ready');
+    } else if (hasAllDocs) {
+      setAnalysisStatus('idle');
+    }
+  }, [hasAnalysis, hasAllDocs]);
+
+  // Handle run analysis
+  const handleRunAnalysis = async () => {
+    if (!projectId) {
+      setAnalysisError('Project not found');
+      setAnalysisStatus('error');
+      return;
+    }
+
+    try {
+      setAnalysisStatus('generating');
+      setAnalysisError(null);
+
+      const response = await fetch('/api/spec-workflow/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          featureId: feature.id,
+          specContent: feature.specContent,
+          planContent: feature.planContent,
+          tasksContent: feature.tasksContent,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate analysis');
+      }
+
+      setAnalysisStatus('ready');
+      toast.success('Analysis complete');
+    } catch (err) {
+      setAnalysisError(err instanceof Error ? err.message : 'Failed to analyze');
+      setAnalysisStatus('error');
+    }
+  };
 
   // Handle continue to next stage
   const handleContinueToNextStage = useCallback(() => {
-    if (onStageChange && nextStageConfig) {
+    if (onStageChange && nextStageConfig && nextStage) {
       onStageChange(nextStage.stage as any);
     }
   }, [onStageChange, nextStageConfig, nextStage]);
@@ -110,13 +175,18 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
       onStageChange={onStageChange}
       onDelete={onDelete}
       headerActions={
-        nextStageConfig ? (
+        hasAnalysis ? (
+          <div className="text-sm text-green-500 font-medium">
+            Analysis Complete
+          </div>
+        ) : analysisStatus !== 'generating' ? (
           <button
-            onClick={handleContinueToNextStage}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+            onClick={handleRunAnalysis}
+            disabled={!hasAllDocs}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
           >
-            {nextStageConfig.label}
-            <ArrowRight className="w-4 h-4" />
+            <BarChart3 className="w-4 h-4" />
+            Run Analysis
           </button>
         ) : null
       }

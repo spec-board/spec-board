@@ -36,6 +36,12 @@ async function main() {
       `;
       console.log(`Updated ${checklistResult} from 'checklist' to 'plan'`);
 
+      // Migrate 'analyze' -> 'tasks' (merged into tasks stage)
+      const analyzeResult = await prisma.$executeRaw`
+        UPDATE features SET stage = 'tasks' WHERE stage = 'analyze'
+      `;
+      console.log(`Updated ${analyzeResult} from 'analyze' to 'tasks'`);
+
       // Show current distribution
       const stages = await prisma.$queryRaw<{stage: string, count: bigint}[]>`
         SELECT stage, COUNT(*) as count FROM features GROUP BY stage
