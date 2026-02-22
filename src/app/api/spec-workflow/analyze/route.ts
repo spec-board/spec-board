@@ -28,13 +28,12 @@ export async function POST(request: NextRequest) {
     // Generate analysis markdown content
     const analysisContent = generateAnalysisMarkdown(analysis);
 
-    // Save to database if featureId provided
+    // Save analysis to database if featureId provided - don't update stage (tasks API already set it to 'tasks')
     if (featureId) {
       await prisma.feature.update({
         where: { id: featureId },
         data: {
-          analysisContent,
-          stage: 'analyze'
+          analysisContent
         }
       });
     }

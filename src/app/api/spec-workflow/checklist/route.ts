@@ -34,11 +34,10 @@ export async function POST(request: NextRequest) {
     // Generate markdown content from checklist items
     const checklistsContent = generateChecklistMarkdown(checklist, name || 'Feature');
 
-    // Update feature stage and save checklistsContent to database
+    // Save checklistsContent to database - don't update stage (plan API already set it to 'plan')
     await prisma.feature.update({
       where: { id: featureId },
       data: {
-        stage: 'checklist',
         checklistsContent
       }
     });
