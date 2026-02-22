@@ -29,7 +29,7 @@ Generate complete feature specifications from natural language. Configure your p
 
 ### Spec Workflow Wizard
 
-AI-powered 5-stage workflow: backlog → specs → plan → tasks → analyze
+AI-powered 4-stage workflow: backlog → specs → plan → tasks
 
 <p align="center">
   <img src="https://github.com/paulpham157/spec-board/blob/main/public/assests/suggestion-next-action.png" alt="Next Action Suggestions" width="400" />
@@ -39,9 +39,9 @@ AI-powered 5-stage workflow: backlog → specs → plan → tasks → analyze
 ## Features
 
 ### Core Features
-- **Kanban Board** — 5-column pipeline (Backlog → Specs → Plan → Tasks → Analyze)
+- **Kanban Board** — 4-column pipeline (Backlog → Specs → Plan → Tasks)
 - **AI Feature Creation** — Enter feature name and description, AI generates spec/plan/tasks automatically
-- **Spec Workflow Wizard** — 5-stage AI workflow: backlog → specs → plan → tasks → analyze
+- **Spec Workflow Wizard** — 4-stage AI workflow: backlog → specs → plan → tasks
 - **Real-Time Updates** — Live file watching via Server-Sent Events (SSE)
 - **Interactive Checklists** — Click or keyboard to toggle checklist items with optimistic UI
 - **Deep Linking** — Shareable URLs for projects and features
@@ -73,8 +73,8 @@ https://youtu.be/WQXb2-dj9zQ
 │              │      │              │      │                  │
 │  spec-kit    │ ───▶ │  SpecBoard   │ ───▶ │   Kanban Board   │
 │  project     │      │  parses      │      │                  │
-│              │      │              │      │  ┌──┐┌──┐┌──┐┌──┐┌──┐│
-│  specs/      │      │  spec.md     │      │  │B ││S ││P ││T ││A ││
+│              │      │              │      │  ┌──┐┌──┐┌──┐┌──┐│
+│  specs/      │      │  spec.md     │      │  │B ││S ││P ││T ││
 │  ├─ feature/ │      │  plan.md     │      │  └──┘└──┘└──┘└──┘│
 │  │  ├─ spec  │      │  tasks.md    │      │                  │
 │  │  ├─ plan  │      │              │      │                  │
@@ -82,7 +82,7 @@ https://youtu.be/WQXb2-dj9zQ
 │  │  └─ analysis │   │              │      │                  │
 └──────────────┘      └──────────────┘      └──────────────────┘
 
-B = Backlog | S = Specs | P = Plan | T = Tasks | A = Analyze
+B = Backlog | S = Specs | P = Plan | T = Tasks
 ```
 
 ## Quick Start

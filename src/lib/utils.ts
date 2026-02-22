@@ -45,8 +45,8 @@ export function getStageLabel(stage: string): string {
   return labels[stage] || stage;
 }
 
-// Kanban column types for 5-column workflow view (backlog + 4 stages)
-export type KanbanColumn = 'backlog' | 'specs' | 'plan' | 'tasks' | 'analyze';
+// Kanban column types for 4-column workflow view (backlog + 3 stages)
+export type KanbanColumn = 'backlog' | 'specs' | 'plan' | 'tasks';
 
 // Map feature stages to kanban columns
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
@@ -78,11 +78,8 @@ export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
   if (!feature.hasTasks) {
     return 'plan';
   }
-  const allTasksComplete = feature.completedTasks === feature.totalTasks;
-  if (!allTasksComplete) {
-    return 'tasks';
-  }
-  return 'analyze';
+  // Tasks is now the final stage
+  return 'tasks';
 }
 
 export function getKanbanColumnLabel(column: KanbanColumn): string {
@@ -91,7 +88,6 @@ export function getKanbanColumnLabel(column: KanbanColumn): string {
     specs: 'Specs',
     plan: 'Plan',
     tasks: 'Tasks',
-    analyze: 'Analyze',
   };
   return labels[column];
 }

@@ -8,7 +8,7 @@ import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
 import { CreateFeatureModal } from './create-feature-modal';
 
-const COLUMNS: KanbanColumn[] = ['backlog', 'specs', 'plan', 'tasks', 'analyze'];
+const COLUMNS: KanbanColumn[] = ['backlog', 'specs', 'plan', 'tasks'];
 
 // Get status dot style based on progress percentage (Jira-style 3-state)
 // Uses CSS variables: --status-not-started (0%), --status-in-progress (1-79%), --status-complete (80%+)
@@ -70,7 +70,7 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
   const specNumber = getSpecNumber(feature.featureId || feature.id);
   const checklistCount = getChecklistCount(feature);
 
-  // Build accessible label - show description only in specs/plan, show task count in tasks/analyze
+  // Build accessible label - show description only in specs/plan, show task count in tasks
   const isEarlyStage = ['specs', 'plan'].includes(feature.stage);
   const ariaLabel = [
     specNumber ? `${specNumber} ${feature.name}` : feature.name,
@@ -152,8 +152,8 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
               {feature.completedTasks}/{feature.totalTasks} tasks
             </span>
           )}
-          {/* Checklist count - show for plan, tasks and analyze stages (checklist is now part of plan) */}
-          {checklistCount > 0 && ['plan', 'tasks', 'analyze'].includes(feature.stage) && (
+          {/* Checklist count - show for plan and tasks stages (checklist is now part of plan) */}
+          {checklistCount > 0 && ['plan', 'tasks'].includes(feature.stage) && (
             <span className="tabular-nums text-[var(--color-active)]">
               {checklistCount} {checklistCount === 1 ? 'checklist' : 'checklists'}
             </span>
@@ -180,8 +180,7 @@ function EmptyColumn({ column }: EmptyColumnProps) {
     backlog: 'Add feature ideas here',
     specs: 'Spec and clarifications in progress',
     plan: 'Plan and checklist being created',
-    tasks: 'Tasks being generated',
-    analyze: 'Analyzing complete',
+    tasks: 'Tasks with analysis',
   };
 
   return (
@@ -464,10 +463,11 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
         if (!checklistResponse.ok) throw new Error('Failed to generate checklist');
       }
 
-      // plan -> tasks: generate tasks (checklist is now part of plan stage)
+      // plan -> tasks: generate tasks AND run analysis (both)
       else if (currentColumn === 'plan' && targetColumn === 'tasks') {
         setLoadingMessage('Generating tasks...');
-        const response = await fetch('/api/spec-workflow/tasks', {
+        // Generate tasks first
+        const tasksResponse = await fetch('/api/spec-workflow/tasks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -477,24 +477,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
             planContent: feature.planContent || '',
           })
         });
-        if (!response.ok) throw new Error('Failed to generate tasks');
-      }
-
-      // tasks -> analyze: run analysis
-      else if (currentColumn === 'tasks' && targetColumn === 'analyze') {
-        setLoadingMessage('Running analysis...');
-        const response = await fetch('/api/spec-workflow/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            featureId: feature.id,
-            specContent: feature.specContent || '',
-            planContent: feature.planContent || '',
-            tasksContent: feature.tasksContent || '',
-          })
-        });
-        if (!response.ok) throw new Error('Failed to run analysis');
+        if (!tasksResponse.ok) throw new Error('Failed to generate tasks');
       }
 
       // Reload to get updated data - use smooth refresh
@@ -716,8 +699,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">
         {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog, {featuresByColumn['specs'].length} in specs,
-        {featuresByColumn['plan'].length} in plan, {featuresByColumn['tasks'].length} in tasks,
-        {featuresByColumn['analyze'].length} in analyze
+        {featuresByColumn['plan'].length} in plan, {featuresByColumn['tasks'].length} in tasks
       </div>
 
       {/* Keyboard navigation hint */}

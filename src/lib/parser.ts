@@ -778,9 +778,8 @@ export function determineFeatureStage(
   if (!hasSpec) return 'specs';
   if (!hasPlan) return 'specs';
   if (!hasTasks) return 'plan';
-  if (totalTasks > 0 && completedTasks === totalTasks) return 'analyze';
-  if (totalTasks > 0 && completedTasks > 0) return 'tasks';
-  return 'plan';
+  // Tasks is now the final stage - return tasks regardless of completion
+  return 'tasks';
 }
 
 /**

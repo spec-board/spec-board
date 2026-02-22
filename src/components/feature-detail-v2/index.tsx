@@ -20,13 +20,11 @@ export type {
 } from './types';
 
 // Stage-based modal router
-import type { Feature } from '@/types';
 import type { FeatureDetailV2Props } from './types';
 import { TasksModal } from './stages/tasks-modal';
 import { SpecsModal } from './stages/specs-modal';
 import { createPlaceholderModal } from './stages/placeholder-modal';
 import { PlanModal } from './stages/plan-modal';
-import { AnalyzeModal } from './stages/analyze-modal';
 
 // Router based on feature stage
 const STAGE_MODALS = {
@@ -34,7 +32,6 @@ const STAGE_MODALS = {
   specs: SpecsModal,
   plan: PlanModal,
   tasks: TasksModal,
-  analyze: AnalyzeModal,
 } as const;
 
 type StageModalKey = keyof typeof STAGE_MODALS;

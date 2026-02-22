@@ -35,8 +35,7 @@ export const STAGES: StageConfig[] = [
   { stage: 'backlog', label: 'Backlog', description: 'Feature ideas and descriptions' },
   { stage: 'specs', label: 'Specs', description: 'Spec + Clarifications' },
   { stage: 'plan', label: 'Plan', description: 'Implementation plan with checklist' },
-  { stage: 'tasks', label: 'Tasks', description: 'Task breakdown' },
-  { stage: 'analyze', label: 'Analyze', description: 'Consistency analysis' },
+  { stage: 'tasks', label: 'Tasks', description: 'Task breakdown with analysis' },
 ];
 
 // Get stage config by stage name

@@ -15,8 +15,6 @@ function getStageDisplay(stage: FeatureStage): { icon: React.ReactNode; label: s
       return { icon: <FileText className="w-3 h-3" />, label: 'Plan', cssVar: 'var(--tag-text-warning)', bgVar: 'var(--tag-bg-warning)' };
     case 'tasks':
       return { icon: <ListTodo className="w-3 h-3" />, label: 'Tasks', cssVar: 'var(--tag-text-yellow)', bgVar: 'var(--tag-bg-yellow)' };
-    case 'analyze':
-      return { icon: <CheckCircle className="w-3 h-3" />, label: 'Analyze', cssVar: 'var(--tag-text-success)', bgVar: 'var(--tag-bg-success)' };
   }
 }
 
@@ -46,7 +44,6 @@ function getStageLabel(stageBreakdown: RecentProject['stageBreakdown']): string 
   if (total === 0) return 'No features';
 
   const parts: string[] = [];
-  if (stageBreakdown.analyze > 0) parts.push(`${stageBreakdown.analyze} analyzed`);
   if (stageBreakdown.tasks > 0) parts.push(`${stageBreakdown.tasks} tasks`);
   if (stageBreakdown.plan > 0) parts.push(`${stageBreakdown.plan} planning`);
   if (stageBreakdown.specs > 0) parts.push(`${stageBreakdown.specs} in specs`);
@@ -135,11 +132,7 @@ export function RecentProjectsList({ projects, onSelect, onRemove }: RecentProje
                   >
                     {stageInfo.icon}
                     <span>
-                      {stageInfo.label}
-                      {project.activeFeature && project.activeFeature.stage !== 'analyze' && ': '}
-                      {project.activeFeature && project.activeFeature.stage !== 'analyze' && (
-                        <span className="text-[var(--foreground)]">{project.activeFeature.featureName}</span>
-                      )}
+                      {stageInfo.label}: <span className="text-[var(--foreground)]">{project.activeFeature?.featureName}</span>
                     </span>
                   </div>
                 )}

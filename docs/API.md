@@ -840,8 +840,8 @@ Content-Type: application/json
 
 ## Spec Workflow
 
-AI-powered 5-stage feature generation workflow:
-- `backlog` → `specs` → `plan` → `tasks` → `analyze`
+AI-powered 4-stage feature generation workflow:
+- `backlog` → `specs` → `plan` → `tasks` (final stage, analysis runs on transition)
 
 **Note:** SPECS stage merges old Specify + Clarify stages. PLAN stage includes checklist generation.
 

@@ -25,13 +25,12 @@ export async function GET(request: NextRequest) {
       orderBy: { order: 'asc' },
     });
 
-    // Group by stage for kanban (5-column workflow: specify → clarify → plan → tasks → analyze)
+    // Group by stage for kanban (4-column workflow: backlog → specs → plan → tasks)
     const kanbanData = {
-      specify: features.filter(f => f.stage === 'specify'),
-      clarify: features.filter(f => f.stage === 'clarify'),
+      backlog: features.filter(f => f.stage === 'backlog'),
+      specs: features.filter(f => f.stage === 'specs'),
       plan: features.filter(f => f.stage === 'plan'),
       tasks: features.filter(f => f.stage === 'tasks'),
-      analyze: features.filter(f => f.stage === 'analyze'),
     };
 
     return NextResponse.json(kanbanData);

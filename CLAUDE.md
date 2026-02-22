@@ -51,14 +51,13 @@ PostgreSQL → API Routes (/api/project/[name]/data) → Zustand Store → React
 
 ### Workflow Stages
 
-Current feature workflow (5 stages):
+Current feature workflow (4 stages):
 | Stage | Description |
 |-------|-------------|
 | `backlog` | Feature ideas and descriptions |
 | `specs` | Spec + Clarifications (merged from specify + clarify) |
 | `plan` | Implementation plan with checklist (merged from plan + checklist) |
-| `tasks` | Task breakdown |
-| `analyze` | Consistency analysis |
+| `tasks` | Task breakdown + Analysis (final stage, analysis runs automatically) |
 
 ### URL Structure
 
