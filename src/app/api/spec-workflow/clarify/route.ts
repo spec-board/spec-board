@@ -39,13 +39,13 @@ export async function POST(request: NextRequest) {
     // Generate clarifications markdown content
     const clarificationsContent = generateClarificationsMarkdown(questions);
 
-    // Save to database if featureId provided
+    // Save clarifications to database if featureId provided
+    // Don't update stage - specify API already set it to 'specs'
     if (featureId) {
       await prisma.feature.update({
         where: { id: featureId },
         data: {
-          clarificationsContent,
-          stage: 'clarify'
+          clarificationsContent
         }
       });
     }

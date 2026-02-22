@@ -143,14 +143,15 @@ export async function POST(request: NextRequest) {
     });
     const newOrder = (maxOrderFeature?.order ?? -1) + 1;
 
-    // Save feature to database
+    // Save feature to database - new feature starts in backlog
+    // User will drag to specs to generate clarifications
     const feature = await prisma.feature.create({
       data: {
         projectId,
         featureId,
         name: name.trim(),
         description: description?.trim() || null,
-        stage: 'specify',
+        stage: 'backlog',
         order: newOrder,
       },
     });

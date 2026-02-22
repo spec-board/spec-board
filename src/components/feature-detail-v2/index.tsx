@@ -23,12 +23,13 @@ export type {
 import type { FeatureDetailV2Props } from './types';
 import { TasksModal } from './stages/tasks-modal';
 import { SpecsModal } from './stages/specs-modal';
+import { BacklogModal } from './stages/backlog-modal';
 import { createPlaceholderModal } from './stages/placeholder-modal';
 import { PlanModal } from './stages/plan-modal';
 
 // Router based on feature stage
 const STAGE_MODALS = {
-  backlog: SpecsModal, // Auto-generate spec + questions on transition
+  backlog: BacklogModal,
   specs: SpecsModal,
   plan: PlanModal,
   tasks: TasksModal,
