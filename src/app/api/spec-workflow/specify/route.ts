@@ -49,14 +49,14 @@ export async function POST(request: NextRequest) {
     });
     const constitutionVersionId = latestConstitution?.versions[0]?.id || null;
 
-    // Create feature in database with specContent
+    // Create feature in database with specContent - stage is 'specs' (not 'specify')
     const feature = await prisma.feature.create({
       data: {
         projectId,
         featureId,
         name,
         description: description || null,
-        stage: 'specify',
+        stage: 'specs',
         order: featureCount,
         specContent, // Save spec markdown to database
         constitutionVersionId // Track which constitution version was active
