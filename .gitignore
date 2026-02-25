@@ -63,6 +63,10 @@ Thumbs.db
 logs/
 *.log
 
+# PM2
+.pm2/
+.pm2_runtime
+
 # Runtime data
 pids/
 *.pid
