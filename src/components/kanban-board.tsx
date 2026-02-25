@@ -3,10 +3,12 @@
 import { forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature, KanbanColumnType } from '@/types';
-import { GitBranch, CheckCircle2, Plus } from 'lucide-react';
+import { GitBranch, CheckCircle2, Plus, Loader2 } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
+import { toast } from 'sonner';
 import { CreateFeatureModal } from './create-feature-modal';
+import { CircularProgress, DualCircularProgress } from './circular-progress';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'specs', 'plan', 'tasks'];
 
@@ -61,9 +63,18 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
     ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
     : 0;
 
+  const checklistProgressPercentage = feature.checklistProgress
+    ? Math.round((feature.checklistProgress.completed / feature.checklistProgress.total) * 100)
+    : 0;
+
   const isComplete = progressPercentage === 100;
   const statusDotStyle = getStatusDotStyle(progressPercentage, feature.totalTasks > 0);
   const statusLabel = getStatusLabel(progressPercentage, feature.totalTasks > 0);
+
+  // Job status for background processing
+  const isJobRunning = feature.jobStatus === 'running' || feature.jobStatus === 'queued';
+  const jobProgress = feature.jobProgress || 0;
+  const jobMessage = feature.jobMessage || '';
 
   // Extract spec number from featureId (e.g., "001" from "001-user-login")
   // Use featureId if available, fallback to id for backwards compatibility
@@ -76,6 +87,7 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
     specNumber ? `${specNumber} ${feature.name}` : feature.name,
     isEarlyStage && feature.description ? feature.description : (feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null),
     checklistCount > 0 ? `${checklistCount} checklists` : null,
+    isJobRunning ? `Processing: ${jobMessage}` : null,
   ].filter(Boolean).join(', ');
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -93,20 +105,24 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
     onDragEnd?.();
   };
 
+  // Disable drag while job is running
+  const isDraggable = !isJobRunning;
+
   return (
     <button
       ref={ref}
       onClick={onClick}
-      draggable
+      draggable={isDraggable}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       aria-label={ariaLabel}
       className={cn(
         'w-full text-left rounded-md transition-all',
         'bg-[var(--card)] border border-[var(--border)]',
-        'hover:bg-[var(--card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5',
+        isDraggable && 'hover:bg-[var(--card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5',
         'focus-ring',
-        isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]'
+        isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]',
+        isJobRunning && 'opacity-75'
       )}
       style={{
         padding: 'var(--space-4)', // 16px padding
@@ -123,40 +139,82 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
           )}
           <span>{toTitleCase(feature.name)}</span>
         </h4>
-        {/* Status indicator - dot or checkmark */}
-        {isComplete ? (
+        {/* Status indicator - dot or checkmark or loading */}
+        {isJobRunning ? (
+          <div className="relative" title={jobMessage}>
+            <Loader2
+              className="w-4 h-4 text-blue-500 flex-shrink-0 animate-spin"
+              aria-label={jobMessage}
+            />
+          </div>
+        ) : isComplete ? (
           <CheckCircle2
             className="w-4 h-4 text-green-500 flex-shrink-0"
             aria-label="Complete"
           />
-        ) : (
-          <span
-            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-            style={statusDotStyle}
-            aria-label={statusLabel}
-            title={statusLabel}
-          />
-        )}
+        ) : null}
       </div>
 
-      {/* Compact task count and checklist - Jira style, or description for early stages */}
+      {/* Job progress bar - show when job is running */}
+      {isJobRunning && (
+        <div className="mb-2">
+          <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)] mb-1">
+            <span className="truncate flex-1">{jobMessage}</span>
+            <span className="ml-2 font-mono">{jobProgress}%</span>
+          </div>
+          <div className="w-full h-1.5 bg-[var(--muted)] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-500 transition-all duration-300"
+              style={{ width: `${jobProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Progress rings + description */}
       <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          {/* Show description if available, otherwise show task count */}
-          {feature.description ? (
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {/* Description (if exists) */}
+          {feature.description && (
             <span className="truncate flex-1" title={feature.description}>
               {feature.description}
             </span>
-          ) : (
-            <span className="tabular-nums">
-              {feature.completedTasks}/{feature.totalTasks} tasks
-            </span>
           )}
-          {/* Checklist count - show for plan and tasks stages (checklist is now part of plan) */}
-          {checklistCount > 0 && ['plan', 'tasks'].includes(feature.stage) && (
-            <span className="tabular-nums text-[var(--color-active)]">
-              {checklistCount} {checklistCount === 1 ? 'checklist' : 'checklists'}
-            </span>
+
+          {/* Progress rings - show when has tasks or checklist */}
+          {(feature.totalTasks > 0 || feature.checklistProgress) && (
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {/* Task ring - primary color with "T" label */}
+              {feature.totalTasks > 0 && (
+                <div className="flex items-center gap-1" title={`Tasks: ${feature.completedTasks}/${feature.totalTasks}`}>
+                  <CircularProgress
+                    value={progressPercentage}
+                    size={20}
+                    strokeWidth={2.5}
+                    color="var(--primary)"
+                    label="T"
+                  />
+                </div>
+              )}
+
+              {/* Checklist ring - green color with "C" label */}
+              {feature.checklistProgress && (
+                <div className="flex items-center gap-1" title={`Checklist: ${feature.checklistProgress.completed}/${feature.checklistProgress.total}`}>
+                  <CircularProgress
+                    value={checklistProgressPercentage}
+                    size={20}
+                    strokeWidth={2.5}
+                    color="var(--color-success)"
+                    label="C"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* No tasks, no description */}
+          {!feature.description && feature.totalTasks === 0 && !feature.checklistProgress && (
+            <span className="tabular-nums">0 tasks</span>
           )}
         </div>
 
@@ -368,7 +426,18 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     setDropTargetColumn(null);
   }, []);
 
-  // Handle drop - call appropriate API based on transition
+  // Helper to refresh data after drop - prefer smooth callback, fallback to reload
+  const refreshData = useCallback(() => {
+    if (onFeaturesChange) {
+      // Callback to parent - parent can re-fetch and update
+      // For now, trigger a custom event that parent can listen to
+      window.dispatchEvent(new CustomEvent('features-updated'));
+    } else {
+      window.location.reload();
+    }
+  }, [onFeaturesChange]);
+
+  // Handle drop - trigger background job via Inngest
   const handleDrop = useCallback((targetColumn: KanbanColumn) => async (e: React.DragEvent) => {
     e.preventDefault();
     setDropTargetColumn(null);
@@ -400,103 +469,32 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       const feature = features.find(f => f.id === featureId);
       if (!feature) return;
 
-      // Call appropriate API based on transition
+      // Trigger background job via Inngest API
       setIsLoading(true);
+      setLoadingMessage('Queuing background job...');
 
-      // backlog -> specs: generate spec + questions (both)
-      if (currentColumn === 'backlog' && targetColumn === 'specs') {
-        setLoadingMessage('Generating specification and clarifications...');
-        // Generate spec first
-        const specResponse = await fetch('/api/spec-workflow/specify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            featureId: feature.id,
-            name: feature.name,
-            description: feature.description || '',
-          })
-        });
-        if (!specResponse.ok) throw new Error('Failed to generate specification');
-        // Then generate questions
-        const clarifyResponse = await fetch('/api/spec-workflow/clarify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            featureId: feature.id,
-            specContent: feature.specContent || '',
-          })
-        });
-        if (!clarifyResponse.ok) throw new Error('Failed to generate clarifications');
+      const response = await fetch('/api/stage-transition', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          featureId: feature.id,
+          fromStage: currentColumn,
+          toStage: targetColumn,
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to trigger background job');
       }
 
-      // specs -> plan: generate plan AND checklist (both)
-      else if (currentColumn === 'specs' && targetColumn === 'plan') {
-        setLoadingMessage('Generating plan and checklist...');
-        // Generate plan first
-        const planResponse = await fetch('/api/spec-workflow/plan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            featureId: feature.id,
-            specContent: feature.specContent || '',
-            // Don't parse clarificationsContent here - let API handle parsing from database
-            // API plan/route.ts has parseClarificationsContent() to handle markdown format
-          })
-        });
-        if (!planResponse.ok) throw new Error('Failed to generate plan');
-        // Then generate checklist
-        const planData = await planResponse.json();
-        const checklistResponse = await fetch('/api/spec-workflow/checklist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            featureId: feature.id,
-            name: feature.name,
-            specContent: feature.specContent || '',
-            planContent: planData.content || '',
-          })
-        });
-        if (!checklistResponse.ok) throw new Error('Failed to generate checklist');
-      }
+      const result = await response.json();
 
-      // plan -> tasks: generate tasks AND run analysis (both)
-      else if (currentColumn === 'plan' && targetColumn === 'tasks') {
-        setLoadingMessage('Generating tasks...');
-        // Generate tasks first
-        const tasksResponse = await fetch('/api/spec-workflow/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            featureId: feature.id,
-            specContent: feature.specContent || '',
-            planContent: feature.planContent || '',
-          })
-        });
-        if (!tasksResponse.ok) throw new Error('Failed to generate tasks');
+      // Show toast that job was queued
+      toast.success(`Feature queued for ${targetColumn} - you can continue working`);
 
-        // Then run analysis (after tasks is generated, we need the tasks content)
-        const tasksData = await tasksResponse.json();
-        setLoadingMessage('Running analysis...');
-        const analyzeResponse = await fetch('/api/spec-workflow/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            featureId: feature.id,
-            specContent: feature.specContent || '',
-            planContent: feature.planContent || '',
-            tasksContent: tasksData.content || '',
-          })
-        });
-        if (!analyzeResponse.ok) throw new Error('Failed to run analysis');
-      }
-
-      // Reload to get updated data - use smooth refresh
+      // Refresh data to show updated job status
+      // The feature will show progress indicator while job runs
       refreshData();
     } catch (err) {
       console.error('Drop error:', err);
@@ -505,7 +503,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [features, projectId]);
+  }, [features, projectId, refreshData]);
 
   // Group features by kanban column (using new function that considers checklists)
   const featuresByColumn = COLUMNS.reduce((acc, column) => {
@@ -688,17 +686,6 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       cardRefs.current.delete(featureId);
     }
   }, []);
-
-  // Helper to refresh data after drop - prefer smooth callback, fallback to reload
-  const refreshData = useCallback(() => {
-    if (onFeaturesChange) {
-      // Callback to parent - parent can re-fetch and update
-      // For now, trigger a custom event that parent can listen to
-      window.dispatchEvent(new CustomEvent('features-updated'));
-    } else {
-      window.location.reload();
-    }
-  }, [onFeaturesChange]);
 
   return (
     <>
