@@ -102,6 +102,7 @@ DATABASE_URL="postgresql://user1:passwordD@localhost:5432/specboard1"
 POSTGRES_USER="user1"
 POSTGRES_PASSWORD="passwordD"
 POSTGRES_DB="specboard1"
+REDIS_URL="redis://localhost:6379"
 ```
 
 ```bash

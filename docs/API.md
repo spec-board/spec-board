@@ -1,7 +1,7 @@
 # SpecBoard API Documentation
 
 > **Version**: 1.2.0
-> **Last Updated**: 2026-02-17
+> **Last Updated**: 2026-02-25
 > **Base URL**: `http://localhost:3000/api`
 
 ## Table of Contents
@@ -975,6 +975,65 @@ Content-Type: application/json
   "principles": ["Principle 1", "Principle 2"]
 }
 ```
+
+### Trigger Stage Transition (BullMQ)
+
+Trigger background job for stage transition via BullMQ queue.
+
+```http
+POST /api/stage-transition
+Content-Type: application/json
+
+{
+  "featureId": "feat_123",
+  "fromStage": "backlog",
+  "toStage": "specs"
+}
+```
+
+**Valid Transitions:**
+- `backlog` → `specs`
+- `specs` → `plan`
+- `plan` → `tasks`
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "featureId": "feat_123",
+  "status": "queued",
+  "message": "Stage transition to specs queued",
+  "jobId": "job_abc123"
+}
+```
+
+### Get Job Status
+
+Get background job status for a feature.
+
+```http
+GET /api/stage-transition?featureId=feat_123
+```
+
+**Response** (200 OK):
+```json
+{
+  "featureId": "feat_123",
+  "stage": "specs",
+  "jobStatus": "running",
+  "jobProgress": 45,
+  "jobMessage": "Generating spec...",
+  "jobStartedAt": "2026-02-25T10:00:00Z",
+  "jobCompletedAt": null
+}
+```
+
+**Job Status Values:**
+- `idle` - No job running
+- `queued` - Job queued in BullMQ
+- `running` - Job currently processing
+- `completed` - Job finished successfully
+- `failed` - Job failed (will retry automatically)
 
 ---
 

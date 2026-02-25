@@ -1,7 +1,7 @@
 # SpecBoard Developer Guide
 
-> **Version**: 1.1.0
-> **Last Updated**: 2026-01-08
+> **Version**: 1.2.0
+> **Last Updated**: 2026-02-25
 
 ## Table of Contents
 
@@ -21,8 +21,10 @@
 
 - Node.js 18+ (LTS recommended)
 - PostgreSQL 14+
+- Redis 7+ (for BullMQ job queue)
 - pnpm 10.26.0 (recommended package manager)
 - Git
+- Docker (optional, for local database/redis)
 
 ### Initial Setup
 
@@ -556,22 +558,45 @@ Current coverage targets:
 
 ### Docker Deployment
 
-1. **Build and start services**:
+1. **Start database + Redis** (for local development):
+```bash
+docker compose -f docker-compose.db.yml up -d
+```
+
+2. **Start full stack** (app + db + redis):
 ```bash
 docker compose up -d --build
 ```
 
-2. **Check logs**:
+3. **Check logs**:
 ```bash
 docker compose logs -f app
 ```
 
-3. **Stop services**:
+4. **Stop services**:
 ```bash
 docker compose down
 ```
 
-### PM2 Deployment
+### Local Development with PM2
+
+1. **Start Redis and Worker**:
+```bash
+pnpm redis    # Start Redis in Docker
+pnpm worker   # Start BullMQ worker (separate terminal)
+```
+
+2. **Start Next.js**:
+```bash
+pnpm dev      # Development server
+```
+
+3. **Or run all together**:
+```bash
+pnpm dev:all  # Runs Next.js + Worker concurrently
+```
+
+### PM2 Production Deployment
 
 1. **Build application**:
 ```bash
@@ -594,6 +619,9 @@ pm2 status
 ```env
 # Database
 DATABASE_URL="postgresql://user:password@db:5432/specboard"
+
+# Redis (for BullMQ)
+REDIS_URL="redis://redis:6379"
 
 # Server
 PORT=3000
