@@ -274,14 +274,14 @@ Some planning notes here.
 });
 
 describe('determineFeatureStage', () => {
-  it('should return "specify" when no spec exists', () => {
-    expect(determineFeatureStage(false, false, false, 0, 0)).toBe('specify');
-    expect(determineFeatureStage(false, true, true, 5, 10)).toBe('specify');
+  it('should return "specs" when no spec exists', () => {
+    expect(determineFeatureStage(false, false, false, 0, 0)).toBe('specs');
+    expect(determineFeatureStage(false, true, true, 5, 10)).toBe('specs');
   });
 
-  it('should return "specify" when spec exists but no plan', () => {
-    expect(determineFeatureStage(true, false, false, 0, 0)).toBe('specify');
-    expect(determineFeatureStage(true, false, true, 0, 0)).toBe('specify');
+  it('should return "specs" when spec exists but no plan', () => {
+    expect(determineFeatureStage(true, false, false, 0, 0)).toBe('specs');
+    expect(determineFeatureStage(true, false, true, 0, 0)).toBe('specs');
   });
 
   it('should return "plan" when plan exists but no tasks', () => {
@@ -295,9 +295,9 @@ describe('determineFeatureStage', () => {
     expect(determineFeatureStage(true, true, true, 1, 5)).toBe('tasks');
   });
 
-  it('should return "analyze" when all tasks are completed', () => {
-    expect(determineFeatureStage(true, true, true, 10, 10)).toBe('analyze');
-    expect(determineFeatureStage(true, true, true, 1, 1)).toBe('analyze');
+  it('should return "tasks" when all tasks are completed (tasks is final stage)', () => {
+    expect(determineFeatureStage(true, true, true, 10, 10)).toBe('tasks');
+    expect(determineFeatureStage(true, true, true, 1, 1)).toBe('tasks');
   });
 });
 

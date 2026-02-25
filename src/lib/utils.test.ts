@@ -142,21 +142,18 @@ describe('getKanbanColumn', () => {
 
 describe('getFeatureKanbanColumn', () => {
   it('should return the feature stage directly', () => {
-    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'specify' }))).toBe('specify');
-    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'clarify' }))).toBe('clarify');
+    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'specs' }))).toBe('specs');
     expect(getFeatureKanbanColumn(createMockFeature({ stage: 'plan' }))).toBe('plan');
     expect(getFeatureKanbanColumn(createMockFeature({ stage: 'tasks' }))).toBe('tasks');
-    expect(getFeatureKanbanColumn(createMockFeature({ stage: 'analyze' }))).toBe('analyze');
   });
 });
 
 describe('getKanbanColumnLabel', () => {
   it('should return correct labels for each kanban column', () => {
-    expect(getKanbanColumnLabel('specify')).toBe('Specify');
-    expect(getKanbanColumnLabel('clarify')).toBe('Clarify');
+    expect(getKanbanColumnLabel('backlog')).toBe('Backlog');
+    expect(getKanbanColumnLabel('specs')).toBe('Specs');
     expect(getKanbanColumnLabel('plan')).toBe('Plan');
     expect(getKanbanColumnLabel('tasks')).toBe('Tasks');
-    expect(getKanbanColumnLabel('analyze')).toBe('Analyze');
   });
 
   it('should return empty string for unknown columns', () => {
