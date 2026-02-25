@@ -174,6 +174,7 @@ export interface Feature {
   totalTasks: number;
   completedTasks: number;
   inProgressTasks: number;
+  checklistProgress: { completed: number; total: number } | null;
   // Feature branch name from spec.md or plan.md
   branch: string | null;
   // Clarification history from spec.md
@@ -207,6 +208,10 @@ export interface Feature {
     content: string;
     principles: Array<{ name: string; description: string }>;
   } | null;
+  // Background job status for stage transitions
+  jobStatus?: 'idle' | 'queued' | 'running' | 'completed' | 'failed';
+  jobProgress?: number;
+  jobMessage?: string;
 }
 
 export interface Project {

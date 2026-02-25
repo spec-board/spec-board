@@ -67,6 +67,14 @@ model Feature {
   contractsContent  String?  @db.Text // JSON array of {name, content}
   checklistsContent String?  @db.Text // JSON array of {name, content}
 
+  // Background job status for stage transitions
+  jobStatus        String?   @default("idle") @map("job_status") // idle, queued, running, completed, failed
+  jobProgress      Int?      @default(0) @map("job_progress") // 0-100
+  jobMessage       String?   @map("job_message") // Current step message
+  jobStartedAt     DateTime? @map("job_started_at")
+  jobCompletedAt   DateTime? @map("job_completed_at")
+  inngestRunId     String?   @map("inngest_run_id")
+
   // Timestamps
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
