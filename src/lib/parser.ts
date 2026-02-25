@@ -909,6 +909,9 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
       hasChecklists,
       totalChecklistItems,
       completedChecklistItems,
+      checklistProgress: hasChecklists && totalChecklistItems > 0
+        ? { completed: completedChecklistItems, total: totalChecklistItems }
+        : null,
       // Constitution version - null for parser-based features (legacy)
       constitutionVersion: null,
     };
