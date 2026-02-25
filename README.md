@@ -55,7 +55,6 @@ AI-powered 4-stage workflow: backlog → specs → plan → tasks
 - **Conflict Resolution** — 3-way merge with visual diff viewer
 - **Version History** — Last 30 versions retained per spec file
 - **Activity Audit Trail** — Track who changed what and when
-- **MCP Server** — Sync specs via AI coding assistants (Claude Code, Cursor, GitHub Copilot)
 
 ### Developer Experience
 - **Split-View Modal** — Resizable panes for viewing multiple sections simultaneously

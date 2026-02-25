@@ -10,8 +10,9 @@ SpecBoard is a visual dashboard for spec-kit projects with a Kanban board interf
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Database**: PostgreSQL with Prisma ORM
+- **Job Queue**: BullMQ + Redis
 - **Auth**: Better Auth
 - **State**: Zustand
 - **UI**: Tailwind CSS v4, shadcn/ui components
@@ -22,16 +23,30 @@ SpecBoard is a visual dashboard for spec-kit projects with a Kanban board interf
 ## Commands
 
 ```bash
-pnpm dev              # Start development server (port 3000)
-pnpm build            # Build for production
-pnpm start            # Start production server
-pnpm test             # Run tests in watch mode
-pnpm test:run        # Run tests once
-pnpm test:coverage   # Run tests with coverage
-pnpm tsc --noEmit    # Type check
-pnpm lint            # Run linter
+# Development
+pnpm dev              # Start dev server (port 3000)
+pnpm dev:all         # Run dev server + BullMQ worker
+pnpm build           # Production build
+pnpm start           # Start production server
+pnpm worker          # Run BullMQ worker separately
+
+# Database
 pnpm prisma studio   # Open Prisma Studio
 pnpm prisma migrate dev --name migration_name  # Create migration
+pnpm prisma db:push  # Push schema to DB
+
+# Infrastructure
+pnpm redis          # Start Redis via Docker
+docker compose -f docker-compose.db.yml up -d  # Start PostgreSQL + Redis
+
+# Testing
+pnpm test           # Run tests in watch mode
+pnpm test:run       # Run tests once
+pnpm test:coverage  # Run tests with coverage
+
+# Linting & Type check
+pnpm lint           # Run linter
+pnpm tsc --noEmit   # Type check
 ```
 
 ## Architecture
@@ -162,10 +177,10 @@ Run specific test: `pnpm vitest run src/lib/parser.test.ts`
 | `src/lib/ai/client.ts` | AI service with real implementations |
 | `prisma/schema.prisma` | Database schema |
 | `src/components/feature-detail-v2/` | Feature detail UI (ONLY supported) |
-| `src/components/project-info-bubble.tsx` | Project info modal |
-| `src/components/constitution-editor.tsx` | Constitution editor |
 | `src/components/kanban-board.tsx` | Kanban board with stage transitions |
 | `scripts/migrate-stages.ts` | Migration script for stage updates |
+| `scripts/worker.ts` | BullMQ worker for background jobs |
+| `src/lib/path-utils.ts` | Path validation for security |
 
 ## Migration Scripts
 
@@ -178,3 +193,9 @@ This handles transitions like:
 - `specify` → `specs`
 - `clarify` → `specs`
 - `checklist` → `plan`
+
+## Security
+
+All filesystem operations use `isPathSafe()` from `src/lib/path-utils.ts` to prevent directory traversal attacks. This validation is enforced in all API routes that handle file paths.
+
+XSS prevention: All HTML content is sanitized with DOMPurify before rendering.
