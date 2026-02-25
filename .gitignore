@@ -102,3 +102,4 @@ tsconfig.tsbuildinfo
 # Playwright
 playwright-report/
 test-results/
+.claude
