@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 /**
+ * Parse checklist progress from markdown content
+ * Returns { completed, total } counts
+ */
+function parseChecklistProgress(content: string | null): { completed: number; total: number } | null {
+  if (!content) return null;
+
+  const checkedMatches = content.match(/- \[x\]/gi);
+  const uncheckedMatches = content.match(/- \[ \]/gi);
+
+  const completed = checkedMatches?.length || 0;
+  const total = completed + (uncheckedMatches?.length || 0);
+
+  if (total === 0) return null;
+
+  return { completed, total };
+}
+
+/**
  * GET /api/project/[name]/data
  * Returns project data - features from DB or filesystem,
  * constitution always from database.
@@ -81,6 +99,7 @@ export async function GET(
       totalTasks: feature.tasks.length,
       completedTasks: feature.tasks.filter((t) => t.status === 'completed').length,
       inProgressTasks: feature.tasks.filter((t) => t.status === 'in_progress').length,
+      checklistProgress: parseChecklistProgress(feature.checklistsContent),
       branch: null,
       clarificationSessions: [],
       totalClarifications: 0,
@@ -103,6 +122,10 @@ export async function GET(
       checklistsContent: feature.checklistsContent,
       analysisContent: feature.analysisContent,
       additionalFiles: [],
+      // Background job status
+      jobStatus: feature.jobStatus as 'idle' | 'queued' | 'running' | 'completed' | 'failed' | undefined,
+      jobProgress: feature.jobProgress || 0,
+      jobMessage: feature.jobMessage || undefined,
     }));
 
     return NextResponse.json({
