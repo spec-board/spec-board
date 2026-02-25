@@ -15,10 +15,11 @@
 
 | Category | Technology |
 |----------|------------|
-| **Framework** | Next.js 15.x (App Router) |
+| **Framework** | Next.js 16.x (App Router) |
 | **Language** | TypeScript 5.9.3 (strict mode) |
 | **UI** | React 19.2.3, Tailwind CSS v4.x, Lucide Icons |
 | **Database** | PostgreSQL via Prisma ORM |
+| **Job Queue** | BullMQ + Redis |
 | **State** | Zustand (client), localStorage persistence |
 | **Markdown** | remark, unified, DOMPurify |
 | **File Watching** | chokidar |
@@ -83,7 +84,7 @@ spec-board/
 └── .claude/                    # SoupSpec configuration
 ```
 
-## 5-Stage Workflow
+## 4-Stage Workflow
 
 ```
 backlog ──(spec + clarify)──► specs ──(plan + checklist)──► plan ──(tasks + analyze)──► tasks
@@ -97,7 +98,7 @@ backlog ──(spec + clarify)──► specs ──(plan + checklist)──► 
 | **specs → plan** | `plan` + `checklist` | Generate implementation plan AND checklist |
 | **plan → tasks** | `tasks` + `analyze` | Generate task breakdown AND run consistency analysis |
 
-**Note:** SPECS stage merges old Specify + Clarify. PLAN stage includes checklist. TASKS is final stage - analysis runs automatically on transition.
+**Note:** SPECS stage merges old Specify + Clarify. PLAN stage includes checklist. TASKS is final stage - analysis runs automatically on transition. BullMQ handles background job processing for stage transitions.
 
 ## Database-First Architecture
 
@@ -199,6 +200,7 @@ backlog ──(spec + clarify)──► specs ──(plan + checklist)──► 
 
 ```typescript
 // Feature stages (Kanban columns) - 4-stage workflow
+// Note: 'analyze' is now merged into 'tasks' stage
 type FeatureStage = 'backlog' | 'specs' | 'plan' | 'tasks';
 
 // Spec-Kit file types
@@ -270,11 +272,13 @@ App
 | `src/lib/parser.ts` | Core markdown parsing | ~900 |
 | `src/lib/store.ts` | Zustand state management | ~50 |
 | `src/lib/settings-store.ts` | Settings persistence | ~150 |
+| `src/lib/path-utils.ts` | Path validation/security | ~80 |
 | `src/app/projects/[name]/page.tsx` | Project dashboard | ~300 |
 | `src/components/kanban-board.tsx` | Kanban board UI | ~500 |
 | `src/components/feature-detail-v2/` | Jira-like feature modal | ~1000 |
 | `src/types/index.ts` | All TypeScript types | ~200 |
 | `src/lib/ai/client.ts` | AI service | ~300 |
+| `scripts/worker.ts` | BullMQ worker for background jobs | ~200 |
 
 ## Mandatory Policies
 
@@ -296,6 +300,7 @@ App
 - DOMPurify for markdown HTML sanitization
 - No hardcoded secrets (env vars only)
 - Rate limiting on public APIs
+- BullMQ job queue for background processing (isolates AI operations)
 
 ## Accessibility
 
@@ -314,6 +319,12 @@ pnpm install
 # Run development server
 pnpm dev
 
+# Run dev server + BullMQ worker
+pnpm dev:all
+
+# Run BullMQ worker separately
+pnpm worker
+
 # Run tests
 pnpm test
 
@@ -325,6 +336,10 @@ pnpm build
 
 # Run E2E tests
 npx playwright test
+
+# Start infrastructure
+docker compose -f docker-compose.db.yml up -d  # PostgreSQL + Redis
+pnpm redis                                        # Redis only
 ```
 
 ## Generated CLAUDE.md Files
