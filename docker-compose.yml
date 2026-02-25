@@ -1,6 +1,6 @@
 # ============================================================================
 # SpecBoard Docker Compose
-# Full stack: Next.js app + PostgreSQL database
+# Full stack: Next.js app + PostgreSQL + Redis
 # ============================================================================
 #
 # Usage:
@@ -37,6 +37,20 @@ services:
       - specboard-network
 
   # ---------------------------------------------------------------------------
+  # Redis (for BullMQ job queue)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: specboard-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - specboard_redis:/data
+    networks:
+      - specboard-network
+
+  # ---------------------------------------------------------------------------
   # Next.js Application
   # ---------------------------------------------------------------------------
   app:
@@ -69,6 +83,7 @@ services:
 
 volumes:
   specboard_data:
+  specboard_redis:
 
 networks:
   specboard-network:

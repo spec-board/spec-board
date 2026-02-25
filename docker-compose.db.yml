@@ -1,11 +1,11 @@
 # ============================================================================
-# SpecBoard Database Only
+# SpecBoard Database + Redis
 # Use this when running the app via PM2 or local development
 # ============================================================================
 #
 # Usage:
-#   docker compose -f docker-compose.db.yml up -d    # Start database
-#   docker compose -f docker-compose.db.yml down     # Stop database
+#   docker compose -f docker-compose.db.yml up -d    # Start database + redis
+#   docker compose -f docker-compose.db.yml down     # Stop services
 #   docker compose -f docker-compose.db.yml logs -f  # View logs
 #
 # ============================================================================
@@ -28,6 +28,24 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - specboard-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: specboard-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - specboard_redis:/data
+    networks:
+      - specboard-network
 
 volumes:
   specboard_data:
+  specboard_redis:
+
+networks:
+  specboard-network:
+    driver: bridge
