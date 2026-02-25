@@ -161,7 +161,7 @@ describe('Spec Workflow API Endpoints', () => {
 
 
   describe('POST /api/spec-workflow/tasks', () => {
-    it('should return 400 when spec and plan content are missing', async () => {
+    it('should return 400 when feature ID is missing', async () => {
       const request = new Request('http://localhost/api/spec-workflow/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -177,10 +177,10 @@ describe('Spec Workflow API Endpoints', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Spec and plan content required');
+      expect(data.error).toBe('Feature ID is required');
     });
 
-    it('should return 400 when spec content is not provided', async () => {
+    it('should return 400 when feature ID is not provided', async () => {
       const request = new Request('http://localhost/api/spec-workflow/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,18 +196,17 @@ describe('Spec Workflow API Endpoints', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Spec and plan content required');
+      expect(data.error).toBe('Feature ID is required');
     });
   });
 
   describe('POST /api/spec-workflow/constitution', () => {
-    it('should return 400 when project name is missing', async () => {
+    it('should return 400 when project ID is missing', async () => {
       const request = new Request('http://localhost/api/spec-workflow/constitution', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          projectId: 'test-project-id',
-          name: '',
+          projectId: '',
         }),
       });
 
@@ -215,23 +214,21 @@ describe('Spec Workflow API Endpoints', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Project name is required');
+      expect(data.error).toBe('Project ID is required');
     });
 
-    it('should return 400 when project name is not provided', async () => {
+    it('should return 400 when project ID is not provided', async () => {
       const request = new Request('http://localhost/api/spec-workflow/constitution', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId: 'test-project-id',
-        }),
+        body: JSON.stringify({}),
       });
 
       const response = await CREATE_CONSTITUTION(request);
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Project name is required');
+      expect(data.error).toBe('Project ID is required');
     });
   });
 });
@@ -275,11 +272,11 @@ describe('Workflow Validation', () => {
       expect(response.status).toBe(400);
     });
 
-    it('constitution endpoint requires project name', async () => {
+    it('constitution endpoint requires project ID', async () => {
       const request = new Request('http://localhost/api/spec-workflow/constitution', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: 'test' }),
+        body: JSON.stringify({ projectId: '' }),
       });
 
       const response = await CREATE_CONSTITUTION(request);

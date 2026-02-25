@@ -122,11 +122,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Codebase Documentation** - CLAUDE.md files for all major directories
 
 ### Changed
-- **MCP Package Renamed** - Changed from `spec-board-mcp` to `specboard-mcp` for consistency
 - **API Route Improvements** - Checklist endpoint uses async `fs/promises`
 - **Cross-Platform Path Validation** - Uses `path.extname()` and `path.sep`
 - **TypeScript Types** - Proper React type imports, cross-platform timer types
-- **Dependencies** - Updated @modelcontextprotocol/sdk to latest version
 
 ### Fixed
 - Rollback logic now only reverts specific failed item, not entire document

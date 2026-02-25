@@ -141,42 +141,6 @@ pnpm build
 pnpm start
 ```
 
-### MCP Server (AI Assistant Integration)
-
-The `specboard-mcp` package enables AI coding assistants to sync specs with SpecBoard cloud.
-
-**Installation:**
-```bash
-npm install -g specboard-mcp
-```
-
-**Configuration for Claude Code:**
-```json
-{
-  "mcpServers": {
-    "spec-board": {
-      "command": "npx",
-      "args": ["specboard-mcp"],
-      "env": {
-        "SPEC_BOARD_API_TOKEN": "your-token-here"
-      }
-    }
-  }
-}
-```
-
-**Get API Token:**
-1. Login to SpecBoard dashboard
-2. Go to Settings → API Tokens
-3. Click "Generate New Token"
-4. Copy token and add to MCP configuration
-
-**Available Tools:**
-- `pull_spec` - Download specs from cloud to local project
-- `push_spec` - Upload local specs to cloud
-
-See [packages/spec-board-mcp/README.md](packages/spec-board-mcp/README.md) for full documentation.
-
 ## URL Structure
 
 ```
