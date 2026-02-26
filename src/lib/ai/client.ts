@@ -41,6 +41,11 @@ const DEFAULT_CONFIG: AIConfig = {
   model: 'gpt-4o'
 };
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 1000;
+const MAX_BACKOFF_MS = 30000;
+
 // Environment variables as fallback
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -90,7 +95,7 @@ class AIService {
     return settings.model || this.config.model || 'gpt-4o';
   }
 
-  // Internal API call helper
+  // Internal API call helper with retry logic
   private async callAPI(prompt: string, systemPrompt?: string, maxTokens: number = 4096): Promise<string> {
     const apiKey = await this.getApiKey();
     if (!apiKey) {
@@ -125,28 +130,90 @@ class AIService {
     }
     console.log('[AI Client] fetchUrl:', fetchUrl);
 
-    const response = await fetch(fetchUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: 0.7,
-        max_tokens: maxTokens
-      })
-    });
+    // Retry loop
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await fetch(fetchUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            temperature: 0.7,
+            max_tokens: maxTokens
+          })
+        });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log('[AI Client] Error response:', errorText);
-      throw new Error(`API error: ${response.statusText} - ${errorText}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.log('[AI Client] Error response:', errorText);
+
+          // Handle rate limit (429) specially
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('retry-after');
+            let waitTime = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
+
+            if (retryAfter) {
+              const parsed = parseInt(retryAfter, 10);
+              if (!isNaN(parsed)) {
+                waitTime = parsed * 1000; // Convert seconds to ms
+              }
+            }
+
+            console.log(`[AI Client] Rate limited. Waiting ${waitTime}ms before retry (attempt ${attempt + 1}/${MAX_RETRIES + 1})`);
+
+            if (attempt < MAX_RETRIES) {
+              await this.sleep(waitTime);
+              continue; // Retry
+            }
+          }
+
+          // For other errors, throw immediately on last attempt
+          throw new Error(`API error: ${response.statusText} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        return data.choices[0].message.content;
+
+      } catch (error) {
+        lastError = error as Error;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown';
+
+        // Check if it's a rate limit error (429 in message) - case insensitive
+        const lowerErrorMessage = errorMessage.toLowerCase();
+        if (lowerErrorMessage.includes('429')) {
+          const waitTime = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
+          console.log(`[AI Client] Rate limited (parsed from error). Waiting ${waitTime}ms before retry (attempt ${attempt + 1}/${MAX_RETRIES + 1})`);
+
+          if (attempt < MAX_RETRIES) {
+            await this.sleep(waitTime);
+            continue;
+          }
+          // Fall through to throw after retries exhausted
+        }
+        // Only retry on network errors, not on API errors (400, 401, etc.)
+        else if (attempt < MAX_RETRIES && (lowerErrorMessage.includes('network') || lowerErrorMessage.includes('fetch') || lowerErrorMessage.includes('econnrefused'))) {
+          const waitTime = Math.min(INITIAL_BACKOFF_MS * Math.pow(2, attempt), MAX_BACKOFF_MS);
+          console.log(`[AI Client] Network error: ${errorMessage}. Retrying in ${waitTime}ms`);
+          await this.sleep(waitTime);
+          continue;
+        }
+
+        // For all other errors (including API errors like 400), don't retry
+        break;
+      }
     }
 
-    const data = await response.json();
-    return data.choices[0].message.content;
+    throw lastError || new Error('API call failed after retries');
+  }
+
+  // Sleep helper
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   // Generate user stories
