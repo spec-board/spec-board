@@ -142,26 +142,16 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
       onStageChange={onStageChange}
       onDelete={onDelete}
       headerActions={
-        <div className="flex items-center gap-2">
-          {hasChecklist && nextStageConfig ? (
-            <button
-              onClick={handleContinueToNextStage}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
-            >
-              {nextStageConfig.label}
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          ) : status !== 'generating' && (
-            <button
-              onClick={handleGenerateChecklist}
-              disabled={!hasPlan}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
-            >
-              <CheckSquare className="w-4 h-4" />
-              Generate Checklist
-            </button>
-          )}
-        </div>
+        status !== 'generating' && (
+          <button
+            onClick={handleGenerateChecklist}
+            disabled={!hasPlan}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+          >
+            <CheckSquare className="w-4 h-4" />
+            Generate Checklist
+          </button>
+        )
       }
       showNavigation={hasPlan}
     >

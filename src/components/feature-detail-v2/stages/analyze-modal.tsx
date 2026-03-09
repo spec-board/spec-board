@@ -203,28 +203,7 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
       onStageChange={onStageChange}
       onDelete={onDelete}
       headerActions={
-        hasNextStage ? (
-          <div className="flex items-center gap-2">
-            {hasAnalysis && nextStageConfig ? (
-              <button
-                onClick={handleContinueToNextStage}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
-              >
-                {nextStageConfig.label}
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            ) : status !== 'generating' && (
-              <button
-                onClick={handleGenerateAnalysis}
-                disabled={!hasAllDocs}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
-              >
-                <BarChart3 className="w-4 h-4" />
-                Run Analysis
-              </button>
-            )}
-          </div>
-        ) : hasAnalysis ? (
+        hasAnalysis ? (
           <div className="text-sm text-green-500 font-medium">
             Analysis Complete
           </div>

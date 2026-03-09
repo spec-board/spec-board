@@ -88,6 +88,32 @@ export default function FeaturePage() {
     }
   };
 
+  // Handle stage transition
+  const handleStageChange = async (toStage: string) => {
+    if (!feature) return;
+    try {
+      const response = await fetch('/api/stage-transition', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          featureId: feature.id,
+          fromStage: feature.stage,
+          toStage,
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        alert(err.error || 'Failed to transition stage');
+        return;
+      }
+      // Reload to get updated feature data
+      loadFeature();
+    } catch (err) {
+      console.error('Error changing stage:', err);
+      alert('Failed to change stage');
+    }
+  };
+
   const handleDeleteCancel = () => {
     setShowDeleteConfirm(false);
   };
@@ -139,6 +165,7 @@ export default function FeaturePage() {
         feature={feature}
         onClose={handleClose}
         onDelete={handleDelete}
+        onStageChange={handleStageChange}
       />
     </>
   );

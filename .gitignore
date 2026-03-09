@@ -103,3 +103,10 @@ tsconfig.tsbuildinfo
 playwright-report/
 test-results/
 .claude
+.CLAUDE.md
+.playwright-mcp
+PROJECT_INDEX.md
+agent-includes 
+.mcp.json
+DOCUMENTATION_INDEX.md
+.exploration-complete

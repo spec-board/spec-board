@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature, KanbanColumnType } from '@/types';
-import { GitBranch, CheckCircle2, Plus, Loader2 } from 'lucide-react';
+import { GitBranch, CheckCircle2, Plus } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
 import { toast } from 'sonner';
@@ -33,6 +33,7 @@ interface FeatureCardProps {
   isFocused?: boolean;
   onDragStart?: (feature: Feature) => void;
   onDragEnd?: () => void;
+  targetStage?: KanbanColumn | null; // Stage this feature is being moved to
 }
 
 // Extract spec number from feature id (e.g., "012" from "012-ui-ux-rebrand")
@@ -56,7 +57,7 @@ function toTitleCase(str: string | undefined | null): string {
 }
 
 const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function FeatureCard(
-  { feature, onClick, isFocused, onDragStart, onDragEnd },
+  { feature, onClick, isFocused, onDragStart, onDragEnd, targetStage },
   ref
 ) {
   const progressPercentage = feature.totalTasks > 0
@@ -71,15 +72,13 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
   const statusDotStyle = getStatusDotStyle(progressPercentage, feature.totalTasks > 0);
   const statusLabel = getStatusLabel(progressPercentage, feature.totalTasks > 0);
 
-  // Job status for background processing
-  const isJobRunning = feature.jobStatus === 'running' || feature.jobStatus === 'queued';
-  const jobProgress = feature.jobProgress || 0;
-  const jobMessage = feature.jobMessage || '';
-
   // Extract spec number from featureId (e.g., "001" from "001-user-login")
   // Use featureId if available, fallback to id for backwards compatibility
   const specNumber = getSpecNumber(feature.featureId || feature.id);
   const checklistCount = getChecklistCount(feature);
+
+  // Get label for target stage
+  const targetStageLabel = targetStage ? getKanbanColumnLabel(targetStage) : null;
 
   // Build accessible label - show description only in specs/plan, show task count in tasks
   const isEarlyStage = ['specs', 'plan'].includes(feature.stage);
@@ -87,7 +86,6 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
     specNumber ? `${specNumber} ${feature.name}` : feature.name,
     isEarlyStage && feature.description ? feature.description : (feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null),
     checklistCount > 0 ? `${checklistCount} checklists` : null,
-    isJobRunning ? `Processing: ${jobMessage}` : null,
   ].filter(Boolean).join(', ');
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -105,24 +103,20 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
     onDragEnd?.();
   };
 
-  // Disable drag while job is running
-  const isDraggable = !isJobRunning;
-
   return (
     <button
       ref={ref}
       onClick={onClick}
-      draggable={isDraggable}
+      draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       aria-label={ariaLabel}
       className={cn(
         'w-full text-left rounded-md transition-all',
         'bg-[var(--card)] border border-[var(--border)]',
-        isDraggable && 'hover:bg-[var(--card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5',
+        'hover:bg-[var(--card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5',
         'focus-ring',
-        isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]',
-        isJobRunning && 'opacity-75'
+        isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]'
       )}
       style={{
         padding: 'var(--space-4)', // 16px padding
@@ -139,37 +133,22 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
           )}
           <span>{toTitleCase(feature.name)}</span>
         </h4>
-        {/* Status indicator - dot or checkmark or loading */}
-        {isJobRunning ? (
-          <div className="relative" title={jobMessage}>
-            <Loader2
-              className="w-4 h-4 text-blue-500 flex-shrink-0 animate-spin"
-              aria-label={jobMessage}
+        <div className="flex items-center gap-1">
+          {/* Target stage indicator - shows when feature is being dragged to new column */}
+          {targetStageLabel && (
+            <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-500 rounded font-medium">
+              → {targetStageLabel}
+            </span>
+          )}
+          {/* Status indicator - checkmark when complete */}
+          {isComplete ? (
+            <CheckCircle2
+              className="w-4 h-4 text-green-500 flex-shrink-0"
+              aria-label="Complete"
             />
-          </div>
-        ) : isComplete ? (
-          <CheckCircle2
-            className="w-4 h-4 text-green-500 flex-shrink-0"
-            aria-label="Complete"
-          />
-        ) : null}
-      </div>
-
-      {/* Job progress bar - show when job is running */}
-      {isJobRunning && (
-        <div className="mb-2">
-          <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)] mb-1">
-            <span className="truncate flex-1">{jobMessage}</span>
-            <span className="ml-2 font-mono">{jobProgress}%</span>
-          </div>
-          <div className="w-full h-1.5 bg-[var(--muted)] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 transition-all duration-300"
-              style={{ width: `${jobProgress}%` }}
-            />
-          </div>
+          ) : null}
         </div>
-      )}
+      </div>
 
       {/* Progress rings + description */}
       <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
@@ -261,6 +240,7 @@ interface KanbanColumnComponentProps {
   isDropTarget?: boolean;
   onDragStartCard?: (feature: Feature) => void;
   onDragEndCard?: () => void;
+  dragTargetColumn?: KanbanColumn | null; // Column being dragged over (for showing target stage)
 }
 
 function KanbanColumnComponent({
@@ -276,6 +256,7 @@ function KanbanColumnComponent({
   isDropTarget,
   onDragStartCard,
   onDragEndCard,
+  dragTargetColumn,
 }: KanbanColumnComponentProps) {
   const columnLabel = getKanbanColumnLabel(column);
 
@@ -368,6 +349,7 @@ function KanbanColumnComponent({
                   }}
                   isFocused={isFocused}
                   onDragStart={onDragStartCard}
+                  targetStage={isDropTarget ? column : null}
                 />
               </div>
             );
@@ -384,14 +366,16 @@ interface KanbanBoardProps {
   projectPath: string;
   projectId?: string;
   onFeaturesChange?: (features: Feature[]) => void;  // Callback for parent to update features
+  onRefresh?: () => void;  // Optional direct refresh callback from parent
 }
 
-export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, onFeaturesChange }: KanbanBoardProps) {
+export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, onFeaturesChange, onRefresh }: KanbanBoardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [dropTargetColumn, setDropTargetColumn] = useState<KanbanColumn | null>(null);
   const [dragSourceColumn, setDragSourceColumn] = useState<KanbanColumn | null>(null);
+
   const { focusState, setFocusState, clearFocusState } = useProjectStore();
   const cardRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map());
   const boardRef = useRef<HTMLElement>(null);
@@ -426,18 +410,19 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     setDropTargetColumn(null);
   }, []);
 
-  // Helper to refresh data after drop - prefer smooth callback, fallback to reload
+  // Helper to refresh data after drop - use onRefresh callback if provided, otherwise dispatch event
   const refreshData = useCallback(() => {
-    if (onFeaturesChange) {
-      // Callback to parent - parent can re-fetch and update
-      // For now, trigger a custom event that parent can listen to
-      window.dispatchEvent(new CustomEvent('features-updated'));
+    // Option B: Use direct callback if provided (more reliable than event)
+    if (onRefresh) {
+      onRefresh();
     } else {
-      window.location.reload();
+      // Fallback: dispatch event for smooth refresh - parent listens and re-fetches
+      window.dispatchEvent(new CustomEvent('features-updated'));
     }
-  }, [onFeaturesChange]);
+  }, [onRefresh]);
 
-  // Handle drop - trigger background job via Inngest
+
+  // Handle drop - trigger background job via BullMQ
   const handleDrop = useCallback((targetColumn: KanbanColumn) => async (e: React.DragEvent) => {
     e.preventDefault();
     setDropTargetColumn(null);
@@ -469,7 +454,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       const feature = features.find(f => f.id === featureId);
       if (!feature) return;
 
-      // Trigger background job via Inngest API
+      // Trigger background job via BullMQ API
       setIsLoading(true);
       setLoadingMessage('Queuing background job...');
 
@@ -491,11 +476,10 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       const result = await response.json();
 
       // Show toast that job was queued
-      toast.success(`Feature queued for ${targetColumn} - you can continue working`);
+      toast.success(`Feature queued for ${targetColumn} - refresh (F5) to see updates when complete`);
 
-      // Refresh data to show updated job status
-      // The feature will show progress indicator while job runs
-      refreshData();
+      // NOTE: No auto-refresh - user manually refreshes (F5) after job completes
+
     } catch (err) {
       console.error('Drop error:', err);
       alert(err instanceof Error ? err.message : 'Failed to process drop');

@@ -135,28 +135,16 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
       onStageChange={onStageChange}
       onDelete={onDelete}
       headerActions={
-        <div className="flex items-center gap-2">
-          {hasClarifications && nextStageConfig ? (
-            <button
-              onClick={handleContinueToNextStage}
-              disabled={!allAnswered}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
-              title={!allAnswered ? 'Please answer all questions before continuing' : undefined}
-            >
-              {nextStageConfig.label}
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          ) : status !== 'generating' && (
-            <button
-              onClick={handleGenerateQuestions}
-              disabled={!hasSpec}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
-            >
-              <HelpCircle className="w-4 h-4" />
-              Generate Questions
-            </button>
-          )}
-        </div>
+        status !== 'generating' && (
+          <button
+            onClick={handleGenerateQuestions}
+            disabled={!hasSpec}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+          >
+            <HelpCircle className="w-4 h-4" />
+            Generate Questions
+          </button>
+        )
       }
       showNavigation={hasSpec}
     >
