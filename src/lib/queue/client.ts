@@ -2,6 +2,7 @@ import { Queue, Worker, Job } from 'bullmq';
 import { getRedisClient } from './redis';
 import { prisma } from '@/lib/prisma';
 import { generateSpec, generateClarify, generatePlan, generateChecklist, generateTasks, analyzeDocuments, getProvider } from '@/lib/ai';
+import { emitJobComplete } from '@/lib/events';
 
 // Job status types
 export type JobStatus = 'idle' | 'queued' | 'running' | 'completed' | 'failed';
@@ -142,6 +143,7 @@ async function handleBacklogToSpecs(
     },
   });
 
+  emitJobComplete({ featureId, stage: 'specs', status: 'completed' });
   return { success: true, featureId, toStage: 'specs', spec, clarifications };
 }
 
@@ -219,6 +221,7 @@ async function handleSpecsToPlan(
     },
   });
 
+  emitJobComplete({ featureId, stage: 'plan', status: 'completed' });
   return { success: true, featureId, toStage: 'plan', plan, checklist };
 }
 
@@ -319,6 +322,7 @@ async function handlePlanToTasks(
     },
   });
 
+  emitJobComplete({ featureId, stage: 'tasks', status: 'completed' });
   return { success: true, featureId, toStage: 'tasks', tasks, analysis };
 }
 

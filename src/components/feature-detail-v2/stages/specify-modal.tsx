@@ -88,33 +88,23 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
       onStageChange={onStageChange}
       onDelete={onDelete}
       headerActions={
-        hasSpec && nextStageConfig ? (
-          <button
-            onClick={handleContinueToNextStage}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
-          >
-            {nextStageConfig.label}
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        ) : (
-          <button
-            onClick={handleGenerate}
-            disabled={status === 'generating'}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-md font-medium transition-colors"
-          >
-            {status === 'generating' ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4" />
-                Generate Spec
-              </>
-            )}
-          </button>
-        )
+        <button
+          onClick={handleGenerate}
+          disabled={status === 'generating'}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-md font-medium transition-colors"
+        >
+          {status === 'generating' ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4" />
+              Generate Spec
+            </>
+          )}
+        </button>
       }
       showNavigation={hasSpec}
     >

@@ -40,28 +40,34 @@ function StageBadge({ stage }: { stage: string }) {
 // Stage progress indicator
 function StageProgress({ currentStage }: { currentStage: string }) {
   const currentIndex = STAGES.findIndex(s => s.stage === currentStage);
+  const currentConfig = getStageConfig(currentStage as any);
 
   return (
-    <div className="flex items-center gap-1">
-      {STAGES.map((stage, index) => (
-        <div key={stage.stage} className="flex items-center">
-          <div
-            className={cn(
-              'w-2 h-2 rounded-full transition-colors',
-              index < currentIndex ? 'bg-green-500' :
-              index === currentIndex ? 'bg-blue-500' :
-              'bg-gray-600'
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1">
+        {STAGES.map((stage, index) => (
+          <div key={stage.stage} className="flex items-center">
+            <div
+              className={cn(
+                'w-2 h-2 rounded-full transition-colors',
+                index < currentIndex ? 'bg-green-500' :
+                index === currentIndex ? 'bg-blue-500' :
+                'bg-gray-600'
+              )}
+              title={stage.label}
+            />
+            {index < STAGES.length - 1 && (
+              <div className={cn(
+                'w-4 h-0.5',
+                index < currentIndex ? 'bg-green-500' : 'bg-gray-600'
+              )} />
             )}
-            title={stage.label}
-          />
-          {index < STAGES.length - 1 && (
-            <div className={cn(
-              'w-4 h-0.5',
-              index < currentIndex ? 'bg-green-500' : 'bg-gray-600'
-            )} />
-          )}
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
+      <span className="text-sm font-medium text-[var(--foreground)]">
+        {currentConfig?.label || currentStage}
+      </span>
     </div>
   );
 }

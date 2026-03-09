@@ -38,7 +38,7 @@ const STAGE_MODALS = {
 type StageModalKey = keyof typeof STAGE_MODALS;
 
 // Main exported component - routes to correct stage modal
-export function FeatureDetailByStage({ feature, onClose, onDelete, initialDocument }: FeatureDetailV2Props) {
+export function FeatureDetailByStage({ feature, onClose, onDelete, onStageChange, initialDocument }: FeatureDetailV2Props) {
   const StageModal = STAGE_MODALS[feature.stage as StageModalKey] || TasksModal;
-  return <StageModal feature={feature} onClose={onClose} onDelete={onDelete} />;
+  return <StageModal feature={feature} onClose={onClose} onDelete={onDelete} onStageChange={onStageChange} />;
 }

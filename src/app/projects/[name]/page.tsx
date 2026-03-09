@@ -62,15 +62,6 @@ export default function ProjectPage() {
     loadProject();
   }, [loadProject]);
 
-  // Listen for features-updated event from KanbanBoard (smooth refresh)
-  useEffect(() => {
-    const handleFeaturesUpdated = () => {
-      loadProject();
-    };
-    window.addEventListener('features-updated', handleFeaturesUpdated);
-    return () => window.removeEventListener('features-updated', handleFeaturesUpdated);
-  }, [loadProject]);
-
   // Navigate to feature detail page
   const handleFeatureClick = (feature: Feature) => {
     router.push('/projects/' + projectSlug + '/features/' + feature.id);
@@ -202,6 +193,7 @@ export default function ProjectPage() {
               onFeatureClick={handleFeatureClick}
               projectPath={project.path}
               projectId={projectId || undefined}
+              onRefresh={loadProject}
             />
           </div>
         </div>

@@ -15,6 +15,7 @@ export interface FeatureDetailV2Props {
   feature: Feature;
   onClose: () => void;
   onDelete?: () => void;
+  onStageChange?: (stage: string) => void;
   initialDocument?: DocumentType;
 }
 
