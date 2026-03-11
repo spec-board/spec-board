@@ -163,7 +163,6 @@ export function BaseModal({
                   onClick={onDelete}
                   className="btn btn-danger btn-sm"
                 >
-                  <Trash2 className="w-4 h-4" />
                   Delete Feature
                 </button>
               )}

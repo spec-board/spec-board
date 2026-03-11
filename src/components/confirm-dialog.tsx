@@ -123,8 +123,7 @@ export function ConfirmDialog({
               variant === 'info' && 'btn-primary',
             )}
           >
-            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {confirmLabel}
+            {isLoading ? 'Processing...' : confirmLabel}
           </button>
         </div>
       </div>

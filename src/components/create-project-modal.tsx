@@ -164,11 +164,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
               disabled={isLoading || !name.trim()}
               className="btn btn-primary btn-sm"
             >
-              {isLoading ? (
-                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating...</>
-              ) : (
-                'Create'
-              )}
+              {isLoading ? 'Creating...' : 'Create'}
             </button>
           </div>
         </form>
