@@ -111,7 +111,7 @@ export function ProjectList({ projects, onSelect, onDelete, onCreateProject }: P
         {onCreateProject && (
           <button
             onClick={onCreateProject}
-            className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-opacity"
+            className="btn btn-primary btn-md"
           >
             <Plus className="w-4 h-4" />
             Create project
@@ -205,7 +205,7 @@ export function ProjectList({ projects, onSelect, onDelete, onCreateProject }: P
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(project); }}
                 className={cn(
-                  'p-1 rounded transition-all text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]',
+                  'btn-icon !p-1',
                   hoveredProject === project.id ? 'opacity-100' : 'opacity-0'
                 )}
                 aria-label={`Delete ${project.displayName}`}

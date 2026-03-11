@@ -155,19 +155,14 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="px-3 py-1.5 rounded-md text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+              className="btn btn-ghost btn-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || !name.trim()}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium',
-                'bg-[var(--primary)] text-[var(--primary-foreground)]',
-                'hover:opacity-90 transition-opacity',
-                'disabled:opacity-40 disabled:cursor-not-allowed'
-              )}
+              className="btn btn-primary btn-sm"
             >
               {isLoading ? (
                 <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating...</>

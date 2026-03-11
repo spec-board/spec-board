@@ -135,7 +135,7 @@ export function BaseModal({
               {/* Close button */}
               <button
                 onClick={onClose}
-                className="p-2 rounded-md hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)]"
+                className="btn-icon"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -161,7 +161,7 @@ export function BaseModal({
               {onDelete && (
                 <button
                   onClick={onDelete}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="btn btn-danger btn-sm"
                 >
                   <Trash2 className="w-4 h-4" />
                   Delete Feature

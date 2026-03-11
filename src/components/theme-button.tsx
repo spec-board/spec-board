@@ -25,7 +25,7 @@ export function ThemeButton() {
   return (
     <button
       onClick={cycleTheme}
-      className="p-2 rounded-md hover:bg-[var(--accent)] transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+      className="btn-icon"
       title={`${label} (click to change)`}
       aria-label={`Current: ${label}. Click to cycle theme.`}
     >

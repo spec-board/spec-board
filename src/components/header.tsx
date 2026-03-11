@@ -42,7 +42,7 @@ export function Header({ variant, projectName, onNewProject }: HeaderProps) {
             {variant === 'home' && onNewProject && (
               <button
                 onClick={onNewProject}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium mr-2 bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-opacity"
+                className="btn btn-primary btn-sm mr-2"
               >
                 <Plus className="w-3.5 h-3.5" />
                 New
@@ -58,7 +58,7 @@ export function Header({ variant, projectName, onNewProject }: HeaderProps) {
                 href="https://github.com/paulpham157/spec-board"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-md hover:bg-[var(--accent)] transition-colors flex items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                className="btn-icon"
                 aria-label="GitHub Repository"
               >
                 <Github className="w-4 h-4" />
@@ -68,7 +68,7 @@ export function Header({ variant, projectName, onNewProject }: HeaderProps) {
             <Tooltip content="Settings" side="bottom">
               <button
                 onClick={() => router.push('/settings')}
-                className="p-2 rounded-md hover:bg-[var(--accent)] transition-colors flex items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                className="btn-icon"
                 aria-label="Settings"
               >
                 <Settings className="w-4 h-4" />
