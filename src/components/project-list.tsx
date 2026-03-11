@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Plus, ArrowRight, Trash2 } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, ArrowRight, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DbProject {
@@ -97,8 +97,8 @@ export function ProjectList({ projects, onSelect, onDelete, onCreateProject }: P
   if (projects.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
-        <div className="w-12 h-12 rounded-lg border border-[var(--border)] flex items-center justify-center mb-6 bg-[var(--secondary)]">
-          <Plus className="w-5 h-5 text-[var(--muted-foreground)]" />
+        <div className="w-12 h-12 rounded-full border border-dashed border-[var(--border-hover)] flex items-center justify-center mb-6">
+          <div className="w-2 h-2 rounded-full bg-[var(--muted-foreground)]" />
         </div>
 
         <h2 className="text-lg font-semibold tracking-tight mb-1 text-[var(--foreground)]">
@@ -113,7 +113,6 @@ export function ProjectList({ projects, onSelect, onDelete, onCreateProject }: P
             onClick={onCreateProject}
             className="btn btn-primary btn-md"
           >
-            <Plus className="w-4 h-4" />
             Create project
           </button>
         )}

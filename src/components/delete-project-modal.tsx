@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
+// Icons removed for minimal button style
 import { cn } from '@/lib/utils';
 
 interface DeleteProjectModalProps {
@@ -70,11 +70,7 @@ export function DeleteProjectModal({ isOpen, projectName, onClose, onConfirm }: 
             disabled={isDeleting}
             className="btn btn-danger btn-sm border border-red-500/20 hover:border-red-500/30"
           >
-            {isDeleting ? (
-              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Deleting...</>
-            ) : (
-              'Delete'
-            )}
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       </div>

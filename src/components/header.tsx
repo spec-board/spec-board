@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Github, Settings, Plus, ChevronRight } from 'lucide-react';
+import { Github, Settings, ChevronRight } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
 import { Tooltip } from '@/components/tooltip';
 
@@ -44,7 +44,6 @@ export function Header({ variant, projectName, onNewProject }: HeaderProps) {
                 onClick={onNewProject}
                 className="btn btn-primary btn-sm mr-2"
               >
-                <Plus className="w-3.5 h-3.5" />
                 New
               </button>
             )}
