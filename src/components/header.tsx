@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FolderOpen, Github, Settings, Plus } from 'lucide-react';
+import { FolderOpen, Github, Settings, Plus, ChevronRight } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
+import { Tooltip } from '@/components/tooltip';
 
 interface HeaderProps {
   variant: 'home' | 'project';
@@ -26,81 +27,79 @@ export function Header({ variant, projectName, projectPath, projectSlug, onNewPr
         }}
       >
         <div className="flex items-center justify-between w-full">
-          {/* Left side - Logo and title */}
-          <div className="flex items-center gap-3">
+          {/* Left side - Logo, breadcrumb */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => router.push('/')}
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
               title="Home"
             >
               <Image
                 src="/images/specboard-logo.svg"
                 alt="SpecBoard Logo"
-                width={32}
-                height={32}
+                width={28}
+                height={28}
                 className="rounded"
               />
-              <h1 className="font-bold" style={{ fontSize: 'var(--text-xl)' }}>
-                <span className="text-blue-500">Spec</span>
-                <span>Board</span>
+              <h1 className="font-bold text-lg">
+                <span className="text-[var(--primary)]">Spec</span>
+                <span className="text-[var(--foreground)]">Board</span>
               </h1>
             </button>
 
-            {/* Project context for project pages */}
+            {/* Breadcrumb for project pages */}
             {variant === 'project' && projectName && (
-              <div className="flex items-center gap-3 text-sm text-[var(--muted-foreground)]">
-                <FolderOpen className="w-4 h-4 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-foreground font-medium">{projectName}</span>
-                  {projectPath && (
-                    <span className="text-xs opacity-60 truncate max-w-md">
-                      {projectPath}
-                    </span>
-                  )}
-                </div>
+              <div className="flex items-center gap-1.5 text-sm text-[var(--muted-foreground)] ml-1">
+                <ChevronRight className="w-4 h-4 opacity-40" />
+                <FolderOpen className="w-4 h-4 flex-shrink-0 opacity-60" />
+                <span className="text-[var(--foreground)] font-medium">{projectName}</span>
               </div>
             )}
           </div>
 
           {/* Right side - Actions */}
-          <div
-            className="flex items-center"
-            style={{ gap: 'var(--space-2)' }}
-          >
+          <div className="flex items-center gap-1">
             {variant === 'home' && onNewProject && (
-              <button
-                onClick={onNewProject}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium"
-              >
-                <Plus className="w-4 h-4" />
-                New
-              </button>
+              <Tooltip content="Create a new project" side="bottom">
+                <button
+                  onClick={onNewProject}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-colors text-sm font-medium mr-1"
+                  style={{
+                    background: 'var(--primary)',
+                    color: 'var(--primary-foreground)',
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                  New Project
+                </button>
+              </Tooltip>
             )}
-            <ThemeButton />
-            <a
-              href="https://github.com/paulpham157/spec-board"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:bg-[var(--secondary)] rounded-lg transition-colors flex items-center justify-center"
-              style={{
-                padding: 'var(--space-2)',
-                borderRadius: 'var(--radius)',
-              }}
-              title="GitHub Repository"
-            >
-              <Github className="w-5 h-5" />
-            </a>
-            <button
-              onClick={() => router.push('/settings')}
-              className="hover:bg-[var(--secondary)] rounded-lg transition-colors flex items-center justify-center"
-              style={{
-                padding: 'var(--space-2)',
-                borderRadius: 'var(--radius)',
-              }}
-              title="Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
+
+            <Tooltip content="Toggle theme" side="bottom">
+              <ThemeButton />
+            </Tooltip>
+
+            <Tooltip content="View on GitHub" side="bottom">
+              <a
+                href="https://github.com/paulpham157/spec-board"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors flex items-center justify-center"
+                aria-label="GitHub Repository"
+              >
+                <Github className="w-5 h-5" />
+              </a>
+            </Tooltip>
+
+            <Tooltip content="Settings" side="bottom">
+              <button
+                onClick={() => router.push('/settings')}
+                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors flex items-center justify-center"
+                aria-label="Settings"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>
