@@ -60,7 +60,7 @@ export function DeleteProjectModal({ isOpen, projectName, onClose, onConfirm }: 
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-md text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+            className="btn btn-ghost btn-sm"
           >
             Cancel
           </button>
@@ -68,12 +68,7 @@ export function DeleteProjectModal({ isOpen, projectName, onClose, onConfirm }: 
             type="button"
             onClick={handleConfirm}
             disabled={isDeleting}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium',
-              'bg-[var(--primary)] text-[var(--primary-foreground)]',
-              'hover:opacity-90 transition-opacity',
-              'disabled:opacity-40 disabled:cursor-not-allowed'
-            )}
+            className="btn btn-danger btn-sm border border-red-500/20 hover:border-red-500/30"
           >
             {isDeleting ? (
               <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Deleting...</>

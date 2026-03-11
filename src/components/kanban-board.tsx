@@ -306,7 +306,7 @@ function KanbanColumnComponent({
         {column === 'backlog' && onCreateFeature && (
           <button
             onClick={onCreateFeature}
-            className="px-2.5 py-1.5 rounded-md bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)] text-xs font-medium transition-colors"
+            className="btn btn-primary btn-xs"
             aria-label="Create new feature"
           >
             Create Feature

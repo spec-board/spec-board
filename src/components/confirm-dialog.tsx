@@ -109,11 +109,7 @@ export function ConfirmDialog({
             ref={cancelButtonRef}
             onClick={onCancel}
             disabled={isLoading}
-            className={cn(
-              'px-4 py-2 text-sm font-medium rounded-lg',
-              'border border-[var(--border)] hover:bg-[var(--secondary)]',
-              'transition-colors disabled:opacity-50'
-            )}
+            className="btn btn-secondary btn-sm"
           >
             {cancelLabel}
           </button>
@@ -121,10 +117,10 @@ export function ConfirmDialog({
             onClick={onConfirm}
             disabled={isLoading}
             className={cn(
-              'px-4 py-2 text-sm font-medium rounded-lg',
-              'flex items-center gap-2',
-              variantStyles[variant].button,
-              'transition-colors disabled:opacity-50'
+              'btn btn-sm',
+              variant === 'danger' && 'btn-danger border border-red-500/20',
+              variant === 'warning' && 'btn-primary',
+              variant === 'info' && 'btn-primary',
             )}
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
