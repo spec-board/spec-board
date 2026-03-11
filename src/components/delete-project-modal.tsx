@@ -14,11 +14,8 @@ interface DeleteProjectModalProps {
 export function DeleteProjectModal({ isOpen, projectName, onClose, onConfirm }: DeleteProjectModalProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Reset state when modal opens
   useEffect(() => {
-    if (isOpen) {
-      setIsDeleting(false);
-    }
+    if (isOpen) setIsDeleting(false);
   }, [isOpen]);
 
   const handleConfirm = useCallback(async () => {
@@ -31,60 +28,39 @@ export function DeleteProjectModal({ isOpen, projectName, onClose, onConfirm }: 
     }
   }, [onConfirm, onClose]);
 
-  // Handle keyboard
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose();
-    }
+    if (e.key === 'Escape') onClose();
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-      {/* Modal */}
       <div
-        className="relative w-full max-w-md mx-4 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl"
+        className="relative w-full max-w-sm mx-4 bg-[var(--card)] border border-[var(--border)] rounded-lg"
+        style={{ boxShadow: 'var(--shadow-xl)' }}
         onKeyDown={handleKeyDown}
       >
-        {/* Header */}
-        <div
-          className="flex items-center justify-center border-b border-[var(--border)]"
-          style={{ padding: 'var(--space-4)' }}
-        >
-          <h2
-            className="font-semibold"
-            style={{ fontSize: 'var(--text-lg)' }}
-          >
-            Delete Project
-          </h2>
+        <div className="px-5 pt-5 pb-0">
+          <h2 className="text-base font-semibold text-[var(--foreground)]">Delete project</h2>
         </div>
 
-        {/* Content */}
-        <div style={{ padding: 'var(--space-4)' }}>
+        <div className="px-5 py-4">
           <p className="text-sm text-[var(--foreground)]">
             Are you sure you want to delete <strong>{projectName}</strong>?
           </p>
-          <p className="text-xs text-[var(--muted-foreground)] mt-2">
-            This will permanently delete the project and all its data from the database. This action cannot be undone.
+          <p className="text-xs text-[var(--muted-foreground)] mt-1.5">
+            This action cannot be undone.
           </p>
         </div>
 
-        {/* Footer */}
-        <div
-          className="flex items-center justify-center gap-3 border-t border-[var(--border)]"
-          style={{ padding: 'var(--space-4)' }}
-        >
+        <div className="flex items-center justify-end gap-2 px-5 pb-5">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--secondary)] transition-colors"
+            className="px-3 py-1.5 rounded-md text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
           >
             Cancel
           </button>
@@ -93,18 +69,16 @@ export function DeleteProjectModal({ isOpen, projectName, onClose, onConfirm }: 
             onClick={handleConfirm}
             disabled={isDeleting}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium',
-              'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
-              'bg-red-500 hover:bg-red-600 text-white'
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium',
+              'bg-[var(--primary)] text-[var(--primary-foreground)]',
+              'hover:opacity-90 transition-opacity',
+              'disabled:opacity-40 disabled:cursor-not-allowed'
             )}
           >
             {isDeleting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Removing...
-              </>
+              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Deleting...</>
             ) : (
-              'Delete Project'
+              'Delete'
             )}
           </button>
         </div>
