@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjectStore } from '@/lib/store';
+import { Loader2 } from 'lucide-react';
 import { Header } from '@/components/header';
 import { ProjectList } from '@/components/project-list';
 import { CreateProjectModal } from '@/components/create-project-modal';
@@ -88,15 +89,10 @@ export default function Home() {
       />
 
       {/* Main content */}
-      <main
-        className="flex-1 max-w-5xl mx-auto w-full px-6 py-6"
-      >
+      <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-8">
         {isLoading ? (
           <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="flex flex-col items-center gap-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--border)] border-t-[var(--primary)]" />
-              <p className="text-sm text-[var(--muted-foreground)]">Loading projects...</p>
-            </div>
+            <Loader2 className="w-5 h-5 animate-spin text-[var(--muted-foreground)]" />
           </div>
         ) : (
           <ProjectList
