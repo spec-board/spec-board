@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Folder } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Plus, Layout, FileText, CheckSquare, ArrowRight, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DbProject {
@@ -20,6 +20,7 @@ interface ProjectListProps {
   projects: DbProject[];
   onSelect: (project: DbProject) => void;
   onDelete: (project: DbProject) => void;
+  onCreateProject?: () => void;
 }
 
 type SortField = 'displayName' | 'featureCount' | 'updatedAt';
@@ -51,7 +52,7 @@ function SortIcon({ field, currentField, direction }: { field: SortField; curren
   );
 }
 
-export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) {
+export function ProjectList({ projects, onSelect, onDelete, onCreateProject }: ProjectListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -101,39 +102,117 @@ export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) 
 
   if (projects.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center p-8">
-        <div
-          className="flex items-center justify-center mb-4"
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 'var(--radius-lg)',
-            background: 'var(--secondary)',
-          }}
-        >
-          <Folder className="w-8 h-8 text-[var(--muted-foreground)] opacity-50" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
+        {/* Illustrated hero graphic */}
+        <div className="relative mb-8">
+          <div
+            className="w-24 h-24 rounded-2xl flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+              boxShadow: '0 0 60px rgba(59, 130, 246, 0.15), 0 0 30px rgba(6, 182, 212, 0.1)',
+            }}
+          >
+            <Layout className="w-12 h-12 text-[var(--primary-foreground)]" />
+          </div>
+          <div
+            className="absolute -top-2 -right-2 w-8 h-8 rounded-lg flex items-center justify-center border-2 border-[var(--background)]"
+            style={{ background: 'var(--color-success)' }}
+          >
+            <CheckSquare className="w-4 h-4 text-[var(--primary-foreground)]" />
+          </div>
         </div>
-        <p className="text-[var(--muted-foreground)] mb-1 font-medium">No projects yet</p>
-        <p className="text-sm text-[var(--muted-foreground)] opacity-70">
-          Create a project to get started
+
+        {/* Heading and description */}
+        <h2 className="text-2xl font-bold tracking-tight mb-2 text-[var(--foreground)]">
+          Welcome to SpecBoard
+        </h2>
+        <p className="text-[var(--muted-foreground)] max-w-md mb-8 leading-relaxed">
+          Track your specs with a Kanban board, generate AI-powered specifications, and manage your project lifecycle from idea to completion.
         </p>
+
+        {/* Primary CTA */}
+        {onCreateProject && (
+          <button
+            onClick={onCreateProject}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              background: 'var(--primary)',
+              color: 'var(--primary-foreground)',
+              boxShadow: '0 4px 14px rgba(59, 130, 246, 0.3)',
+            }}
+          >
+            <Plus className="w-5 h-5" />
+            Create Your First Project
+          </button>
+        )}
+
+        {/* Feature highlights */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 w-full max-w-xl">
+          {[
+            {
+              icon: FileText,
+              title: 'Write Specs',
+              desc: 'AI-powered specification generation',
+              color: 'var(--primary)',
+              bg: 'var(--color-active-bg)',
+            },
+            {
+              icon: Layout,
+              title: 'Kanban Board',
+              desc: 'Drag and drop feature management',
+              color: 'var(--accent)',
+              bg: 'var(--accent-muted)',
+            },
+            {
+              icon: CheckSquare,
+              title: 'Verify & Ship',
+              desc: 'Checklists to validate completeness',
+              color: 'var(--color-success)',
+              bg: 'var(--tag-bg-success)',
+            },
+          ].map((feature) => (
+            <div
+              key={feature.title}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] transition-colors hover:border-[var(--border-hover)]"
+            >
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center"
+                style={{ background: feature.bg }}
+              >
+                <feature.icon className="w-5 h-5" style={{ color: feature.color }} />
+              </div>
+              <span className="text-sm font-semibold text-[var(--foreground)]">{feature.title}</span>
+              <span className="text-xs text-[var(--muted-foreground)] leading-relaxed">{feature.desc}</span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      {/* Section heading */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-[var(--foreground)]">Projects</h2>
+          <p className="text-sm text-[var(--muted-foreground)] mt-0.5">
+            {projects.length} {projects.length === 1 ? 'project' : 'projects'}
+          </p>
+        </div>
+      </div>
+
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
         <input
           type="text"
           placeholder="Search projects..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className={cn(
-            'w-full pl-10 pr-4 py-2 rounded-lg border bg-[var(--secondary)]',
-            'outline-none focus:border-[var(--ring)] transition-colors',
+            'w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)]',
+            'outline-none focus:border-[var(--ring)] focus:ring-1 focus:ring-[var(--ring)] transition-all',
             'placeholder:text-[var(--muted-foreground)]'
           )}
           style={{ fontSize: 'var(--text-sm)' }}
@@ -142,8 +221,8 @@ export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) 
 
       {/* Table Header */}
       <div
-        className="grid gap-4 px-4 py-2 text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wider"
-        style={{ gridTemplateColumns: '1fr 100px 140px' }}
+        className="grid gap-4 px-4 py-2.5 text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wider"
+        style={{ gridTemplateColumns: '1fr 100px 160px' }}
       >
         <button
           onClick={() => handleSort('displayName')}
@@ -169,19 +248,22 @@ export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) 
       </div>
 
       {/* Project Rows */}
-      <div className="border border-[var(--border)] rounded-lg overflow-hidden bg-[var(--card)]">
+      <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--card)]">
         {filteredAndSorted.map((project) => (
           <div
             key={project.id}
-            className="grid gap-4 px-4 py-3 items-center hover:bg-[var(--secondary)] transition-colors cursor-pointer border-b border-[var(--border)] last:border-b-0"
-            style={{ gridTemplateColumns: '1fr 100px 140px' }}
+            className="grid gap-4 px-4 py-3.5 items-center hover:bg-[var(--card-hover)] transition-colors cursor-pointer border-b border-[var(--border)] last:border-b-0 group"
+            style={{ gridTemplateColumns: '1fr 100px 160px' }}
             onClick={() => onSelect(project)}
             onMouseEnter={() => setHoveredProject(project.id)}
             onMouseLeave={() => setHoveredProject(null)}
           >
             {/* Project Name & Description */}
             <div className="min-w-0">
-              <span className="font-medium truncate">{project.displayName}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold truncate text-[var(--foreground)]">{project.displayName}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[var(--muted-foreground)] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              </div>
               {project.description && (
                 <p className="text-sm text-[var(--muted-foreground)] truncate mt-0.5">
                   {project.description}
@@ -190,11 +272,17 @@ export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) 
             </div>
 
             {/* Feature Count */}
-            <div className="text-sm">
-              <span className="font-medium">{project.featureCount}</span>
-              <span className="text-[var(--muted-foreground)] ml-1">
-                {project.featureCount === 1 ? 'feature' : 'features'}
+            <div className="text-sm text-[var(--muted-foreground)]">
+              <span
+                className="inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-semibold mr-1.5"
+                style={{
+                  background: project.featureCount > 0 ? 'var(--color-active-bg)' : 'var(--secondary)',
+                  color: project.featureCount > 0 ? 'var(--color-active)' : 'var(--muted-foreground)',
+                }}
+              >
+                {project.featureCount}
               </span>
+              {project.featureCount === 1 ? 'feature' : 'features'}
             </div>
 
             {/* Updated */}
@@ -202,20 +290,21 @@ export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) 
               <span className="text-sm text-[var(--muted-foreground)]">
                 {formatRelativeTime(project.updatedAt)}
               </span>
-              {hoveredProject === project.id && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(project);
-                  }}
-                  className="p-1 rounded hover:bg-[var(--tag-bg-error)] text-[var(--muted-foreground)] hover:text-[var(--tag-text-error)] transition-colors"
-                  title="Delete project"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(project);
+                }}
+                className={cn(
+                  "p-1.5 rounded-md transition-all",
+                  "text-[var(--muted-foreground)] hover:text-[var(--tag-text-error)] hover:bg-[var(--tag-bg-error)]",
+                  hoveredProject === project.id ? "opacity-100" : "opacity-0"
+                )}
+                title="Delete project"
+                aria-label={`Delete ${project.displayName}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
         ))}

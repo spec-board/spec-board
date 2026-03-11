@@ -3,21 +3,21 @@
 /* Dark theme (default) */
 :root,
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --card: #141414;
-  --card-foreground: #ededed;
+  --background: #0d1117;
+  --foreground: #e6edf3;
+  --card: #161b22;
+  --card-foreground: #e6edf3;
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
-  --secondary: #27272a;
-  --secondary-foreground: #ededed;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
+  --secondary: #21262d;
+  --secondary-foreground: #e6edf3;
+  --muted: #21262d;
+  --muted-foreground: #8b949e;
   --accent: #06b6d4; /* Cyan accent color */
   --accent-hover: #0891b2; /* Darker cyan for hover */
   --accent-muted: rgba(6, 182, 212, 0.1); /* Muted cyan background */
-  --accent-foreground: #ededed;
-  --border: #27272a;
+  --accent-foreground: #e6edf3;
+  --border: #30363d;
   --ring: #3b82f6;
 
   /* Typography scale (rem-based for accessibility) */
@@ -126,8 +126,12 @@
   --shadow-hover: 0 8px 12px -2px rgb(0 0 0 / 0.15);
 
   /* Interactive states */
-  --card-hover: #1a1a1a;
-  --border-hover: #3f3f46;
+  --card-hover: #1c2129;
+  --border-hover: #484f58;
+
+  /* Radius system */
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
 }
 
 /* Light theme */

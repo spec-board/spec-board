@@ -89,23 +89,21 @@ export default function Home() {
 
       {/* Main content */}
       <main
-        className="flex-1 max-w-4xl mx-auto w-full"
-        style={{
-          paddingLeft: 'var(--space-6)',
-          paddingRight: 'var(--space-6)',
-          paddingTop: 'var(--space-8)',
-          paddingBottom: 'var(--space-8)',
-        }}
+        className="flex-1 max-w-5xl mx-auto w-full px-6 py-6"
       >
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--foreground)]" />
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--border)] border-t-[var(--primary)]" />
+              <p className="text-sm text-[var(--muted-foreground)]">Loading projects...</p>
+            </div>
           </div>
         ) : (
           <ProjectList
             projects={projects}
             onSelect={handleSelectProject}
             onDelete={handleDeleteClick}
+            onCreateProject={() => setIsCreateModalOpen(true)}
           />
         )}
       </main>
