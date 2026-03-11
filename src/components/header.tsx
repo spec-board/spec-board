@@ -38,11 +38,11 @@ export function Header({ variant, projectName, onNewProject }: HeaderProps) {
           </div>
 
           {/* Right — actions */}
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-2">
             {variant === 'home' && onNewProject && (
               <button
                 onClick={onNewProject}
-                className="btn btn-primary btn-sm mr-2"
+                className="btn btn-primary btn-sm mr-1"
               >
                 New
               </button>
