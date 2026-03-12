@@ -135,14 +135,14 @@ export default function FeaturePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
         <div className="text-center">
-          <div className="text-red-400 mb-4">{error}</div>
+          <div className="text-[var(--muted-foreground)] mb-4">{error}</div>
           <button
             onClick={() => router.push('/projects/' + projectSlug)}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--secondary)] rounded-lg hover:bg-[var(--secondary)]/80 transition-colors mx-auto"
+            className="btn btn-secondary btn-sm mx-auto"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back to Project
           </button>
         </div>
