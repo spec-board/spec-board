@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -421,6 +421,36 @@ export default function SettingsPage() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<MenuSection>('ai');
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
+  
+  // Store the referrer URL when the page loads
+  const previousUrlRef = useRef<string | null>(null);
+  
+  useEffect(() => {
+    // Capture the referrer on mount (before any navigation)
+    if (typeof document !== 'undefined' && document.referrer) {
+      try {
+        const referrerUrl = new URL(document.referrer);
+        // Only use referrer if it's from the same origin
+        if (referrerUrl.origin === window.location.origin) {
+          previousUrlRef.current = referrerUrl.pathname;
+        }
+      } catch {
+        // Invalid referrer URL, ignore
+      }
+    }
+  }, []);
+
+  const handleGoBack = () => {
+    // Use native browser navigation to ensure immediate visual transition
+    // This bypasses Next.js's transition handling which can get stuck waiting for the target page
+    if (window.history.length > 1) {
+      window.history.back();
+    } else if (previousUrlRef.current && previousUrlRef.current !== '/settings') {
+      window.location.href = previousUrlRef.current;
+    } else {
+      window.location.href = '/';
+    }
+  };
 
   // Fetch app info for footer
   useEffect(() => {
@@ -452,7 +482,7 @@ export default function SettingsPage() {
         <div className="px-6 py-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.back()}
+              onClick={handleGoBack}
               className="btn-icon -ml-2"
               aria-label="Go back"
             >
