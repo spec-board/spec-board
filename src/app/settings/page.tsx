@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore, type AIProvider } from '@/lib/settings-store';
@@ -433,6 +433,7 @@ function AboutContent() {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState<MenuSection>('shortcuts');
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
 
@@ -465,13 +466,13 @@ export default function SettingsPage() {
       <header className="border-b border-[var(--border)] bg-[var(--card)]">
         <div className="px-6 py-4">
           <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="p-2 -ml-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
-              aria-label="Back to home"
+            <button
+              onClick={() => router.back()}
+              className="btn-icon -ml-2"
+              aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5" />
-            </Link>
+            </button>
             <h1 className="text-xl font-bold">Settings</h1>
           </div>
         </div>
