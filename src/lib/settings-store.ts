@@ -134,11 +134,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 
   loadSettings: async () => {
-    // Load app settings from database
+    // Load app settings from database with timeout to avoid blocking navigation
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+
     try {
       const [appRes, aiRes] = await Promise.all([
-        fetch('/api/settings/app'),
-        fetch('/api/settings/ai'),
+        fetch('/api/settings/app', { signal: controller.signal }),
+        fetch('/api/settings/ai', { signal: controller.signal }),
       ]);
 
       // Use defaults if API fails
@@ -187,6 +190,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         aiSettings: DEFAULT_SETTINGS.aiSettings,
         isLoaded: true,
       });
+    } finally {
+      clearTimeout(timeout);
     }
 
     // Listen for system theme changes when using 'system' theme

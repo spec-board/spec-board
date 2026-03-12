@@ -99,12 +99,7 @@ function ShortcutRow({ keys, description }: { keys: string[]; description: strin
 }
 
 function ShortcutsContent() {
-  const { shortcutsEnabled, setShortcutsEnabled, loadSettings } = useSettingsStore();
-
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+  const { shortcutsEnabled, setShortcutsEnabled } = useSettingsStore();
 
   return (
     <div className="space-y-6">
@@ -166,12 +161,6 @@ function ShortcutsContent() {
 }
 
 function AppearanceContent() {
-  const { loadSettings } = useSettingsStore();
-
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
 
   return (
     <div className="space-y-6">
@@ -200,10 +189,6 @@ function AppearanceContent() {
 
 function AIContent() {
   const { aiSettings, setAISettings, loadSettings } = useSettingsStore();
-
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
 
   // Single form state
   const [formData, setFormData] = useState({
