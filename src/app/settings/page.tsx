@@ -434,7 +434,7 @@ function AboutContent() {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<MenuSection>('shortcuts');
+  const [activeSection, setActiveSection] = useState<MenuSection>('ai');
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
 
   // Fetch app info for footer
@@ -454,9 +454,9 @@ export default function SettingsPage() {
   }, []);
 
   const menuItems: { id: MenuSection; label: string; icon: React.ReactNode }[] = [
+    { id: 'ai', label: 'AI Settings', icon: <Sparkles className="w-4 h-4" /> },
     { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
     { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
-    { id: 'ai', label: 'AI Settings', icon: <Sparkles className="w-4 h-4" /> },
     { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
   ];
 
