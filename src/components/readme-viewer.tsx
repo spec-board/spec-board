@@ -136,65 +136,37 @@ function HowItWorksFlow() {
     {
       title: 'spec-kit project',
       items: ['specs/', '├─ feature/', '│  ├─ spec', '│  ├─ plan', '│  └─ tasks'],
-      icon: <FolderTree className="w-6 h-6" />,
-      color: 'from-purple-500/20 to-purple-600/10',
-      borderColor: 'border-purple-500/30',
-      iconBg: 'bg-purple-500/20',
-      iconColorVar: '--tag-text-purple',
+      icon: <FolderTree className="w-5 h-5" />,
     },
     {
       title: 'SpecBoard parses',
       items: ['spec.md', 'plan.md', 'tasks.md'],
-      icon: <FileCode className="w-6 h-6" />,
-      color: 'from-blue-500/20 to-blue-600/10',
-      borderColor: 'border-blue-500/30',
-      iconBg: 'bg-blue-500/20',
-      iconColorVar: '--tag-text-info',
+      icon: <FileCode className="w-5 h-5" />,
     },
     {
       title: 'Kanban Board',
-      items: ['Backlog', 'Planning', 'In Progress', 'Done'],
-      icon: <Columns3 className="w-6 h-6" />,
-      color: 'from-green-500/20 to-green-600/10',
-      borderColor: 'border-green-500/30',
-      iconBg: 'bg-green-500/20',
-      iconColorVar: '--tag-text-success',
+      items: ['Backlog', 'Specs', 'Plan', 'Tasks'],
+      icon: <Columns3 className="w-5 h-5" />,
+      isKanban: true,
     },
   ];
 
-  const getKanbanItemStyle = (i: number) => {
-    const styles = [
-      { bg: 'bg-zinc-600/50', colorVar: '--muted-foreground' },
-      { bg: 'bg-yellow-600/50', colorVar: '--tag-text-warning' },
-      { bg: 'bg-blue-600/50', colorVar: '--tag-text-info' },
-      { bg: 'bg-green-600/50', colorVar: '--tag-text-success' },
-    ];
-    return styles[i] || styles[0];
-  };
-
   return (
-    <div className="flex flex-col md:flex-row items-stretch gap-4">
+    <div className="flex flex-col md:flex-row items-stretch gap-3">
       {steps.map((step, index) => (
-        <div key={index} className="flex items-center gap-4 flex-1">
-          <div className={cn(
-            'flex-1 rounded-xl p-4 border bg-gradient-to-br',
-            step.color,
-            step.borderColor
-          )}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className={cn('p-2 rounded-lg', step.iconBg)} style={{ color: `var(${step.iconColorVar})` }}>
+        <div key={index} className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex-1 rounded-lg p-4 border border-[var(--border)] bg-[var(--card)]">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="p-1.5 rounded-md bg-[var(--accent)] text-[var(--foreground)]">
                 {step.icon}
               </div>
-              <h4 className="font-semibold text-sm">{step.title}</h4>
+              <h4 className="font-semibold text-sm text-[var(--foreground)]">{step.title}</h4>
             </div>
             <div className="space-y-1 font-mono text-xs text-[var(--muted-foreground)]">
               {step.items.map((item, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  {index === 2 ? (
-                    <span
-                      className={cn('px-2 py-0.5 rounded text-[10px] font-medium', getKanbanItemStyle(i).bg)}
-                      style={{ color: `var(${getKanbanItemStyle(i).colorVar})` }}
-                    >
+                <div key={i}>
+                  {'isKanban' in step && step.isKanban ? (
+                    <span className="inline-block px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--accent)] text-[10px] font-medium text-[var(--muted-foreground)]">
                       {item}
                     </span>
                   ) : (
@@ -205,7 +177,7 @@ function HowItWorksFlow() {
             </div>
           </div>
           {index < steps.length - 1 && (
-            <ArrowRight className="w-5 h-5 text-[var(--muted-foreground)] hidden md:block flex-shrink-0" />
+            <ArrowRight className="w-4 h-4 text-[var(--muted-foreground)] hidden md:block flex-shrink-0" />
           )}
         </div>
       ))}
@@ -231,8 +203,8 @@ function TechStackDisplay() {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-[var(--border)] overflow-hidden">
-        <div className="px-4 py-2 bg-blue-500/10 border-b border-[var(--border)]">
-          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--tag-text-info)' }}>Frontend</span>
+        <div className="px-4 py-2 bg-[var(--accent)] border-b border-[var(--border)]">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">Frontend</span>
         </div>
         <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
           {frontend.map((tech, i) => (
@@ -244,8 +216,8 @@ function TechStackDisplay() {
         </div>
       </div>
       <div className="rounded-xl border border-[var(--border)] overflow-hidden">
-        <div className="px-4 py-2 bg-green-500/10 border-b border-[var(--border)]">
-          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--tag-text-success)' }}>Backend</span>
+        <div className="px-4 py-2 bg-[var(--accent)] border-b border-[var(--border)]">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">Backend</span>
         </div>
         <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
           {backend.map((tech, i) => (
