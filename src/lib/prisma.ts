@@ -14,15 +14,6 @@ if (!process.env.DATABASE_URL && process.env.POSTGRES_PRISMA_URL) {
   process.env.DATABASE_URL = process.env.POSTGRES_PRISMA_URL;
 }
 
-const isExistingClient = !!globalForPrisma.prisma;
-console.log('[v0] Prisma init:', {
-  existingClient: isExistingClient,
-  dbUrlSet: !!databaseUrl,
-  dbUrlPrefix: databaseUrl ? databaseUrl.substring(0, 40) + '...' : 'NONE',
-  DATABASE_URL_set: !!process.env.DATABASE_URL,
-  POSTGRES_PRISMA_URL_set: !!process.env.POSTGRES_PRISMA_URL,
-});
-
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
