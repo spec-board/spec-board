@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-03-12
+
+### Added
+- **Supabase Cloud Database** - Migrated from local filesystem to Supabase PostgreSQL:
+  - Full schema migration with all tables (projects, features, tasks, constitutions, etc.)
+  - Prisma ORM with runtime `DATABASE_URL` resolution from `POSTGRES_PRISMA_URL`
+  - Connection pooling via Supabase for production readiness
+- **Skeleton Loading System** - Responsive loading screens for every route:
+  - Reusable `Skeleton`, `ProjectListSkeleton`, `KanbanSkeleton`, `FeatureDetailSkeleton` components
+  - Next.js `loading.tsx` files for `/`, `/projects/[name]`, `/features/[featureId]`, `/settings`
+  - Replaces plain text "Loading..." with animated pulse placeholders
+- **Code Splitting** - Dynamic imports for heavy components:
+  - `KanbanBoard`, `ProjectInfoBubble`, `FeatureDetailByStage`, `ConfirmDialog` lazy-loaded
+  - Skeleton fallbacks shown while chunks load
+  - `ssr: false` for client-only components to reduce server bundle
+- **AI Provider Guard** - Prevents broken stage transitions:
+  - Client-side check in kanban `handleDrop` before queuing jobs
+  - Server-side validation in `/api/stage-transition` returns 400 if no API key
+  - Clean modal dialog with "Go to Settings" button instead of infinite spinner
+- **GitHub Stars Badge** - Header shows live star count from GitHub API:
+  - `GitHubStars` component fetches `/repos/spec-board/spec-board` with SWR
+  - Displays compact star count with link to repository
+- **Button Design System** - Unified CSS button classes in `globals.css`:
+  - `.btn` base with `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-danger` variants
+  - `.btn-xs`, `.btn-sm`, `.btn-md` size classes
+  - `.btn-icon` for icon-only circular buttons
+  - Pill-shaped (`border-radius: 9999px`) with consistent focus rings
+- **SEO & Meta Tags** - Comprehensive metadata for search and social:
+  - OpenGraph and Twitter card metadata
+  - Keywords, authors, site name
+  - Viewport with `themeColor` for light/dark modes
+  - Description: "Visual Dashboard for Software Specs & Docs"
+
+### Changed
+- **Minimal Mono Design** - Complete visual overhaul:
+  - Monochromatic zinc/neutral color palette (no blue, cyan, or colored accents)
+  - All semantic tokens (success, error, warning, tags, phases) mapped to gray scale
+  - Lowercase "specboard" wordmark with geometric SVG logo mark
+  - Compact header with `gap-2` spacing between action buttons
+  - Narrower `max-w-3xl` content column for focused reading
+  - Feature detail screens synchronized with mono tokens throughout
+- **Button Styling** - Text-only pill buttons without icons:
+  - Removed icons from all text buttons (New, Create, Cancel, Delete, etc.)
+  - Icon-only buttons (settings, theme, close) retain icons with circular shape
+- **Default Theme** - Changed from `dark` to `system`:
+  - Follows device `prefers-color-scheme` by default
+  - `theme-init.js` uses `matchMedia` for flash-free system theme detection
+  - Settings store defaults and fallbacks updated to `'system'`
+- **Settings Page** - AI Settings moved to first position:
+  - Default active section is now `'ai'` instead of `'shortcuts'`
+  - Users see AI provider configuration immediately on open
+- **Settings Navigation** - Back button uses `router.back()`:
+  - Previously hardcoded to `/` (home page)
+  - Now correctly returns to the previous page in browser history
+- **License** - Changed from AGPL-3.0 to MIT
+- **React Compiler** - Enabled `reactCompiler: true` in `next.config.ts`
+- **Removed `output: "standalone"`** - Not needed for Vercel deployment
+
+### Fixed
+- **Prisma DATABASE_URL Error** - `prisma.ts` sets `process.env.DATABASE_URL` from `POSTGRES_PRISMA_URL` before client init
+- **Database Column Mismatch** - Renamed snake_case columns (`feature_id`, `spec_content`, etc.) to camelCase to match Prisma schema
+- **Create Feature Modal Focus** - Fixed textarea click focusing name input instead:
+  - Added `htmlFor`/`id` associations to labels and inputs
+  - Added cleanup for `setTimeout` in focus `useEffect`
+  - Added visible `focus:ring` to distinguish active field
+- **Native `alert()` Calls** - Replaced all 5 `alert()` calls with `toast.error()` from Sonner
+- **Feature Detail Colors** - Replaced all colored badges, progress dots, focus rings, and animations with mono design tokens
+
+### Removed
+- Standalone Docker output configuration
+
+## [1.2.0] - 2026-02-15
+
 ### Added
 - **4-Stage Workflow** - New Kanban pipeline:
   - `backlog` → `specs` → `plan` → `tasks`
