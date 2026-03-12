@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { addStageTransitionJob } from '@/lib/queue';
+import { getAISettings } from '@/lib/ai/settings';
 
 // POST /api/stage-transition - Trigger background stage transition via BullMQ
 export async function POST(request: NextRequest) {
@@ -10,6 +11,15 @@ export async function POST(request: NextRequest) {
 
     if (!featureId) {
       return NextResponse.json({ error: 'Feature ID is required' }, { status: 400 });
+    }
+
+    // Check if AI provider is configured before queuing a job
+    const aiSettings = await getAISettings();
+    if (!aiSettings.apiKey) {
+      return NextResponse.json(
+        { error: 'AI provider is not configured. Please add an API key in Settings before generating specs.' },
+        { status: 400 }
+      );
     }
 
     // Get the feature

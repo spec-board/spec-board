@@ -1,11 +1,13 @@
 'use client';
 
 import { forwardRef, useEffect, useCallback, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature, KanbanColumnType } from '@/types';
-import { GitBranch, CheckCircle2, Plus } from 'lucide-react';
+import { GitBranch, CheckCircle2, Plus, Settings } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 import { useProjectStore } from '@/lib/store';
+import { useSettingsStore } from '@/lib/settings-store';
 import { toast } from 'sonner';
 import { CreateFeatureModal } from './create-feature-modal';
 import { CircularProgress, DualCircularProgress } from './circular-progress';
@@ -375,8 +377,11 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
   const [loadingMessage, setLoadingMessage] = useState('');
   const [dropTargetColumn, setDropTargetColumn] = useState<KanbanColumn | null>(null);
   const [dragSourceColumn, setDragSourceColumn] = useState<KanbanColumn | null>(null);
+  const [showAIConfigDialog, setShowAIConfigDialog] = useState(false);
 
+  const router = useRouter();
   const { focusState, setFocusState, clearFocusState } = useProjectStore();
+  const { aiSettings } = useSettingsStore();
   const cardRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map());
   const boardRef = useRef<HTMLElement>(null);
 
@@ -427,6 +432,12 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     e.preventDefault();
     setDropTargetColumn(null);
     setDragSourceColumn(null);
+
+    // Check if AI provider is configured before proceeding
+    if (!aiSettings.hasApiKey && !aiSettings.apiKey) {
+      setShowAIConfigDialog(true);
+      return;
+    }
 
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -487,7 +498,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [features, projectId, refreshData]);
+  }, [features, projectId, refreshData, aiSettings]);
 
   // Group features by kanban column (using new function that considers checklists)
   const featuresByColumn = COLUMNS.reduce((acc, column) => {
@@ -732,12 +743,55 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] transition-opacity duration-200">
         <div className="bg-[var(--card)] rounded-lg px-8 py-6 flex flex-col items-center gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
           <div className="relative">
-            <svg className="animate-spin w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="none">
+            <svg className="animate-spin w-8 h-8 text-[var(--foreground)]" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
           </div>
           <p className="text-sm font-medium text-[var(--foreground)]">{loadingMessage}</p>
+        </div>
+      </div>
+    )}
+
+    {/* AI Provider not configured dialog */}
+    {showAIConfigDialog && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+        <div
+          className="bg-[var(--card)] border border-[var(--border)] rounded-xl w-full max-w-md mx-4 shadow-2xl"
+        >
+          {/* Header */}
+          <div className="px-6 pt-6 pb-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center">
+                <Settings className="w-5 h-5 text-[var(--foreground)]" />
+              </div>
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                AI Provider Required
+              </h3>
+            </div>
+            <p className="text-sm text-[var(--muted-foreground)] leading-relaxed">
+              To generate specs, plans, and tasks automatically, you need to configure an AI provider with a valid API key. This is required for stage transitions.
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-2 px-6 pb-6 pt-2">
+            <button
+              onClick={() => setShowAIConfigDialog(false)}
+              className="btn btn-ghost btn-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                setShowAIConfigDialog(false);
+                router.push('/settings');
+              }}
+              className="btn btn-primary btn-sm"
+            >
+              Go to Settings
+            </button>
+          </div>
         </div>
       </div>
     )}
