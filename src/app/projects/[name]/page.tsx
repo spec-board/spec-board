@@ -2,11 +2,20 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { KanbanBoard } from '@/components/kanban-board';
-import { ProjectInfoBubble } from '@/components/project-info-bubble';
+import dynamic from 'next/dynamic';
 import { Header } from '@/components/header';
+import { KanbanSkeleton } from '@/components/skeleton';
 import type { Project, Feature } from '@/types';
 import { useProjectStore } from '@/lib/store';
+
+const KanbanBoard = dynamic(() => import('@/components/kanban-board').then(m => ({ default: m.KanbanBoard })), {
+  loading: () => <KanbanSkeleton />,
+  ssr: false,
+});
+
+const ProjectInfoBubble = dynamic(() => import('@/components/project-info-bubble').then(m => ({ default: m.ProjectInfoBubble })), {
+  ssr: false,
+});
 
 export default function ProjectPage() {
   const params = useParams();
@@ -132,8 +141,11 @@ export default function ProjectPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-[var(--muted-foreground)]">Loading project...</div>
+      <div className="min-h-screen flex flex-col">
+        <Header variant="project" projectName="..." />
+        <main className="flex-1 container mx-auto px-4 py-6">
+          <KanbanSkeleton />
+        </main>
       </div>
     );
   }

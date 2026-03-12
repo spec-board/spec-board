@@ -2,12 +2,22 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { FeatureDetailByStage } from '@/components/feature-detail-v2';
-import { ConfirmDialog } from '@/components/confirm-dialog';
+import dynamic from 'next/dynamic';
 import { ArrowLeft } from 'lucide-react';
+import { FeatureDetailSkeleton } from '@/components/skeleton';
 import type { Project, Feature, Constitution } from '@/types';
 import { deleteFeature } from '@/lib/api-client';
 import { useProjectStore } from '@/lib/store';
+
+const FeatureDetailByStage = dynamic(
+  () => import('@/components/feature-detail-v2').then(m => ({ default: m.FeatureDetailByStage })),
+  { loading: () => <FeatureDetailSkeleton />, ssr: false }
+);
+
+const ConfirmDialog = dynamic(
+  () => import('@/components/confirm-dialog').then(m => ({ default: m.ConfirmDialog })),
+  { ssr: false }
+);
 
 export default function FeaturePage() {
   const params = useParams();
@@ -119,11 +129,7 @@ export default function FeaturePage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-[var(--muted-foreground)]">Loading feature...</div>
-      </div>
-    );
+    return <FeatureDetailSkeleton />;
   }
 
   if (error) {
