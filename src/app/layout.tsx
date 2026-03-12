@@ -13,8 +13,35 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SpecBoard - Kanban for Spec-Kit",
-  description: "Visual dashboard for spec-kit task management",
+  title: "SpecBoard — Visual Dashboard for Software Specs & Docs",
+  description:
+    "SpecBoard helps non-technical teams create, organize, and manage professional software specifications and documentation. A visual drag-and-drop dashboard that turns ideas into structured specs — no coding required.",
+  keywords: [
+    "spec management",
+    "software specification",
+    "documentation tool",
+    "visual dashboard",
+    "kanban board",
+    "project management",
+    "non-technical",
+    "spec writing",
+    "software docs",
+    "specboard",
+  ],
+  authors: [{ name: "SpecBoard" }],
+  openGraph: {
+    type: "website",
+    title: "SpecBoard — Visual Dashboard for Software Specs & Docs",
+    description:
+      "Create and manage professional software specifications without writing code. A visual dashboard for non-technical teams to organize specs, track features, and ship better software.",
+    siteName: "SpecBoard",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SpecBoard — Visual Dashboard for Software Specs & Docs",
+    description:
+      "Create and manage professional software specifications without writing code. A visual dashboard for non-technical teams.",
+  },
 };
 
 export default function RootLayout({
