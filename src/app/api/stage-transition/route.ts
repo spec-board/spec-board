@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { addStageTransitionJob } from '@/lib/queue';
+import { addStageTransitionJob, isRedisAvailable } from '@/lib/queue';
 import { getAISettings } from '@/lib/ai/settings';
 
 // POST /api/stage-transition - Trigger background stage transition via BullMQ
@@ -11,6 +11,14 @@ export async function POST(request: NextRequest) {
 
     if (!featureId) {
       return NextResponse.json({ error: 'Feature ID is required' }, { status: 400 });
+    }
+
+    // Check if Redis is available for queue functionality
+    if (!isRedisAvailable()) {
+      return NextResponse.json(
+        { error: 'Background processing is not available. REDIS_URL is not configured.' },
+        { status: 503 }
+      );
     }
 
     // Check if AI provider is configured before queuing a job
