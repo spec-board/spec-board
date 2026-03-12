@@ -8,6 +8,7 @@ import { FeatureDetailSkeleton } from '@/components/skeleton';
 import type { Project, Feature, Constitution } from '@/types';
 import { deleteFeature } from '@/lib/api-client';
 import { useProjectStore } from '@/lib/store';
+import { toast } from 'sonner';
 
 const FeatureDetailByStage = dynamic(
   () => import('@/components/feature-detail-v2').then(m => ({ default: m.FeatureDetailByStage })),
@@ -92,7 +93,7 @@ export default function FeaturePage() {
     } catch (err) {
       console.error('Error deleting feature:', err);
       setShowDeleteConfirm(false);
-      alert('Failed to delete feature');
+      toast.error('Failed to delete feature');
     } finally {
       setIsDeleting(false);
     }
@@ -113,14 +114,14 @@ export default function FeaturePage() {
       });
       if (!response.ok) {
         const err = await response.json();
-        alert(err.error || 'Failed to transition stage');
+        toast.error(err.error || 'Failed to transition stage');
         return;
       }
       // Reload to get updated feature data
       loadFeature();
     } catch (err) {
       console.error('Error changing stage:', err);
-      alert('Failed to change stage');
+      toast.error('Failed to change stage');
     }
   };
 
