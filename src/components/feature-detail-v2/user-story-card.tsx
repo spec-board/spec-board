@@ -29,7 +29,7 @@ export function UserStoryCard({
   return (
     <div className={cn(
       "bg-[var(--card)] rounded-lg shadow-sm border overflow-hidden transition-all",
-      isFocused ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/20" : "border-[var(--border)]"
+      isFocused ? "border-[var(--ring)] ring-2 ring-[var(--ring)]/20" : "border-[var(--border)]"
     )}>
       {/* Card Header - Clickable to expand/collapse */}
       <button
@@ -67,7 +67,7 @@ export function UserStoryCard({
 
           {/* Progress bar */}
           <div className="mt-2 flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-black/20 dark:bg-white/10 rounded-full overflow-hidden">
+            <div className="flex-1 h-1.5 bg-[var(--progress-empty)] rounded-full overflow-hidden">
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-300',

@@ -93,7 +93,7 @@ export function DocumentPanel({
         {selectedDocument === 'clarifications' && onEditClarifications && (
           <button
             onClick={onEditClarifications}
-            className="ml-3 flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 transition-colors"
+            className="ml-3 btn btn-primary btn-sm"
           >
             <Edit3 className="w-3.5 h-3.5" />
             Edit
@@ -126,10 +126,12 @@ export function DocumentPanel({
 
         @keyframes highlight-pulse {
           0% {
-            background-color: rgba(59, 130, 246, 0.3);
+            background-color: var(--accent-muted);
+            box-shadow: 0 0 0 2px var(--ring);
           }
           100% {
             background-color: transparent;
+            box-shadow: none;
           }
         }
       `}</style>

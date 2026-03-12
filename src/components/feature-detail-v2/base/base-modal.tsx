@@ -15,23 +15,10 @@ interface BaseModalComponentProps extends BaseModalProps {
 
 // Stage badge component
 function StageBadge({ stage }: { stage: string }) {
-  const colors: Record<string, string> = {
-    backlog: 'bg-gray-500/20 text-gray-400',
-    specify: 'bg-blue-500/20 text-blue-400',
-    clarify: 'bg-purple-500/20 text-purple-400',
-    plan: 'bg-orange-500/20 text-orange-400',
-    checklist: 'bg-green-500/20 text-green-400',
-    tasks: 'bg-yellow-500/20 text-yellow-400',
-    analyze: 'bg-cyan-500/20 text-cyan-400',
-  };
-
   const config = getStageConfig(stage as any);
 
   return (
-    <span className={cn(
-      'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-      colors[stage] || 'bg-gray-500/20 text-gray-400'
-    )}>
+    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--accent)] text-[var(--muted-foreground)] border border-[var(--border)]">
       {config.label}
     </span>
   );
@@ -50,16 +37,16 @@ function StageProgress({ currentStage }: { currentStage: string }) {
             <div
               className={cn(
                 'w-2 h-2 rounded-full transition-colors',
-                index < currentIndex ? 'bg-green-500' :
-                index === currentIndex ? 'bg-blue-500' :
-                'bg-gray-600'
+                index < currentIndex ? 'bg-[var(--foreground)]' :
+                index === currentIndex ? 'bg-[var(--muted-foreground)]' :
+                'bg-[var(--accent)]'
               )}
               title={stage.label}
             />
             {index < STAGES.length - 1 && (
               <div className={cn(
                 'w-4 h-0.5',
-                index < currentIndex ? 'bg-green-500' : 'bg-gray-600'
+                index < currentIndex ? 'bg-[var(--foreground)]' : 'bg-[var(--accent)]'
               )} />
             )}
           </div>
