@@ -34,7 +34,7 @@ interface SettingsStore {
 
 const DEFAULT_SETTINGS: Settings = {
   shortcutsEnabled: true, // Default: shortcuts are enabled
-  theme: 'dark', // Default: dark theme
+  theme: 'system', // Default: follow device preference
   aiSettings: {
     provider: 'openai', // Default to OpenAI-compatible
   },
@@ -73,7 +73,7 @@ function applyTheme(resolvedTheme: 'light' | 'dark') {
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   shortcutsEnabled: DEFAULT_SETTINGS.shortcutsEnabled,
   theme: DEFAULT_SETTINGS.theme,
-  resolvedTheme: 'dark',
+  resolvedTheme: resolveTheme('system'),
   aiSettings: DEFAULT_SETTINGS.aiSettings,
   isLoaded: false,
 
@@ -159,12 +159,13 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         console.warn('Failed to load AI settings:', aiRes.status, err);
       }
 
-      const resolvedTheme = resolveTheme(appData.theme || 'dark');
+      const themeValue = appData.theme || DEFAULT_SETTINGS.theme;
+      const resolvedTheme = resolveTheme(themeValue);
       applyTheme(resolvedTheme);
 
       set({
         shortcutsEnabled: appData.shortcutsEnabled ?? DEFAULT_SETTINGS.shortcutsEnabled,
-        theme: appData.theme || DEFAULT_SETTINGS.theme,
+        theme: themeValue,
         resolvedTheme,
         aiSettings: {
           provider: (aiData.provider || DEFAULT_SETTINGS.aiSettings.provider) as AIProvider,
@@ -176,12 +177,13 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       });
     } catch (error) {
       console.error('Failed to load settings from database:', error);
-      // Fall back to defaults
-      applyTheme('dark');
+      // Fall back to defaults (system preference)
+      const fallbackResolved = resolveTheme(DEFAULT_SETTINGS.theme);
+      applyTheme(fallbackResolved);
       set({
         shortcutsEnabled: DEFAULT_SETTINGS.shortcutsEnabled,
         theme: DEFAULT_SETTINGS.theme,
-        resolvedTheme: 'dark',
+        resolvedTheme: fallbackResolved,
         aiSettings: DEFAULT_SETTINGS.aiSettings,
         isLoaded: true,
       });
