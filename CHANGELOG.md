@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-03-12
+
+### Changed
+- **GitHub Stars Badge** - Header displays live GitHub star count alongside repo link
+- **Settings AI First** - AI Settings section moved to first position, opens by default
+- **README Rewrite** - Updated to reflect v2 architecture (Supabase, mono design, MIT license)
+- **Version Bump** - Package version updated to 2.1.0
+
 ## [2.0.0] - 2026-03-12
 
 ### Added
