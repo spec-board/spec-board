@@ -519,12 +519,12 @@ export default function SettingsPage() {
           <span>{appInfo?.description || 'Visual dashboard for spec-kit'}</span>
           <span>—</span>
           <a
-            href={appInfo?.licenseUrl || 'https://github.com/paulpham157/spec-board/blob/main/LICENSE'}
+            href={appInfo?.licenseUrl || 'https://github.com/spec-board/spec-board/blob/main/LICENSE'}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+            className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-1 transition-colors"
           >
-            {appInfo?.license || 'AGPL-3.0'} Copyleft
+            {appInfo?.license || 'MIT'} License
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>

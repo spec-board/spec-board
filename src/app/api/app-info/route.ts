@@ -29,9 +29,9 @@ export async function GET() {
       name: 'SpecBoard',
       version: packageJson.version,
       description: packageJson.description || 'Visual dashboard for spec-kit projects',
-      license: 'AGPL-3.0',
-      licenseUrl: 'https://github.com/paulpham157/spec-board/blob/main/LICENSE',
-      repository: 'https://github.com/paulpham157/spec-board',
+      license: 'MIT',
+      licenseUrl: 'https://github.com/spec-board/spec-board/blob/main/LICENSE',
+      repository: 'https://github.com/spec-board/spec-board',
       readme,
       changelog,
     });
