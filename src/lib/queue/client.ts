@@ -1,5 +1,5 @@
 import { Queue, Worker, Job } from 'bullmq';
-import { getRedisClient } from './redis';
+import { getRedisClient, isRedisAvailable } from './redis';
 import { prisma } from '@/lib/prisma';
 import { generateSpec, generateClarify, generatePlan, generateChecklist, generateTasks, analyzeDocuments, getProvider } from '@/lib/ai';
 import { emitJobComplete } from '@/lib/events';
@@ -31,6 +31,9 @@ export const QUEUE_NAMES = {
 
 // Create stage transition queue
 export const createStageTransitionQueue = () => {
+  if (!isRedisAvailable()) {
+    throw new Error('Redis is not configured. Cannot create queue.');
+  }
   const connection = getRedisClient();
   return new Queue<StageTransitionData>(QUEUE_NAMES.STAGE_TRANSITION, { connection });
 };
