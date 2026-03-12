@@ -441,12 +441,14 @@ export default function SettingsPage() {
   }, []);
 
   const handleGoBack = () => {
-    // Use native browser navigation to ensure immediate visual transition
-    // This bypasses Next.js's transition handling which can get stuck waiting for the target page
-    if (window.history.length > 1) {
-      window.history.back();
-    } else if (previousUrlRef.current && previousUrlRef.current !== '/settings') {
-      window.location.href = previousUrlRef.current;
+    // Force a full page navigation to ensure immediate visual transition
+    // and bypass any cached state in Next.js router
+    const previousUrl = previousUrlRef.current;
+    if (previousUrl && previousUrl !== '/settings') {
+      window.location.href = previousUrl;
+    } else if (window.history.length > 2) {
+      // Go back and force reload
+      window.location.href = document.referrer || '/';
     } else {
       window.location.href = '/';
     }
