@@ -123,13 +123,8 @@ export function FeatureDetail({ feature, onClose, onDelete, hasConstitution = fa
     focusedPane: 'left',
   });
 
-  // Get shortcuts setting
-  const { shortcutsEnabled, loadSettings } = useSettingsStore();
-
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+  // Get shortcuts setting (loaded globally by ThemeProvider)
+  const { shortcutsEnabled } = useSettingsStore();
 
   // Build section configs - memoized to prevent recalculation on every render
   const sections = useMemo(() => buildSectionConfigs(feature), [feature]);
