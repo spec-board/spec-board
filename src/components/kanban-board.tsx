@@ -450,8 +450,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       const isNextStep = targetIndex === sourceIndex + 1;
 
       if (!isNextStep) {
-        // Can only move to the next step, not skip
-        alert('Can only move to the next step. Please complete this step first.');
+        toast.error('Can only move to the next step. Please complete this step first.');
         return;
       }
 
@@ -493,7 +492,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
 
     } catch (err) {
       console.error('Drop error:', err);
-      alert(err instanceof Error ? err.message : 'Failed to process drop');
+      toast.error(err instanceof Error ? err.message : 'Failed to process drop');
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
