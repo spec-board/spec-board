@@ -35,9 +35,17 @@ export default function ProjectPage() {
   const loadProject = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    
+    // Add timeout to prevent hanging on slow/failing API calls
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    
     try {
       // Unified endpoint - handles both database-first and filesystem-based projects
-      const response = await fetch('/api/project/' + projectSlug + '/data', { cache: 'no-store' });
+      const response = await fetch('/api/project/' + projectSlug + '/data', { 
+        cache: 'no-store',
+        signal: controller.signal,
+      });
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Project "' + projectSlug + '" not found. Please open it from the home page first.');
@@ -60,8 +68,13 @@ export default function ProjectPage() {
         setProjectPath(data.path);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Request timed out. The server may be unavailable.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      }
     } finally {
+      clearTimeout(timeout);
       setIsLoading(false);
     }
   }, [projectSlug]);

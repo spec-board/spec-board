@@ -30,15 +30,21 @@ export default function Home() {
 
   // Fetch projects from database on mount
   const fetchProjects = useCallback(async () => {
+    // Add timeout to prevent hanging on slow/failing API calls
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    
     try {
-      const response = await fetch('/api/projects');
+      const response = await fetch('/api/projects', { signal: controller.signal });
       if (response.ok) {
         const data = await response.json();
         setProjects(data);
       }
     } catch (error) {
+      // Silently handle errors - show empty state
       console.error('Failed to fetch projects:', error);
     } finally {
+      clearTimeout(timeout);
       setIsLoading(false);
     }
   }, []);
