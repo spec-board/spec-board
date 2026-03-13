@@ -69,6 +69,7 @@
     "@types/dompurify": "^3.2.0",
     "@types/mdast": "^4.0.4",
     "@types/ws": "^8.18.1",
+    "babel-plugin-react-compiler": "^19.1.0-rc.2",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^11.0.0",
     "prisma": "^5.22.0",
