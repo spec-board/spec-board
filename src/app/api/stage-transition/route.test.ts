@@ -12,13 +12,16 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-// Mock BullMQ queue
-vi.mock('@/lib/queue', () => ({
-  addStageTransitionJob: vi.fn().mockResolvedValue({ id: 'job-123' }),
+// Mock AI stage-transition module
+vi.mock('@/lib/ai/stage-transition', () => ({
+  generateStageTransitionContent: vi.fn().mockResolvedValue({
+    content: 'Generated content',
+    clarifications: 'Generated clarifications',
+  }),
 }));
 
 import { prisma } from '@/lib/prisma';
-import { addStageTransitionJob } from '@/lib/queue';
+import { generateStageTransitionContent } from '@/lib/ai/stage-transition';
 
 describe('/api/stage-transition', () => {
   beforeEach(() => {
@@ -30,11 +33,11 @@ describe('/api/stage-transition', () => {
       const mockFeature = {
         id: 'feature-123',
         stage: 'specs',
-        jobStatus: 'running',
-        jobProgress: 50,
-        jobMessage: 'Generating spec...',
+        jobStatus: 'completed',
+        jobProgress: 100,
+        jobMessage: 'Processing complete',
         jobStartedAt: new Date(),
-        jobCompletedAt: null,
+        jobCompletedAt: new Date(),
       };
 
       vi.mocked(prisma.feature.findUnique).mockResolvedValueOnce(mockFeature);
@@ -46,8 +49,8 @@ describe('/api/stage-transition', () => {
       expect(response.status).toBe(200);
       expect(data.featureId).toBe('feature-123');
       expect(data.stage).toBe('specs');
-      expect(data.jobStatus).toBe('running');
-      expect(data.jobProgress).toBe(50);
+      expect(data.jobStatus).toBe('completed');
+      expect(data.jobProgress).toBe(100);
     });
 
     it('should return 400 if featureId is missing', async () => {
@@ -69,31 +72,10 @@ describe('/api/stage-transition', () => {
       expect(response.status).toBe(404);
       expect(data.error).toBe('Feature not found');
     });
-
-    it('should return null/undefined jobStatus when job is completed', async () => {
-      const mockFeature = {
-        id: 'feature-123',
-        stage: 'plan',
-        jobStatus: null,
-        jobProgress: null,
-        jobMessage: null,
-        jobStartedAt: new Date(),
-        jobCompletedAt: new Date(),
-      };
-
-      vi.mocked(prisma.feature.findUnique).mockResolvedValueOnce(mockFeature);
-
-      const request = new NextRequest('http://localhost/api/stage-transition?featureId=feature-123');
-      const response = await GET(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.jobStatus).toBeNull();
-    });
   });
 
   describe('POST - Stage Transition', () => {
-    it('should queue a job for valid stage transition', async () => {
+    it('should process a valid stage transition', async () => {
       const mockFeature = {
         id: 'feature-123',
         projectId: 'project-1',
@@ -107,8 +89,11 @@ describe('/api/stage-transition', () => {
       };
 
       vi.mocked(prisma.feature.findUnique).mockResolvedValueOnce(mockFeature);
-      vi.mocked(prisma.feature.update).mockResolvedValueOnce({ ...mockFeature, jobStatus: 'queued' });
-      vi.mocked(addStageTransitionJob).mockResolvedValueOnce({ id: 'job-123' });
+      vi.mocked(prisma.feature.update).mockResolvedValueOnce({ ...mockFeature, stage: 'specs' });
+      vi.mocked(generateStageTransitionContent).mockResolvedValueOnce({
+        content: 'Generated spec content',
+        clarifications: 'Generated clarifications',
+      });
 
       const request = new NextRequest('http://localhost/api/stage-transition', {
         method: 'POST',
@@ -124,8 +109,7 @@ describe('/api/stage-transition', () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.status).toBe('queued');
-      expect(data.jobId).toBe('job-123');
+      expect(data.stage).toBe('specs');
     });
 
     it('should return 400 for invalid transition', async () => {
@@ -187,27 +171,6 @@ describe('/api/stage-transition', () => {
 
       expect(response.status).toBe(404);
       expect(data.error).toBe('Feature not found');
-    });
-
-    it('should handle job failure status', async () => {
-      const mockFeature = {
-        id: 'feature-123',
-        stage: 'specs',
-        jobStatus: 'failed',
-        jobProgress: 0,
-        jobMessage: 'AI generation failed',
-        jobStartedAt: new Date(),
-        jobCompletedAt: new Date(),
-      };
-
-      vi.mocked(prisma.feature.findUnique).mockResolvedValueOnce(mockFeature);
-
-      const request = new NextRequest('http://localhost/api/stage-transition?featureId=feature-123');
-      const response = await GET(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.jobStatus).toBe('failed');
     });
   });
 });
