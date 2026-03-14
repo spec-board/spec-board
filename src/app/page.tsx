@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjectStore } from '@/lib/store';
 import { Header } from '@/components/header';
+import { ProjectListSkeleton } from '@/components/skeleton';
 import { ProjectList } from '@/components/project-list';
 import { CreateProjectModal } from '@/components/create-project-modal';
 import { DeleteProjectModal } from '@/components/delete-project-modal';
@@ -29,15 +30,21 @@ export default function Home() {
 
   // Fetch projects from database on mount
   const fetchProjects = useCallback(async () => {
+    // Add timeout to prevent hanging on slow/failing API calls
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    
     try {
-      const response = await fetch('/api/projects');
+      const response = await fetch('/api/projects', { signal: controller.signal });
       if (response.ok) {
         const data = await response.json();
         setProjects(data);
       }
     } catch (error) {
+      // Silently handle errors - show empty state
       console.error('Failed to fetch projects:', error);
     } finally {
+      clearTimeout(timeout);
       setIsLoading(false);
     }
   }, []);
@@ -88,24 +95,15 @@ export default function Home() {
       />
 
       {/* Main content */}
-      <main
-        className="flex-1 max-w-4xl mx-auto w-full"
-        style={{
-          paddingLeft: 'var(--space-6)',
-          paddingRight: 'var(--space-6)',
-          paddingTop: 'var(--space-8)',
-          paddingBottom: 'var(--space-8)',
-        }}
-      >
+      <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-8">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--foreground)]" />
-          </div>
+          <ProjectListSkeleton />
         ) : (
           <ProjectList
             projects={projects}
             onSelect={handleSelectProject}
             onDelete={handleDeleteClick}
+            onCreateProject={() => setIsCreateModalOpen(true)}
           />
         )}
       </main>

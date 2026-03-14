@@ -1,44 +1,29 @@
 # Contributing to SpecBoard
 
-This guide covers development setup, architecture, and contribution guidelines.
-
-## Contributor License Agreement (CLA)
-
-**Before contributing, you must agree to our [Contributor License Agreement (CLA)](CLA.md).**
-
-By submitting a pull request, you confirm that:
-1. You have read and agree to the CLA
-2. Your contribution is your original work
-3. You grant the project owner the rights described in the CLA
-4. Your contribution will be licensed under AGPL-3.0
-
-For your first contribution, please comment "I agree to the CLA" on your pull request.
+Thank you for your interest in contributing to SpecBoard! This project is licensed under the [MIT License](LICENSE) -- all contributions are made under the same terms.
 
 ## Table of Contents
 
 - [Development Setup](#development-setup)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
-- [API Reference](#api-reference)
-- [Accessibility](#accessibility)
-- [Testing](#testing)
-- [Deployment](#deployment)
 - [Code Style](#code-style)
+- [Pull Request Guidelines](#pull-request-guidelines)
 
 ## Development Setup
 
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL database
+- PostgreSQL database (or Supabase)
 - pnpm (recommended)
+- Redis (for BullMQ background jobs)
 
 ### Environment Variables
 
 ```bash
 # .env
-DATABASE_URL="postgresql://user:password@localhost:5432/specboard"
-PORT=3000  # Optional, defaults to 3000
+POSTGRES_PRISMA_URL="postgresql://user:password@localhost:5432/specboard"
 ```
 
 ### Commands
@@ -49,18 +34,17 @@ pnpm dev              # Start development server
 pnpm build            # Build for production
 pnpm start            # Start production server
 
-# Testing
-pnpm test             # Run tests (watch mode)
-pnpm test:run         # Run tests once
-pnpm test:coverage    # Run tests with coverage
-
-# Type checking
-pnpm tsc --noEmit
-
 # Database
 pnpm prisma studio    # Open Prisma Studio
 pnpm prisma migrate dev   # Run migrations
 pnpm prisma generate  # Regenerate client
+
+# Testing
+pnpm test             # Run tests (watch mode)
+pnpm test:run         # Run tests once
+
+# Type checking
+pnpm tsc --noEmit
 ```
 
 ## Project Structure
@@ -68,268 +52,54 @@ pnpm prisma generate  # Regenerate client
 ```
 spec-board/
 ├── prisma/
-│   └── schema.prisma      # Database schema
+│   └── schema.prisma      # Database schema (PostgreSQL)
 ├── src/
 │   ├── app/
-│   │   ├── api/           # API routes
-│   │   │   ├── projects/  # Project CRUD API
-│   │   │   ├── project/   # Spec data loading
-│   │   │   ├── browse/    # File browser
-│   │   │   └── watch/     # SSE real-time updates
-│   │   ├── projects/
-│   │   │   └── [name]/    # Dynamic project routes
-│   │   └── page.tsx       # Home page
-│   ├── components/        # React components
-│   │   ├── feature-detail/  # Feature modal (split-view, navigation)
-│   │   │   ├── feature-detail.tsx  # Main modal component (~510 lines)
-│   │   │   ├── split-view.tsx      # Resizable split panes
-│   │   │   ├── nav-sidebar.tsx     # Left navigation by phase
-│   │   │   ├── nav-item.tsx        # Navigation item with drag support
-│   │   │   ├── section-icon.tsx    # Semantic icons per section
-│   │   │   ├── content-pane.tsx    # Section content renderer
-│   │   │   ├── header-bar.tsx      # Modal header with actions
-│   │   │   ├── status-header.tsx   # Progress bar and next action
-│   │   │   └── types.ts            # Types and constants
-│   │   ├── kanban-board.tsx
-│   │   └── ...
-│   ├── lib/               # Utilities and business logic
-│   │   ├── parser.ts      # Markdown file parser
-│   │   ├── store.ts       # Zustand state
-│   │   ├── path-utils.ts  # Path validation
-│   │   └── utils.ts       # General utilities
-│   └── types/             # TypeScript types
-└── docs/                  # Additional documentation
+│   │   ├── api/            # API routes
+│   │   ├── projects/       # Project routes
+│   │   ├── settings/       # Settings page
+│   │   └── page.tsx        # Home page
+│   ├── components/         # React components
+│   │   ├── feature-detail-v2/  # Feature detail (current UI)
+│   │   ├── kanban-board.tsx    # Kanban board
+│   │   └── header.tsx          # App header
+│   ├── lib/                # Utilities and business logic
+│   │   ├── prisma.ts       # Database client
+│   │   ├── store.ts        # Zustand state
+│   │   ├── settings-store.ts  # Settings persistence
+│   │   ├── ai/             # AI client
+│   │   └── utils.ts        # General utilities
+│   └── types/              # TypeScript types
+├── docs/                   # Documentation
+├── specs/                  # Feature specifications
+└── scripts/                # Database scripts
 ```
 
 ## Architecture
 
-### Core Components
+### Tech Stack
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| Parser | `src/lib/parser.ts` | Parse spec-kit markdown files |
-| Store | `src/lib/store.ts` | Zustand state management |
-| Path Utils | `src/lib/path-utils.ts` | Path validation and security |
+| Category | Technology |
+|----------|------------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript (strict mode) |
+| UI | React 19, Tailwind CSS v4, Lucide Icons |
+| Database | PostgreSQL via Prisma ORM (Supabase) |
+| Job Queue | BullMQ + Redis |
+| State | Zustand (client) |
+| AI | Configurable (OpenAI-compatible) |
 
-### Data Flow
+### 4-Stage Workflow
 
-1. User opens project via path
-2. `/api/project` loads and parses spec-kit files
-3. Zustand store holds project state
-4. Components render from store
-5. `/api/watch` provides real-time updates via SSE
-
-### URL Structure
-
-| Route | Description |
-|-------|-------------|
-| `/` | Home - recent projects and "Open Project" button |
-| `/projects/:slug` | Project board view (slug from database) |
-| `/projects/:slug/features/:id` | Feature detail view |
-| `/projects/:slug/features/:id/spec` | Spec viewer |
-| `/projects/:slug/features/:id}/plan` | Plan viewer |
-
-**Note:** URLs use clean database slugs (e.g., `todolist`) generated from folder names when projects are auto-registered.
-
-## API Reference
-
-### Project Auto-Registration
-
-```bash
-# Auto-register project from filesystem path
-POST /api/projects/register
-Content-Type: application/json
-{ "filePath": "/path/to/project" }
-
-# Response (existing or newly created)
-{ "id": "...", "name": "my-project", "displayName": "My Project", "filePath": "/path/to/project" }
+```
+backlog --> specs --> plan --> tasks
 ```
 
-**Behavior:**
-- Returns existing project if path already registered
-- Generates unique slug from folder name (e.g., `/Users/paul/my-todolist` → `my-todolist`)
-- Handles slug conflicts by appending numbers (`my-todolist-2`, `my-todolist-3`)
+Each stage transition triggers AI-powered generation via BullMQ background jobs.
 
-### Projects CRUD
+### Design System
 
-```bash
-# List all projects
-GET /api/projects
-
-# Create project
-POST /api/projects
-Content-Type: application/json
-{ "name": "slug", "displayName": "Name", "filePath": "/path" }
-
-# Get project by slug
-GET /api/projects/:name
-
-# Update project
-PUT /api/projects/:name
-Content-Type: application/json
-{ "displayName": "New Name", "filePath": "/new/path" }
-
-# Delete project
-DELETE /api/projects/:name
-```
-
-### Spec Data
-
-```bash
-# Load and parse spec-kit project
-GET /api/project?path=/path/to/project
-```
-
-**Response:** Full `Project` object with features, tasks, constitution, etc.
-
-### File Browser
-
-```bash
-# List directory contents
-GET /api/browse?path=/path/to/dir
-```
-
-**Response:**
-```json
-{
-  "path": "/path/to/dir",
-  "entries": [
-    {
-      "name": "my-project",
-      "path": "/path/to/dir/my-project",
-      "isDirectory": true,
-      "isSpecKit": true
-    }
-  ]
-}
-```
-
-### Real-time Updates
-
-```bash
-# Server-Sent Events stream
-GET /api/watch?path=/path/to/project
-```
-
-**Events:** `update` (project data), `error`, `connected`
-
-### Security Features
-
-- **Path Traversal Protection**: Browse API restricts access to user directories only
-- **Input Validation**: Project names validated against URL-safe slug pattern
-- **File Path Validation**: PUT endpoint verifies directory existence
-- **XSS Prevention**: Markdown content sanitized with DOMPurify
-
-## Accessibility
-
-SpecBoard is built with WCAG 2.2 AA compliance.
-
-### Keyboard Navigation
-
-| Context | Key | Action |
-|---------|-----|--------|
-| Kanban Board | `Tab` | Navigate cards |
-| Kanban Board | `Enter` | Open feature detail |
-| Feature Modal | `Escape` | Close split view, or close modal |
-| Feature Modal | `1-9` | Jump to section by number |
-| Feature Modal | `Shift+1-9` | Open section in right pane (split view) |
-| Feature Modal | `Ctrl+\` | Toggle split view |
-| Feature Modal | `Tab` | Switch focus between panes (split mode) |
-| Feature Modal | `↑/↓` | Navigate sections |
-| Feature Modal | `Enter` | Open selected section |
-| Feature Modal | `Shift+Enter` | Open in split view |
-| Project Selector | `Arrow keys` | Navigate directories |
-| Project Selector | `Enter` | Select directory |
-
-### Screen Reader Support
-
-- ARIA roles and labels on all interactive elements
-- Live regions for dynamic content announcements
-- Semantic HTML structure with proper headings
-
-### Accessibility Utilities
-
-Located in `src/lib/accessibility/`:
-
-```typescript
-// Focus trapping for modals
-import { useFocusTrap } from '@/lib/accessibility';
-useFocusTrap(modalRef, isOpen, { initialFocusRef });
-
-// Screen reader announcements
-import { announce } from '@/lib/accessibility';
-announce('Item selected', 'polite');
-```
-
-## Testing
-
-### Running Tests
-
-```bash
-pnpm test             # Watch mode
-pnpm test:run         # Single run
-pnpm test:coverage    # With coverage report
-```
-
-### Test Files
-
-Tests are co-located with source files:
-- `src/lib/parser.test.ts`
-- `src/lib/path-utils.test.ts`
-- `src/lib/utils.test.ts`
-
-## Deployment
-
-### Docker (Recommended)
-
-```bash
-# Start everything (app + database)
-docker compose up -d --build
-
-# View logs
-docker compose logs -f app
-
-# Stop services
-docker compose down
-```
-
-**Environment Variables** (optional, defaults shown):
-
-```bash
-POSTGRES_USER=specboard
-POSTGRES_PASSWORD=specboard
-POSTGRES_DB=specboard
-POSTGRES_PORT=5432
-APP_PORT=3000
-```
-
-**Volume Mounts**: The app container mounts your home directory read-only to access spec-kit projects.
-
-### PM2 (Process Manager)
-
-```bash
-# Build first
-pnpm build
-
-# Start with PM2
-pm2 start ecosystem.config.cjs
-
-# View logs
-pm2 logs specboard
-
-# Other commands
-pm2 status              # Check status
-pm2 restart specboard   # Restart
-pm2 stop specboard      # Stop
-```
-
-### Manual Deployment
-
-1. Set up PostgreSQL database
-2. Configure `DATABASE_URL` environment variable
-3. Run `pnpm prisma migrate deploy`
-4. Run `pnpm build && pnpm start`
-5. Deploy to Vercel, Railway, or your preferred platform
+SpecBoard uses a monochromatic design with CSS custom properties (`var(--foreground)`, `var(--border)`, `var(--accent)`, etc.) and a global button system (`.btn`, `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-danger`). Always use design tokens instead of raw colors.
 
 ## Code Style
 
@@ -342,6 +112,13 @@ pm2 stop specboard      # Stop
 | Functions | `camelCase` |
 | Types/Interfaces | `PascalCase` |
 | Constants | `UPPER_SNAKE_CASE` |
+
+### Styling
+
+- Use Tailwind CSS with `cn()` utility for conditional classes
+- Use CSS variables for theming: `var(--foreground)`, `var(--border)`, etc.
+- Use the global `.btn` classes for buttons
+- Icons from `lucide-react`
 
 ### Component Structure
 
@@ -362,12 +139,6 @@ export function FeatureDetail({ feature, onClose }: Props) {
 }
 ```
 
-### Styling
-
-- Use Tailwind CSS with `cn()` utility for conditional classes
-- Use CSS variables for theming: `var(--foreground)`, `var(--border)`, etc.
-- Icons from `lucide-react`
-
 ## Pull Request Guidelines
 
 1. Create a feature branch from `main`
@@ -375,25 +146,19 @@ export function FeatureDetail({ feature, onClose }: Props) {
 3. Write tests for new functionality
 4. Ensure all tests pass
 5. Update documentation if needed
-6. Submit PR using the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md)
+6. Submit PR with a clear description
 
-### PR Template Requirements
+### What to include in your PR
 
-When you create a pull request, the template will automatically load. You must:
+- A clear description of what your PR does and why
+- The type of change (bug fix, feature, refactor, docs, etc.)
+- Screenshots or recordings for UI changes
+- Reference any related issues
 
-- **Describe your changes** - Provide a clear description of what the PR does
-- **Select change type** - Mark the appropriate type (bug fix, feature, etc.)
-- **Link related issues** - Reference any related GitHub issues
-- **Complete testing checklist** - Confirm you've tested your changes
-- **Agree to the CLA** - Check all CLA confirmation boxes
+## License
 
-### CLA in Pull Requests
+By contributing to SpecBoard, you agree that your contributions will be licensed under the [MIT License](LICENSE).
 
-The PR template includes a CLA section. By submitting a PR, you must confirm:
+## Questions
 
-- [ ] You have read and agree to the [CLA](CLA.md)
-- [ ] Your contribution is your original work
-- [ ] Your contribution will be licensed under AGPL-3.0
-- [ ] You acknowledge the project may be offered under commercial license
-
-**First-time contributors:** Please also comment "I agree to the CLA" on your pull request.
+If you have questions, please open an issue on the [GitHub repository](https://github.com/spec-board/spec-board/issues).

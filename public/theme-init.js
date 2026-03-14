@@ -11,11 +11,13 @@
       document.documentElement.classList.add(theme);
       document.documentElement.setAttribute('data-theme', theme);
     } else {
-      document.documentElement.classList.add('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
+      var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.classList.add(systemTheme);
+      document.documentElement.setAttribute('data-theme', systemTheme);
     }
   } catch (e) {
-    document.documentElement.classList.add('dark');
-    document.documentElement.setAttribute('data-theme', 'dark');
+    var fallback = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.classList.add(fallback);
+    document.documentElement.setAttribute('data-theme', fallback);
   }
 })();

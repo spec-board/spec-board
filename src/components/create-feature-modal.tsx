@@ -37,7 +37,8 @@ export function CreateFeatureModal({
       setDescription('');
       setCreatedFeature(null);
       setError(null);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -162,36 +163,38 @@ export function CreateFeatureModal({
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium mb-2 text-[var(--foreground)]">
+                <label htmlFor="feature-name-input" className="block text-sm font-medium mb-2 text-[var(--foreground)]">
                   Feature Name *
                 </label>
                 <input
                   ref={inputRef}
+                  id="feature-name-input"
                   type="text"
                   value={featureName}
                   onChange={(e) => setFeatureName(e.target.value)}
                   placeholder="e.g., User Authentication"
                   disabled={isLoading}
                   className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border bg-[var(--secondary)] text-[var(--foreground)]',
-                    'outline-none focus:border-[var(--ring)] transition-colors',
+                    'w-full px-4 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--secondary)] text-[var(--foreground)]',
+                    'outline-none focus:border-[var(--foreground)] focus:ring-1 focus:ring-[var(--foreground)] transition-all',
                     isLoading && 'opacity-50 cursor-not-allowed'
                   )}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-[var(--foreground)]">
+                <label htmlFor="feature-description-input" className="block text-sm font-medium mb-2 text-[var(--foreground)]">
                   Description / PRD *
                 </label>
                 <textarea
+                  id="feature-description-input"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe what this feature should do..."
                   rows={6}
                   disabled={isLoading}
                   className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border bg-[var(--secondary)] text-[var(--foreground)]',
-                    'outline-none focus:border-[var(--ring)] transition-colors resize-none',
+                    'w-full px-4 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--secondary)] text-[var(--foreground)]',
+                    'outline-none focus:border-[var(--foreground)] focus:ring-1 focus:ring-[var(--foreground)] transition-all resize-none',
                     isLoading && 'opacity-50 cursor-not-allowed'
                   )}
                 />

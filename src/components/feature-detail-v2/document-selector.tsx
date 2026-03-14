@@ -48,7 +48,7 @@ export function DocumentSelector({ options, selected, onChange }: DocumentSelect
           isSecondary 
             ? 'px-2 py-1 text-xs' 
             : 'px-3 py-1.5',
-          'focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-1',
+          'focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-1',
           option.type === selected
             ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
             : isAvailable

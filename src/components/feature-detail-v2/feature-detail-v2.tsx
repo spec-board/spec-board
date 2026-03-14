@@ -197,7 +197,7 @@ export function FeatureDetailV2({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)]"
+            className="btn-icon"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -216,8 +216,8 @@ export function FeatureDetailV2({
             ref={leftPanelRef}
             tabIndex={0}
             className={cn(
-              "w-[40%] border-r border-gray-200 overflow-hidden outline-none",
-              focusedPanel === 'left' && 'ring-2 ring-inset ring-blue-500/20'
+              "w-[40%] border-r border-[var(--border)] overflow-hidden outline-none",
+              focusedPanel === 'left' && 'ring-2 ring-inset ring-[var(--ring)]/30'
             )}
             aria-label="User stories panel"
           >
@@ -238,7 +238,7 @@ export function FeatureDetailV2({
             tabIndex={0}
             className={cn(
               "w-[60%] overflow-hidden outline-none",
-              focusedPanel === 'right' && 'ring-2 ring-inset ring-blue-500/20'
+              focusedPanel === 'right' && 'ring-2 ring-inset ring-[var(--ring)]/30'
             )}
             aria-label="Document panel"
           >
@@ -258,10 +258,10 @@ export function FeatureDetailV2({
           <div className="absolute bottom-0 left-0 p-3">
             <button
               onClick={onDelete}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-red-500/10 transition-colors text-[var(--muted-foreground)] hover:text-red-500 text-sm"
+              className="btn btn-danger btn-sm"
               aria-label="Delete feature"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 mr-1.5" />
               Delete Feature
             </button>
           </div>

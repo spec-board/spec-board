@@ -153,7 +153,7 @@ export function UserStoryPanel({
             className={cn(
               "bg-[var(--card)] rounded-lg shadow-sm border overflow-hidden transition-all",
               focusedCardIndex === userStories.length
-                ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/20"
+                ? "border-[var(--ring)] ring-2 ring-[var(--ring)]/20"
                 : "border-[var(--border)]"
             )}
           >

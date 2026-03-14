@@ -2,11 +2,20 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { KanbanBoard } from '@/components/kanban-board';
-import { ProjectInfoBubble } from '@/components/project-info-bubble';
+import dynamic from 'next/dynamic';
 import { Header } from '@/components/header';
+import { KanbanSkeleton } from '@/components/skeleton';
 import type { Project, Feature } from '@/types';
 import { useProjectStore } from '@/lib/store';
+
+const KanbanBoard = dynamic(() => import('@/components/kanban-board').then(m => ({ default: m.KanbanBoard })), {
+  loading: () => <KanbanSkeleton />,
+  ssr: false,
+});
+
+const ProjectInfoBubble = dynamic(() => import('@/components/project-info-bubble').then(m => ({ default: m.ProjectInfoBubble })), {
+  ssr: false,
+});
 
 export default function ProjectPage() {
   const params = useParams();
@@ -26,9 +35,17 @@ export default function ProjectPage() {
   const loadProject = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    
+    // Add timeout to prevent hanging on slow/failing API calls
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    
     try {
       // Unified endpoint - handles both database-first and filesystem-based projects
-      const response = await fetch('/api/project/' + projectSlug + '/data', { cache: 'no-store' });
+      const response = await fetch('/api/project/' + projectSlug + '/data', { 
+        cache: 'no-store',
+        signal: controller.signal,
+      });
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Project "' + projectSlug + '" not found. Please open it from the home page first.');
@@ -51,8 +68,13 @@ export default function ProjectPage() {
         setProjectPath(data.path);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Request timed out. The server may be unavailable.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      }
     } finally {
+      clearTimeout(timeout);
       setIsLoading(false);
     }
   }, [projectSlug]);
@@ -132,8 +154,11 @@ export default function ProjectPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-[var(--muted-foreground)]">Loading project...</div>
+      <div className="min-h-screen flex flex-col">
+        <Header variant="project" projectName="..." />
+        <main className="flex-1 container mx-auto px-4 py-6">
+          <KanbanSkeleton />
+        </main>
       </div>
     );
   }

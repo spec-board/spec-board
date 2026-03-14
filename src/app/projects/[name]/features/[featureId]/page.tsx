@@ -2,12 +2,23 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { FeatureDetailByStage } from '@/components/feature-detail-v2';
-import { ConfirmDialog } from '@/components/confirm-dialog';
+import dynamic from 'next/dynamic';
 import { ArrowLeft } from 'lucide-react';
+import { FeatureDetailSkeleton } from '@/components/skeleton';
 import type { Project, Feature, Constitution } from '@/types';
 import { deleteFeature } from '@/lib/api-client';
 import { useProjectStore } from '@/lib/store';
+import { toast } from 'sonner';
+
+const FeatureDetailByStage = dynamic(
+  () => import('@/components/feature-detail-v2').then(m => ({ default: m.FeatureDetailByStage })),
+  { loading: () => <FeatureDetailSkeleton />, ssr: false }
+);
+
+const ConfirmDialog = dynamic(
+  () => import('@/components/confirm-dialog').then(m => ({ default: m.ConfirmDialog })),
+  { ssr: false }
+);
 
 export default function FeaturePage() {
   const params = useParams();
@@ -82,7 +93,7 @@ export default function FeaturePage() {
     } catch (err) {
       console.error('Error deleting feature:', err);
       setShowDeleteConfirm(false);
-      alert('Failed to delete feature');
+      toast.error('Failed to delete feature');
     } finally {
       setIsDeleting(false);
     }
@@ -103,14 +114,14 @@ export default function FeaturePage() {
       });
       if (!response.ok) {
         const err = await response.json();
-        alert(err.error || 'Failed to transition stage');
+        toast.error(err.error || 'Failed to transition stage');
         return;
       }
       // Reload to get updated feature data
       loadFeature();
     } catch (err) {
       console.error('Error changing stage:', err);
-      alert('Failed to change stage');
+      toast.error('Failed to change stage');
     }
   };
 
@@ -119,23 +130,19 @@ export default function FeaturePage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-[var(--muted-foreground)]">Loading feature...</div>
-      </div>
-    );
+    return <FeatureDetailSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
         <div className="text-center">
-          <div className="text-red-400 mb-4">{error}</div>
+          <div className="text-[var(--muted-foreground)] mb-4">{error}</div>
           <button
             onClick={() => router.push('/projects/' + projectSlug)}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--secondary)] rounded-lg hover:bg-[var(--secondary)]/80 transition-colors mx-auto"
+            className="btn btn-secondary btn-sm mx-auto"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back to Project
           </button>
         </div>

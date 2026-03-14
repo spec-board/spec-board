@@ -7,4 +7,4 @@ export {
   type StageTransition,
   type StageTransitionData
 } from './client';
-export { getRedisClient, closeRedis } from './redis';
+export { getRedisClient, closeRedis, isRedisAvailable } from './redis';

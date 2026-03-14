@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { FolderOpen, Github, Settings, Plus } from 'lucide-react';
+import { Github, Settings, ChevronRight } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
+import { Tooltip } from '@/components/tooltip';
 
 interface HeaderProps {
   variant: 'home' | 'project';
@@ -13,94 +13,141 @@ interface HeaderProps {
   onNewProject?: () => void;
 }
 
-export function Header({ variant, projectName, projectPath, projectSlug, onNewProject }: HeaderProps) {
+export function Header({ variant, projectName, onNewProject }: HeaderProps) {
   const router = useRouter();
 
   return (
-    <header className="border-b border-[var(--border)] bg-[var(--card)] h-14">
-      <div
-        className="container mx-auto h-full flex items-center"
-        style={{
-          paddingLeft: 'var(--space-6)',
-          paddingRight: 'var(--space-6)',
-        }}
-      >
+    <header className="border-b border-[var(--border)] h-14 bg-[var(--background)]">
+      <div className="max-w-5xl mx-auto h-full flex items-center px-6">
         <div className="flex items-center justify-between w-full">
-          {/* Left side - Logo and title */}
-          <div className="flex items-center gap-3">
+          {/* Left — logo + wordmark + breadcrumb */}
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => router.push('/')}
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-              title="Home"
+              className="flex items-center gap-2 hover:opacity-70 transition-opacity"
             >
-              <Image
-                src="/images/specboard-logo.svg"
-                alt="SpecBoard Logo"
-                width={32}
-                height={32}
-                className="rounded"
-              />
-              <h1 className="font-bold" style={{ fontSize: 'var(--text-xl)' }}>
-                <span className="text-blue-500">Spec</span>
-                <span>Board</span>
-              </h1>
+              {/* Logo mark */}
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                {/* Outer square frame */}
+                <rect
+                  x="2"
+                  y="2"
+                  width="20"
+                  height="20"
+                  rx="4"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  className="text-[var(--foreground)]"
+                />
+                {/* Top-left block */}
+                <rect
+                  x="5.5"
+                  y="5.5"
+                  width="5"
+                  height="5"
+                  rx="1.2"
+                  fill="currentColor"
+                  className="text-[var(--foreground)]"
+                />
+                {/* Top-right line */}
+                <rect
+                  x="13.5"
+                  y="6.5"
+                  width="5"
+                  height="1.5"
+                  rx="0.75"
+                  fill="currentColor"
+                  className="text-[var(--muted-foreground)]"
+                />
+                {/* Mid-right line */}
+                <rect
+                  x="13.5"
+                  y="9.5"
+                  width="3.5"
+                  height="1.5"
+                  rx="0.75"
+                  fill="currentColor"
+                  className="text-[var(--muted-foreground)]"
+                  opacity="0.5"
+                />
+                {/* Bottom row — two small blocks */}
+                <rect
+                  x="5.5"
+                  y="14"
+                  width="5"
+                  height="5.5"
+                  rx="1.2"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  className="text-[var(--muted-foreground)]"
+                />
+                <rect
+                  x="13.5"
+                  y="14"
+                  width="5"
+                  height="5.5"
+                  rx="1.2"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  className="text-[var(--muted-foreground)]"
+                />
+              </svg>
+              <span className="text-[var(--foreground)] font-semibold text-base tracking-tight">
+                specboard
+              </span>
             </button>
 
-            {/* Project context for project pages */}
             {variant === 'project' && projectName && (
-              <div className="flex items-center gap-3 text-sm text-[var(--muted-foreground)]">
-                <FolderOpen className="w-4 h-4 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-foreground font-medium">{projectName}</span>
-                  {projectPath && (
-                    <span className="text-xs opacity-60 truncate max-w-md">
-                      {projectPath}
-                    </span>
-                  )}
-                </div>
-              </div>
+              <>
+                <ChevronRight className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
+                <span className="text-sm text-[var(--muted-foreground)]">{projectName}</span>
+              </>
             )}
           </div>
 
-          {/* Right side - Actions */}
-          <div
-            className="flex items-center"
-            style={{ gap: 'var(--space-2)' }}
-          >
+          {/* Right — actions */}
+          <div className="flex items-center gap-2">
             {variant === 'home' && onNewProject && (
               <button
                 onClick={onNewProject}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium"
+                className="btn btn-primary btn-sm mr-1"
               >
-                <Plus className="w-4 h-4" />
                 New
               </button>
             )}
-            <ThemeButton />
-            <a
-              href="https://github.com/paulpham157/spec-board"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:bg-[var(--secondary)] rounded-lg transition-colors flex items-center justify-center"
-              style={{
-                padding: 'var(--space-2)',
-                borderRadius: 'var(--radius)',
-              }}
-              title="GitHub Repository"
-            >
-              <Github className="w-5 h-5" />
-            </a>
-            <button
-              onClick={() => router.push('/settings')}
-              className="hover:bg-[var(--secondary)] rounded-lg transition-colors flex items-center justify-center"
-              style={{
-                padding: 'var(--space-2)',
-                borderRadius: 'var(--radius)',
-              }}
-              title="Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
+
+            <Tooltip content="Toggle theme" side="bottom">
+              <ThemeButton />
+            </Tooltip>
+
+            <Tooltip content="GitHub" side="bottom">
+              <a
+                href="https://github.com/paulpham157/spec-board"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-icon"
+                aria-label="GitHub Repository"
+              >
+                <Github className="w-4 h-4" />
+              </a>
+            </Tooltip>
+
+            <Tooltip content="Settings" side="bottom">
+              <button
+                onClick={() => router.push('/settings')}
+                className="btn-icon"
+                aria-label="Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>

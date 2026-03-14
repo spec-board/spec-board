@@ -44,8 +44,8 @@ export function TaskRow({ task, onClick, isSelected }: TaskRowProps) {
       onClick={onClick}
       className={cn(
         'flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors',
-        'hover:bg-black/20 dark:hover:bg-white/10',
-        isSelected && 'bg-[var(--primary)]/10 ring-1 ring-[var(--primary)]/20'
+        'hover:bg-[var(--accent)]',
+        isSelected && 'bg-[var(--accent-muted)] ring-1 ring-[var(--ring)]'
       )}
       role="button"
       tabIndex={0}
