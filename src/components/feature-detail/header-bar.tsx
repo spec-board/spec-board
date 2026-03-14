@@ -28,13 +28,8 @@ export function HeaderBar({
       >
         <button
           onClick={onClose}
-          className="hover:bg-[var(--secondary)] rounded-lg transition-colors focus-ring"
-          style={{
-            padding: 'var(--space-2)',
-            marginLeft: 'calc(var(--space-2) * -1)',
-            borderRadius: 'var(--radius)',
-            transitionDuration: 'var(--transition-base)',
-          }}
+          className="btn-icon"
+          style={{ marginLeft: 'calc(var(--space-2) * -1)' }}
           aria-label="Back to project"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -67,12 +62,7 @@ export function HeaderBar({
         {onDelete && (
           <button
             onClick={onDelete}
-            className="rounded-lg hover:bg-red-500/10 text-[var(--muted-foreground)] hover:text-red-500 transition-colors focus-ring"
-            style={{
-              padding: 'var(--space-2)',
-              borderRadius: 'var(--radius)',
-              transitionDuration: 'var(--transition-base)',
-            }}
+            className="btn-icon hover:!bg-red-500/10 hover:!text-red-500"
             aria-label="Delete feature"
           >
             <Trash2 className="w-5 h-5" />
@@ -81,17 +71,9 @@ export function HeaderBar({
         <button
           onClick={onToggleSplit}
           className={cn(
-            'rounded-lg transition-colors focus-ring',
-            isSplitActive
-              ? 'bg-blue-500/20 hover:bg-blue-500/30'
-              : 'hover:bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+            'btn-icon',
+            isSplitActive && 'bg-[var(--accent)] text-[var(--foreground)]'
           )}
-          style={{
-            padding: 'var(--space-2)',
-            borderRadius: 'var(--radius)',
-            transitionDuration: 'var(--transition-base)',
-            ...(isSplitActive ? { color: 'var(--tag-text-info)' } : {}),
-          }}
           aria-label={isSplitActive ? 'Close split view' : 'Open split view'}
           aria-pressed={isSplitActive}
         >

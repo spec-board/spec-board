@@ -25,11 +25,11 @@ export function ThemeButton() {
   return (
     <button
       onClick={cycleTheme}
-      className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+      className="btn-icon"
       title={`${label} (click to change)`}
       aria-label={`Current: ${label}. Click to cycle theme.`}
     >
-      <Icon className="w-5 h-5" />
+      <Icon className="w-4 h-4" />
     </button>
   );
 }

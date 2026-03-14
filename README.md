@@ -1,13 +1,11 @@
 # SpecBoard
 
-> Visual dashboard for [spec-kit](https://github.com/github/spec-kit) projects
+> Visual dashboard that helps non-technical teams create, organize, and manage professional software specifications and documentation.
 
-![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Version](https://img.shields.io/badge/version-2.1.0-black.svg)
 
-🚧 Under Development 🚧 <br>
-This project is in its early stages. I came up with this idea a few days before the January 1st, 2026 holiday and it's still being refined. Updates may not be frequent as I can't commit to a fixed weekly schedule.
-
-Please use it, report bugs and provide support: software bugs, feature requests, questions, anything helpful.
+Turn ideas into structured specs -- no coding required. SpecBoard provides a drag-and-drop Kanban interface to move features through a 4-stage AI-powered pipeline: **Backlog** > **Specs** > **Plan** > **Tasks**.
 
 ## Screenshots
 
@@ -15,62 +13,59 @@ Please use it, report bugs and provide support: software bugs, feature requests,
 
 Track features across your development pipeline with a 4-column Kanban board showing progress metrics for tasks and checklists.
 
-![Kanban Board](https://github.com/paulpham157/spec-board/blob/main/public/assests/board.png)
+![Kanban Board](https://github.com/spec-board/spec-board/blob/main/public/assests/board.png)
 
 ### Feature Detail View
 
 Deep dive into specifications with structured user stories, acceptance scenarios, edge cases, and implementation guidance.
 
-![Feature Detail](https://github.com/paulpham157/spec-board/blob/main/public/assests/spec.png)
+![Feature Detail](https://github.com/spec-board/spec-board/blob/main/public/assests/spec.png)
 
-### AI-Powered Development Assistance
+### AI-Powered Spec Generation
 
-Generate complete feature specifications from natural language. Configure your preferred LLM provider (OpenAI or Anthropic) with custom base URLs for self-hosted models.
+Generate complete feature specifications from natural language. Configure your preferred LLM provider (OpenAI, Anthropic, or any OpenAI-compatible API) with custom base URLs for self-hosted models.
 
 ### Spec Workflow Wizard
 
-AI-powered 4-stage workflow: backlog → specs → plan → tasks
+AI-powered 4-stage workflow: backlog > specs > plan > tasks
 
 <p align="center">
-  <img src="https://github.com/paulpham157/spec-board/blob/main/public/assests/suggestion-next-action.png" alt="Next Action Suggestions" width="400" />
-  <img src="https://github.com/paulpham157/spec-board/blob/main/public/assests/save-the-analysis.png" alt="Save Analysis Report" width="300" />
+  <img src="https://github.com/spec-board/spec-board/blob/main/public/assests/suggestion-next-action.png" alt="Next Action Suggestions" width="400" />
+  <img src="https://github.com/spec-board/spec-board/blob/main/public/assests/save-the-analysis.png" alt="Save Analysis Report" width="300" />
 </p>
 
 ## Features
 
-### Core Features
-- **Kanban Board** — 4-column pipeline (Backlog → Specs → Plan → Tasks)
-- **AI Feature Creation** — Enter feature name and description, AI generates spec/plan/tasks automatically
-- **Spec Workflow Wizard** — 4-stage AI workflow: backlog → specs → plan → tasks
-- **Real-Time Updates** — Live file watching via Server-Sent Events (SSE)
-- **Interactive Checklists** — Click or keyboard to toggle checklist items with optimistic UI
-- **Deep Linking** — Shareable URLs for projects and features
-- **Progress Tracking** — Visual metrics for tasks, checklists, and user stories
-- **Accessible** — WCAG 2.2 AA compliant with full keyboard navigation
-- **AI Integration** — Next action suggestions, analysis reports, and feature generation
+### Core
+- **Kanban Board** -- 4-column pipeline (Backlog > Specs > Plan > Tasks) with drag-and-drop
+- **AI Spec Generation** -- Enter a feature name and description, AI generates spec, plan, and tasks
+- **Spec Workflow Wizard** -- 4-stage AI workflow with automatic stage transitions
+- **Skeleton Loading** -- Responsive loading screens with animated placeholders for every route
+- **Code Splitting** -- Dynamic imports for heavy components (KanbanBoard, FeatureDetail, modals)
+- **Deep Linking** -- Shareable URLs for projects and features
+- **Progress Tracking** -- Visual metrics for tasks, checklists, and user stories
+- **Accessible** -- WCAG 2.2 AA compliant with full keyboard navigation
 
 ### Cloud Sync & Collaboration
-- **OAuth Authentication** — Login with Google or GitHub
-- **Team Collaboration** — Role-based access control (VIEW, EDIT, ADMIN)
-- **Conflict Resolution** — 3-way merge with visual diff viewer
-- **Version History** — Last 30 versions retained per spec file
-- **Activity Audit Trail** — Track who changed what and when
+- **Supabase PostgreSQL** -- Cloud database with Prisma ORM and connection pooling
+- **OAuth Authentication** -- Login with Google or GitHub
+- **Team Collaboration** -- Role-based access control (VIEW, EDIT, ADMIN)
+- **Conflict Resolution** -- 3-way merge with visual diff viewer
+- **Version History** -- Last 30 versions retained per spec file
 
 ### Developer Experience
-- **Split-View Modal** — Resizable panes for viewing multiple sections simultaneously
-- **Keyboard Shortcuts** — Navigate features and sections with number keys
-- **Semantic Icons** — Visual indicators for document status and content
-- **Contract Viewer** — Syntax highlighting for API contracts
-- **Analysis Tracking** — Spec alignment reports with severity indicators
-
-https://youtu.be/WQXb2-dj9zQ
+- **Mono Design System** -- Minimal monochromatic UI with semantic design tokens
+- **System Theme** -- Follows device preference by default (light/dark/system)
+- **Split-View Modal** -- Resizable panes for viewing multiple sections simultaneously
+- **Keyboard Shortcuts** -- Navigate features and sections with number keys
+- **React Compiler** -- Automatic memoization for optimal re-rendering
 
 ## How It Works
 
 ```
 ┌──────────────┐      ┌──────────────┐      ┌──────────────────┐
 │              │      │              │      │                  │
-│  spec-kit    │ ───▶ │  SpecBoard   │ ───▶ │   Kanban Board   │
+│  spec-kit    │ ---> │  SpecBoard   │ ---> │   Kanban Board   │
 │  project     │      │  parses      │      │                  │
 │              │      │              │      │  ┌──┐┌──┐┌──┐┌──┐│
 │  specs/      │      │  spec.md     │      │  │B ││S ││P ││T ││
@@ -78,7 +73,7 @@ https://youtu.be/WQXb2-dj9zQ
 │  │  ├─ spec  │      │  tasks.md    │      │                  │
 │  │  ├─ plan  │      │              │      │                  │
 │  │  ├─ tasks │      │              │      │                  │
-│  │  └─ analysis │   │              │      │                  │
+│  │  └─ ...   │      │              │      │                  │
 └──────────────┘      └──────────────┘      └──────────────────┘
 
 B = Backlog | S = Specs | P = Plan | T = Tasks
@@ -86,87 +81,67 @@ B = Backlog | S = Specs | P = Plan | T = Tasks
 
 ## Quick Start
 
-### Local Development
+### Prerequisites
 
-Install dependencies
+- Node.js 18+
+- pnpm
+- A Supabase project (or any PostgreSQL database)
+
+### Setup
 
 ```bash
 pnpm install
 cp .env.example .env
 ```
 
-```.env
-PORT=3000
-DATABASE_URL="postgresql://user1:passwordD@localhost:5432/specboard1"
-POSTGRES_USER="user1"
-POSTGRES_PASSWORD="passwordD"
-POSTGRES_DB="specboard1"
-REDIS_URL="redis://localhost:6379"
+Add your database connection string to `.env`:
+
+```env
+POSTGRES_PRISMA_URL="postgresql://..."
 ```
 
-```bash
-docker compose -f docker-compose.db.yml up -d
-pnpm prisma db:setup
-```
-
-Run dev
+Run the database migration and start the dev server:
 
 ```bash
+pnpm prisma db push
 pnpm dev
 ```
 
 ### Commands
 
 ```bash
-pnpm dev              # Start dev server
+pnpm dev              # Start dev server (Turbopack)
 pnpm build            # Production build
 pnpm start            # Start production server
 pnpm test             # Run tests (watch mode)
-pnpm test:run        # Run tests once
-pnpm test:coverage   # Run tests with coverage
-```
-
-### E2B Cloud Testing
-
-```bash
-# Run tests in E2B sandbox (requires E2B_API_KEY)
-node scripts/e2b-run-tests.js
-```
-
-Or build for stable production
-
-```bash
-pnpm build
-pnpm start
+pnpm test:run         # Run tests once
+pnpm test:coverage    # Run tests with coverage
 ```
 
 ## URL Structure
 
 ```
-/                                          → Home (recent projects)
-/projects/{slug}                           → Project board
-/projects/{slug}/features/{id}             → Feature detail
-/projects/{slug}/features/{id}/spec        → Spec viewer
-/projects/{slug}/features/{id}/plan        → Plan viewer
+/                                          Home (recent projects)
+/projects/{slug}                           Project board
+/projects/{slug}/features/{id}             Feature detail
+/settings                                  AI provider & app settings
 ```
-
-**Note:** URLs use clean database slugs (e.g., `todolist`) generated from folder names, not encoded filesystem paths.
 
 ## Tech Stack
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  FRONTEND                                               │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐     │
-│  │ Next.js │  │Tailwind │  │ Zustand │  │Recharts │     │
-│  │   15    │  │  CSS v4 │  │  State  │  │ Charts  │     │
-│  └─────────┘  └─────────┘  └─────────┘  └─────────┘     │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │
+│  │ Next.js │  │Tailwind │  │ Zustand │  │ Sonner  │   │
+│  │   16    │  │  CSS v4 │  │  State  │  │ Toasts  │   │
+│  └─────────┘  └─────────┘  └─────────┘  └─────────┘   │
 ├─────────────────────────────────────────────────────────┤
 │  BACKEND                                                │
-│  ┌─────────┐  ┌─────────┐  ┌──────────┐                 │
-│  │ Next.js │  │ Prisma  │  │PostgreSQL│                 │
-│  │   API   │  │   ORM   │  │    DB    │                 │
-│  └─────────┘  └─────────┘  └──────────┘                 │
+│  ┌─────────┐  ┌─────────┐  ┌──────────┐  ┌─────────┐  │
+│  │ Next.js │  │ Prisma  │  │ Supabase │  │ BullMQ  │  │
+│  │   API   │  │   ORM   │  │ Postgres │  │  Queue  │  │
+│  └─────────┘  └─────────┘  └──────────┘  └─────────┘  │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -174,17 +149,17 @@ pnpm start
 
 | Document | Description |
 |----------|-------------|
-| [CLAUDE.md](https://github.com/paulpham157/spec-board/blob/main/CLAUDE.md) | Main development guide for Claude Code |
-| [CONTRIBUTING.md](https://github.com/paulpham157/spec-board/blob/main/CONTRIBUTING.md) | Development guide, API reference |
-| [CHANGELOG.md](https://github.com/paulpham157/spec-board/blob/main/CHANGELOG.md) | Version history |
-| [PROJECT_INDEX.md](https://github.com/paulpham157/spec-board/blob/main/PROJECT_INDEX.md) | Codebase structure |
-| [docs/API.md](https://github.com/paulpham157/spec-board/blob/main/docs/API.md) | Complete API documentation |
-| [docs/DEVELOPER_GUIDE.md](https://github.com/paulpham157/spec-board/blob/main/docs/DEVELOPER_GUIDE.md) | Developer guide with examples |
+| [CLAUDE.md](CLAUDE.md) | Development guide for Claude Code |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development guide, API reference |
+| [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [PROJECT_INDEX.md](PROJECT_INDEX.md) | Codebase structure |
+| [docs/API.md](docs/API.md) | Complete API documentation |
+| [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) | Developer guide with examples |
 
 ## License
 
-Available under [AGPL-3.0](https://github.com/paulpham157/spec-board/blob/main/LICENSE) or commercial license. For commercial licensing, contact us at [Email](mailto:paulpham157@gmail.com).
+Available under the [MIT License](LICENSE).
 
 ### Contributing
 
-By contributing to this project, you agree to the [Contributor License Agreement (CLA)](https://github.com/paulpham157/spec-board/blob/main/CLA.md). All contributions must be made under the AGPL-3.0 license.
+Contributions welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.

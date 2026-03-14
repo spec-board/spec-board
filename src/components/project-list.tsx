@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Folder } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, ArrowRight, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DbProject {
@@ -20,6 +20,7 @@ interface ProjectListProps {
   projects: DbProject[];
   onSelect: (project: DbProject) => void;
   onDelete: (project: DbProject) => void;
+  onCreateProject?: () => void;
 }
 
 type SortField = 'displayName' | 'featureCount' | 'updatedAt';
@@ -42,16 +43,14 @@ function formatRelativeTime(isoDate: string): string {
 
 function SortIcon({ field, currentField, direction }: { field: SortField; currentField: SortField; direction: SortDirection }) {
   if (field !== currentField) {
-    return <ArrowUpDown className="w-3 h-3 opacity-40" />;
+    return <ArrowUpDown className="w-3 h-3 opacity-30" />;
   }
-  return direction === 'asc' ? (
-    <ArrowUp className="w-3 h-3" />
-  ) : (
-    <ArrowDown className="w-3 h-3" />
-  );
+  return direction === 'asc'
+    ? <ArrowUp className="w-3 h-3" />
+    : <ArrowDown className="w-3 h-3" />;
 }
 
-export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) {
+export function ProjectList({ projects, onSelect, onDelete, onCreateProject }: ProjectListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -59,8 +58,6 @@ export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) 
 
   const filteredAndSorted = useMemo(() => {
     let result = [...projects];
-
-    // Filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(p =>
@@ -69,8 +66,6 @@ export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) 
         p.name.toLowerCase().includes(query)
       );
     }
-
-    // Sort
     result.sort((a, b) => {
       let comparison = 0;
       switch (sortField) {
@@ -86,7 +81,6 @@ export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) 
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-
     return result;
   }, [projects, searchQuery, sortField, sortDirection]);
 
@@ -99,132 +93,132 @@ export function ProjectList({ projects, onSelect, onDelete }: ProjectListProps) 
     }
   };
 
+  /* ---------- Empty state ---------- */
   if (projects.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center p-8">
-        <div
-          className="flex items-center justify-center mb-4"
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 'var(--radius-lg)',
-            background: 'var(--secondary)',
-          }}
-        >
-          <Folder className="w-8 h-8 text-[var(--muted-foreground)] opacity-50" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
+        <div className="w-12 h-12 rounded-full border border-dashed border-[var(--border-hover)] flex items-center justify-center mb-6">
+          <div className="w-2 h-2 rounded-full bg-[var(--muted-foreground)]" />
         </div>
-        <p className="text-[var(--muted-foreground)] mb-1 font-medium">No projects yet</p>
-        <p className="text-sm text-[var(--muted-foreground)] opacity-70">
-          Create a project to get started
+
+        <h2 className="text-lg font-semibold tracking-tight mb-1 text-[var(--foreground)]">
+          No projects yet
+        </h2>
+        <p className="text-sm text-[var(--muted-foreground)] max-w-sm mb-6 leading-relaxed">
+          Create a project to start writing specs, managing features on a board, and tracking progress.
         </p>
+
+        {onCreateProject && (
+          <button
+            onClick={onCreateProject}
+            className="btn btn-primary btn-md"
+          >
+            Create project
+          </button>
+        )}
       </div>
     );
   }
 
+  /* ---------- Project list ---------- */
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
+      {/* Heading row */}
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wider">
+          Projects
+          <span className="ml-2 text-[var(--muted-foreground)] font-normal normal-case tracking-normal">
+            {projects.length}
+          </span>
+        </h2>
+      </div>
+
+      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
         <input
           type="text"
-          placeholder="Search projects..."
+          placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className={cn(
-            'w-full pl-10 pr-4 py-2 rounded-lg border bg-[var(--secondary)]',
-            'outline-none focus:border-[var(--ring)] transition-colors',
+            'w-full pl-9 pr-4 py-2 rounded-md border border-[var(--border)] bg-[var(--background)]',
+            'outline-none focus:border-[var(--ring)] transition-colors text-sm',
             'placeholder:text-[var(--muted-foreground)]'
           )}
-          style={{ fontSize: 'var(--text-sm)' }}
         />
       </div>
 
-      {/* Table Header */}
+      {/* Table header */}
       <div
-        className="grid gap-4 px-4 py-2 text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wider"
-        style={{ gridTemplateColumns: '1fr 100px 140px' }}
+        className="grid gap-4 px-3 py-2 text-xs text-[var(--muted-foreground)]"
+        style={{ gridTemplateColumns: '1fr 80px 120px' }}
       >
-        <button
-          onClick={() => handleSort('displayName')}
-          className="flex items-center gap-1 hover:text-[var(--foreground)] transition-colors text-left"
-        >
-          Project
-          <SortIcon field="displayName" currentField={sortField} direction={sortDirection} />
+        <button onClick={() => handleSort('displayName')} className="flex items-center gap-1 hover:text-[var(--foreground)] transition-colors text-left">
+          Name <SortIcon field="displayName" currentField={sortField} direction={sortDirection} />
         </button>
-        <button
-          onClick={() => handleSort('featureCount')}
-          className="flex items-center gap-1 hover:text-[var(--foreground)] transition-colors text-left"
-        >
-          Features
-          <SortIcon field="featureCount" currentField={sortField} direction={sortDirection} />
+        <button onClick={() => handleSort('featureCount')} className="flex items-center gap-1 hover:text-[var(--foreground)] transition-colors text-left">
+          Features <SortIcon field="featureCount" currentField={sortField} direction={sortDirection} />
         </button>
-        <button
-          onClick={() => handleSort('updatedAt')}
-          className="flex items-center gap-1 hover:text-[var(--foreground)] transition-colors text-left"
-        >
-          Updated
-          <SortIcon field="updatedAt" currentField={sortField} direction={sortDirection} />
+        <button onClick={() => handleSort('updatedAt')} className="flex items-center gap-1 hover:text-[var(--foreground)] transition-colors text-left">
+          Updated <SortIcon field="updatedAt" currentField={sortField} direction={sortDirection} />
         </button>
       </div>
 
-      {/* Project Rows */}
-      <div className="border border-[var(--border)] rounded-lg overflow-hidden bg-[var(--card)]">
+      {/* Rows */}
+      <div className="border border-[var(--border)] rounded-lg overflow-hidden divide-y divide-[var(--border)]">
         {filteredAndSorted.map((project) => (
           <div
             key={project.id}
-            className="grid gap-4 px-4 py-3 items-center hover:bg-[var(--secondary)] transition-colors cursor-pointer border-b border-[var(--border)] last:border-b-0"
-            style={{ gridTemplateColumns: '1fr 100px 140px' }}
+            className="grid gap-4 px-3 py-3 items-center hover:bg-[var(--card-hover)] transition-colors cursor-pointer group"
+            style={{ gridTemplateColumns: '1fr 80px 120px' }}
             onClick={() => onSelect(project)}
             onMouseEnter={() => setHoveredProject(project.id)}
             onMouseLeave={() => setHoveredProject(null)}
           >
-            {/* Project Name & Description */}
+            {/* Name */}
             <div className="min-w-0">
-              <span className="font-medium truncate">{project.displayName}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium text-sm truncate text-[var(--foreground)]">
+                  {project.displayName}
+                </span>
+                <ArrowRight className="w-3 h-3 text-[var(--muted-foreground)] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              </div>
               {project.description && (
-                <p className="text-sm text-[var(--muted-foreground)] truncate mt-0.5">
+                <p className="text-xs text-[var(--muted-foreground)] truncate mt-0.5">
                   {project.description}
                 </p>
               )}
             </div>
 
-            {/* Feature Count */}
-            <div className="text-sm">
-              <span className="font-medium">{project.featureCount}</span>
-              <span className="text-[var(--muted-foreground)] ml-1">
-                {project.featureCount === 1 ? 'feature' : 'features'}
-              </span>
-            </div>
+            {/* Feature count */}
+            <span className="text-sm tabular-nums text-[var(--muted-foreground)]">
+              {project.featureCount}
+            </span>
 
-            {/* Updated */}
+            {/* Updated + delete */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-[var(--muted-foreground)]">
+              <span className="text-xs text-[var(--muted-foreground)]">
                 {formatRelativeTime(project.updatedAt)}
               </span>
-              {hoveredProject === project.id && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(project);
-                  }}
-                  className="p-1 rounded hover:bg-[var(--tag-bg-error)] text-[var(--muted-foreground)] hover:text-[var(--tag-text-error)] transition-colors"
-                  title="Delete project"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(project); }}
+                className={cn(
+                  'btn-icon !p-1',
+                  hoveredProject === project.id ? 'opacity-100' : 'opacity-0'
+                )}
+                aria-label={`Delete ${project.displayName}`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Results count */}
       {searchQuery && (
-        <p className="text-sm text-[var(--muted-foreground)]">
-          {filteredAndSorted.length} of {projects.length} projects
+        <p className="text-xs text-[var(--muted-foreground)]">
+          {filteredAndSorted.length} of {projects.length}
         </p>
       )}
     </div>

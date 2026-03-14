@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { addStageTransitionJob } from '@/lib/queue';
+import { getAISettings } from '@/lib/ai/settings';
+import { generateStageTransitionContent } from '@/lib/ai/stage-transition';
 
-// POST /api/stage-transition - Trigger background stage transition via BullMQ
+// POST /api/stage-transition - Trigger stage transition (synchronous)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -10,6 +11,15 @@ export async function POST(request: NextRequest) {
 
     if (!featureId) {
       return NextResponse.json({ error: 'Feature ID is required' }, { status: 400 });
+    }
+
+    // Check if AI provider is configured
+    const aiSettings = await getAISettings();
+    if (!aiSettings.apiKey) {
+      return NextResponse.json(
+        { error: 'AI provider is not configured. Please add an API key in Settings before generating specs.' },
+        { status: 400 }
+      );
     }
 
     // Get the feature
@@ -36,41 +46,75 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update feature to queued status
+    // Update feature to processing status
     await prisma.feature.update({
       where: { id: featureId },
       data: {
-        jobStatus: 'queued',
+        jobStatus: 'processing',
         jobProgress: 0,
-        jobMessage: 'Queued for processing...',
+        jobMessage: 'Processing...',
       },
     });
 
-    // Trigger BullMQ background job
-    const job = await addStageTransitionJob({
-      featureId: feature.id,
-      projectId: feature.projectId,
-      fromStage,
-      toStage,
-      featureName: feature.name,
-      description: feature.description || undefined,
-      specContent: feature.specContent || undefined,
-      clarificationsContent: feature.clarificationsContent || undefined,
-      planContent: feature.planContent || undefined,
-      constitutionVersionId: feature.constitutionVersionId,
-    });
+    try {
+      // Generate content for the stage transition
+      const result = await generateStageTransitionContent({
+        featureId: feature.id,
+        fromStage,
+        toStage,
+        featureName: feature.name,
+        description: feature.description || '',
+        specContent: feature.specContent || '',
+        clarificationsContent: feature.clarificationsContent || '',
+        planContent: feature.planContent || '',
+      });
 
-    return NextResponse.json({
-      success: true,
-      featureId,
-      status: 'queued',
-      message: `Stage transition to ${toStage} queued`,
-      jobId: job.id,
-    });
+      // Update feature with new stage and content
+      const updateData: any = {
+        stage: toStage,
+        jobStatus: 'completed',
+        jobProgress: 100,
+        jobMessage: `Successfully transitioned to ${toStage}`,
+        jobCompletedAt: new Date(),
+      };
+
+      // Update appropriate content field based on target stage
+      if (toStage === 'specs') {
+        updateData.specContent = result.content;
+        updateData.clarificationsContent = result.clarifications;
+      } else if (toStage === 'plan') {
+        updateData.planContent = result.content;
+      } else if (toStage === 'tasks') {
+        updateData.tasksContent = result.content;
+      }
+
+      const updatedFeature = await prisma.feature.update({
+        where: { id: featureId },
+        data: updateData,
+      });
+
+      return NextResponse.json({
+        success: true,
+        featureId,
+        stage: updatedFeature.stage,
+        message: `Successfully transitioned to ${toStage}`,
+      });
+    } catch (error) {
+      // Update feature with error status
+      await prisma.feature.update({
+        where: { id: featureId },
+        data: {
+          jobStatus: 'failed',
+          jobMessage: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
+      throw error;
+    }
   } catch (error) {
     console.error('Error triggering stage transition:', error);
     return NextResponse.json(
-      { error: 'Failed to trigger stage transition' },
+      { error: error instanceof Error ? error.message : 'Failed to trigger stage transition' },
       { status: 500 }
     );
   }

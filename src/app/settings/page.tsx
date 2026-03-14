@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore, type AIProvider } from '@/lib/settings-store';
@@ -99,12 +99,7 @@ function ShortcutRow({ keys, description }: { keys: string[]; description: strin
 }
 
 function ShortcutsContent() {
-  const { shortcutsEnabled, setShortcutsEnabled, loadSettings } = useSettingsStore();
-
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+  const { shortcutsEnabled, setShortcutsEnabled } = useSettingsStore();
 
   return (
     <div className="space-y-6">
@@ -166,12 +161,6 @@ function ShortcutsContent() {
 }
 
 function AppearanceContent() {
-  const { loadSettings } = useSettingsStore();
-
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
 
   return (
     <div className="space-y-6">
@@ -200,10 +189,6 @@ function AppearanceContent() {
 
 function AIContent() {
   const { aiSettings, setAISettings, loadSettings } = useSettingsStore();
-
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
 
   // Single form state
   const [formData, setFormData] = useState({
@@ -433,8 +418,41 @@ function AboutContent() {
 }
 
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState<MenuSection>('shortcuts');
+  const router = useRouter();
+  const [activeSection, setActiveSection] = useState<MenuSection>('ai');
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
+  
+  // Store the referrer URL when the page loads
+  const previousUrlRef = useRef<string | null>(null);
+  
+  useEffect(() => {
+    // Capture the referrer on mount (before any navigation)
+    if (typeof document !== 'undefined' && document.referrer) {
+      try {
+        const referrerUrl = new URL(document.referrer);
+        // Only use referrer if it's from the same origin
+        if (referrerUrl.origin === window.location.origin) {
+          previousUrlRef.current = referrerUrl.pathname;
+        }
+      } catch {
+        // Invalid referrer URL, ignore
+      }
+    }
+  }, []);
+
+  const handleGoBack = () => {
+    // Force a full page navigation to ensure immediate visual transition
+    // and bypass any cached state in Next.js router
+    const previousUrl = previousUrlRef.current;
+    if (previousUrl && previousUrl !== '/settings') {
+      window.location.href = previousUrl;
+    } else if (window.history.length > 2) {
+      // Go back and force reload
+      window.location.href = document.referrer || '/';
+    } else {
+      window.location.href = '/';
+    }
+  };
 
   // Fetch app info for footer
   useEffect(() => {
@@ -453,9 +471,9 @@ export default function SettingsPage() {
   }, []);
 
   const menuItems: { id: MenuSection; label: string; icon: React.ReactNode }[] = [
+    { id: 'ai', label: 'AI Settings', icon: <Sparkles className="w-4 h-4" /> },
     { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
     { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
-    { id: 'ai', label: 'AI Settings', icon: <Sparkles className="w-4 h-4" /> },
     { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
   ];
 
@@ -465,13 +483,13 @@ export default function SettingsPage() {
       <header className="border-b border-[var(--border)] bg-[var(--card)]">
         <div className="px-6 py-4">
           <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="p-2 -ml-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
-              aria-label="Back to home"
+            <button
+              onClick={handleGoBack}
+              className="btn-icon -ml-2"
+              aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5" />
-            </Link>
+            </button>
             <h1 className="text-xl font-bold">Settings</h1>
           </div>
         </div>
@@ -518,12 +536,12 @@ export default function SettingsPage() {
           <span>{appInfo?.description || 'Visual dashboard for spec-kit'}</span>
           <span>—</span>
           <a
-            href={appInfo?.licenseUrl || 'https://github.com/paulpham157/spec-board/blob/main/LICENSE'}
+            href={appInfo?.licenseUrl || 'https://github.com/spec-board/spec-board/blob/main/LICENSE'}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+            className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-1 transition-colors"
           >
-            {appInfo?.license || 'AGPL-3.0'} Copyleft
+            {appInfo?.license || 'MIT'} License
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>
