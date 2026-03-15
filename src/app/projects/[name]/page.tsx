@@ -41,8 +41,8 @@ export default function ProjectPage() {
     const timeout = setTimeout(() => controller.abort(), 5000);
     
     try {
-      // Unified endpoint - handles both database-first and filesystem-based projects
-      const response = await fetch('/api/project/' + projectSlug + '/data', { 
+      // Unified endpoint - use kanban view for lightweight query
+      const response = await fetch('/api/project/' + projectSlug + '/data?view=kanban', {
         cache: 'no-store',
         signal: controller.signal,
       });
