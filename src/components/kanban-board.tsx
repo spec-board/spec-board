@@ -36,6 +36,8 @@ interface FeatureCardProps {
   onDragStart?: (feature: Feature) => void;
   onDragEnd?: () => void;
   targetStage?: KanbanColumn | null; // Stage this feature is being moved to
+  needsInteraction?: boolean; // Paused pipeline - needs user input
+  onResumePipeline?: () => void; // Resume pipeline after user interaction
 }
 
 // Extract spec number from feature id (e.g., "012" from "012-ui-ux-rebrand")
@@ -59,7 +61,7 @@ function toTitleCase(str: string | undefined | null): string {
 }
 
 const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function FeatureCard(
-  { feature, onClick, isFocused, onDragStart, onDragEnd, targetStage },
+  { feature, onClick, isFocused, onDragStart, onDragEnd, targetStage, needsInteraction, onResumePipeline },
   ref
 ) {
   const progressPercentage = feature.totalTasks > 0
@@ -118,7 +120,8 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
         'bg-[var(--card)] border border-[var(--border)]',
         'hover:bg-[var(--card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5',
         'focus-ring',
-        isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]'
+        isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]',
+        needsInteraction && 'border-amber-500 animate-pulse shadow-[0_0_12px_rgba(245,158,11,0.15)]'
       )}
       style={{
         padding: 'var(--space-4)', // 16px padding
@@ -136,6 +139,12 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
           <span>{toTitleCase(feature.name)}</span>
         </h4>
         <div className="flex items-center gap-1">
+          {/* Needs interaction badge - paused pipeline */}
+          {needsInteraction && (
+            <span className="text-xs px-1.5 py-0.5 bg-amber-500/20 text-amber-500 rounded font-medium whitespace-nowrap">
+              Answer Questions
+            </span>
+          )}
           {/* Target stage indicator - shows when feature is being dragged to new column */}
           {targetStageLabel && (
             <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-500 rounded font-medium">
@@ -206,6 +215,19 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
           </div>
         )}
       </div>
+
+      {/* Continue Pipeline button */}
+      {needsInteraction && onResumePipeline && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onResumePipeline();
+          }}
+          className="mt-2 w-full text-xs font-medium py-1.5 rounded bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 transition-colors"
+        >
+          Continue Pipeline →
+        </button>
+      )}
     </button>
   );
 });
@@ -242,7 +264,9 @@ interface KanbanColumnComponentProps {
   isDropTarget?: boolean;
   onDragStartCard?: (feature: Feature) => void;
   onDragEndCard?: () => void;
-  dragTargetColumn?: KanbanColumn | null; // Column being dragged over (for showing target stage)
+  dragTargetColumn?: KanbanColumn | null;
+  pendingFeatureId?: string | null; // Feature ID waiting for user interaction
+  onResumePipeline?: () => void;
 }
 
 function KanbanColumnComponent({
@@ -259,6 +283,8 @@ function KanbanColumnComponent({
   onDragStartCard,
   onDragEndCard,
   dragTargetColumn,
+  pendingFeatureId,
+  onResumePipeline,
 }: KanbanColumnComponentProps) {
   const columnLabel = getKanbanColumnLabel(column);
 
@@ -352,6 +378,8 @@ function KanbanColumnComponent({
                   isFocused={isFocused}
                   onDragStart={onDragStartCard}
                   targetStage={isDropTarget ? column : null}
+                  needsInteraction={feature.id === pendingFeatureId}
+                  onResumePipeline={feature.id === pendingFeatureId ? onResumePipeline : undefined}
                 />
               </div>
             );
@@ -378,6 +406,13 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
   const [dropTargetColumn, setDropTargetColumn] = useState<KanbanColumn | null>(null);
   const [dragSourceColumn, setDragSourceColumn] = useState<KanbanColumn | null>(null);
   const [showAIConfigDialog, setShowAIConfigDialog] = useState(false);
+  // Multi-step pipeline state
+  const [pipelineStep, setPipelineStep] = useState<{ current: number; total: number } | null>(null);
+  // Pending pipeline: feature paused at specs waiting for user to answer clarifications
+  const [pendingPipeline, setPendingPipeline] = useState<{
+    featureId: string;
+    remainingSteps: { from: KanbanColumn; to: KanbanColumn }[];
+  } | null>(null);
 
   const router = useRouter();
   const { focusState, setFocusState, clearFocusState } = useProjectStore();
@@ -394,20 +429,19 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     setDragSourceColumn(sourceColumn);
   }, []);
 
-  // Handle drag over column - only allow next step
+  // Handle drag over column - allow any forward movement (skip-stage)
   const handleDragOver = useCallback((column: KanbanColumn) => (e: React.DragEvent) => {
     if (!dragSourceColumn) return;
 
     const sourceIndex = getColumnIndex(dragSourceColumn);
     const targetIndex = getColumnIndex(column);
-    const isNextStep = targetIndex === sourceIndex + 1;
+    const isForward = targetIndex > sourceIndex;
 
-    if (isNextStep) {
+    if (isForward) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       setDropTargetColumn(column);
     }
-    // If not next step, don't set drop target (won't highlight)
   }, [dragSourceColumn]);
 
   // Handle drag leave
@@ -427,7 +461,101 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
   }, [onRefresh]);
 
 
-  // Handle drop - trigger background job via BullMQ
+  // Build the pipeline steps for a multi-stage transition
+  const buildPipelineSteps = useCallback((fromColumn: KanbanColumn, toColumn: KanbanColumn) => {
+    const fromIdx = getColumnIndex(fromColumn);
+    const toIdx = getColumnIndex(toColumn);
+    const steps: { from: KanbanColumn; to: KanbanColumn }[] = [];
+    for (let i = fromIdx; i < toIdx; i++) {
+      steps.push({ from: COLUMNS[i], to: COLUMNS[i + 1] });
+    }
+    return steps;
+  }, []);
+
+  // Execute a single step of the pipeline
+  const executeStep = useCallback(async (featureId: string, fromStage: KanbanColumn, toStage: KanbanColumn) => {
+    const response = await fetch('/api/stage-transition', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ featureId, fromStage, toStage }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || `Failed to transition to ${toStage}`);
+    }
+    return response.json();
+  }, []);
+
+  // Run pipeline steps sequentially, pausing at specs if clarifications are generated
+  const runPipeline = useCallback(async (
+    featureId: string,
+    steps: { from: KanbanColumn; to: KanbanColumn }[],
+    startIndex: number = 0,
+  ) => {
+    setIsLoading(true);
+    const totalSteps = steps.length;
+
+    try {
+      for (let i = startIndex; i < steps.length; i++) {
+        const step = steps[i];
+        const stepNum = i + 1;
+        const stageLabel = getKanbanColumnLabel(step.to);
+        setPipelineStep({ current: stepNum, total: totalSteps });
+        setLoadingMessage(`Step ${stepNum}/${totalSteps}: Generating ${stageLabel}...`);
+
+        const result = await executeStep(featureId, step.from, step.to);
+
+        // After transitioning to specs: check if clarifications were generated
+        // If there are remaining steps, pause for user to answer questions
+        if (step.to === 'specs' && i < steps.length - 1) {
+          // Refresh data so the feature card moves to specs column
+          refreshData();
+          // Store remaining steps so we can resume after user answers
+          setPendingPipeline({
+            featureId,
+            remainingSteps: steps.slice(i + 1),
+          });
+          setIsLoading(false);
+          setPipelineStep(null);
+          setLoadingMessage('');
+
+          toast.info(
+            'Specs generated! Please answer the clarification questions, then click "Continue Pipeline" to proceed.',
+            { duration: 8000 }
+          );
+
+          // Open the feature detail so user can see clarifications
+          const feature = features.find(f => f.id === featureId);
+          if (feature) {
+            onFeatureClick(feature);
+          }
+          return; // Stop pipeline - will be resumed after user interaction
+        }
+      }
+
+      // All steps completed
+      toast.success(`Successfully transitioned to ${getKanbanColumnLabel(steps[steps.length - 1].to)}`);
+      refreshData();
+    } catch (err) {
+      console.error('Pipeline error:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed during stage transition');
+      refreshData(); // Refresh to show current state
+    } finally {
+      setIsLoading(false);
+      setPipelineStep(null);
+      setLoadingMessage('');
+    }
+  }, [executeStep, refreshData, features, onFeatureClick]);
+
+  // Resume pending pipeline (called after user answers clarifications)
+  const resumePipeline = useCallback(async () => {
+    if (!pendingPipeline) return;
+    const { featureId, remainingSteps } = pendingPipeline;
+    setPendingPipeline(null);
+    await runPipeline(featureId, remainingSteps, 0);
+  }, [pendingPipeline, runPipeline]);
+
+  // Handle drop - trigger multi-step pipeline
   const handleDrop = useCallback((targetColumn: KanbanColumn) => async (e: React.DragEvent) => {
     e.preventDefault();
     setDropTargetColumn(null);
@@ -446,17 +574,8 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       const sourceIndex = getColumnIndex(currentColumn as KanbanColumn);
       const targetIndex = getColumnIndex(targetColumn);
 
-      // Only allow forward movement to the NEXT step (no skipping)
-      const isNextStep = targetIndex === sourceIndex + 1;
-
-      if (!isNextStep) {
-        toast.error('Can only move to the next step. Please complete this step first.');
-        return;
-      }
-
-      // Backward movement (targetIndex < sourceIndex) - just reload
-      if (targetIndex < sourceIndex) {
-        refreshData();
+      // Only allow forward movement
+      if (targetIndex <= sourceIndex) {
         return;
       }
 
@@ -464,40 +583,21 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
       const feature = features.find(f => f.id === featureId);
       if (!feature) return;
 
-      // Trigger background job via BullMQ API
-      setIsLoading(true);
-      setLoadingMessage('Queuing background job...');
+      // Build pipeline steps (e.g., backlog→specs→plan→tasks)
+      const steps = buildPipelineSteps(currentColumn as KanbanColumn, targetColumn);
+      if (steps.length === 0) return;
 
-      const response = await fetch('/api/stage-transition', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          featureId: feature.id,
-          fromStage: currentColumn,
-          toStage: targetColumn,
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to trigger background job');
-      }
-
-      const result = await response.json();
-
-      // Show toast that job was queued
-      toast.success(`Feature queued for ${targetColumn} - refresh (F5) to see updates when complete`);
-
-      // NOTE: No auto-refresh - user manually refreshes (F5) after job completes
+      // Run the pipeline
+      await runPipeline(feature.id, steps);
 
     } catch (err) {
       console.error('Drop error:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to process drop');
-    } finally {
       setIsLoading(false);
+      setPipelineStep(null);
       setLoadingMessage('');
     }
-  }, [features, projectId, refreshData, aiSettings]);
+  }, [features, buildPipelineSteps, runPipeline, aiSettings]);
 
   // Group features by kanban column (using new function that considers checklists)
   const featuresByColumn = COLUMNS.reduce((acc, column) => {
@@ -719,6 +819,8 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
           isDropTarget={dropTargetColumn === column}
           onDragStartCard={handleCardDragStart}
           onDragEndCard={() => setDragSourceColumn(null)}
+          pendingFeatureId={pendingPipeline?.featureId ?? null}
+          onResumePipeline={resumePipeline}
         />
       ))}
     </section>
@@ -740,7 +842,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     {/* Loading overlay during drag-drop generation */}
     {isLoading && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] transition-opacity duration-200">
-        <div className="bg-[var(--card)] rounded-lg px-8 py-6 flex flex-col items-center gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg px-8 py-6 flex flex-col items-center gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 min-w-[300px]">
           <div className="relative">
             <svg className="animate-spin w-8 h-8 text-[var(--foreground)]" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -748,6 +850,19 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
             </svg>
           </div>
           <p className="text-sm font-medium text-[var(--foreground)]">{loadingMessage}</p>
+          {pipelineStep && pipelineStep.total > 1 && (
+            <div className="w-full flex flex-col gap-2">
+              <div className="w-full bg-[var(--secondary)] rounded-full h-1.5">
+                <div
+                  className="bg-[var(--primary)] h-1.5 rounded-full transition-all duration-500"
+                  style={{ width: `${(pipelineStep.current / pipelineStep.total) * 100}%` }}
+                />
+              </div>
+              <p className="text-xs text-[var(--muted-foreground)] text-center">
+                Step {pipelineStep.current} of {pipelineStep.total}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     )}
