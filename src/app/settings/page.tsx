@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -422,36 +422,9 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<MenuSection>('ai');
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   
-  // Store the referrer URL when the page loads
-  const previousUrlRef = useRef<string | null>(null);
-  
-  useEffect(() => {
-    // Capture the referrer on mount (before any navigation)
-    if (typeof document !== 'undefined' && document.referrer) {
-      try {
-        const referrerUrl = new URL(document.referrer);
-        // Only use referrer if it's from the same origin
-        if (referrerUrl.origin === window.location.origin) {
-          previousUrlRef.current = referrerUrl.pathname;
-        }
-      } catch {
-        // Invalid referrer URL, ignore
-      }
-    }
-  }, []);
-
   const handleGoBack = () => {
-    // Force a full page navigation to ensure immediate visual transition
-    // and bypass any cached state in Next.js router
-    const previousUrl = previousUrlRef.current;
-    if (previousUrl && previousUrl !== '/settings') {
-      window.location.href = previousUrl;
-    } else if (window.history.length > 2) {
-      // Go back and force reload
-      window.location.href = document.referrer || '/';
-    } else {
-      window.location.href = '/';
-    }
+    // Use Next.js router to navigate back within the app context
+    router.push('/');
   };
 
   // Fetch app info for footer
