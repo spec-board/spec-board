@@ -94,6 +94,22 @@ export default function ProjectPage() {
     router.push('/projects/' + projectSlug + '/features/' + feature.id + '?section=clarifications');
   };
 
+  // Update project name (displayName)
+  const handleProjectNameChange = useCallback(async (newName: string) => {
+    try {
+      const response = await fetch('/api/projects/' + projectSlug, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: newName }),
+      });
+      if (response.ok) {
+        setProject(prev => prev ? { ...prev, name: newName } : null);
+      }
+    } catch (error) {
+      console.error('Failed to update project name:', error);
+    }
+  }, [projectSlug]);
+
   // Update project description
   const handleDescriptionChange = useCallback(async (description: string) => {
     try {
@@ -191,6 +207,7 @@ export default function ProjectPage() {
         projectName={project?.name}
         projectPath={projectPath || undefined}
         projectSlug={projectSlug}
+        onProjectNameChange={handleProjectNameChange}
       />
 
       {/* Main content */}
