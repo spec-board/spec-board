@@ -3,7 +3,6 @@ import prisma from '@/lib/prisma';
 import { isPrismaError } from '@/lib/utils';
 import { isValidDirectoryPath } from '@/lib/path-utils';
 
-// Disable Next.js route caching - always read fresh data from database
 export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[name] - Get a project by name
@@ -13,25 +12,14 @@ export async function GET(
 ) {
   try {
     const { name } = await params;
-
-    const project = await prisma.project.findUnique({
-      where: { name },
-    });
-
+    const project = await prisma.project.findUnique({ where: { name } });
     if (!project) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
-
     return NextResponse.json(project);
   } catch (error) {
     console.error('Error fetching project:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch project' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch project' }, { status: 500 });
   }
 }
 
@@ -45,40 +33,22 @@ export async function PUT(
     const body = await request.json();
     const { displayName, filePath, description } = body;
 
-    // Validate filePath if provided
     if (filePath && !isValidDirectoryPath(filePath)) {
-      return NextResponse.json(
-        { error: 'Invalid file path: directory does not exist' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid file path' }, { status: 400 });
     }
 
-    // Build update data - only include fields that are provided
-    const updateData: { displayName?: string; filePath?: string | null; description?: string | null } = {};
+    const updateData: Record<string, unknown> = {};
     if (displayName !== undefined) updateData.displayName = displayName;
     if (filePath !== undefined) updateData.filePath = filePath || null;
     if (description !== undefined) updateData.description = description || null;
 
-    const project = await prisma.project.update({
-      where: { name },
-      data: updateData,
-    });
-
+    const project = await prisma.project.update({ where: { name }, data: updateData });
     return NextResponse.json(project);
   } catch (error: unknown) {
-    console.error('Error updating project:', error);
-
     if (isPrismaError(error, 'P2025')) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
-
-    return NextResponse.json(
-      { error: 'Failed to update project' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
   }
 }
 
@@ -89,25 +59,12 @@ export async function DELETE(
 ) {
   try {
     const { name } = await params;
-
-    await prisma.project.delete({
-      where: { name },
-    });
-
+    await prisma.project.delete({ where: { name } });
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    console.error('Error deleting project:', error);
-
     if (isPrismaError(error, 'P2025')) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
-
-    return NextResponse.json(
-      { error: 'Failed to delete project' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 });
   }
 }
