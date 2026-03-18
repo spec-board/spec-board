@@ -1,9 +1,10 @@
 'use client';
 
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Github, Settings, ChevronRight } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
 import { Tooltip } from '@/components/tooltip';
+import { useSettingsStore } from '@/lib/settings-store';
 
 interface HeaderProps {
   variant: 'home' | 'project';
@@ -15,7 +16,7 @@ interface HeaderProps {
 
 export function Header({ variant, projectName, onNewProject }: HeaderProps) {
   const router = useRouter();
-  const pathname = usePathname();
+  const { openSettings } = useSettingsStore();
 
   return (
     <header className="border-b border-[var(--border)] h-14 bg-[var(--background)]">
@@ -142,7 +143,7 @@ export function Header({ variant, projectName, onNewProject }: HeaderProps) {
 
             <Tooltip content="Settings" side="bottom">
               <button
-                onClick={() => router.push(`/settings?from=${encodeURIComponent(pathname)}`)}
+                onClick={() => openSettings()}
                 className="btn-icon"
                 aria-label="Settings"
               >
