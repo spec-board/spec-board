@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Github, Settings, ChevronRight } from 'lucide-react';
+import { Settings, ChevronRight } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
 import { Tooltip } from '@/components/tooltip';
+import { GitHubStars } from '@/components/github-stars';
 import { useSettingsStore } from '@/lib/settings-store';
 
 interface HeaderProps {
@@ -130,15 +131,7 @@ export function Header({ variant, projectName, onNewProject }: HeaderProps) {
             </Tooltip>
 
             <Tooltip content="GitHub" side="bottom">
-              <a
-                href="https://github.com/paulpham157/spec-board"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-icon"
-                aria-label="GitHub Repository"
-              >
-                <Github className="w-4 h-4" />
-              </a>
+              <GitHubStars />
             </Tooltip>
 
             <Tooltip content="Settings" side="bottom">
