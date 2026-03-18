@@ -69,7 +69,7 @@ export default function Home() {
     if (!deleteProject) return;
 
     try {
-      const response = await fetch(`/api/projects/${deleteProject.name}`, {
+      const response = await fetch(`/api/project/${deleteProject.name}`, {
         method: 'DELETE',
       });
 
