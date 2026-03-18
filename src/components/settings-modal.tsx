@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useSettingsStore, type AIProvider } from '@/lib/settings-store';
-import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { useSettingsStore, type AIProvider, type SettingsSection } from '@/lib/settings-store';
 import { ReadmeViewer } from '@/components/readme-viewer';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ChangelogViewer } from '@/components/changelog-viewer';
@@ -21,8 +19,6 @@ interface AppInfo {
   changelog: string;
 }
 
-type MenuSection = 'shortcuts' | 'appearance' | 'ai' | 'about';
-
 interface ShortcutGroup {
   title: string;
   shortcuts: { keys: string[]; description: string }[];
@@ -37,7 +33,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ['Tab'], description: 'Switch panes (split mode)' },
       { keys: ['1-9'], description: 'Jump to section' },
       { keys: ['Shift', '1-9'], description: 'Open in right pane' },
-      { keys: ['↑', '↓'], description: 'Navigate sections' },
+      { keys: ['Up', 'Down'], description: 'Navigate sections' },
       { keys: ['Enter'], description: 'Open section' },
       { keys: ['Shift', 'Enter'], description: 'Open in split view' },
     ],
@@ -45,7 +41,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     title: 'Split View',
     shortcuts: [
-      { keys: ['←', '→'], description: 'Adjust split ratio' },
+      { keys: ['Left', 'Right'], description: 'Adjust split ratio' },
     ],
   },
   {
@@ -60,7 +56,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     shortcuts: [
       { keys: ['H'], description: 'Home directory' },
       { keys: ['Backspace'], description: 'Parent directory' },
-      { keys: ['↑', '↓'], description: 'Navigate list' },
+      { keys: ['Up', 'Down'], description: 'Navigate list' },
       { keys: ['Enter'], description: 'Open/select' },
       { keys: ['Tab'], description: 'Accept suggestion' },
       { keys: ['Esc'], description: 'Close modal' },
@@ -110,7 +106,6 @@ function ShortcutsContent() {
         </p>
       </div>
 
-      {/* Toggle Switch */}
       <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
         <div className="flex items-center justify-between">
           <div>
@@ -138,7 +133,6 @@ function ShortcutsContent() {
         </div>
       </div>
 
-      {/* Shortcuts List */}
       <div className={cn(
         'grid grid-cols-1 lg:grid-cols-2 gap-4 transition-opacity',
         !shortcutsEnabled && 'opacity-50 pointer-events-none'
@@ -161,7 +155,6 @@ function ShortcutsContent() {
 }
 
 function AppearanceContent() {
-
   return (
     <div className="space-y-6">
       <div>
@@ -171,7 +164,6 @@ function AppearanceContent() {
         </p>
       </div>
 
-      {/* Theme Selection */}
       <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
         <div className="flex items-center justify-between">
           <div>
@@ -190,7 +182,6 @@ function AppearanceContent() {
 function AIContent() {
   const { aiSettings, setAISettings, loadSettings } = useSettingsStore();
 
-  // Single form state
   const [formData, setFormData] = useState({
     provider: aiSettings.provider,
     baseUrl: aiSettings.baseUrl || '',
@@ -202,19 +193,17 @@ function AIContent() {
 
   const handleSave = async () => {
     setIsSaving(true);
-
     const settings = {
       provider: formData.provider,
       baseUrl: formData.baseUrl.trim() || undefined,
       apiKey: formData.apiKey.trim() || undefined,
       model: formData.model.trim() || undefined,
     };
-
     await setAISettings(settings);
-    await loadSettings(); // Reload to get updated has flags
+    await loadSettings();
     setIsSaving(false);
     setSaved(true);
-    setFormData({ ...formData, apiKey: '' }); // Clear API key after save
+    setFormData({ ...formData, apiKey: '' });
     setTimeout(() => setSaved(false), 2000);
   };
 
@@ -228,7 +217,6 @@ function AIContent() {
       </div>
 
       <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-4">
-        {/* Provider - Fixed to OpenAI */}
         <div>
           <label className="text-xs text-[var(--muted-foreground)] block mb-1">Provider</label>
           <div className="px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg">
@@ -236,7 +224,6 @@ function AIContent() {
           </div>
         </div>
 
-        {/* Base URL */}
         <div>
           <label className="text-xs text-[var(--muted-foreground)] block mb-1">Base URL (Optional)</label>
           <input
@@ -248,7 +235,6 @@ function AIContent() {
           />
         </div>
 
-        {/* API Key */}
         <div>
           <label className="text-xs text-[var(--muted-foreground)] block mb-1">API Key</label>
           <input
@@ -260,7 +246,6 @@ function AIContent() {
           />
         </div>
 
-        {/* Model */}
         <div>
           <label className="text-xs text-[var(--muted-foreground)] block mb-1">Model</label>
           <input
@@ -272,7 +257,6 @@ function AIContent() {
           />
         </div>
 
-        {/* Save Button */}
         <button
           onClick={handleSave}
           disabled={isSaving}
@@ -320,9 +304,7 @@ function AboutContent() {
   }
 
   if (!appInfo) {
-    return (
-      <div className="text-red-400">Failed to load app information</div>
-    );
+    return <div className="text-red-400">Failed to load app information</div>;
   }
 
   return (
@@ -334,7 +316,6 @@ function AboutContent() {
         </p>
       </div>
 
-      {/* Tab Navigation */}
       <div className="flex gap-1 border-b border-[var(--border)]">
         <button
           onClick={() => setActiveTab('readme')}
@@ -362,10 +343,8 @@ function AboutContent() {
         </button>
       </div>
 
-      {/* Tab Content */}
       {activeTab === 'readme' && (
         <div className="space-y-4">
-          {/* Overview Info */}
           <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
               <div className="flex items-center gap-2">
@@ -401,7 +380,6 @@ function AboutContent() {
             </div>
           </div>
 
-          {/* README Content */}
           <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
             <ReadmeViewer content={appInfo.readme} />
           </div>
@@ -417,111 +395,99 @@ function AboutContent() {
   );
 }
 
-export default function SettingsPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [activeSection, setActiveSection] = useState<MenuSection>('ai');
-  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
-  
-  // Read the "from" query param to know where to navigate back to
-  const fromUrl = searchParams.get('from') || '/';
-  
-  const handleGoBack = () => {
-    router.push(fromUrl);
-  };
+const MENU_ITEMS: { id: SettingsSection; label: string; icon: React.ReactNode }[] = [
+  { id: 'ai', label: 'AI Settings', icon: <Sparkles className="w-4 h-4" /> },
+  { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
+  { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
+  { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
+];
 
-  // Fetch app info for footer
+export function SettingsModal() {
+  const { settingsOpen, settingsSection, closeSettings } = useSettingsStore();
+  const [activeSection, setActiveSection] = useState<SettingsSection>(settingsSection);
+
+  // Sync activeSection when modal opens with a specific section
   useEffect(() => {
-    async function loadAppInfo() {
-      try {
-        const response = await fetch('/api/app-info');
-        if (response.ok) {
-          const data = await response.json();
-          setAppInfo(data);
-        }
-      } catch (error) {
-        console.error('Failed to load app info:', error);
-      }
+    if (settingsOpen) {
+      setActiveSection(settingsSection);
     }
-    loadAppInfo();
-  }, []);
+  }, [settingsOpen, settingsSection]);
 
-  const menuItems: { id: MenuSection; label: string; icon: React.ReactNode }[] = [
-    { id: 'ai', label: 'AI Settings', icon: <Sparkles className="w-4 h-4" /> },
-    { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
-    { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
-    { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
-  ];
+  // Close on Escape key
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      closeSettings();
+    }
+  }, [closeSettings]);
+
+  useEffect(() => {
+    if (settingsOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scroll
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = '';
+      };
+    }
+  }, [settingsOpen, handleKeyDown]);
+
+  if (!settingsOpen) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--background)]">
-      {/* Header */}
-      <header className="border-b border-[var(--border)] bg-[var(--card)]">
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleGoBack}
-              className="btn-icon -ml-2"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-bold">Settings</h1>
-          </div>
-        </div>
-      </header>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={closeSettings}
+      />
 
-      {/* Main content - 2 column layout */}
-      <div className="flex-1 flex">
-        {/* Left sidebar menu - 1/4 width */}
-        <aside className="w-1/4 min-w-[200px] max-w-[280px] border-r border-[var(--border)] bg-[var(--card)] p-4">
-          <nav className="space-y-1">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-                  activeSection === item.id
-                    ? 'bg-[var(--secondary)] text-[var(--foreground)]'
-                    : 'text-[var(--muted-foreground)] hover:bg-[var(--secondary)]/50 hover:text-[var(--foreground)]'
-                )}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </aside>
-
-        {/* Right content area - 3/4 width */}
-        <main className="flex-1 p-6 overflow-y-auto">
-          {activeSection === 'shortcuts' && <ShortcutsContent />}
-          {activeSection === 'appearance' && <AppearanceContent />}
-          {activeSection === 'ai' && <AIContent />}
-          {activeSection === 'about' && <AboutContent />}
-        </main>
-      </div>
-
-      {/* Footer */}
-      <footer className="border-t border-[var(--border)] bg-[var(--card)] px-6 py-3">
-        <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted-foreground)]">
-          <span className="font-medium">{appInfo?.name || 'SpecBoard'}</span>
-          <span>v{appInfo?.version || '...'}</span>
-          <span>—</span>
-          <span>{appInfo?.description || 'Visual dashboard for spec-kit'}</span>
-          <span>—</span>
-          <a
-            href={appInfo?.licenseUrl || 'https://github.com/spec-board/spec-board/blob/main/LICENSE'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-1 transition-colors"
+      {/* Modal */}
+      <div className="relative w-[90vw] max-w-[900px] h-[80vh] max-h-[700px] bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
+          <h1 className="text-lg font-bold">Settings</h1>
+          <button
+            onClick={closeSettings}
+            className="btn-icon"
+            aria-label="Close settings"
           >
-            {appInfo?.license || 'MIT'} License
-            <ExternalLink className="w-3 h-3" />
-          </a>
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      </footer>
+
+        {/* Body — 2 column layout */}
+        <div className="flex-1 flex min-h-0">
+          {/* Left sidebar menu */}
+          <aside className="w-[200px] shrink-0 border-r border-[var(--border)] bg-[var(--card)] p-3">
+            <nav className="space-y-1">
+              {MENU_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+                    activeSection === item.id
+                      ? 'bg-[var(--secondary)] text-[var(--foreground)]'
+                      : 'text-[var(--muted-foreground)] hover:bg-[var(--secondary)]/50 hover:text-[var(--foreground)]'
+                  )}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </aside>
+
+          {/* Right content area */}
+          <main className="flex-1 p-6 overflow-y-auto">
+            {activeSection === 'ai' && <AIContent />}
+            {activeSection === 'shortcuts' && <ShortcutsContent />}
+            {activeSection === 'appearance' && <AppearanceContent />}
+            {activeSection === 'about' && <AboutContent />}
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

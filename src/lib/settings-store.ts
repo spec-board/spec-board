@@ -17,6 +17,8 @@ interface Settings {
   aiSettings: AISettings;
 }
 
+export type SettingsSection = 'ai' | 'shortcuts' | 'appearance' | 'about';
+
 interface SettingsStore {
   // State
   shortcutsEnabled: boolean;
@@ -24,12 +26,16 @@ interface SettingsStore {
   resolvedTheme: 'light' | 'dark'; // Actual theme after resolving 'system'
   aiSettings: AISettings;
   isLoaded: boolean;
+  settingsOpen: boolean;
+  settingsSection: SettingsSection;
 
   // Actions
   setShortcutsEnabled: (enabled: boolean) => Promise<void>;
   setTheme: (theme: Theme) => Promise<void>;
   setAISettings: (settings: Partial<AISettings>) => Promise<void>;
   loadSettings: () => Promise<void>;
+  openSettings: (section?: SettingsSection) => void;
+  closeSettings: () => void;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -76,6 +82,16 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   resolvedTheme: resolveTheme('system'),
   aiSettings: DEFAULT_SETTINGS.aiSettings,
   isLoaded: false,
+  settingsOpen: false,
+  settingsSection: 'ai' as SettingsSection,
+
+  openSettings: (section: SettingsSection = 'ai') => {
+    set({ settingsOpen: true, settingsSection: section });
+  },
+
+  closeSettings: () => {
+    set({ settingsOpen: false });
+  },
 
   setShortcutsEnabled: async (enabled: boolean) => {
     set({ shortcutsEnabled: enabled });
