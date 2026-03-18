@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useCallback, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature, KanbanColumnType } from '@/types';
 import { GitBranch, CheckCircle2, Plus, Settings } from 'lucide-react';
@@ -380,6 +380,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
   const [showAIConfigDialog, setShowAIConfigDialog] = useState(false);
 
   const router = useRouter();
+  const pathname = usePathname();
   const { focusState, setFocusState, clearFocusState } = useProjectStore();
   const { aiSettings } = useSettingsStore();
   const cardRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map());
@@ -784,7 +785,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
             <button
               onClick={() => {
                 setShowAIConfigDialog(false);
-                router.push('/settings');
+                router.push(`/settings?from=${encodeURIComponent(pathname)}`);
               }}
               className="btn btn-primary btn-sm"
             >

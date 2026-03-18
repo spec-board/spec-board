@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore, type AIProvider } from '@/lib/settings-store';
@@ -419,12 +419,15 @@ function AboutContent() {
 
 export default function SettingsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState<MenuSection>('ai');
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   
+  // Read the "from" query param to know where to navigate back to
+  const fromUrl = searchParams.get('from') || '/';
+  
   const handleGoBack = () => {
-    // Use Next.js router to navigate back within the app context
-    router.push('/');
+    router.push(fromUrl);
   };
 
   // Fetch app info for footer
