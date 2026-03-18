@@ -1,9 +1,14 @@
+/* Stage Transition API - No external stage-transition module needed */
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAISettings } from '@/lib/ai/settings';
-import { generateSpec, generateClarify, generatePlan, generateTasks } from '@/lib/ai';
+import {
+  generateSpec,
+  generateClarify,
+  generatePlan,
+  generateTasks,
+} from '@/lib/ai';
 
-// Helper: format spec result to markdown
 function formatSpec(spec: any): string {
   const sections: string[] = [];
   if (spec.userStories?.length) {
@@ -36,7 +41,6 @@ function formatSpec(spec: any): string {
   return sections.join('\n');
 }
 
-// Helper: format plan result to markdown
 function formatPlan(plan: any): string {
   const sections: string[] = [];
   if (plan.summary) {
@@ -65,7 +69,6 @@ function formatPlan(plan: any): string {
   return sections.join('\n');
 }
 
-// Helper: format tasks result to markdown
 function formatTasks(tasks: any): string {
   const sections: string[] = [];
   if (tasks.phases?.length) {
@@ -84,7 +87,6 @@ function formatTasks(tasks: any): string {
   return sections.join('\n');
 }
 
-// Helper: parse clarifications markdown back into structured format
 function parseClarifications(content: string): { question: string; answer: string }[] {
   if (!content) return [];
   const lines = content.split('\n').filter(l => l.trim());
@@ -98,8 +100,7 @@ function parseClarifications(content: string): { question: string; answer: strin
   return results;
 }
 
-// Generate content for a stage transition
-async function generateStageTransitionContent(input: {
+async function handleStageTransition(input: {
   featureId: string;
   fromStage: string;
   toStage: string;
@@ -117,7 +118,7 @@ async function generateStageTransitionContent(input: {
       const specMarkdown = formatSpec(spec);
       const clarifications = await generateClarify({ specContent: specMarkdown });
       const clarificationsMarkdown = clarifications
-        .map((c, i) => `${i + 1}. **${c.question}**\n   _${c.context || ''}_`)
+        .map((c: any, i: number) => `${i + 1}. **${c.question}**\n   _${c.context || ''}_`)
         .join('\n\n');
       return { content: specMarkdown, clarifications: clarificationsMarkdown };
     }
@@ -137,7 +138,6 @@ async function generateStageTransitionContent(input: {
   }
 }
 
-// POST /api/stage-transition - Trigger stage transition (synchronous)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -147,7 +147,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Feature ID is required' }, { status: 400 });
     }
 
-    // Check if AI provider is configured
     const aiSettings = await getAISettings();
     if (!aiSettings.apiKey) {
       return NextResponse.json(
@@ -156,7 +155,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the feature
     const feature = await prisma.feature.findUnique({
       where: { id: featureId },
     });
@@ -165,7 +163,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Feature not found' }, { status: 404 });
     }
 
-    // Validate transition is allowed
     const validTransitions: Record<string, string> = {
       'backlog': 'specs',
       'specs': 'plan',
@@ -180,7 +177,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update feature to processing status
     await prisma.feature.update({
       where: { id: featureId },
       data: {
@@ -191,8 +187,7 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      // Generate content for the stage transition
-      const result = await generateStageTransitionContent({
+      const result = await handleStageTransition({
         featureId: feature.id,
         fromStage,
         toStage,
@@ -203,8 +198,7 @@ export async function POST(request: NextRequest) {
         planContent: feature.planContent || '',
       });
 
-      // Update feature with new stage and content
-      const updateData: any = {
+      const updateData: Record<string, any> = {
         stage: toStage,
         jobStatus: 'completed',
         jobProgress: 100,
@@ -212,7 +206,6 @@ export async function POST(request: NextRequest) {
         jobCompletedAt: new Date(),
       };
 
-      // Update appropriate content field based on target stage
       if (toStage === 'specs') {
         updateData.specContent = result.content;
         updateData.clarificationsContent = result.clarifications;
@@ -234,7 +227,6 @@ export async function POST(request: NextRequest) {
         message: `Successfully transitioned to ${toStage}`,
       });
     } catch (error) {
-      // Update feature with error status
       await prisma.feature.update({
         where: { id: featureId },
         data: {
@@ -242,7 +234,6 @@ export async function POST(request: NextRequest) {
           jobMessage: error instanceof Error ? error.message : 'Unknown error',
         },
       });
-
       throw error;
     }
   } catch (error) {
@@ -254,7 +245,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/stage-transition - Get job status for a feature
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
