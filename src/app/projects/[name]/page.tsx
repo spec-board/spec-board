@@ -97,7 +97,7 @@ export default function ProjectPage() {
   // Update project name (displayName)
   const handleProjectNameChange = useCallback(async (newName: string) => {
     try {
-      const response = await fetch('/api/projects/' + projectSlug, {
+      const response = await fetch('/api/project/' + projectSlug, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ displayName: newName }),
@@ -113,7 +113,7 @@ export default function ProjectPage() {
   // Update project description
   const handleDescriptionChange = useCallback(async (description: string) => {
     try {
-      const response = await fetch('/api/projects/' + projectSlug, {
+      const response = await fetch('/api/project/' + projectSlug, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description }),
