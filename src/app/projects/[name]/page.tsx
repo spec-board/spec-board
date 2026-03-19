@@ -213,8 +213,8 @@ export default function ProjectPage() {
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="space-y-6">
-          {/* Project Info Bubble */}
-          <div className="flex justify-start">
+          {/* Project Info Row: bubble + description */}
+          <div className="flex items-start gap-4">
             <ProjectInfoBubble
               constitution={project.constitution}
               hasConstitution={project.hasConstitution}
@@ -226,6 +226,11 @@ export default function ProjectPage() {
               onSaveAndGenerateConstitution={handleSaveAndGenerateConstitution}
               isGeneratingConstitution={isGeneratingConstitution}
             />
+            {project.description && (
+              <p className="text-sm text-[var(--muted-foreground)] pt-2 line-clamp-2 flex-1 min-w-0">
+                {project.description}
+              </p>
+            )}
           </div>
 
           {/* Kanban board */}
