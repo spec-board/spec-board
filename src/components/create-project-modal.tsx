@@ -31,6 +31,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setError('Project name is required'); return; }
+    if (!description.trim()) { setError('Project description is required'); return; }
 
     setIsLoading(true);
     setError(null);
@@ -39,8 +40,8 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
     try {
       const requestBody = {
         name: name.trim(),
-        description: description.trim() || undefined,
-        generateConstitution: !!description.trim(),
+        description: description.trim(),
+        generateConstitution: true,
       };
 
       const response = await fetch('/api/projects', {
@@ -90,7 +91,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--card)]/90 rounded-lg">
               <div className="flex flex-col items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin text-[var(--muted-foreground)]" />
-                <p className="text-xs text-[var(--muted-foreground)]">Creating...</p>
+                <p className="text-xs text-[var(--muted-foreground)]">Creating project & generating Constitution...</p>
               </div>
             </div>
           )}
@@ -123,14 +124,14 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
             {/* Description */}
             <div className="space-y-1.5">
               <label htmlFor="project-description" className="text-xs font-medium text-[var(--muted-foreground)]">
-                Description <span className="font-normal opacity-60">(optional)</span>
+                Description <span className="text-[var(--foreground)]">*</span>
               </label>
               <textarea
                 id="project-description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="What is this project about?"
-                rows={3}
+                onChange={(e) => { setDescription(e.target.value); setError(null); }}
+                placeholder="Describe your project goals, tech stack, and key requirements. This will be used to generate the project Constitution."
+                rows={4}
                 disabled={isLoading}
                 className={cn(
                   'w-full px-3 py-2 rounded-md border border-[var(--border)] bg-[var(--background)] text-sm',
@@ -139,6 +140,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
                   isLoading && 'opacity-50'
                 )}
               />
+              <p className="text-xs text-[var(--muted-foreground)]">Used to generate the initial project Constitution</p>
             </div>
 
             {warning && (
@@ -161,7 +163,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
             </button>
             <button
               type="submit"
-              disabled={isLoading || !name.trim()}
+              disabled={isLoading || !name.trim() || !description.trim()}
               className="btn btn-primary btn-sm"
             >
               {isLoading ? 'Creating...' : 'Create'}

@@ -50,10 +50,17 @@ export async function POST(request: NextRequest) {
 
     console.log('[API/Projects] POST received:', { name, displayName, hasDescription: !!description, shouldGenerateConstitution });
 
-    // name is always required
+    // name and description are required
     if (!name || typeof name !== 'string') {
       return NextResponse.json(
         { error: 'name is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!description || typeof description !== 'string' || !description.trim()) {
+      return NextResponse.json(
+        { error: 'description is required' },
         { status: 400 }
       );
     }
