@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   logging: {
     browserToTerminal: true,
   },
+  // Force cache invalidation
+  generateBuildId: async () => `build-${Date.now()}`,
 };
 
 export default nextConfig;
