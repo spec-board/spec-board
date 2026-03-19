@@ -124,12 +124,12 @@ export function ProjectInfoBubble({
                   {/* Project Description - Always visible as textarea */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-medium">Project Description</h3>
+                      <h3 className="text-sm font-medium">Project Description <span className="text-[var(--foreground)]">*</span></h3>
                     </div>
                     <textarea
                       value={editDescription}
                       onChange={e => setEditDescription(e.target.value)}
-                      placeholder="Describe your project purpose, goals, and key requirements..."
+                      placeholder="Describe your project goals, tech stack, and key requirements. This will be used to generate the project Constitution."
                       className="w-full h-32 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--secondary)] text-[var(--foreground)] outline-none focus:border-[var(--ring)] resize-none text-sm placeholder:text-[var(--muted-foreground)]"
                     />
                     {onSaveAndGenerateConstitution && (
