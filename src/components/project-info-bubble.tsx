@@ -28,9 +28,9 @@ interface ProjectInfoBubbleProps {
   description?: string;
   features: Feature[];
   totalClarifications: number;
-  onDescriptionChange?: (description: string) => void;
+  onDescriptionChange?: (description: string) => void | Promise<void>;
   onFeatureClick?: (feature: Feature) => void;
-  onSaveAndGenerateConstitution?: (description: string) => void;
+  onSaveAndGenerateConstitution?: (description: string) => void | Promise<void>;
   isGeneratingConstitution?: boolean;
 }
 
@@ -68,9 +68,11 @@ export function ProjectInfoBubble({
     }
   }, [isOpen]);
 
-  const handleSaveAndGenerate = () => {
-    onDescriptionChange?.(editDescription);
-    onSaveAndGenerateConstitution?.(editDescription);
+  const handleSaveAndGenerate = async () => {
+    // Save description first, then generate constitution
+    // Both operations update the description in the database
+    await onDescriptionChange?.(editDescription);
+    await onSaveAndGenerateConstitution?.(editDescription);
   };
 
   const principleCount = constitution?.principles.length ?? 0;
