@@ -2,6 +2,8 @@
  * Auth middleware for API routes (T021)
  * Protects cloud sync API routes with session validation
  * Includes rate limiting for sync endpoints (T083)
+ *
+ * @module middleware
  */
 
 import { NextResponse } from 'next/server';
@@ -19,7 +21,7 @@ const PROTECTED_ROUTES = [
   '/api/tokens',
 ];
 
-// Routes that are always public
+// Routes that are always public (no auth needed)
 const PUBLIC_ROUTES = [
   '/api/auth',
   '/api/health',
@@ -39,7 +41,7 @@ const RATE_LIMITED_ROUTES = [
   '/api/tokens',
 ];
 
-function proxyHandler(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for public routes
@@ -77,10 +79,8 @@ function proxyHandler(request: NextRequest) {
     // Check for API token (used by MCP server)
     const authHeader = request.headers.get('Authorization');
     if (authHeader?.startsWith('Bearer ')) {
-      // API token auth - let the route handler validate the token
       const response = NextResponse.next();
 
-      // Add rate limit headers to response
       if (isRateLimitedRoute) {
         const identifier = getRequestIdentifier(request);
         const headers = getRateLimitHeaders(identifier, pathname);
@@ -95,10 +95,8 @@ function proxyHandler(request: NextRequest) {
     // Check for session cookie (used by web app)
     const sessionCookie = request.cookies.get('better-auth.session_token');
     if (sessionCookie) {
-      // Session auth - let Better Auth validate the session
       const response = NextResponse.next();
 
-      // Add rate limit headers to response
       if (isRateLimitedRoute) {
         const identifier = getRequestIdentifier(request);
         const headers = getRateLimitHeaders(identifier, pathname);
@@ -120,11 +118,6 @@ function proxyHandler(request: NextRequest) {
   return NextResponse.next();
 }
 
-export const proxy = proxyHandler;
-
 export const config = {
-  matcher: [
-    // Match all API routes except static files
-    '/api/:path*',
-  ],
+  matcher: ['/api/:path*'],
 };
