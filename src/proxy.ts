@@ -1,5 +1,5 @@
 /**
- * Auth middleware for API routes (T021)
+ * Auth proxy for API routes (T021)
  * Protects cloud sync API routes with session validation
  * Includes rate limiting for sync endpoints (T083)
  */
@@ -39,10 +39,10 @@ const RATE_LIMITED_ROUTES = [
   '/api/tokens',
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for public routes
+  // Skip proxy for public routes
   if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
     return NextResponse.next();
   }
