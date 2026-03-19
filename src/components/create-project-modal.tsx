@@ -100,7 +100,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
             {/* Name */}
             <div className="space-y-1.5">
               <label htmlFor="project-name" className="text-xs font-medium text-[var(--muted-foreground)]">
-                Name
+                Name <span className="text-[var(--foreground)]">*</span>
               </label>
               <input
                 ref={inputRef}
