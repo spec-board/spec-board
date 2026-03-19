@@ -75,11 +75,6 @@ export function ProjectInfoBubble({
 
   const principleCount = constitution?.principles.length ?? 0;
   const featuresWithClarifications = features.filter(f => f.totalClarifications > 0);
-  const hasSomething = hasConstitution || totalClarifications > 0 || !!description;
-
-  if (!hasSomething) {
-    return null;
-  }
 
   return (
     <div className="relative">
