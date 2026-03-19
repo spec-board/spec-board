@@ -44,7 +44,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProject
         generateConstitution: true,
       };
 
-      const response = await fetch('/api/projects', {
+      const response = await fetch('/api/project-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
