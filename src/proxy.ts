@@ -39,7 +39,7 @@ const RATE_LIMITED_ROUTES = [
   '/api/tokens',
 ];
 
-export function middleware(request: NextRequest) {
+function proxyHandler(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for public routes
@@ -119,6 +119,8 @@ export function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
+
+export const proxy = proxyHandler;
 
 export const config = {
   matcher: [
