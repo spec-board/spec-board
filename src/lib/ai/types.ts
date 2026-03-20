@@ -34,7 +34,7 @@ export interface AICompletionResponse {
 }
 
 // Provider types
-export type AIProvider = 'openai';
+export type AIProvider = 'openai' | 'qwen' | 'codex';
 
 // Configuration
 export interface AIConfig {

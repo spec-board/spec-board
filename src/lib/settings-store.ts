@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type Theme = 'light' | 'dark' | 'system';
-export type AIProvider = 'openai';
+export type AIProvider = 'openai' | 'qwen' | 'codex';
 
 interface AISettings {
   provider: AIProvider;
