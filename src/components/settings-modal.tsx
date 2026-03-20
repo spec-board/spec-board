@@ -179,9 +179,48 @@ function AppearanceContent() {
   );
 }
 
+const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string }> = {
+  openai: {
+    label: 'OpenAI',
+    baseUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4o',
+    apiKeyPlaceholder: 'sk-...',
+    description: 'GPT-4o, GPT-4o-mini, and other OpenAI models',
+  },
+  qwen: {
+    label: 'Qwen (qwen.ai)',
+    baseUrl: 'https://chat.qwen.ai/api/v1',
+    model: 'qwen-max',
+    apiKeyPlaceholder: 'sk-... (from portal.qwen.ai)',
+    description: 'Qwen-Max, Qwen-Plus, Qwen-Turbo via Alibaba Cloud',
+  },
+  codex: {
+    label: 'OpenAI Codex',
+    baseUrl: 'https://api.openai.com/v1',
+    model: 'codex-mini-latest',
+    apiKeyPlaceholder: 'sk-... (OpenAI API key)',
+    description: 'OpenAI Codex models optimized for code generation',
+  },
+  custom: {
+    label: 'Custom (OpenAI-Compatible)',
+    baseUrl: '',
+    model: '',
+    apiKeyPlaceholder: 'API key for your provider',
+    description: 'Ollama, LM Studio, or any OpenAI-compatible endpoint',
+  },
+};
+
 function AIContent() {
   const { aiSettings, setAISettings, loadSettings } = useSettingsStore();
 
+  // Determine initial preset from current settings
+  const getInitialPreset = () => {
+    const p = aiSettings.provider;
+    if (p === 'qwen' || p === 'codex' || p === 'openai') return p;
+    return 'custom';
+  };
+
+  const [selectedPreset, setSelectedPreset] = useState(getInitialPreset());
   const [formData, setFormData] = useState({
     provider: aiSettings.provider,
     baseUrl: aiSettings.baseUrl || '',
@@ -190,6 +229,19 @@ function AIContent() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const handlePresetChange = (preset: string) => {
+    setSelectedPreset(preset);
+    const config = PROVIDER_PRESETS[preset];
+    if (config) {
+      setFormData(prev => ({
+        ...prev,
+        provider: preset === 'custom' ? 'openai' : preset as 'openai' | 'qwen' | 'codex',
+        baseUrl: config.baseUrl,
+        model: config.model,
+      }));
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -207,31 +259,49 @@ function AIContent() {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const activePreset = PROVIDER_PRESETS[selectedPreset] || PROVIDER_PRESETS.custom;
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold mb-1">AI Settings</h2>
         <p className="text-sm text-[var(--muted-foreground)]">
-          Configure OpenAI-compatible API for feature generation
+          Configure AI provider for feature generation
         </p>
       </div>
 
       <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-4">
         <div>
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">Provider</label>
-          <div className="px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg">
-            OpenAI-Compatible API
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1.5">Provider</label>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => (
+              <button
+                key={key}
+                onClick={() => handlePresetChange(key)}
+                className={cn(
+                  'flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-lg border text-left transition-colors',
+                  selectedPreset === key
+                    ? 'border-[var(--ring)] bg-[var(--accent)]'
+                    : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
+                )}
+              >
+                <span className="text-sm font-medium">{preset.label}</span>
+                <span className="text-[10px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
+              </button>
+            ))}
           </div>
         </div>
 
         <div>
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">Base URL (Optional)</label>
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
+            Base URL {selectedPreset !== 'custom' && <span className="opacity-60">(auto-filled)</span>}
+          </label>
           <input
             type="text"
             value={formData.baseUrl}
             onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-            placeholder="http://localhost:11434/v1 (for Ollama, LM Studio)"
-            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+            placeholder={selectedPreset === 'custom' ? 'http://localhost:11434/v1' : activePreset.baseUrl}
+            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors"
           />
         </div>
 
@@ -241,26 +311,28 @@ function AIContent() {
             type="password"
             value={aiSettings.hasApiKey ? '***' : formData.apiKey}
             onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-            placeholder="sk-... (leave empty to keep existing)"
-            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+            placeholder={activePreset.apiKeyPlaceholder}
+            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors"
           />
         </div>
 
         <div>
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">Model</label>
+          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
+            Model {selectedPreset !== 'custom' && <span className="opacity-60">(auto-filled)</span>}
+          </label>
           <input
             type="text"
             value={formData.model}
             onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-            placeholder="gpt-4o, llama3, mistral, etc."
-            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg"
+            placeholder={selectedPreset === 'custom' ? 'gpt-4o, llama3, mistral, etc.' : activePreset.model}
+            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors"
           />
         </div>
 
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full px-4 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50"
+          className="w-full px-4 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors"
         >
           {isSaving ? 'Saving...' : 'Save'}
         </button>
