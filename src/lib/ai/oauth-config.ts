@@ -19,9 +19,9 @@ export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
   codex: {
     name: 'OpenAI Codex',
     flow: 'pkce',
-    authorizeUrl: 'https://auth.openai.com/authorize',
+    authorizeUrl: 'https://auth.openai.com/oauth/authorize',
     tokenUrl: 'https://auth.openai.com/oauth/token',
-    clientId: 'app_sL9yHHTbNaJiIt0Ywz9ue',
+    clientId: 'app_EMoamEEZ73f0CkXaXp7hrann',
     scopes: ['openid', 'profile', 'email', 'offline_access'],
   },
   qwen: {
