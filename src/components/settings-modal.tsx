@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, LogIn, LogOut, Loader2, Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore, type AIProvider, type SettingsSection } from '@/lib/settings-store';
 import { ReadmeViewer } from '@/components/readme-viewer';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ChangelogViewer } from '@/components/changelog-viewer';
+import { OAUTH_PROVIDERS, generateRandomString, generateCodeChallenge } from '@/lib/ai/oauth-config';
 
 interface AppInfo {
   name: string;
@@ -179,44 +180,231 @@ function AppearanceContent() {
   );
 }
 
-const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string }> = {
+const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string; oauthOnly?: boolean }> = {
+  codex: {
+    label: 'OpenAI Codex',
+    baseUrl: 'https://api.openai.com/v1',
+    model: 'codex-mini-latest',
+    apiKeyPlaceholder: '',
+    description: 'Code-optimized models via OpenAI account',
+    oauthOnly: true,
+  },
+  qwen: {
+    label: 'Qwen',
+    baseUrl: 'https://chat.qwen.ai/api/v1',
+    model: 'qwen-max',
+    apiKeyPlaceholder: '',
+    description: 'Qwen-Max, Qwen-Plus via qwen.ai account',
+    oauthOnly: true,
+  },
+  kimi: {
+    label: 'Kimi',
+    baseUrl: 'https://api.kimi.ai/v1',
+    model: 'kimi-latest',
+    apiKeyPlaceholder: '',
+    description: 'Kimi models via Moonshot account',
+    oauthOnly: true,
+  },
   openai: {
     label: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
     model: 'gpt-4o',
     apiKeyPlaceholder: 'sk-...',
-    description: 'GPT-4o, GPT-4o-mini, and other OpenAI models',
-  },
-  qwen: {
-    label: 'Qwen (qwen.ai)',
-    baseUrl: 'https://chat.qwen.ai/api/v1',
-    model: 'qwen-max',
-    apiKeyPlaceholder: 'sk-... (from portal.qwen.ai)',
-    description: 'Qwen-Max, Qwen-Plus, Qwen-Turbo via Alibaba Cloud',
-  },
-  codex: {
-    label: 'OpenAI Codex',
-    baseUrl: 'https://api.openai.com/v1',
-    model: 'codex-mini-latest',
-    apiKeyPlaceholder: 'sk-... (OpenAI API key)',
-    description: 'OpenAI Codex models optimized for code generation',
+    description: 'GPT-4o and other OpenAI models (API key)',
   },
   custom: {
-    label: 'Custom (OpenAI-Compatible)',
+    label: 'Custom',
     baseUrl: '',
     model: '',
-    apiKeyPlaceholder: 'API key for your provider',
-    description: 'Ollama, LM Studio, or any OpenAI-compatible endpoint',
+    apiKeyPlaceholder: 'API key',
+    description: 'Ollama, LM Studio, or any OpenAI-compatible API',
   },
 };
+
+// Device code flow UI (Qwen, Kimi)
+function DeviceCodeFlow({ provider, onSuccess }: { provider: string; onSuccess: () => void }) {
+  const [userCode, setUserCode] = useState('');
+  const [verificationUri, setVerificationUri] = useState('');
+  const [polling, setPolling] = useState(false);
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startFlow = async () => {
+    setError('');
+    try {
+      const res = await fetch('/api/settings/oauth/device-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider }),
+      });
+      if (!res.ok) throw new Error('Failed to start login flow');
+      const data = await res.json();
+      setUserCode(data.user_code);
+      setVerificationUri(data.verification_uri);
+      setPolling(true);
+      window.open(data.verification_uri, '_blank', 'noopener');
+
+      const interval = (data.interval || 5) * 1000;
+      pollingRef.current = setInterval(async () => {
+        try {
+          const tokenRes = await fetch('/api/settings/oauth/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider, device_code: data.device_code }),
+          });
+          const tokenData = await tokenRes.json();
+          if (tokenData.status === 'success') {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+            setPolling(false);
+            onSuccess();
+          } else if (tokenData.status !== 'pending') {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+            setPolling(false);
+            setError(tokenData.error || 'Login failed');
+          }
+        } catch { /* keep polling */ }
+      }, interval);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start login');
+    }
+  };
+
+  useEffect(() => {
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+  }, []);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(userCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (polling && userCode) {
+    return (
+      <div className="space-y-3">
+        <div className="text-center space-y-2">
+          <p className="text-xs text-[var(--muted-foreground)]">Enter this code at the verification page:</p>
+          <div className="flex items-center justify-center gap-2">
+            <code className="text-2xl font-mono font-bold tracking-widest px-4 py-2 bg-[var(--secondary)] border border-[var(--border)] rounded-lg">
+              {userCode}
+            </code>
+            <button onClick={handleCopy} className="p-2 rounded-lg hover:bg-[var(--secondary)] transition-colors" title="Copy code">
+              {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-[var(--muted-foreground)]" />}
+            </button>
+          </div>
+          <a href={verificationUri} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
+            Open verification page <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted-foreground)]">
+          <Loader2 className="w-3 h-3 animate-spin" /> Waiting for authorization...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <button onClick={startFlow}
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg hover:opacity-90 transition-opacity">
+        <LogIn className="w-4 h-4" /> Login with {OAUTH_PROVIDERS[provider]?.name || provider}
+      </button>
+      {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+    </div>
+  );
+}
+
+// PKCE Authorization Code flow (Codex)
+function PKCEFlow({ provider, onSuccess }: { provider: string; onSuccess: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const handler = async (event: MessageEvent) => {
+      if (event.data?.type !== 'oauth-callback') return;
+      if (event.data.error) { setError(event.data.error); setLoading(false); return; }
+      if (event.data.code) {
+        const codeVerifier = sessionStorage.getItem('oauth_code_verifier');
+        const state = sessionStorage.getItem('oauth_state');
+        if (state !== event.data.state) { setError('State mismatch'); setLoading(false); return; }
+        try {
+          const res = await fetch('/api/settings/oauth/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider, code: event.data.code, code_verifier: codeVerifier, redirect_uri: `${window.location.origin}/api/settings/oauth/callback` }),
+          });
+          const data = await res.json();
+          if (data.status === 'success') onSuccess();
+          else setError(data.error || 'Token exchange failed');
+        } catch { setError('Token exchange failed'); }
+        setLoading(false);
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [provider, onSuccess]);
+
+  const startFlow = async () => {
+    setLoading(true); setError('');
+    const config = OAUTH_PROVIDERS[provider];
+    if (!config?.authorizeUrl || !config.clientId) return;
+    const codeVerifier = generateRandomString(64);
+    const state = generateRandomString(32);
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    sessionStorage.setItem('oauth_code_verifier', codeVerifier);
+    sessionStorage.setItem('oauth_state', state);
+    const params = new URLSearchParams({
+      response_type: 'code', client_id: config.clientId,
+      redirect_uri: `${window.location.origin}/api/settings/oauth/callback`,
+      scope: (config.scopes || []).join(' '), state,
+      code_challenge: codeChallenge, code_challenge_method: 'S256',
+    });
+    window.open(`${config.authorizeUrl}?${params}`, 'oauth-popup', 'width=600,height=700');
+  };
+
+  return (
+    <div className="space-y-2">
+      <button onClick={startFlow} disabled={loading}
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity">
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+        Login with {OAUTH_PROVIDERS[provider]?.name || provider}
+      </button>
+      {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+    </div>
+  );
+}
+
+// Connected OAuth status
+function OAuthConnected({ provider, onDisconnect }: { provider: string; onDisconnect: () => void }) {
+  const [disconnecting, setDisconnecting] = useState(false);
+  const config = OAUTH_PROVIDERS[provider];
+  const handleDisconnect = async () => {
+    setDisconnecting(true);
+    try { await fetch('/api/settings/oauth/disconnect', { method: 'POST' }); onDisconnect(); } catch { /* ignore */ }
+    setDisconnecting(false);
+  };
+  return (
+    <div className="flex items-center justify-between px-3 py-2.5 bg-[var(--secondary)]/50 border border-[var(--border)] rounded-lg">
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-green-500" />
+        <span className="text-sm">Connected via {config?.name || provider}</span>
+      </div>
+      <button onClick={handleDisconnect} disabled={disconnecting}
+        className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--muted-foreground)] hover:text-red-400 transition-colors">
+        {disconnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3 h-3" />} Disconnect
+      </button>
+    </div>
+  );
+}
 
 function AIContent() {
   const { aiSettings, setAISettings, loadSettings } = useSettingsStore();
 
-  // Determine initial preset from current settings
   const getInitialPreset = () => {
     const p = aiSettings.provider;
-    if (p === 'qwen' || p === 'codex' || p === 'openai') return p;
+    if (p === 'qwen' || p === 'codex' || p === 'openai' || p === 'kimi') return p;
     return 'custom';
   };
 
@@ -236,7 +424,7 @@ function AIContent() {
     if (config) {
       setFormData(prev => ({
         ...prev,
-        provider: preset === 'custom' ? 'openai' : preset as 'openai' | 'qwen' | 'codex',
+        provider: preset === 'custom' ? 'openai' : preset as AIProvider,
         baseUrl: config.baseUrl,
         model: config.model,
       }));
@@ -245,101 +433,112 @@ function AIContent() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    const settings = {
+    await setAISettings({
       provider: formData.provider,
       baseUrl: formData.baseUrl.trim() || undefined,
       apiKey: formData.apiKey.trim() || undefined,
       model: formData.model.trim() || undefined,
-    };
-    await setAISettings(settings);
+    });
     await loadSettings();
     setIsSaving(false);
     setSaved(true);
-    setFormData({ ...formData, apiKey: '' });
+    setFormData(prev => ({ ...prev, apiKey: '' }));
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const handleOAuthSuccess = async () => {
+    await loadSettings();
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleDisconnect = async () => { await loadSettings(); };
+
   const activePreset = PROVIDER_PRESETS[selectedPreset] || PROVIDER_PRESETS.custom;
+  const isOAuthOnly = activePreset.oauthOnly;
+  const isOAuthConnected = aiSettings.oauthConnected && aiSettings.oauthProvider === selectedPreset;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold mb-1">AI Settings</h2>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          Configure AI provider for feature generation
-        </p>
+        <p className="text-sm text-[var(--muted-foreground)]">Configure AI provider for feature generation</p>
       </div>
 
       <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-4">
+        {/* Provider selection */}
         <div>
           <label className="text-xs text-[var(--muted-foreground)] block mb-1.5">Provider</label>
           <div className="grid grid-cols-2 gap-2">
-            {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => (
-              <button
-                key={key}
-                onClick={() => handlePresetChange(key)}
-                className={cn(
-                  'flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-lg border text-left transition-colors',
-                  selectedPreset === key
-                    ? 'border-[var(--ring)] bg-[var(--accent)]'
-                    : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
-                )}
-              >
-                <span className="text-sm font-medium">{preset.label}</span>
-                <span className="text-[10px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
-              </button>
-            ))}
+            {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => {
+              const isConnected = aiSettings.oauthConnected && aiSettings.oauthProvider === key;
+              return (
+                <button key={key} onClick={() => handlePresetChange(key)}
+                  className={cn(
+                    'relative flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-lg border text-left transition-colors',
+                    selectedPreset === key
+                      ? 'border-[var(--ring)] bg-[var(--accent)]'
+                      : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
+                  )}>
+                  <span className="text-sm font-medium">{preset.label}</span>
+                  <span className="text-[10px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
+                  {isConnected && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-green-500" />}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div>
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
-            Base URL {selectedPreset !== 'custom' && <span className="opacity-60">(auto-filled)</span>}
-          </label>
-          <input
-            type="text"
-            value={formData.baseUrl}
-            onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-            placeholder={selectedPreset === 'custom' ? 'http://localhost:11434/v1' : activePreset.baseUrl}
-            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">API Key</label>
-          <input
-            type="password"
-            value={aiSettings.hasApiKey ? '***' : formData.apiKey}
-            onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-            placeholder={activePreset.apiKeyPlaceholder}
-            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1">
-            Model {selectedPreset !== 'custom' && <span className="opacity-60">(auto-filled)</span>}
-          </label>
-          <input
-            type="text"
-            value={formData.model}
-            onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-            placeholder={selectedPreset === 'custom' ? 'gpt-4o, llama3, mistral, etc.' : activePreset.model}
-            className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors"
-          />
-        </div>
-
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full px-4 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors"
-        >
-          {isSaving ? 'Saving...' : 'Save'}
-        </button>
-
-        {saved && (
-          <div className="text-xs text-green-500 text-center">Settings saved successfully</div>
+        {/* OAuth-only providers: show login/connected state only */}
+        {isOAuthOnly && (
+          <div>
+            <label className="text-xs text-[var(--muted-foreground)] block mb-1.5">Authentication</label>
+            {isOAuthConnected ? (
+              <OAuthConnected provider={selectedPreset} onDisconnect={handleDisconnect} />
+            ) : selectedPreset === 'codex' ? (
+              <PKCEFlow provider={selectedPreset} onSuccess={handleOAuthSuccess} />
+            ) : (
+              <DeviceCodeFlow provider={selectedPreset} onSuccess={handleOAuthSuccess} />
+            )}
+          </div>
         )}
+
+        {/* API key config: only for openai and custom */}
+        {!isOAuthOnly && (
+          <>
+            <div>
+              <label className="text-xs text-[var(--muted-foreground)] block mb-1">
+                Base URL {selectedPreset !== 'custom' && <span className="opacity-60">(auto-filled)</span>}
+              </label>
+              <input type="text" value={formData.baseUrl}
+                onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+                placeholder={selectedPreset === 'custom' ? 'http://localhost:11434/v1' : activePreset.baseUrl}
+                className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors" />
+            </div>
+            <div>
+              <label className="text-xs text-[var(--muted-foreground)] block mb-1">API Key</label>
+              <input type="password" value={aiSettings.hasApiKey ? '***' : formData.apiKey}
+                onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                placeholder={activePreset.apiKeyPlaceholder}
+                className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors" />
+            </div>
+            <div>
+              <label className="text-xs text-[var(--muted-foreground)] block mb-1">
+                Model {selectedPreset !== 'custom' && <span className="opacity-60">(auto-filled)</span>}
+              </label>
+              <input type="text" value={formData.model}
+                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                placeholder={selectedPreset === 'custom' ? 'gpt-4o, llama3, mistral, etc.' : activePreset.model}
+                className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors" />
+            </div>
+            <button onClick={handleSave} disabled={isSaving}
+              className="w-full px-4 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors">
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
+          </>
+        )}
+
+        {saved && <div className="text-xs text-green-500 text-center">Settings saved successfully</div>}
       </div>
     </div>
   );

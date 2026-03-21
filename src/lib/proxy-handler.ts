@@ -30,6 +30,7 @@ const PUBLIC_ROUTES = [
   '/api/checklist',
   '/api/analysis',
   '/api/app-info',
+  '/api/settings',
 ];
 
 // Routes that should be rate limited
