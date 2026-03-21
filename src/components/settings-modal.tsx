@@ -155,7 +155,17 @@ function ShortcutsContent() {
   );
 }
 
+const LANGUAGE_OPTIONS: { value: string; label: string; flag: string }[] = [
+  { value: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
+  { value: 'en', label: 'English', flag: '🇺🇸' },
+  { value: 'zh', label: '中文', flag: '🇨🇳' },
+  { value: 'ja', label: '日本語', flag: '🇯🇵' },
+  { value: 'ko', label: '한국어', flag: '🇰🇷' },
+];
+
 function AppearanceContent() {
+  const { language, setLanguage } = useSettingsStore();
+
   return (
     <div className="space-y-6">
       <div>
@@ -165,7 +175,7 @@ function AppearanceContent() {
         </p>
       </div>
 
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-sm font-medium">Theme</span>
@@ -174,6 +184,34 @@ function AppearanceContent() {
             </p>
           </div>
           <ThemeToggle />
+        </div>
+
+        <div className="h-px bg-[var(--border)]" />
+
+        <div>
+          <div className="mb-2">
+            <span className="text-sm font-medium">AI Output Language</span>
+            <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+              Language for AI-generated specs, plans, and tasks
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {LANGUAGE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setLanguage(opt.value as any)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors',
+                  language === opt.value
+                    ? 'border-[var(--ring)] bg-[var(--accent)] font-medium'
+                    : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
+                )}
+              >
+                <span>{opt.flag}</span>
+                <span>{opt.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

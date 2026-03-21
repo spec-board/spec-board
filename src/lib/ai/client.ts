@@ -29,7 +29,7 @@ import type {
   GeneratedQuickstart,
   GeneratedContracts
 } from './types';
-import { getAISettings } from './settings';
+import { getAISettings, getAppSettings } from './settings';
 
 /**
  * AI Client - OpenAI-Compatible API only
@@ -111,9 +111,27 @@ class AIService {
     console.log('[AI Client] apiKey length:', apiKey?.length);
     console.log('[AI Client] apiKey prefix:', apiKey?.substring(0, 5));
 
-    const messages = systemPrompt
-      ? [{ role: 'system', content: systemPrompt }, { role: 'user', content: prompt }]
-      : [{ role: 'user', content: prompt }];
+    // Inject output language instruction into system prompt
+    const LANGUAGE_NAMES: Record<string, string> = {
+      vi: 'Vietnamese (Tiếng Việt)',
+      en: 'English',
+      zh: 'Chinese (中文)',
+      ja: 'Japanese (日本語)',
+      ko: 'Korean (한국어)',
+    };
+    const appSettings = await getAppSettings();
+    const lang = appSettings.language || 'vi';
+    const langName = LANGUAGE_NAMES[lang] || lang;
+    const langInstruction = `\n\nIMPORTANT: You MUST respond entirely in ${langName}. All text, titles, descriptions, names, and content must be written in ${langName}. Only keep technical terms, code, and JSON keys in English.`;
+
+    const finalSystemPrompt = systemPrompt
+      ? systemPrompt + langInstruction
+      : `You are a helpful assistant.${langInstruction}`;
+
+    const messages = [
+      { role: 'system', content: finalSystemPrompt },
+      { role: 'user', content: prompt },
+    ];
 
     // Handle baseUrl - support both OpenAI-compatible formats:
     // - /v1/chat/completions (new format)
