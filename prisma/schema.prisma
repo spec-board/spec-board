@@ -445,6 +445,7 @@ model AppSettings {
   key       String   @unique // 'app-settings' - single row for all settings
   theme     String   @default("dark") // light, dark, system
   shortcutsEnabled Boolean @default(true)
+  language  String   @default("vi") // AI output language: vi, en, zh, ja, ko
 
   // AI Settings - OpenAI-Compatible API only
   aiProvider        String   @default("openai") // openai only
