@@ -5,7 +5,7 @@ import { Loader2, CheckSquare, AlertCircle, CheckCircle, Circle, ArrowRight } fr
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
 import type { DocumentType } from '../types';
-import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { MarkdownRenderer, InlineMarkdown } from '@/components/markdown-renderer';
 import { DocumentSelector } from '../document-selector';
 import { getDocumentOptions } from '../types';
 import { cn } from '@/lib/utils';
@@ -146,9 +146,8 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
           <button
             onClick={handleGenerateChecklist}
             disabled={!hasPlan}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+            className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <CheckSquare className="w-4 h-4" />
             Generate Checklist
           </button>
         )
@@ -164,7 +163,7 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
 
           {status === 'generating' && (
             <div className="text-center py-8">
-              <Loader2 className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin" />
+              <Loader2 className="w-8 h-8 mx-auto mb-4 text-[var(--foreground)] animate-spin" />
               <p className="text-[var(--foreground)] font-medium">
                 Generating Checklist...
               </p>
@@ -175,8 +174,8 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
           )}
 
           {status === 'error' && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-red-500 mb-2">
+            <div className="bg-[var(--destructive)]/10 border border-[var(--destructive)]/20 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-[var(--destructive)] mb-2">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">Error</span>
               </div>
@@ -185,7 +184,7 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
               </p>
               <button
                 onClick={handleGenerateChecklist}
-                className="text-sm text-blue-500 hover:text-blue-400"
+                className="text-sm text-[var(--foreground)] underline hover:opacity-70"
               >
                 Try again →
               </button>
@@ -194,8 +193,8 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
 
           {status === 'idle' && !hasChecklist && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <CheckSquare className="w-8 h-8 text-blue-500" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--secondary)] flex items-center justify-center">
+                <CheckSquare className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
               <p className="text-[var(--foreground)] font-medium mb-2">
                 Quality Assurance Checklist
@@ -232,7 +231,7 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
                       strokeLinecap="round"
                       className={cn(
                         "transition-all duration-500",
-                        percentage >= 80 ? "text-green-500" : percentage > 0 ? "text-blue-500" : "text-[var(--muted)]"
+                        percentage >= 80 ? "text-[var(--foreground)]" : percentage > 0 ? "text-[var(--muted-foreground)]" : "text-[var(--muted)]"
                       )}
                     />
                   </svg>
@@ -264,7 +263,7 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
                       <span className={cn(
                         "text-sm",
                         sectionCompleted === sectionTotal
-                          ? "text-green-500"
+                          ? "text-[var(--foreground)] font-medium"
                           : "text-[var(--muted-foreground)]"
                       )}>
                         {sectionCompleted}/{sectionTotal}
@@ -311,23 +310,24 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
                           className={cn(
                             "flex items-start gap-3 p-3 rounded-lg transition-colors",
                             item.checked
-                              ? "bg-green-500/10"
+                              ? "bg-[var(--secondary)]/50"
                               : "hover:bg-[var(--muted)]/50"
                           )}
                         >
                           {item.checked ? (
-                            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                            <CheckCircle className="w-5 h-5 text-[var(--foreground)] mt-0.5 flex-shrink-0" />
                           ) : (
                             <Circle className="w-5 h-5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
                           )}
-                          <span className={cn(
-                            "text-sm",
-                            item.checked
-                              ? "text-[var(--foreground)] line-through opacity-70"
-                              : "text-[var(--foreground)]"
-                          )}>
-                            {item.text}
-                          </span>
+                          <InlineMarkdown
+                            content={item.text}
+                            className={cn(
+                              "text-sm",
+                              item.checked
+                                ? "text-[var(--foreground)] line-through opacity-70"
+                                : "text-[var(--foreground)]"
+                            )}
+                          />
                         </div>
                       ))}
                     </div>

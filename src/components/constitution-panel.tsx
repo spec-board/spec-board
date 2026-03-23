@@ -69,7 +69,7 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
           <div className="text-left">
             <h3 className="font-semibold">Project Constitution</h3>
             <p className="text-xs text-[var(--muted-foreground)]">
-              {constitution.principles.length} principles defined
+              {constitution.principles?.length ?? 0} principles defined
             </p>
           </div>
         </div>
@@ -109,14 +109,14 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
           )}
 
           {/* Principles */}
-          {constitution.principles.length > 0 && (
+          {(constitution.principles?.length ?? 0) > 0 && (
             <div className="p-4">
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <Shield className="w-4 h-4 text-[var(--muted-foreground)]" />
                 Core Principles
               </h4>
               <div className="space-y-2">
-                {constitution.principles.map((principle, index) => (
+                {constitution.principles?.map((principle, index) => (
                   <div
                     key={index}
                     className="rounded-lg border border-[var(--border)] overflow-hidden"
@@ -144,14 +144,14 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
           )}
 
           {/* Other Sections */}
-          {constitution.sections.length > 0 && (
+          {(constitution.sections?.length ?? 0) > 0 && (
             <div className="p-4 border-t border-[var(--border)]">
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[var(--muted-foreground)]" />
                 Additional Sections
               </h4>
               <div className="space-y-2">
-                {constitution.sections.map((section, index) => (
+                {constitution.sections?.map((section, index) => (
                   <div
                     key={index}
                     className="rounded-lg border border-[var(--border)] overflow-hidden"

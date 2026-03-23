@@ -72,14 +72,14 @@ export function ExecutionPanel({ sessionId, onConnect, onDisconnect }: Execution
           {!sessionId ? (
             <button
               onClick={onConnect}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="btn btn-primary btn-sm"
             >
               Connect
             </button>
           ) : (
             <button
               onClick={onDisconnect}
-              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              className="btn btn-secondary btn-sm"
             >
               Disconnect
             </button>
@@ -107,7 +107,7 @@ export function ExecutionPanel({ sessionId, onConnect, onDisconnect }: Execution
             <button
               onClick={handleExecute}
               disabled={isExecuting || !command.trim()}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isExecuting ? 'Executing...' : 'Execute'}
             </button>

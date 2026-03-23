@@ -5,7 +5,7 @@ import { Loader2, Play, AlertCircle, CheckCircle, ArrowRight } from 'lucide-reac
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
 import type { DocumentType } from '../types';
-import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { MarkdownRenderer, InlineMarkdown } from '@/components/markdown-renderer';
 import { DocumentSelector } from '../document-selector';
 import { getDocumentOptions } from '../types';
 import { STAGES, getStageConfig } from '../base/types';
@@ -91,7 +91,7 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
         <button
           onClick={handleGenerate}
           disabled={status === 'generating'}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-md font-medium transition-colors"
+          className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {status === 'generating' ? (
             <>
@@ -99,10 +99,7 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
               Generating...
             </>
           ) : (
-            <>
-              <Play className="w-4 h-4" />
-              Generate Spec
-            </>
+            'Generate Spec'
           )}
         </button>
       }
@@ -120,15 +117,13 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
             <h4 className="text-sm font-medium text-[var(--muted-foreground)] mb-2">
               Description
             </h4>
-            <p className="text-[var(--foreground)]">
-              {feature.description || feature.name}
-            </p>
+            <InlineMarkdown content={feature.description || feature.name} as="p" className="text-[var(--foreground)]" />
           </div>
 
           {status === 'idle' && !hasSpec && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Play className="w-8 h-8 text-blue-500" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--secondary)] flex items-center justify-center">
+                <Play className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
               <p className="text-[var(--foreground)] mb-2 font-medium">
                 Ready to Generate
@@ -149,7 +144,7 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
                 </div>
                 <div className="h-2 bg-[var(--muted)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-300"
+                    className="h-full bg-[var(--foreground)] transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -157,7 +152,7 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
 
               {/* Current step */}
               <div className="flex items-center gap-3">
-                <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                <Loader2 className="w-5 h-5 text-[var(--foreground)] animate-spin" />
                 <div>
                   <p className="text-[var(--foreground)] font-medium">{currentStep.label}</p>
                   <p className="text-sm text-[var(--muted-foreground)]">
@@ -174,9 +169,9 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
                     className="flex items-center gap-2 text-sm"
                   >
                     {progress > step.progress ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <CheckCircle className="w-4 h-4 text-[var(--foreground)]" />
                     ) : progress === step.progress ? (
-                      <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+                      <Loader2 className="w-4 h-4 text-[var(--foreground)] animate-spin" />
                     ) : (
                       <div className="w-4 h-4 rounded-full border border-[var(--border)]" />
                     )}
@@ -194,8 +189,8 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
           )}
 
           {status === 'error' && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-red-500 mb-2">
+            <div className="bg-[var(--destructive)]/10 border border-[var(--destructive)]/20 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-[var(--destructive)] mb-2">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">Generation Failed</span>
               </div>
@@ -204,7 +199,7 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
               </p>
               <button
                 onClick={handleGenerate}
-                className="text-sm text-blue-500 hover:text-blue-400"
+                className="text-sm text-[var(--foreground)] underline hover:opacity-70"
               >
                 Try again →
               </button>
@@ -213,8 +208,8 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
 
           {status === 'complete' && (
             <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-500" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--secondary)] flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-[var(--foreground)]" />
               </div>
               <p className="text-[var(--foreground)] font-medium mb-2">
                 Spec Generated Successfully!
@@ -227,8 +222,8 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
 
           {hasSpec && status === 'idle' && (
             <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-500" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--secondary)] flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-[var(--foreground)]" />
               </div>
               <p className="text-[var(--foreground)] font-medium mb-2">
                 Spec Already Exists

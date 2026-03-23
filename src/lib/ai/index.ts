@@ -1,4 +1,4 @@
-// AI Service exports
+// AI Service exports - updated 2026-03-23
 export * from './types';
 export * from './mock';
 export * from './settings';
@@ -48,7 +48,7 @@ export async function getProvider(): Promise<AIProvider> {
   }
 
   throw new Error(
-    'No AI API key configured. Please configure an API key in settings to use AI features.'
+    'Please configure AI settings before using this feature.'
   );
 }
 
@@ -156,9 +156,7 @@ export async function generateConstitution(options: {
   principles: Array<{ name: string; description: string }>;
   suggestedSections: Array<{ name: string; content: string }>;
 }> {
-  const provider = await getProvider();
-  console.log(`[AI] Generating constitution with ${provider}`);
-
+  console.log(`[AI] Generating constitution...`);
   return aiService.generateConstitution(options);
 }
 

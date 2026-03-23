@@ -177,21 +177,10 @@ export function AnalysisSaveModal({
           <button
             onClick={handleSave}
             disabled={isSaving || !content.trim()}
-            className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg',
-              'bg-blue-600 hover:bg-blue-700 text-white',
-              'transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-            )}
+            className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={isSaving ? 'Saving...' : 'Save analysis'}
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save'
-            )}
+            {isSaving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>

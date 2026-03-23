@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-03-23
+
+### Added
+- **Delete Confirmation Modal** - Custom modal replaces browser `confirm()` for provider deletion:
+  - Backdrop blur overlay with centered dialog
+  - Shows provider name and "cannot be undone" warning
+  - Cancel and Remove buttons with red destructive styling
+- **Optimistic UI for Provider Toggle** - Switch responds instantly:
+  - Toggle updates local state immediately via `setProviders`
+  - Reverts on API failure for consistency
+- **Theme Dropdown** - Replaced toggle button with animated dropdown:
+  - Compact trigger with chevron rotation animation
+  - Dropdown with Light, Dark, System options
+  - Spring-like `cubic-bezier(0.16,1,0.3,1)` entrance animation
+  - Staggered item fade-in with `translateY` transitions
+  - Active theme highlighted with accent background
+
+### Changed
+- **AI Provider System Simplified** - All providers now use API Key authentication:
+  - Removed OAuth flows (Codex PKCE, Qwen/Kimi/iFlow Device Code) -- Codex CLI client_id only supports `localhost:1455` redirect
+  - Unified `AddApiKeyProviderDialog` replaces separate OAuth/API Key dialogs
+  - OpenAI added as API Key provider (`sk-...` key for GPT-4o, o3, Codex mini)
+  - Model field made optional with auto-fill from preset defaults
+  - Provider selection list uses single vertical column layout
+  - Single "Add Provider" + "Env" action buttons replace three-button layout
+- **Project Info Modal Redesign** - Constitution-first layout:
+  - Constitution displayed as the primary/largest section
+  - Small "View history" link replaces the old tab navigation
+  - Project Description moved to bottom in compact read-only format
+  - Edit button reveals textarea and "Save & Generate Constitution" action
+- **Constitution Type Safety** - `principles` and `sections` fields made optional in `Constitution` type:
+  - All components use optional chaining with safe defaults (`?? []`)
+- **Provider Route Migration** - Moved from `/api/settings/ai/providers` to `/api/settings/ai/provider-configs`:
+  - All SQL queries use `::uuid` casts for PostgreSQL compatibility
+  - Sub-routes (`import-env`, `oauth`) moved to new path
+- **Component Renaming** - `project-info-bubble.tsx` renamed to `project-info-panel.tsx`
+- **Page Architecture** - Project page split into `page.tsx` (thin wrapper) + `project-view.tsx` (logic):
+  - Direct named imports replace `dynamic()` lazy loading
+- **Build System** - Switched from Turbopack to webpack for dev server to resolve persistent cache issues
+
+### Fixed
+- **Provider Toggle Slow Response** - API calls failed silently due to stale SQL; optimistic UI added
+- **Build Cache Persistence** - Old compiled modules served despite source changes:
+  - Renamed files to force new module paths
+  - Disabled Turbopack to use webpack with `cache: false`
+  - Restored missing Lucide icon imports
+- **OAuth Token Exchange** - Fixed `Content-Type` to `application/x-www-form-urlencoded` (OAuth2 standard)
+- **Device Code Flow** - Fixed `Content-Type` for Qwen device authorization endpoint
+- **Duplicate Changelog Key** - Renamed second `[1.2.0]` entry to `[1.1.0]`
+
+### Removed
+- **OAuth Provider Flows** - Removed Codex PKCE, Qwen, Kimi, iFlow Device Code (incompatible with hosted web apps)
+- **`AddOAuthProviderDialog`** - Replaced by unified `AddApiKeyProviderDialog`
+- **`oauthOnly` Provider Flag** - All providers are now API key-based
+- **Browser `confirm()` Dialog** - Replaced with custom confirmation modal
+- **Cycle Theme Toggle** - Replaced with dropdown menu
+- **Tab Navigation in Project Info** - Replaced with constitution-first layout
+- **`dynamic()` Imports** - Removed for `ProjectInfoBubble` and `KanbanBoard`
+
 ## [2.1.0] - 2026-03-12
 
 ### Changed
@@ -149,7 +208,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API key status not showing after save
 - UI shows "***" in API key field when configured
 
-## [1.2.0] - 2026-02-15
+## [1.1.0] - 2026-02-15
 
 ### Added
 - **Toast Notifications** - User feedback for actions:

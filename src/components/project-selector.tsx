@@ -375,7 +375,6 @@ export function ProjectSelector({ onSelect, recentProjects }: ProjectSelectorPro
               className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded text-sm font-medium hover:opacity-90 transition-opacity focus-ring"
               aria-label={`Select ${currentPath} as project`}
             >
-              <Check className="w-4 h-4" aria-hidden="true" />
               Select This Project
             </button>
           </Tooltip>

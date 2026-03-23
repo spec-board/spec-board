@@ -127,8 +127,8 @@ export interface Constitution {
   rawContent: string;
   title?: string;
   description?: string;  // Project description at time of constitution creation
-  principles: ConstitutionPrinciple[];
-  sections: ConstitutionSection[];
+  principles?: ConstitutionPrinciple[];
+  sections?: ConstitutionSection[];
   version?: string;
   ratifiedDate?: string;
   lastAmendedDate?: string;

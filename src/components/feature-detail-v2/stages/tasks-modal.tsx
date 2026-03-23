@@ -90,7 +90,8 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate analysis');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to generate analysis');
       }
 
       setAnalysisStatus('ready');
@@ -176,16 +177,15 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
       onDelete={onDelete}
       headerActions={
         hasAnalysis ? (
-          <div className="text-sm text-green-500 font-medium">
+          <div className="text-sm text-[var(--foreground)] font-medium">
             Analysis Complete
           </div>
         ) : analysisStatus !== 'generating' ? (
           <button
             onClick={handleRunAnalysis}
             disabled={!hasAllDocs}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+            className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <BarChart3 className="w-4 h-4" />
             Run Analysis
           </button>
         ) : null
@@ -198,7 +198,7 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
           tabIndex={0}
           className={cn(
             "w-[40%] border-r border-[var(--border)] overflow-hidden outline-none",
-            focusedPanel === 'left' && 'ring-2 ring-inset ring-blue-500/20'
+            focusedPanel === 'left' && 'ring-2 ring-inset ring-[var(--ring)]'
           )}
         >
           <UserStoryPanel
@@ -218,7 +218,7 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
           tabIndex={0}
           className={cn(
             "w-[60%] overflow-hidden outline-none",
-            focusedPanel === 'right' && 'ring-2 ring-inset ring-blue-500/20'
+            focusedPanel === 'right' && 'ring-2 ring-inset ring-[var(--ring)]'
           )}
         >
           <DocumentPanel

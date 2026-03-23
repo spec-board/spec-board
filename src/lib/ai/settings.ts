@@ -43,6 +43,42 @@ async function getOrCreateSettings() {
 }
 
 export async function getAISettings(): Promise<AISettingsData> {
+  // First check ai_provider_configs for enabled providers (new system)
+  try {
+    const providers = await prisma.$queryRawUnsafe<Array<{
+      provider: string;
+      baseUrl: string;
+      model: string;
+      apiKey: string | null;
+      oauthToken: string | null;
+    }>>(
+      `SELECT "provider","baseUrl","model","apiKey","oauthToken"
+       FROM "ai_provider_configs"
+       WHERE "enabled" = true
+       ORDER BY "priority" ASC
+       LIMIT 1`
+    );
+
+    if (providers.length > 0) {
+      const p = providers[0];
+      const key = p.apiKey || p.oauthToken || undefined;
+      if (key) {
+        const result: AISettingsData = {
+          provider: p.provider || 'openai',
+          baseUrl: p.baseUrl || undefined,
+          apiKey: key,
+          model: p.model || undefined,
+        };
+        cachedSettings = result;
+        cacheInitialized = true;
+        return result;
+      }
+    }
+  } catch {
+    // Table may not exist yet, fall through to legacy settings
+  }
+
+  // Fallback to legacy appSettings table
   const settings = await getOrCreateSettings();
 
   const result = {

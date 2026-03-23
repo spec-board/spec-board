@@ -12,32 +12,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
 
-    let tokenBody: Record<string, string>;
+    const tokenParams = new URLSearchParams();
 
     if (config.flow === 'device_code' && device_code) {
-      // Device code token exchange (Qwen, Kimi)
-      tokenBody = {
-        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-        device_code,
-        client_id: config.clientId || '',
-      };
+      // Device code token exchange
+      tokenParams.set('grant_type', 'urn:ietf:params:oauth:grant-type:device_code');
+      tokenParams.set('device_code', device_code);
+      tokenParams.set('client_id', config.clientId || '');
     } else if (config.flow === 'pkce' && code) {
       // PKCE authorization code exchange (Codex)
-      tokenBody = {
-        grant_type: 'authorization_code',
-        code,
-        client_id: config.clientId || '',
-        code_verifier: code_verifier || '',
-        redirect_uri: redirect_uri || '',
-      };
+      tokenParams.set('grant_type', 'authorization_code');
+      tokenParams.set('code', code);
+      tokenParams.set('client_id', config.clientId || '');
+      tokenParams.set('code_verifier', code_verifier || '');
+      tokenParams.set('redirect_uri', redirect_uri || '');
+      // OpenAI requires audience parameter
+      if (config.audience) {
+        tokenParams.set('audience', config.audience);
+      }
     } else {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
     const res = await fetch(config.tokenUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(tokenBody),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: tokenParams.toString(),
     });
 
     const data = await res.json();
@@ -59,17 +59,57 @@ export async function POST(request: Request) {
       return NextResponse.json({ status: 'error', error: 'No access token received' }, { status: 400 });
     }
 
-    // Save OAuth tokens to database
+    // Save OAuth tokens to ai_provider_configs table
     const expiresAt = data.expires_in
       ? new Date(Date.now() + data.expires_in * 1000)
       : null;
 
-    // Get or create settings
+    // Check if provider config already exists for this provider
+    const existing = await prisma.$queryRawUnsafe<{ id: string }[]>(
+      `SELECT "id" FROM "ai_provider_configs" WHERE "provider" = $1 LIMIT 1`,
+      provider
+    );
+
+    const baseUrl = (config.flow === 'device_code' && data.resource_url)
+      ? data.resource_url
+      : (config as any).baseUrl || 'https://api.openai.com/v1';
+
+    if (existing.length > 0) {
+      // Update existing provider config with new OAuth tokens
+      await prisma.$executeRawUnsafe(
+        `UPDATE "ai_provider_configs"
+         SET "oauthToken" = $1, "oauthRefresh" = $2, "oauthExpiresAt" = $3,
+             "baseUrl" = $4, "enabled" = true, "updated_at" = NOW()
+         WHERE "id" = $5::uuid`,
+        data.access_token, data.refresh_token || null, expiresAt,
+        baseUrl, existing[0].id
+      );
+    } else {
+      // Create new provider config with OAuth tokens
+      const maxResult = await prisma.$queryRawUnsafe<[{ max: number | null }]>(
+        `SELECT MAX("priority") as max FROM "ai_provider_configs"`
+      );
+      const nextPriority = ((maxResult[0]?.max) ?? -1) + 1;
+
+      // Get model from PROVIDER_PRESETS equivalent
+      const defaultModels: Record<string, string> = {
+        codex: 'codex-mini-latest',
+      };
+
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "ai_provider_configs"
+         ("id","provider","label","baseUrl","model","oauthToken","oauthRefresh","oauthExpiresAt","priority","enabled","created_at","updated_at")
+         VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,$8,true,NOW(),NOW())`,
+        provider, config.name, baseUrl, defaultModels[provider] || 'default',
+        data.access_token, data.refresh_token || null, expiresAt, nextPriority
+      );
+    }
+
+    // Also update appSettings for backward compatibility
     let settings = await prisma.appSettings.findFirst();
     if (!settings) {
       settings = await prisma.appSettings.create({ data: {} });
     }
-
     await prisma.appSettings.update({
       where: { id: settings.id },
       data: {
@@ -78,10 +118,6 @@ export async function POST(request: Request) {
         oauthRefreshToken: data.refresh_token || null,
         oauthExpiresAt: expiresAt,
         oauthProvider: provider,
-        // Set the correct base URL and model for the provider
-        openaiBaseUrl: config.flow === 'device_code' && data.resource_url
-          ? data.resource_url
-          : undefined,
       },
     });
 

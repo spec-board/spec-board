@@ -62,7 +62,7 @@ export function HeaderBar({
         {onDelete && (
           <button
             onClick={onDelete}
-            className="btn-icon hover:!bg-red-500/10 hover:!text-red-500"
+            className="btn-icon"
             aria-label="Delete feature"
           >
             <Trash2 className="w-5 h-5" />

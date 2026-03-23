@@ -144,7 +144,7 @@ export function PRDToUserStoriesModal({
                   value={prdContent}
                   onChange={(e) => setPRDContent(e.target.value)}
                   placeholder="Paste your PRD content here..."
-                  className="w-full h-64 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full h-64 p-4 border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] rounded-lg resize-none focus:ring-2 focus:ring-[var(--ring)] focus:border-[var(--ring)]"
                   disabled={isProcessing}
                 />
                 <p className="mt-2 text-sm text-gray-500">
@@ -163,7 +163,7 @@ export function PRDToUserStoriesModal({
                 <button
                   onClick={handleGenerate}
                   disabled={isProcessing}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isProcessing ? (
                     <>
@@ -238,7 +238,7 @@ export function PRDToUserStoriesModal({
                 </button>
                 <button
                   onClick={handleSaveStories}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="btn btn-primary btn-sm"
                 >
                   Save User Stories
                 </button>

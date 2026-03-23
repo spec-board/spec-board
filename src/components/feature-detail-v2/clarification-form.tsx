@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { InlineMarkdown } from '@/components/markdown-renderer';
 
 export interface ClarificationQuestion {
   question: string;
+  context?: string;
   answer?: string;
 }
 
@@ -119,9 +121,17 @@ export function ClarificationForm({
         ) : (
           questions.map((item, index) => (
             <div key={index} className={cn('space-y-2', readOnly && 'opacity-80')}>
-              <label className="block text-sm font-medium text-[var(--foreground)]">
-                <span className="text-[var(--muted-foreground)]">Q{index + 1}:</span> {item.question}
-              </label>
+              <div>
+                <label className="block text-sm font-medium text-[var(--foreground)]">
+                  <span className="text-[var(--muted-foreground)] mr-1.5">{index + 1}.</span>
+                  <InlineMarkdown content={item.question} />
+                </label>
+                {item.context && (
+                  <p className="text-xs text-[var(--muted-foreground)] mt-1 leading-relaxed pl-4">
+                    {item.context}
+                  </p>
+                )}
+              </div>
               {readOnly ? (
                 <div className="px-3 py-2 rounded-md text-sm bg-[var(--muted)] text-[var(--foreground)] border border-[var(--border)]">
                   {item.answer || <span className="italic text-[var(--muted-foreground)]">No answer provided</span>}
@@ -156,37 +166,77 @@ export function ClarificationForm({
   );
 }
 
-// Parse markdown content to extract Q&A
+// Parse markdown content to extract Q&A -- handles both canonical and legacy formats
 function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
+  if (!content) return [];
+
   const questions: ClarificationQuestion[] = [];
 
-  // Split content by Q: sections and parse each
-  const sections = content.split(/^### Q:/m);
+  // Format 1: Canonical (### Q: question\n_context_)
+  if (content.includes('### Q:')) {
+    const sections = content.split(/^### Q:\s*/m);
+    for (const section of sections) {
+      if (!section.trim()) continue;
 
-  for (const section of sections) {
-    if (!section.trim()) continue;
+      const lines = section.trim().split('\n');
+      let question = lines[0]?.trim() || '';
 
-    // Extract question and answer
-    const lines = section.trim().split('\n');
-    let question = lines[0]?.trim() || '';
+      // Skip header sections
+      if (!question || question.startsWith('#')) continue;
 
-    // Skip header sections (e.g., "# Clarifications", "## Questions & Answers")
-    if (!question || question.startsWith('#')) continue;
-
-    // Find answer line
-    let answer = '';
-    for (const line of lines) {
-      const answerMatch = line.match(/^\*\*A\*\*:\s*(.+)$/);
-      if (answerMatch) {
-        answer = answerMatch[1].trim();
-        break;
+      // Extract context (italic line below question: _context text_)
+      let context = '';
+      let answer = '';
+      for (const line of lines.slice(1)) {
+        const trimmed = line.trim();
+        // Context line: _text_ (italic markdown)
+        const contextMatch = trimmed.match(/^_(.+)_$/);
+        if (contextMatch && !context) {
+          context = contextMatch[1];
+          continue;
+        }
+        // Answer line
+        const answerMatch = trimmed.match(/^\*\*A\*\*:\s*(.+)$/);
+        if (answerMatch) {
+          answer = answerMatch[1].trim();
+          break;
+        }
       }
+
+      const filteredAnswer = answer === '_Pending_' ? '' : answer;
+      questions.push({ question, context, answer: filteredAnswer });
     }
 
-    // Filter out "_Pending_" as empty answer
-    const filteredAnswer = answer === '_Pending_' ? '' : answer;
+    if (questions.length > 0) return questions;
+  }
 
-    questions.push({ question, answer: filteredAnswer });
+  // Format 2: Legacy numbered list (1. **Question** _context_)
+  const lines = content.split('\n').filter(l => l.trim());
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const match = line.match(/^\d+\.\s*\*\*(.+?)\*\*/);
+    if (match) {
+      let context = '';
+
+      // Check for inline context on same line: 1. **Question** _context_
+      const inlineCtx = line.match(/\*\*\s+_(.+)_\s*$/);
+      if (inlineCtx) {
+        context = inlineCtx[1];
+      }
+
+      // Check next line for _context_ on separate line
+      if (!context) {
+        const nextLine = lines[i + 1]?.trim();
+        if (nextLine) {
+          const ctxMatch = nextLine.match(/^_(.+)_$/);
+          if (ctxMatch) {
+            context = ctxMatch[1];
+          }
+        }
+      }
+
+      questions.push({ question: match[1], context, answer: '' });
+    }
   }
 
   return questions;

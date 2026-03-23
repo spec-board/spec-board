@@ -634,91 +634,141 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// Priority left-border color
+function priorityBorderColor(priority: string): string {
+  const num = parseInt(priority.replace(/\D/g, ''), 10) || 1;
+  if (num === 1) return 'border-l-red-500';
+  if (num === 2) return 'border-l-amber-500';
+  if (num === 3) return 'border-l-yellow-500';
+  if (num <= 5) return 'border-l-green-500';
+  return 'border-l-zinc-400';
+}
+
 // User Story Card component
-function UserStoryCard({ story }: { story: UserStory }) {
+function UserStoryCard({ story, index }: { story: UserStory; index: number }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden">
+    <div className={cn(
+      'bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden border-l-[3px]',
+      priorityBorderColor(story.priority)
+    )}>
       {/* Story Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center gap-3 p-4 hover:bg-[var(--secondary)]/30 transition-colors text-left"
+        className="w-full flex items-start gap-3 px-5 py-4 hover:bg-[var(--secondary)]/30 transition-colors text-left"
       >
-        {isExpanded ? (
-          <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
-        )}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="text-xs font-mono text-[var(--muted-foreground)] bg-[var(--secondary)] px-2 py-0.5 rounded">
-            {story.id}
-          </span>
-          <span className="font-medium truncate">{story.title}</span>
+        {/* Number circle */}
+        <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center text-xs font-bold mt-0.5">
+          {index + 1}
+        </span>
+
+        {/* Title block */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-semibold text-[var(--foreground)] leading-snug">
+              {story.title}
+            </h3>
+            <PriorityBadge priority={story.priority} />
+          </div>
+          {/* Description preview */}
+          {story.description && (
+            <p className="text-xs text-[var(--muted-foreground)] mt-1.5 leading-relaxed italic line-clamp-2">
+              {story.description}
+            </p>
+          )}
+          {/* Meta row */}
+          <div className="flex items-center gap-3 mt-2">
+            <span className="text-[10px] font-mono text-[var(--muted-foreground)] bg-[var(--secondary)] px-1.5 py-0.5 rounded">
+              {story.id}
+            </span>
+            {story.acceptanceScenarios.length > 0 && (
+              <span className="text-[10px] text-[var(--muted-foreground)] flex items-center gap-1">
+                <FileCheck className="w-3 h-3" />
+                {story.acceptanceScenarios.length} scenario{story.acceptanceScenarios.length > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
         </div>
-        <PriorityBadge priority={story.priority} />
+
+        {/* Chevron */}
+        <span className="flex-shrink-0 mt-1 text-[var(--muted-foreground)]">
+          {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </span>
       </button>
 
       {/* Story Content */}
       {isExpanded && (
-        <div className="px-4 pb-4 space-y-4">
+        <div className="px-5 pb-5 pt-1 space-y-4 border-t border-[var(--border)]/50">
           {/* Description - formatted with line breaks for As a/I want/so that */}
           {story.description && (
-            <div className="pl-7">
-              <p className="text-sm text-[var(--muted-foreground)] italic whitespace-pre-line">
-                "{formatUserStoryDescription(story.description)}"
+            <div className="bg-[var(--secondary)]/40 rounded-lg px-4 py-3">
+              <p className="text-sm text-[var(--foreground)] whitespace-pre-line leading-relaxed">
+                {formatUserStoryDescription(story.description)}
               </p>
             </div>
           )}
 
-          {/* Why this priority */}
-          {story.whyPriority && (
-            <div className="pl-7">
-              <div className="flex items-start gap-2">
-                <Target className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
-                <div>
-                  <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-warning)' }}>Why this priority</span>
-                  <p className="text-sm text-[var(--foreground)] mt-1">{story.whyPriority}</p>
+          {/* Info cards row */}
+          {(story.whyPriority || story.independentTest) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Why this priority */}
+              {story.whyPriority && (
+                <div className="flex items-start gap-2.5 bg-amber-500/5 border border-amber-500/15 rounded-lg px-3.5 py-3">
+                  <Target className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }} />
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--tag-text-warning)' }}>
+                      Why this priority
+                    </span>
+                    <p className="text-xs text-[var(--foreground)] leading-relaxed">{story.whyPriority}</p>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
 
-          {/* Independent Test */}
-          {story.independentTest && (
-            <div className="pl-7">
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
-                <div>
-                  <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-success)' }}>Independent Test</span>
-                  <p className="text-sm text-[var(--foreground)] mt-1">{story.independentTest}</p>
+              {/* Independent Test */}
+              {story.independentTest && (
+                <div className="flex items-start gap-2.5 bg-green-500/5 border border-green-500/15 rounded-lg px-3.5 py-3">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--tag-text-success)' }}>
+                      Independent Test
+                    </span>
+                    <p className="text-xs text-[var(--foreground)] leading-relaxed">{story.independentTest}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
           {/* Acceptance Scenarios */}
           {story.acceptanceScenarios.length > 0 && (
-            <div className="pl-7">
-              <div className="flex items-center gap-2 mb-3">
-                <FileCheck className="w-4 h-4" style={{ color: 'var(--tag-text-info)' }} />
-                <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--tag-text-info)' }}>
-                  Acceptance Scenarios ({story.acceptanceScenarios.length})
+            <div>
+              <div className="flex items-center gap-2 mb-2.5">
+                <FileCheck className="w-3.5 h-3.5" style={{ color: 'var(--tag-text-info)' }} />
+                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--tag-text-info)' }}>
+                  Acceptance Scenarios
                 </span>
+                <span className="text-[10px] text-[var(--muted-foreground)]">({story.acceptanceScenarios.length})</span>
               </div>
               <div className="space-y-2">
                 {story.acceptanceScenarios.map((scenario, idx) => (
                   <div
                     key={idx}
-                    className="bg-[var(--secondary)]/30 rounded-lg p-3 text-sm border-l-2 border-blue-500/50"
+                    className="bg-[var(--secondary)]/30 rounded-lg px-4 py-3 text-sm border-l-2 border-blue-500/40"
                   >
-                    <div className="flex flex-wrap gap-x-1">
-                      <span className="font-semibold" style={{ color: 'var(--tag-text-success)' }}>Given</span>
-                      <span className="text-[var(--foreground)]">{scenario.given},</span>
-                      <span className="font-semibold" style={{ color: 'var(--tag-text-warning)' }}>When</span>
-                      <span className="text-[var(--foreground)]">{scenario.when},</span>
-                      <span className="font-semibold" style={{ color: 'var(--tag-text-info)' }}>Then</span>
-                      <span className="text-[var(--foreground)]">{scenario.then}</span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-green-500/15 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }}>Given</span>
+                        <span className="text-[var(--foreground)] text-xs leading-relaxed">{scenario.given}</span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/15 flex-shrink-0" style={{ color: 'var(--tag-text-warning)' }}>When</span>
+                        <span className="text-[var(--foreground)] text-xs leading-relaxed">{scenario.when}</span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-blue-500/15 flex-shrink-0" style={{ color: 'var(--tag-text-info)' }}>Then</span>
+                        <span className="text-[var(--foreground)] text-xs leading-relaxed">{scenario.then}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -857,8 +907,8 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
                 User Stories ({parsedSpec.userStories.length})
               </h2>
               <div className="space-y-3">
-                {parsedSpec.userStories.map((story) => (
-                  <UserStoryCard key={story.id} story={story} />
+                {parsedSpec.userStories.map((story, idx) => (
+                  <UserStoryCard key={story.id} story={story} index={idx} />
                 ))}
               </div>
             </div>

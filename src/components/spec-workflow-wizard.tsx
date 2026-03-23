@@ -579,10 +579,7 @@ export function SpecWorkflowWizard({
           {currentStep === 'complete' && (
             <button
               onClick={handleFinish}
-              className={cn(
-                'flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium',
-                'bg-green-500 hover:bg-green-500/90 text-white'
-              )}
+              className="btn btn-primary btn-sm"
             >
               Done
               <ArrowRight className="w-4 h-4" />
