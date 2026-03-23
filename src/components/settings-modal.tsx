@@ -847,7 +847,7 @@ function AIContent() {
             className="flex items-center gap-2 px-4 py-2.5 text-sm border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)] disabled:opacity-50"
             title="Import providers from environment variables (.env)">
             {importing && <Loader2 className="w-4 h-4 animate-spin" />}
-            Import .env
+            Load from environment
           </button>
         </div>
       )}
