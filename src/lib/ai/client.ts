@@ -154,6 +154,55 @@ class AIService {
       : `You are a helpful assistant.${langInstruction}`;
   }
 
+  // Build request for Anthropic Messages API (different format)
+  private buildAnthropicRequest(
+    apiKey: string,
+    model: string,
+    messages: { role: string; content: string }[],
+    maxTokens: number,
+    baseUrl: string
+  ): { url: string; init: RequestInit } {
+    // Extract system message
+    const systemMsg = messages.find(m => m.role === 'system');
+    const userMessages = messages.filter(m => m.role !== 'system');
+
+    const url = baseUrl.endsWith('/v1/messages')
+      ? baseUrl
+      : baseUrl.endsWith('/v1')
+        ? `${baseUrl}/messages`
+        : `${baseUrl}/v1/messages`;
+
+    return {
+      url,
+      init: {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: maxTokens,
+          ...(systemMsg ? { system: systemMsg.content } : {}),
+          messages: userMessages.map(m => ({ role: m.role, content: m.content })),
+        }),
+      },
+    };
+  }
+
+  // Parse Anthropic response format
+  private parseAnthropicResponse(data: Record<string, unknown>): string {
+    const content = data.content as Array<{ type: string; text?: string }>;
+    if (Array.isArray(content)) {
+      return content
+        .filter((block) => block.type === 'text' && block.text)
+        .map((block) => block.text)
+        .join('');
+    }
+    throw new Error('Unexpected Anthropic response format');
+  }
+
   // Call a single provider with retry logic
   private async callSingleProvider(
     fetchUrl: string,
@@ -161,25 +210,34 @@ class AIService {
     model: string,
     messages: { role: string; content: string }[],
     maxTokens: number,
-    providerLabel: string
+    providerLabel: string,
+    providerType?: string
   ): Promise<string> {
+    const isAnthropic = providerType === 'anthropic';
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const response = await fetch(fetchUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model,
-            messages,
-            temperature: 0.7,
-            max_tokens: maxTokens,
-          }),
-        });
+        let response: Response;
+
+        if (isAnthropic) {
+          const req = this.buildAnthropicRequest(apiKey, model, messages, maxTokens, fetchUrl);
+          response = await fetch(req.url, req.init);
+        } else {
+          response = await fetch(fetchUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model,
+              messages,
+              temperature: 0.7,
+              max_tokens: maxTokens,
+            }),
+          });
+        }
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -216,6 +274,9 @@ class AIService {
         }
 
         const data = await response.json();
+        if (isAnthropic) {
+          return this.parseAnthropicResponse(data);
+        }
         return data.choices[0].message.content;
       } catch (error) {
         lastError = error as Error;
@@ -256,12 +317,13 @@ class AIService {
           continue;
         }
 
-        const fetchUrl = this.buildFetchUrl(provider.baseUrl);
-        console.log(`[AI LB] Trying provider: ${provider.label} (${provider.model}) -> ${fetchUrl}`);
+        const isAnthropic = provider.provider === 'anthropic';
+        const fetchUrl = isAnthropic ? provider.baseUrl : this.buildFetchUrl(provider.baseUrl);
+        console.log(`[AI LB] Trying provider: ${provider.label} (${provider.provider}/${provider.model}) -> ${fetchUrl}`);
 
         try {
           const result = await this.callSingleProvider(
-            fetchUrl, token, provider.model, messages, maxTokens, provider.label
+            fetchUrl, token, provider.model, messages, maxTokens, provider.label, provider.provider
           );
           console.log(`[AI LB] Success with provider: ${provider.label}`);
           return result;
