@@ -30,6 +30,33 @@ import type {
   GeneratedContracts
 } from './types';
 import { getAISettings, getAppSettings } from './settings';
+import prisma from '@/lib/prisma';
+
+// Provider config from database
+interface ProviderConfig {
+  id: string;
+  provider: string;
+  label: string;
+  baseUrl: string;
+  model: string;
+  apiKey: string | null;
+  oauthToken: string | null;
+  enabled: boolean;
+  priority: number;
+}
+
+// Get all enabled providers sorted by priority
+async function getEnabledProviders(): Promise<ProviderConfig[]> {
+  try {
+    const providers = await prisma.aIProviderConfig.findMany({
+      where: { enabled: true },
+      orderBy: { priority: 'asc' },
+    });
+    return providers;
+  } catch {
+    return [];
+  }
+}
 
 /**
  * AI Client - OpenAI-Compatible API only
@@ -95,23 +122,21 @@ class AIService {
     return settings.model || this.config.model || 'gpt-4o';
   }
 
-  // Internal API call helper with retry logic
-  private async callAPI(prompt: string, systemPrompt?: string, maxTokens: number = 4096): Promise<string> {
-    const apiKey = await this.getApiKey();
-    if (!apiKey) {
-      throw new Error('No API key configured. Please configure an API key in settings.');
+  // Build fetch URL from base URL
+  private buildFetchUrl(baseUrl: string): string {
+    let fetchUrl = baseUrl;
+    if (fetchUrl.includes('/chat/completions')) {
+      // Already has full endpoint
+    } else if (fetchUrl.endsWith('/completions')) {
+      fetchUrl = `${fetchUrl}/chat`;
+    } else {
+      fetchUrl = `${fetchUrl}/chat/completions`;
     }
+    return fetchUrl;
+  }
 
-    const baseUrl = await this.getBaseUrl();
-    const model = await this.getModel();
-
-    // Debug logging
-    console.log('[AI Client] baseUrl:', baseUrl);
-    console.log('[AI Client] model:', model);
-    console.log('[AI Client] apiKey length:', apiKey?.length);
-    console.log('[AI Client] apiKey prefix:', apiKey?.substring(0, 5));
-
-    // Inject output language instruction into system prompt
+  // Build language-injected system prompt
+  private async buildSystemPrompt(systemPrompt?: string): Promise<string> {
     const LANGUAGE_NAMES: Record<string, string> = {
       vi: 'Vietnamese (Tiếng Việt)',
       en: 'English',
@@ -124,109 +149,148 @@ class AIService {
     const langName = LANGUAGE_NAMES[lang] || lang;
     const langInstruction = `\n\nIMPORTANT: You MUST respond entirely in ${langName}. All text, titles, descriptions, names, and content must be written in ${langName}. Only keep technical terms, code, and JSON keys in English.`;
 
-    const finalSystemPrompt = systemPrompt
+    return systemPrompt
       ? systemPrompt + langInstruction
       : `You are a helpful assistant.${langInstruction}`;
+  }
 
-    const messages = [
-      { role: 'system', content: finalSystemPrompt },
-      { role: 'user', content: prompt },
-    ];
-
-    // Handle baseUrl - support both OpenAI-compatible formats:
-    // - /v1/chat/completions (new format)
-    // - /v1/completions (legacy OpenAI format)
-    let fetchUrl = baseUrl;
-    if (fetchUrl.includes('/chat/completions')) {
-      // Already has full endpoint, use as-is
-    } else if (fetchUrl.endsWith('/completions')) {
-      // Legacy format: /v1/completions → add /chat
-      fetchUrl = `${fetchUrl}/chat`;
-    } else {
-      // Standard format: /v1 → add /chat/completions
-      fetchUrl = `${fetchUrl}/chat/completions`;
-    }
-    console.log('[AI Client] fetchUrl:', fetchUrl);
-
-    // Retry loop
+  // Call a single provider with retry logic
+  private async callSingleProvider(
+    fetchUrl: string,
+    apiKey: string,
+    model: string,
+    messages: { role: string; content: string }[],
+    maxTokens: number,
+    providerLabel: string
+  ): Promise<string> {
     let lastError: Error | null = null;
+
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         const response = await fetch(fetchUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Authorization': `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
             model,
             messages,
             temperature: 0.7,
-            max_tokens: maxTokens
-          })
+            max_tokens: maxTokens,
+          }),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.log('[AI Client] Error response:', errorText);
 
-          // Handle rate limit (429) specially
+          // Auth errors (401/403) -- don't retry, throw immediately to skip to next provider
+          if (response.status === 401 || response.status === 403) {
+            throw new Error(`[${providerLabel}] Auth error (${response.status}): ${errorText}`);
+          }
+
+          // Rate limit (429) -- retry with backoff
           if (response.status === 429) {
             const retryAfter = response.headers.get('retry-after');
             let waitTime = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
-
             if (retryAfter) {
               const parsed = parseInt(retryAfter, 10);
-              if (!isNaN(parsed)) {
-                waitTime = parsed * 1000; // Convert seconds to ms
-              }
+              if (!isNaN(parsed)) waitTime = parsed * 1000;
             }
-
-            console.log(`[AI Client] Rate limited. Waiting ${waitTime}ms before retry (attempt ${attempt + 1}/${MAX_RETRIES + 1})`);
-
+            console.log(`[AI LB] ${providerLabel} rate limited. Wait ${waitTime}ms (attempt ${attempt + 1}/${MAX_RETRIES + 1})`);
             if (attempt < MAX_RETRIES) {
               await this.sleep(waitTime);
-              continue; // Retry
+              continue;
             }
           }
 
-          // For other errors, throw immediately on last attempt
-          throw new Error(`API error: ${response.statusText} - ${errorText}`);
+          // 5xx server errors -- retry
+          if (response.status >= 500 && attempt < MAX_RETRIES) {
+            const waitTime = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
+            console.log(`[AI LB] ${providerLabel} server error (${response.status}). Retry in ${waitTime}ms`);
+            await this.sleep(waitTime);
+            continue;
+          }
+
+          throw new Error(`[${providerLabel}] API error ${response.status}: ${errorText}`);
         }
 
         const data = await response.json();
         return data.choices[0].message.content;
-
       } catch (error) {
         lastError = error as Error;
-        const errorMessage = error instanceof Error ? error.message : 'Unknown';
+        const msg = (error instanceof Error ? error.message : '').toLowerCase();
 
-        // Check if it's a rate limit error (429 in message) - case insensitive
-        const lowerErrorMessage = errorMessage.toLowerCase();
-        if (lowerErrorMessage.includes('429')) {
-          const waitTime = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
-          console.log(`[AI Client] Rate limited (parsed from error). Waiting ${waitTime}ms before retry (attempt ${attempt + 1}/${MAX_RETRIES + 1})`);
-
-          if (attempt < MAX_RETRIES) {
-            await this.sleep(waitTime);
-            continue;
-          }
-          // Fall through to throw after retries exhausted
-        }
-        // Only retry on network errors, not on API errors (400, 401, etc.)
-        else if (attempt < MAX_RETRIES && (lowerErrorMessage.includes('network') || lowerErrorMessage.includes('fetch') || lowerErrorMessage.includes('econnrefused'))) {
+        // Network errors -- retry
+        if (attempt < MAX_RETRIES && (msg.includes('network') || msg.includes('fetch') || msg.includes('econnrefused'))) {
           const waitTime = Math.min(INITIAL_BACKOFF_MS * Math.pow(2, attempt), MAX_BACKOFF_MS);
-          console.log(`[AI Client] Network error: ${errorMessage}. Retrying in ${waitTime}ms`);
+          console.log(`[AI LB] ${providerLabel} network error. Retry in ${waitTime}ms`);
           await this.sleep(waitTime);
           continue;
         }
-
-        // For all other errors (including API errors like 400), don't retry
         break;
       }
     }
 
-    throw lastError || new Error('API call failed after retries');
+    throw lastError || new Error(`[${providerLabel}] Failed after retries`);
+  }
+
+  // Internal API call with multi-provider load balancing
+  private async callAPI(prompt: string, systemPrompt?: string, maxTokens: number = 4096): Promise<string> {
+    const finalSystemPrompt = await this.buildSystemPrompt(systemPrompt);
+    const messages = [
+      { role: 'system', content: finalSystemPrompt },
+      { role: 'user', content: prompt },
+    ];
+
+    // Try multi-provider load balancing first
+    const providers = await getEnabledProviders();
+
+    if (providers.length > 0) {
+      const errors: string[] = [];
+
+      for (const provider of providers) {
+        const token = provider.oauthToken || provider.apiKey;
+        if (!token) {
+          console.log(`[AI LB] Skipping ${provider.label}: no auth token`);
+          continue;
+        }
+
+        const fetchUrl = this.buildFetchUrl(provider.baseUrl);
+        console.log(`[AI LB] Trying provider: ${provider.label} (${provider.model}) -> ${fetchUrl}`);
+
+        try {
+          const result = await this.callSingleProvider(
+            fetchUrl, token, provider.model, messages, maxTokens, provider.label
+          );
+          console.log(`[AI LB] Success with provider: ${provider.label}`);
+          return result;
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : 'Unknown error';
+          console.log(`[AI LB] Failed with ${provider.label}: ${msg}`);
+          errors.push(msg);
+          // Continue to next provider
+        }
+      }
+
+      // All providers failed -- throw combined error
+      if (errors.length > 0) {
+        throw new Error(`All AI providers failed:\n${errors.join('\n')}`);
+      }
+    }
+
+    // Fallback: use legacy single-provider settings (for backward compatibility)
+    const apiKey = await this.getApiKey();
+    if (!apiKey) {
+      throw new Error('No API key configured. Please add an AI provider in settings.');
+    }
+
+    const baseUrl = await this.getBaseUrl();
+    const model = await this.getModel();
+    const fetchUrl = this.buildFetchUrl(baseUrl);
+
+    console.log(`[AI LB] Fallback to legacy settings: ${model} -> ${fetchUrl}`);
+    return this.callSingleProvider(fetchUrl, apiKey, model, messages, maxTokens, 'Legacy');
   }
 
   // Sleep helper
