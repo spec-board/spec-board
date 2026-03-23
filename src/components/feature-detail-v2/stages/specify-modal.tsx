@@ -5,7 +5,7 @@ import { Loader2, Play, AlertCircle, CheckCircle, ArrowRight } from 'lucide-reac
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
 import type { DocumentType } from '../types';
-import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { MarkdownRenderer, InlineMarkdown } from '@/components/markdown-renderer';
 import { DocumentSelector } from '../document-selector';
 import { getDocumentOptions } from '../types';
 import { STAGES, getStageConfig } from '../base/types';
@@ -117,9 +117,7 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
             <h4 className="text-sm font-medium text-[var(--muted-foreground)] mb-2">
               Description
             </h4>
-            <p className="text-[var(--foreground)]">
-              {feature.description || feature.name}
-            </p>
+            <InlineMarkdown content={feature.description || feature.name} as="p" className="text-[var(--foreground)]" />
           </div>
 
           {status === 'idle' && !hasSpec && (

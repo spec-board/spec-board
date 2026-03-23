@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { InlineMarkdown } from '@/components/markdown-renderer';
 
 export interface ClarificationQuestion {
   question: string;
@@ -120,7 +121,8 @@ export function ClarificationForm({
           questions.map((item, index) => (
             <div key={index} className={cn('space-y-2', readOnly && 'opacity-80')}>
               <label className="block text-sm font-medium text-[var(--foreground)]">
-                <span className="text-[var(--muted-foreground)]">Q{index + 1}:</span> {item.question}
+                <span className="text-[var(--muted-foreground)]">Q{index + 1}:</span>{' '}
+                <InlineMarkdown content={item.question} />
               </label>
               {readOnly ? (
                 <div className="px-3 py-2 rounded-md text-sm bg-[var(--muted)] text-[var(--foreground)] border border-[var(--border)]">
