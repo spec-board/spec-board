@@ -45,7 +45,7 @@ interface SettingsStore {
 const DEFAULT_SETTINGS: Settings = {
   shortcutsEnabled: true, // Default: shortcuts are enabled
   theme: 'system', // Default: follow device preference
-  language: 'vi', // Default: Vietnamese
+  language: 'en', // Default: English
   aiSettings: {
     provider: 'openai', // Default to OpenAI-compatible
   },
