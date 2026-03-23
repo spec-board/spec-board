@@ -37,9 +37,9 @@ export function PRDToUserStoriesButton({
   };
 
   const variantClasses = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700',
-    ghost: 'hover:bg-gray-100',
-    outline: 'border border-gray-300 hover:bg-gray-50'
+    default: 'bg-[var(--foreground)] text-[var(--background)] hover:opacity-85',
+    ghost: 'hover:bg-[var(--accent)]',
+    outline: 'border border-[var(--border)] hover:bg-[var(--accent)]'
   };
 
   return (
