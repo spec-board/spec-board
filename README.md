@@ -3,7 +3,7 @@
 > Visual dashboard that helps non-technical teams create, organize, and manage professional software specifications and documentation.
 
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Version](https://img.shields.io/badge/version-2.2.0-black.svg)
+![Version](https://img.shields.io/badge/version-2.3.0-black.svg)
 
 Turn ideas into structured specs -- no coding required. SpecBoard provides a drag-and-drop Kanban interface to move features through a 4-stage AI-powered pipeline: **Backlog** > **Specs** > **Plan** > **Tasks**.
 
@@ -40,7 +40,7 @@ AI-powered 4-stage workflow: backlog > specs > plan > tasks
 - **Kanban Board** -- 4-column pipeline (Backlog > Specs > Plan > Tasks) with drag-and-drop
 - **AI Spec Generation** -- Enter a feature name and description, AI generates spec, plan, and tasks
 - **Spec Workflow Wizard** -- 4-stage AI workflow with automatic stage transitions
-- **Multi-Provider AI** -- OAuth (Codex, Qwen, Kimi, iFlow) and API Key (OpenAI, Anthropic, etc.) providers with optimistic toggle
+- **Multi-Provider AI** -- API Key providers (OpenAI, Anthropic, Gemini, Mistral, etc.) with optimistic toggle and preset defaults
 - **Constitution System** -- AI-generated project constitution from description, with version history
 - **Skeleton Loading** -- Responsive loading screens with animated placeholders for every route
 - **Deep Linking** -- Shareable URLs for projects and features
@@ -49,7 +49,7 @@ AI-powered 4-stage workflow: backlog > specs > plan > tasks
 
 ### Cloud Sync & Collaboration
 - **Supabase PostgreSQL** -- Cloud database with Prisma ORM and connection pooling
-- **OAuth Authentication** -- PKCE and Device Code flows for AI providers
+- **OAuth Authentication** -- Login with Google or GitHub
 - **Team Collaboration** -- Role-based access control (VIEW, EDIT, ADMIN)
 - **Conflict Resolution** -- 3-way merge with visual diff viewer
 - **Version History** -- Last 30 versions retained per spec file

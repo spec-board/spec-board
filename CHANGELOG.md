@@ -7,18 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.2.0] - 2026-03-23
+## [2.3.0] - 2026-03-23
 
 ### Added
-- **OAuth Provider System** - Separate OAuth login flow for AI providers:
-  - Dedicated `AddOAuthProviderDialog` component for OAuth-based providers (Codex, Qwen, Kimi, iFlow)
-  - PKCE flow for OpenAI Codex with `audience` parameter support
-  - Device Code flow for Qwen, Kimi, and iFlow providers
-  - OAuth tokens saved directly to `ai_provider_configs` table (not just `appSettings`)
-  - Token exchange uses `application/x-www-form-urlencoded` (OAuth2 standard)
-- **API Key Provider System** - Separate `AddApiKeyProviderDialog` for API key-based providers:
-  - Clean form with API key, base URL, and model inputs
-  - Inline error messages instead of browser alerts
 - **Delete Confirmation Modal** - Custom modal replaces browser `confirm()` for provider deletion:
   - Backdrop blur overlay with centered dialog
   - Shows provider name and "cannot be undone" warning
@@ -34,46 +25,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Active theme highlighted with accent background
 
 ### Changed
+- **AI Provider System Simplified** - All providers now use API Key authentication:
+  - Removed OAuth flows (Codex PKCE, Qwen/Kimi/iFlow Device Code) -- Codex CLI client_id only supports `localhost:1455` redirect
+  - Unified `AddApiKeyProviderDialog` replaces separate OAuth/API Key dialogs
+  - OpenAI added as API Key provider (`sk-...` key for GPT-4o, o3, Codex mini)
+  - Model field made optional with auto-fill from preset defaults
+  - Provider selection list uses single vertical column layout
+  - Single "Add Provider" + "Env" action buttons replace three-button layout
 - **Project Info Modal Redesign** - Constitution-first layout:
   - Constitution displayed as the primary/largest section
   - Small "View history" link replaces the old tab navigation
   - Project Description moved to bottom in compact read-only format
   - Edit button reveals textarea and "Save & Generate Constitution" action
-  - Subtitle hint: "Changes here will regenerate the Constitution"
 - **Constitution Type Safety** - `principles` and `sections` fields made optional in `Constitution` type:
-  - All components (`constitution-viewer`, `constitution-panel`, `constitution-editor`, `project-info-panel`) use optional chaining
-  - `ConstitutionContent` uses `const principles = constitution.principles ?? []` with safe defaults
+  - All components use optional chaining with safe defaults (`?? []`)
 - **Provider Route Migration** - Moved from `/api/settings/ai/providers` to `/api/settings/ai/provider-configs`:
   - All SQL queries use `::uuid` casts for PostgreSQL compatibility
-  - `gen_random_uuid()` without `::text` cast
-  - All fetch URLs updated across `settings-modal.tsx`
-- **Component Renaming** - `project-info-bubble.tsx` renamed to `project-info-panel.tsx`:
-  - Import updated in project page
-  - Removed unused `principleCount` variable
+  - Sub-routes (`import-env`, `oauth`) moved to new path
+- **Component Renaming** - `project-info-bubble.tsx` renamed to `project-info-panel.tsx`
 - **Page Architecture** - Project page split into `page.tsx` (thin wrapper) + `project-view.tsx` (logic):
-  - Direct named imports replace `dynamic()` lazy loading for `ProjectInfoBubble` and `KanbanBoard`
-- **Provider List Layout** - OAuth and API Key provider selection grids changed from 2-column to single vertical column
-- **OAuth Config** - Added `baseUrl` and `audience` fields to `OAuthProviderConfig` type:
-  - Codex: `audience: 'https://api.openai.com/v1'`, `authorizeUrl` corrected to `https://auth.openai.com/authorize`
-  - All providers now include `baseUrl` for automatic configuration on OAuth success
+  - Direct named imports replace `dynamic()` lazy loading
 - **Build System** - Switched from Turbopack to webpack for dev server to resolve persistent cache issues
 
 ### Fixed
-- **Codex OAuth "unknown_error"** - Three root causes fixed:
-  - Token exchange sent JSON instead of `application/x-www-form-urlencoded`
-  - Missing `audience` parameter in both authorize URL and token exchange
-  - OAuth tokens only saved to `appSettings`, not `ai_provider_configs`
 - **Provider Toggle Slow Response** - API calls failed silently due to stale SQL; optimistic UI added
 - **Build Cache Persistence** - Old compiled modules served despite source changes:
   - Renamed files to force new module paths
   - Disabled Turbopack to use webpack with `cache: false`
-  - Restored missing Lucide icon imports (`GitBranch`, `ExternalLink`, `HelpCircle`, `CheckCircle2`)
+  - Restored missing Lucide icon imports
+- **OAuth Token Exchange** - Fixed `Content-Type` to `application/x-www-form-urlencoded` (OAuth2 standard)
+- **Device Code Flow** - Fixed `Content-Type` for Qwen device authorization endpoint
+- **Duplicate Changelog Key** - Renamed second `[1.2.0]` entry to `[1.1.0]`
 
 ### Removed
-- **Browser `confirm()` Dialog** - Replaced with custom confirmation modal for provider deletion
+- **OAuth Provider Flows** - Removed Codex PKCE, Qwen, Kimi, iFlow Device Code (incompatible with hosted web apps)
+- **`AddOAuthProviderDialog`** - Replaced by unified `AddApiKeyProviderDialog`
+- **`oauthOnly` Provider Flag** - All providers are now API key-based
+- **Browser `confirm()` Dialog** - Replaced with custom confirmation modal
 - **Cycle Theme Toggle** - Replaced with dropdown menu
-- **Tab Navigation in Project Info** - Replaced with constitution-first layout and inline history link
-- **`dynamic()` Imports** - Removed for `ProjectInfoBubble` and `KanbanBoard` (direct imports now)
+- **Tab Navigation in Project Info** - Replaced with constitution-first layout
+- **`dynamic()` Imports** - Removed for `ProjectInfoBubble` and `KanbanBoard`
 
 ## [2.1.0] - 2026-03-12
 
