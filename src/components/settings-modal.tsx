@@ -555,11 +555,18 @@ function ProviderApiKeyInput({ providerId, hasApiKey, onSaved }: { providerId: s
   const handleSave = async () => {
     if (!apiKey.trim()) return;
     setSaving(true);
+    // Save to provider-configs
     await fetch('/api/settings/ai/provider-configs', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: providerId, apiKey: apiKey.trim() }),
     });
+    // Also save to legacy appSettings for getProvider() compatibility
+    await fetch('/api/settings/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey: apiKey.trim() }),
+    }).catch(() => {});
     setApiKey('');
     setSaving(false);
     onSaved();
@@ -575,54 +582,6 @@ function ProviderApiKeyInput({ providerId, hasApiKey, onSaved }: { providerId: s
         className="px-2 py-1.5 text-xs bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors">
         {saving ? '...' : 'Save'}
       </button>
-    </div>
-  );
-}
-
-// Add OAuth provider dialog - starts OAuth flow directly
-function AddOAuthProviderDialog({ onDone, onClose }: { onDone: () => void; onClose: () => void }) {
-  const [selected, setSelected] = useState<string | null>(null);
-
-  const oauthPresets = Object.entries(PROVIDER_PRESETS).filter(([, p]) => p.oauthOnly);
-  const oauthConfig = selected ? OAUTH_PROVIDERS[selected] : null;
-  const useDeviceCode = oauthConfig && !oauthConfig.authorizeUrl;
-
-  return (
-    <div className="space-y-3 p-3 bg-[var(--secondary)]/30 rounded-lg border border-[var(--border)]">
-      <div className="flex items-center justify-between">
-        <div className="text-xs font-medium text-[var(--muted-foreground)]">Add OAuth Provider</div>
-        <button onClick={onClose} className="p-0.5 rounded hover:bg-[var(--secondary)] transition-colors">
-          <X className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
-        </button>
-      </div>
-
-      {!selected ? (
-        <div className="flex flex-col gap-1">
-          {oauthPresets.map(([key, preset]) => (
-            <button key={key} onClick={() => setSelected(key)}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50 text-left transition-colors">
-              <div className="min-w-0">
-                <span className="text-xs font-medium block">{preset.label}</span>
-                <span className="text-[9px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 px-2 py-1.5 bg-[var(--accent)] rounded-lg">
-            <span className="text-xs font-medium">{PROVIDER_PRESETS[selected]?.label}</span>
-            <button onClick={() => setSelected(null)} className="ml-auto text-[9px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline">
-              Change
-            </button>
-          </div>
-          {useDeviceCode ? (
-            <DeviceCodeFlow provider={selected} onSuccess={onDone} />
-          ) : (
-            <PKCEFlow provider={selected} onSuccess={onDone} />
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -644,15 +603,20 @@ function AddApiKeyProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClos
     setError('');
     try {
       const preset = PROVIDER_PRESETS[selected];
+      const baseUrl = customUrl || preset.baseUrl;
+      const model = customModel || preset.model;
+      const apiKey = apiKeyInput.trim();
+
+      // Save to provider-configs table
       const res = await fetch('/api/settings/ai/provider-configs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           provider: selected,
           label: preset.label + (customModel ? ` (${customModel})` : ''),
-          baseUrl: customUrl || preset.baseUrl,
-          model: customModel || preset.model,
-          apiKey: apiKeyInput.trim(),
+          baseUrl,
+          model,
+          apiKey,
         }),
       });
       if (!res.ok) {
@@ -660,6 +624,19 @@ function AddApiKeyProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClos
         setError(errData.error || 'Failed to add provider');
         return;
       }
+
+      // Also save to legacy appSettings so getProvider() works immediately
+      await fetch('/api/settings/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: selected,
+          baseUrl,
+          model,
+          apiKey,
+        }),
+      }).catch(() => { /* non-critical */ });
+
       onAdd();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add provider');
