@@ -48,10 +48,12 @@ interface ProviderConfig {
 // Get all enabled providers sorted by priority
 async function getEnabledProviders(): Promise<ProviderConfig[]> {
   try {
-    const providers = await prisma.aIProviderConfig.findMany({
-      where: { enabled: true },
-      orderBy: { priority: 'asc' },
-    });
+    const providers = await prisma.$queryRawUnsafe<ProviderConfig[]>(
+      `SELECT "id", "provider", "label", "baseUrl", "model", "apiKey", "oauthToken", "enabled", "priority"
+       FROM "ai_provider_configs"
+       WHERE "enabled" = true
+       ORDER BY "priority" ASC`
+    );
     return providers;
   } catch {
     return [];

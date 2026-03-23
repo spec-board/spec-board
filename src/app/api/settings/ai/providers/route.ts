@@ -1,14 +1,29 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+interface ProviderRow {
+  id: string;
+  provider: string;
+  label: string;
+  baseUrl: string;
+  model: string;
+  apiKey: string | null;
+  oauthToken: string | null;
+  oauthRefresh: string | null;
+  oauthExpiresAt: Date | null;
+  enabled: boolean;
+  priority: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
 // GET - List all providers (sorted by priority)
 export async function GET() {
   try {
-    const providers = await prisma.aIProviderConfig.findMany({
-      orderBy: { priority: 'asc' },
-    });
+    const providers = await prisma.$queryRawUnsafe<ProviderRow[]>(
+      `SELECT * FROM "ai_provider_configs" ORDER BY "priority" ASC`
+    );
 
-    // Mask API keys in response
     const masked = providers.map((p) => ({
       ...p,
       apiKey: p.apiKey ? '***' : null,
@@ -36,28 +51,24 @@ export async function POST(request: Request) {
     }
 
     // Get max priority to append at end
-    const maxPriority = await prisma.aIProviderConfig.aggregate({
-      _max: { priority: true },
-    });
-    const nextPriority = (maxPriority._max.priority ?? -1) + 1;
+    const maxResult = await prisma.$queryRawUnsafe<[{ max: number | null }]>(
+      `SELECT MAX("priority") as max FROM "ai_provider_configs"`
+    );
+    const nextPriority = ((maxResult[0]?.max) ?? -1) + 1;
 
-    const created = await prisma.aIProviderConfig.create({
-      data: {
-        provider,
-        label,
-        baseUrl,
-        model,
-        apiKey: apiKey || null,
-        priority: nextPriority,
-        enabled: true,
-      },
-    });
+    const created = await prisma.$queryRawUnsafe<ProviderRow[]>(
+      `INSERT INTO "ai_provider_configs" ("id", "provider", "label", "baseUrl", "model", "apiKey", "priority", "enabled", "created_at", "updated_at")
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, true, NOW(), NOW())
+       RETURNING *`,
+      provider, label, baseUrl, model, apiKey || null, nextPriority
+    );
 
+    const row = created[0];
     return NextResponse.json({
-      ...created,
-      apiKey: created.apiKey ? '***' : null,
-      hasApiKey: !!created.apiKey,
-      hasOAuth: !!created.oauthToken,
+      ...row,
+      apiKey: row.apiKey ? '***' : null,
+      hasApiKey: !!row.apiKey,
+      hasOAuth: !!row.oauthToken,
     });
   } catch (error) {
     console.error('Failed to create provider:', error);
@@ -72,14 +83,12 @@ export async function PUT(request: Request) {
 
     // Batch priority reorder: { reorder: [{ id, priority }] }
     if (body.reorder && Array.isArray(body.reorder)) {
-      await prisma.$transaction(
-        body.reorder.map((item: { id: string; priority: number }) =>
-          prisma.aIProviderConfig.update({
-            where: { id: item.id },
-            data: { priority: item.priority },
-          })
-        )
-      );
+      for (const item of body.reorder) {
+        await prisma.$executeRawUnsafe(
+          `UPDATE "ai_provider_configs" SET "priority" = $1, "updated_at" = NOW() WHERE "id" = $2`,
+          item.priority, item.id
+        );
+      }
       return NextResponse.json({ success: true });
     }
 
@@ -89,24 +98,35 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Missing provider id' }, { status: 400 });
     }
 
-    const updateData: Record<string, unknown> = {};
-    if (updateFields.label !== undefined) updateData.label = updateFields.label;
-    if (updateFields.baseUrl !== undefined) updateData.baseUrl = updateFields.baseUrl;
-    if (updateFields.model !== undefined) updateData.model = updateFields.model;
-    if (updateFields.apiKey !== undefined) updateData.apiKey = updateFields.apiKey || null;
-    if (updateFields.enabled !== undefined) updateData.enabled = updateFields.enabled;
-    if (updateFields.priority !== undefined) updateData.priority = updateFields.priority;
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    let paramIndex = 1;
 
-    const updated = await prisma.aIProviderConfig.update({
-      where: { id },
-      data: updateData,
-    });
+    if (updateFields.label !== undefined) { setClauses.push(`"label" = $${paramIndex++}`); values.push(updateFields.label); }
+    if (updateFields.baseUrl !== undefined) { setClauses.push(`"baseUrl" = $${paramIndex++}`); values.push(updateFields.baseUrl); }
+    if (updateFields.model !== undefined) { setClauses.push(`"model" = $${paramIndex++}`); values.push(updateFields.model); }
+    if (updateFields.apiKey !== undefined) { setClauses.push(`"apiKey" = $${paramIndex++}`); values.push(updateFields.apiKey || null); }
+    if (updateFields.enabled !== undefined) { setClauses.push(`"enabled" = $${paramIndex++}`); values.push(updateFields.enabled); }
+    if (updateFields.priority !== undefined) { setClauses.push(`"priority" = $${paramIndex++}`); values.push(updateFields.priority); }
+
+    setClauses.push(`"updated_at" = NOW()`);
+    values.push(id);
+
+    const updated = await prisma.$queryRawUnsafe<ProviderRow[]>(
+      `UPDATE "ai_provider_configs" SET ${setClauses.join(', ')} WHERE "id" = $${paramIndex} RETURNING *`,
+      ...values
+    );
+
+    const row = updated[0];
+    if (!row) {
+      return NextResponse.json({ error: 'Provider not found' }, { status: 404 });
+    }
 
     return NextResponse.json({
-      ...updated,
-      apiKey: updated.apiKey ? '***' : null,
-      hasApiKey: !!updated.apiKey,
-      hasOAuth: !!updated.oauthToken,
+      ...row,
+      apiKey: row.apiKey ? '***' : null,
+      hasApiKey: !!row.apiKey,
+      hasOAuth: !!row.oauthToken,
     });
   } catch (error) {
     console.error('Failed to update provider:', error);
@@ -123,7 +143,10 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Missing provider id' }, { status: 400 });
     }
 
-    await prisma.aIProviderConfig.delete({ where: { id } });
+    await prisma.$executeRawUnsafe(
+      `DELETE FROM "ai_provider_configs" WHERE "id" = $1`,
+      id
+    );
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to delete provider:', error);
