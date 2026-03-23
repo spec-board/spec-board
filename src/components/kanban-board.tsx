@@ -550,9 +550,29 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
   const resumePipeline = useCallback(async () => {
     if (!pendingPipeline) return;
     const { featureId, remainingSteps } = pendingPipeline;
+
+    // Check if all clarifications are answered before resuming
+    const feature = features.find(f => f.id === featureId);
+    if (feature?.clarificationsContent) {
+      const content = feature.clarificationsContent;
+      // Check for unanswered questions: look for **A**: _Pending_ markers
+      const pendingCount = (content.match(/\*\*A\*\*:\s*_Pending_/g) || []).length;
+      // Also check legacy format: questions without any answer
+      const totalQuestions = (content.match(/^### Q:/gm) || []).length
+        || (content.match(/^\d+\.\s*\*\*/gm) || []).length;
+
+      if (pendingCount > 0) {
+        toast.error(
+          `Please answer all clarification questions before continuing. ${pendingCount} question${pendingCount > 1 ? 's' : ''} remaining.`,
+          { duration: 5000 }
+        );
+        return;
+      }
+    }
+
     setPendingPipeline(null);
     await runPipeline(featureId, remainingSteps, 0);
-  }, [pendingPipeline, runPipeline]);
+  }, [pendingPipeline, runPipeline, features]);
 
   // Handle drop - trigger multi-step pipeline
   const handleDrop = useCallback((targetColumn: KanbanColumn) => async (e: React.DragEvent) => {
