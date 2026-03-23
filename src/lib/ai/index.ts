@@ -48,7 +48,7 @@ export async function getProvider(): Promise<AIProvider> {
   }
 
   throw new Error(
-    'No AI API key configured. Please configure an API key in settings to use AI features.'
+    'Please configure AI settings before using this feature.'
   );
 }
 

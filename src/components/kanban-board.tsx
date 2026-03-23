@@ -884,7 +884,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
               </h3>
             </div>
             <p className="text-sm text-[var(--muted-foreground)] leading-relaxed">
-              To generate specs, plans, and tasks automatically, you need to configure an AI provider with a valid API key. This is required for stage transitions.
+              Please configure AI settings before using this feature. Go to Settings to add your AI provider.
             </p>
           </div>
 
