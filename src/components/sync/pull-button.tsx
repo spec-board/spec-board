@@ -114,7 +114,7 @@ export function PullButton({
       <button
         onClick={handlePull}
         disabled={isPulling || disabled}
-        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+        className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isPulling ? (
           <Loader2 className="w-4 h-4 animate-spin" />

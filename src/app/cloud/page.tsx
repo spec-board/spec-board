@@ -155,7 +155,7 @@ export default function CloudProjectsPage() {
             </button>
             <button
               onClick={() => setShowNewForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="btn btn-primary btn-sm"
             >
               New Project
             </button>
@@ -169,7 +169,7 @@ export default function CloudProjectsPage() {
             {error.includes('sign in') && (
               <button
                 onClick={() => router.push('/auth/login')}
-                className="mt-2 flex items-center gap-2 text-sm text-blue-500 hover:underline"
+                className="mt-2 flex items-center gap-2 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:underline"
               >
                 Go to Sign In
               </button>
@@ -201,7 +201,7 @@ export default function CloudProjectsPage() {
               </button>
               <button
                 onClick={() => setShowNewForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="btn btn-primary btn-sm"
               >
                 Create Project
               </button>

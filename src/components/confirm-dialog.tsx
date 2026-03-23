@@ -55,16 +55,16 @@ export function ConfirmDialog({
 
   const variantStyles = {
     danger: {
-      icon: 'bg-red-500/10 text-red-500',
-      button: 'bg-red-500 hover:bg-red-600 text-white',
+      icon: 'bg-[var(--accent)] text-[var(--foreground)]',
+      button: '',
     },
     warning: {
-      icon: 'bg-yellow-500/10 text-yellow-500',
-      button: 'bg-yellow-500 hover:bg-yellow-600 text-white',
+      icon: 'bg-[var(--accent)] text-[var(--foreground)]',
+      button: '',
     },
     info: {
-      icon: 'bg-blue-500/10 text-blue-500',
-      button: 'bg-[var(--primary)] hover:opacity-90 text-[var(--primary-foreground)]',
+      icon: 'bg-[var(--accent)] text-[var(--foreground)]',
+      button: '',
     },
   };
 

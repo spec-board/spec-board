@@ -64,7 +64,7 @@ export function BacklogModal({ feature, onClose, onStageChange, onDelete }: Base
         <button
           onClick={handleGenerateSpec}
           disabled={isGenerating}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+          className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isGenerating && (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -94,8 +94,8 @@ export function BacklogModal({ feature, onClose, onStageChange, onDelete }: Base
         {/* Right: Empty state / Next step */}
         <div className="w-[60%] p-6 overflow-y-auto">
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mb-4">
-              <FileText className="w-8 h-8 text-blue-500" />
+            <div className="w-16 h-16 rounded-full bg-[var(--accent)] flex items-center justify-center mb-4">
+              <FileText className="w-8 h-8 text-[var(--foreground)]" />
             </div>
             <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2">
               Ready to Create Specification
@@ -106,7 +106,7 @@ export function BacklogModal({ feature, onClose, onStageChange, onDelete }: Base
             <button
               onClick={handleGenerateSpec}
               disabled={isGenerating}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+              className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating && (
                 <Loader2 className="w-4 h-4 animate-spin" />

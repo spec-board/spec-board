@@ -146,7 +146,7 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
           <button
             onClick={handleGenerateChecklist}
             disabled={!hasPlan}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
+            className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Generate Checklist
           </button>

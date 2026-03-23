@@ -490,17 +490,17 @@ export function FeatureDetail({ feature, onClose, onDelete, hasConstitution = fa
             <div className="absolute inset-0 flex pointer-events-none z-10">
               {/* Left drop zone indicator */}
               <div className={cn(
-                'flex-1 flex items-center justify-center border-r border-dashed border-blue-500/50 transition-colors',
-                dropSide === 'left' && 'bg-blue-500/20'
+                'flex-1 flex items-center justify-center border-r border-dashed border-[var(--border)] transition-colors',
+                dropSide === 'left' && 'bg-[var(--accent)]'
               )}>
                 <div
                   className={cn(
                     'px-4 py-2 rounded-lg font-medium transition-colors',
                     dropSide === 'left'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-blue-500/10 border border-dashed border-blue-500'
+                      ? 'bg-[var(--foreground)] text-[var(--background)]'
+                      : 'bg-[var(--accent)] border border-dashed border-[var(--border)]'
                   )}
-                  style={dropSide !== 'left' ? { color: 'var(--tag-text-info)' } : undefined}
+                  style={dropSide !== 'left' ? { color: 'var(--muted-foreground)' } : undefined}
                 >
                   Drop here for left
                 </div>
@@ -508,16 +508,16 @@ export function FeatureDetail({ feature, onClose, onDelete, hasConstitution = fa
               {/* Right drop zone indicator */}
               <div className={cn(
                 'flex-1 flex items-center justify-center transition-colors',
-                dropSide === 'right' && 'bg-blue-500/20'
+                dropSide === 'right' && 'bg-[var(--accent)]'
               )}>
                 <div
                   className={cn(
                     'px-4 py-2 rounded-lg font-medium transition-colors',
                     dropSide === 'right'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-blue-500/10 border border-dashed border-blue-500'
+                      ? 'bg-[var(--foreground)] text-[var(--background)]'
+                      : 'bg-[var(--accent)] border border-dashed border-[var(--border)]'
                   )}
-                  style={dropSide !== 'right' ? { color: 'var(--tag-text-info)' } : undefined}
+                  style={dropSide !== 'right' ? { color: 'var(--muted-foreground)' } : undefined}
                 >
                   Drop here for right
                 </div>
