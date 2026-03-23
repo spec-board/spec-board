@@ -274,11 +274,11 @@ const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: 
     description: 'Claude Sonnet, Opus, Haiku, or any Anthropic-compatible API',
   },
   gemini: {
-    label: 'Google Gemini Compatible API',
+    label: 'Google Gemini API',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
     model: 'gemini-2.5-flash',
     apiKeyPlaceholder: 'AIza...',
-    description: 'Gemini 2.5 Flash/Pro, or any Gemini-compatible API',
+    description: 'Gemini 2.5 Flash/Pro via Google AI Studio',
   },
 };
 
