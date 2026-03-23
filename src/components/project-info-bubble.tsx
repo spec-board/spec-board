@@ -28,9 +28,9 @@ interface ProjectInfoBubbleProps {
   description?: string;
   features: Feature[];
   totalClarifications: number;
-  onDescriptionChange?: (description: string) => void;
+  onDescriptionChange?: (description: string) => void | Promise<void>;
   onFeatureClick?: (feature: Feature) => void;
-  onSaveAndGenerateConstitution?: (description: string) => void;
+  onSaveAndGenerateConstitution?: (description: string) => void | Promise<void>;
   isGeneratingConstitution?: boolean;
 }
 
@@ -68,18 +68,15 @@ export function ProjectInfoBubble({
     }
   }, [isOpen]);
 
-  const handleSaveAndGenerate = () => {
-    onDescriptionChange?.(editDescription);
-    onSaveAndGenerateConstitution?.(editDescription);
+  const handleSaveAndGenerate = async () => {
+    // Save description first, then generate constitution
+    // Both operations update the description in the database
+    await onDescriptionChange?.(editDescription);
+    await onSaveAndGenerateConstitution?.(editDescription);
   };
 
   const principleCount = constitution?.principles.length ?? 0;
   const featuresWithClarifications = features.filter(f => f.totalClarifications > 0);
-  const hasSomething = hasConstitution || totalClarifications > 0 || !!description;
-
-  if (!hasSomething) {
-    return null;
-  }
 
   return (
     <div className="relative">
@@ -94,7 +91,7 @@ export function ProjectInfoBubble({
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setIsOpen(false)}>
-          <div className="fixed inset-0 bg-black/50" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
           <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl z-10" onClick={e => e.stopPropagation()}>
             <div className="relative flex items-center justify-center border-b border-[var(--border)] px-6 py-4">
               <h2 className="text-lg font-semibold">Project Info</h2>
@@ -127,19 +124,19 @@ export function ProjectInfoBubble({
                   {/* Project Description - Always visible as textarea */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-medium">Project Description</h3>
+                      <h3 className="text-sm font-medium">Project Description <span className="text-[var(--foreground)]">*</span></h3>
                     </div>
                     <textarea
                       value={editDescription}
                       onChange={e => setEditDescription(e.target.value)}
-                      placeholder="Describe your project purpose, goals, and key requirements..."
-                      className="w-full h-32 px-3 py-2 rounded-lg border bg-[var(--secondary)] outline-none focus:border-[var(--ring)] resize-none text-sm"
+                      placeholder="Describe your project goals, tech stack, and key requirements. This will be used to generate the project Constitution."
+                      className="w-full h-32 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--secondary)] text-[var(--foreground)] outline-none focus:border-[var(--ring)] resize-none text-sm placeholder:text-[var(--muted-foreground)]"
                     />
                     {onSaveAndGenerateConstitution && (
                       <button
                         onClick={handleSaveAndGenerate}
                         disabled={!editDescription.trim() || isGeneratingConstitution}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary)]/90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--primary-foreground)] rounded-lg text-sm font-medium transition-colors"
                       >
                         {isGeneratingConstitution ? (
                           <>
@@ -200,7 +197,7 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
       {constitution.version && (
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Constitution</span>
-          <span className="text-xs px-2 py-0.5 rounded bg-blue-500 text-white">v{constitution.version}</span>
+          <span className="text-xs px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--foreground)]">v{constitution.version}</span>
         </div>
       )}
       {(constitution.ratifiedDate || constitution.lastAmendedDate) && (
@@ -306,7 +303,7 @@ function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
               >
                 <div className="flex items-center gap-3">
                   <span className="font-medium text-sm">v{v.version}</span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">{v.type}</span>
+                  <span className="text-xs px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--muted-foreground)]">{v.type}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-[var(--muted-foreground)]">{formatRelativeTime(v.date)}</span>

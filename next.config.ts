@@ -1,15 +1,16 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: path.resolve(__dirname),
-  },
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
     },
   },
+  logging: {
+    browserToTerminal: true,
+  },
+  // Force cache invalidation
+  generateBuildId: async () => `build-${Date.now()}`,
 };
 
 export default nextConfig;

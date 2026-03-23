@@ -4,9 +4,12 @@ import prisma from '@/lib/prisma';
 const SETTINGS_KEY = 'app-settings';
 
 // General App Settings
+export type OutputLanguage = 'vi' | 'en' | 'zh' | 'ja' | 'ko';
+
 export interface AppSettingsData {
   theme: 'light' | 'dark' | 'system';
   shortcutsEnabled: boolean;
+  language: OutputLanguage;
 }
 
 // AI Settings - OpenAI-Compatible API only
@@ -114,6 +117,7 @@ export async function getAppSettings(): Promise<AppSettingsData> {
   const result: AppSettingsData = {
     theme: settings.theme as 'light' | 'dark' | 'system',
     shortcutsEnabled: settings.shortcutsEnabled,
+    language: (settings.language || 'vi') as OutputLanguage,
   };
 
   // Update cache
@@ -133,6 +137,7 @@ export function getAppSettingsSync(): AppSettingsData {
   return {
     theme: 'dark',
     shortcutsEnabled: true,
+    language: 'vi',
   };
 }
 
@@ -142,6 +147,7 @@ export async function setAppSettings(settingsData: Partial<AppSettingsData>): Pr
   const updateData: any = {};
   if (settingsData.theme !== undefined) updateData.theme = settingsData.theme;
   if (settingsData.shortcutsEnabled !== undefined) updateData.shortcutsEnabled = settingsData.shortcutsEnabled;
+  if (settingsData.language !== undefined) updateData.language = settingsData.language;
 
   await prisma.appSettings.update({
     where: { id: settings.id },

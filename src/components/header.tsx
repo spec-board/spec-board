@@ -1,9 +1,12 @@
 'use client';
 
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Github, Settings, ChevronRight } from 'lucide-react';
+import { Settings, ChevronRight, Pencil, Check, X } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
 import { Tooltip } from '@/components/tooltip';
+import { GitHubStars } from '@/components/github-stars';
+import { useSettingsStore } from '@/lib/settings-store';
 
 interface HeaderProps {
   variant: 'home' | 'project';
@@ -11,10 +14,47 @@ interface HeaderProps {
   projectPath?: string;
   projectSlug?: string;
   onNewProject?: () => void;
+  onProjectNameChange?: (newName: string) => void;
 }
 
-export function Header({ variant, projectName, onNewProject }: HeaderProps) {
+export function Header({ variant, projectName, projectSlug, onNewProject, onProjectNameChange }: HeaderProps) {
   const router = useRouter();
+  const { openSettings } = useSettingsStore();
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState(projectName || '');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setEditName(projectName || '');
+  }, [projectName]);
+
+  useEffect(() => {
+    if (isEditingName && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditingName]);
+
+  const handleSaveName = useCallback(() => {
+    const trimmed = editName.trim();
+    if (trimmed && trimmed !== projectName) {
+      onProjectNameChange?.(trimmed);
+    }
+    setIsEditingName(false);
+  }, [editName, projectName, onProjectNameChange]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditName(projectName || '');
+    setIsEditingName(false);
+  }, [projectName]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveName();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  }, [handleSaveName, handleCancelEdit]);
 
   return (
     <header className="border-b border-[var(--border)] h-14 bg-[var(--background)]">
@@ -107,7 +147,29 @@ export function Header({ variant, projectName, onNewProject }: HeaderProps) {
             {variant === 'project' && projectName && (
               <>
                 <ChevronRight className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
-                <span className="text-sm text-[var(--muted-foreground)]">{projectName}</span>
+                {isEditingName ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      ref={inputRef}
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onBlur={handleSaveName}
+                      className="text-sm bg-[var(--secondary)] border border-[var(--border)] rounded px-2 py-0.5 outline-none focus:border-[var(--ring)] min-w-[120px]"
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => onProjectNameChange && setIsEditingName(true)}
+                    className="group flex items-center gap-1.5 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                    title={onProjectNameChange ? 'Click to rename' : undefined}
+                  >
+                    <span>{projectName}</span>
+                    {onProjectNameChange && (
+                      <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -128,20 +190,12 @@ export function Header({ variant, projectName, onNewProject }: HeaderProps) {
             </Tooltip>
 
             <Tooltip content="GitHub" side="bottom">
-              <a
-                href="https://github.com/paulpham157/spec-board"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-icon"
-                aria-label="GitHub Repository"
-              >
-                <Github className="w-4 h-4" />
-              </a>
+              <GitHubStars />
             </Tooltip>
 
             <Tooltip content="Settings" side="bottom">
               <button
-                onClick={() => router.push('/settings')}
+                onClick={() => openSettings()}
                 className="btn-icon"
                 aria-label="Settings"
               >

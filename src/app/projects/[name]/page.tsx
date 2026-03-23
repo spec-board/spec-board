@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/header';
@@ -94,10 +94,26 @@ export default function ProjectPage() {
     router.push('/projects/' + projectSlug + '/features/' + feature.id + '?section=clarifications');
   };
 
+  // Update project name (displayName)
+  const handleProjectNameChange = useCallback(async (newName: string) => {
+    try {
+      const response = await fetch('/api/project/' + projectSlug, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: newName }),
+      });
+      if (response.ok) {
+        setProject(prev => prev ? { ...prev, name: newName } : null);
+      }
+    } catch (error) {
+      console.error('Failed to update project name:', error);
+    }
+  }, [projectSlug]);
+
   // Update project description
   const handleDescriptionChange = useCallback(async (description: string) => {
     try {
-      const response = await fetch('/api/projects/' + projectSlug, {
+      const response = await fetch('/api/project/' + projectSlug, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description }),
@@ -138,12 +154,26 @@ export default function ProjectPage() {
 
       const result = await response.json();
 
+      // Map API response to Constitution type expected by UI
+      const apiConst = result.constitution;
+      const mappedConstitution = apiConst ? {
+        rawContent: apiConst.content || '',
+        title: apiConst.title,
+        description: result.description || description,
+        principles: Array.isArray(apiConst.principles) ? apiConst.principles : [],
+        sections: [],
+        version: apiConst.version,
+        ratifiedDate: apiConst.ratifiedDate,
+        lastAmendedDate: apiConst.lastAmendedDate,
+        versions: [],
+      } : null;
+
       // Update project state with new constitution
       setProject(prev => prev ? {
         ...prev,
         description: result.description || description,
-        constitution: result.constitution,
-        hasConstitution: true,
+        constitution: mappedConstitution,
+        hasConstitution: !!mappedConstitution,
       } : null);
     } catch (error) {
       console.error('Failed to generate constitution:', error);
@@ -191,13 +221,14 @@ export default function ProjectPage() {
         projectName={project?.name}
         projectPath={projectPath || undefined}
         projectSlug={projectSlug}
+        onProjectNameChange={handleProjectNameChange}
       />
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="space-y-6">
-          {/* Project Info Bubble */}
-          <div className="flex justify-start">
+          {/* Project Info Row: bubble + description */}
+          <div className="flex items-start gap-4">
             <ProjectInfoBubble
               constitution={project.constitution}
               hasConstitution={project.hasConstitution}
@@ -209,6 +240,11 @@ export default function ProjectPage() {
               onSaveAndGenerateConstitution={handleSaveAndGenerateConstitution}
               isGeneratingConstitution={isGeneratingConstitution}
             />
+            {project.description && (
+              <p className="text-sm text-[var(--muted-foreground)] pt-2 line-clamp-2 flex-1 min-w-0">
+                {project.description}
+              </p>
+            )}
           </div>
 
           {/* Kanban board */}

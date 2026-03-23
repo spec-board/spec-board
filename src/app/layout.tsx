@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ShortcutsProvider } from "@/components/shortcuts-provider";
+import { SettingsModal } from "@/components/settings-modal";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen font-sans">
         <ThemeProvider>
           <ShortcutsProvider>{children}</ShortcutsProvider>
+          <SettingsModal />
           <Toaster position="bottom-right" richColors />
         </ThemeProvider>
       </body>

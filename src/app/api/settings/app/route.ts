@@ -9,6 +9,7 @@ export async function GET() {
     return NextResponse.json({
       theme: settings.theme,
       shortcutsEnabled: settings.shortcutsEnabled,
+      language: settings.language,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -24,17 +25,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { theme, shortcutsEnabled } = body;
+    const { theme, shortcutsEnabled, language } = body;
 
     const settings = await setAppSettings({
       theme,
       shortcutsEnabled,
+      language,
     });
 
     return NextResponse.json({
       success: true,
       theme: settings.theme,
       shortcutsEnabled: settings.shortcutsEnabled,
+      language: settings.language,
     });
   } catch (error) {
     console.error('Error saving app settings:', error);

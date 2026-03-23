@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 
 export type Theme = 'light' | 'dark' | 'system';
-export type AIProvider = 'openai';
+export type AIProvider = 'openai' | 'qwen' | 'codex' | 'kimi' | 'iflow' | 'anthropic' | 'gemini' | 'mistral';
+export type OutputLanguage = 'vi' | 'en' | 'zh' | 'ja' | 'ko';
 
 interface AISettings {
   provider: AIProvider;
@@ -14,27 +15,37 @@ interface AISettings {
 interface Settings {
   shortcutsEnabled: boolean;
   theme: Theme;
+  language: OutputLanguage;
   aiSettings: AISettings;
 }
+
+export type SettingsSection = 'ai' | 'shortcuts' | 'appearance' | 'about';
 
 interface SettingsStore {
   // State
   shortcutsEnabled: boolean;
   theme: Theme;
   resolvedTheme: 'light' | 'dark'; // Actual theme after resolving 'system'
+  language: OutputLanguage;
   aiSettings: AISettings;
   isLoaded: boolean;
+  settingsOpen: boolean;
+  settingsSection: SettingsSection;
 
   // Actions
   setShortcutsEnabled: (enabled: boolean) => Promise<void>;
   setTheme: (theme: Theme) => Promise<void>;
+  setLanguage: (language: OutputLanguage) => Promise<void>;
   setAISettings: (settings: Partial<AISettings>) => Promise<void>;
   loadSettings: () => Promise<void>;
+  openSettings: (section?: SettingsSection) => void;
+  closeSettings: () => void;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   shortcutsEnabled: true, // Default: shortcuts are enabled
   theme: 'system', // Default: follow device preference
+  language: 'vi', // Default: Vietnamese
   aiSettings: {
     provider: 'openai', // Default to OpenAI-compatible
   },
@@ -74,8 +85,19 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   shortcutsEnabled: DEFAULT_SETTINGS.shortcutsEnabled,
   theme: DEFAULT_SETTINGS.theme,
   resolvedTheme: resolveTheme('system'),
+  language: DEFAULT_SETTINGS.language,
   aiSettings: DEFAULT_SETTINGS.aiSettings,
   isLoaded: false,
+  settingsOpen: false,
+  settingsSection: 'ai' as SettingsSection,
+
+  openSettings: (section: SettingsSection = 'ai') => {
+    set({ settingsOpen: true, settingsSection: section });
+  },
+
+  closeSettings: () => {
+    set({ settingsOpen: false });
+  },
 
   setShortcutsEnabled: async (enabled: boolean) => {
     set({ shortcutsEnabled: enabled });
@@ -106,6 +128,19 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       });
     } catch (error) {
       console.error('Failed to save theme setting:', error);
+    }
+  },
+
+  setLanguage: async (language: OutputLanguage) => {
+    set({ language });
+    try {
+      await fetch('/api/settings/app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language }),
+      });
+    } catch (error) {
+      console.error('Failed to save language setting:', error);
     }
   },
 
@@ -170,6 +205,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         shortcutsEnabled: appData.shortcutsEnabled ?? DEFAULT_SETTINGS.shortcutsEnabled,
         theme: themeValue,
         resolvedTheme,
+        language: appData.language || DEFAULT_SETTINGS.language,
         aiSettings: {
           provider: (aiData.provider || DEFAULT_SETTINGS.aiSettings.provider) as AIProvider,
           baseUrl: aiData.baseUrl,
@@ -187,6 +223,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         shortcutsEnabled: DEFAULT_SETTINGS.shortcutsEnabled,
         theme: DEFAULT_SETTINGS.theme,
         resolvedTheme: fallbackResolved,
+        language: DEFAULT_SETTINGS.language,
         aiSettings: DEFAULT_SETTINGS.aiSettings,
         isLoaded: true,
       });

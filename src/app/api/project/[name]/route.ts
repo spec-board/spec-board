@@ -6,7 +6,7 @@ import { isValidDirectoryPath } from '@/lib/path-utils';
 // Disable Next.js route caching - always read fresh data from database
 export const dynamic = 'force-dynamic';
 
-// GET /api/projects/[name] - Get a project by name
+// GET /api/project/[name] - Get a project by name
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
@@ -35,7 +35,7 @@ export async function GET(
   }
 }
 
-// PUT /api/projects/[name] - Update a project
+// PUT /api/project/[name] - Update a project
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
@@ -82,7 +82,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/projects/[name] - Delete a project
+// DELETE /api/project/[name] - Delete a project
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }

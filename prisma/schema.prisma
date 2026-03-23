@@ -445,6 +445,7 @@ model AppSettings {
   key       String   @unique // 'app-settings' - single row for all settings
   theme     String   @default("dark") // light, dark, system
   shortcutsEnabled Boolean @default(true)
+  language  String   @default("vi") // AI output language: vi, en, zh, ja, ko
 
   // AI Settings - OpenAI-Compatible API only
   aiProvider        String   @default("openai") // openai only
@@ -456,4 +457,26 @@ model AppSettings {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("app_settings")
+}
+
+// ============================================
+// AI Provider Configurations (multi-provider load balancing)
+// ============================================
+
+model AIProviderConfig {
+  id          String   @id @default(uuid())
+  provider    String   // openai, qwen, codex, kimi, iflow, anthropic, gemini, mistral
+  label       String   // Display name
+  baseUrl     String   // API base URL
+  model       String   // Model name
+  apiKey      String?  // API key (for API key auth)
+  oauthToken  String?  // OAuth access token
+  oauthRefresh String? // OAuth refresh token
+  oauthExpiresAt DateTime? // OAuth token expiry
+  enabled     Boolean  @default(true)
+  priority    Int      @default(0) // Lower = higher priority (tried first)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("ai_provider_configs")
 }
