@@ -1,11 +1,6 @@
-import { getAISettings } from './settings';
+import { generateSpec, generateClarify, generatePlan, generateTasks } from './index';
 
-/**
- * Stage transition content generation
- * Generates spec, plan, or tasks content based on transition
- */
-
-interface StageTransitionInput {
+export interface StageTransitionInput {
   featureId: string;
   fromStage: string;
   toStage: string;
@@ -16,167 +11,176 @@ interface StageTransitionInput {
   planContent: string;
 }
 
-interface StageTransitionResult {
+export interface StageTransitionResult {
   content: string;
   clarifications?: string;
 }
 
 /**
- * Generate content for stage transition
- * Uses existing AI functions based on target stage
+ * Generate content for a stage transition using the existing AI service methods.
+ * Maps each transition to the appropriate AI generation function.
  */
 export async function generateStageTransitionContent(
   input: StageTransitionInput
 ): Promise<StageTransitionResult> {
-  const aiSettings = await getAISettings();
-
-  // Require API key
-  if (!aiSettings.apiKey) {
-    throw new Error('AI provider is not configured');
-  }
-
   const { toStage, featureName, description, specContent, clarificationsContent, planContent } = input;
 
-  // Create typed settings object
-  const settings = {
-    apiKey: aiSettings.apiKey,
-    baseUrl: aiSettings.baseUrl,
-    model: aiSettings.model,
-  };
-
-  // Generate content based on target stage
   switch (toStage) {
-    case 'specs':
-      return generateSpecsContent(featureName, description, settings);
-    case 'plan':
-      return generatePlanContent(featureName, specContent, clarificationsContent, settings);
-    case 'tasks':
-      return generateTasksContent(featureName, specContent, planContent, settings);
+    case 'specs': {
+      // Generate spec + clarifications
+      const spec = await generateSpec({
+        featureName,
+        description,
+      });
+
+      const specMarkdown = formatSpec(spec);
+
+      const clarifications = await generateClarify({
+        specContent: specMarkdown,
+      });
+
+      const clarificationsMarkdown = clarifications
+        .map((c, i) => `${i + 1}. **${c.question}**\n   _${c.context || ''}_`)
+        .join('\n\n');
+
+      return {
+        content: specMarkdown,
+        clarifications: clarificationsMarkdown,
+      };
+    }
+
+    case 'plan': {
+      const plan = await generatePlan({
+        specContent,
+        clarifications: parseClarifications(clarificationsContent),
+      });
+
+      return {
+        content: formatPlan(plan),
+      };
+    }
+
+    case 'tasks': {
+      const tasks = await generateTasks({
+        specContent,
+        planContent,
+      });
+
+      return {
+        content: formatTasks(tasks),
+      };
+    }
+
     default:
-      throw new Error(`Unknown target stage: ${toStage}`);
+      throw new Error(`Unsupported stage transition to: ${toStage}`);
   }
 }
 
-/**
- * Generate spec content with clarifications
- */
-async function generateSpecsContent(
-  featureName: string,
-  description: string,
-  settings: { apiKey: string; baseUrl?: string; model?: string }
-): Promise<StageTransitionResult> {
-  const prompt = `Generate a detailed specification for: ${featureName}
+// Helper: format spec result to markdown
+function formatSpec(spec: any): string {
+  const sections: string[] = [];
 
-Description: ${description}
-
-Include:
-1. User Stories (at least 3)
-2. Acceptance Criteria for each story
-3. Edge Cases to consider
-4. Technical Considerations
-
-Format as markdown.`;
-
-  const content = await callAI(prompt, settings);
-
-  return {
-    content,
-    clarifications: '',
-  };
-}
-
-/**
- * Generate plan content
- */
-async function generatePlanContent(
-  featureName: string,
-  specContent: string,
-  clarificationsContent: string,
-  settings: { apiKey: string; baseUrl?: string; model?: string }
-): Promise<StageTransitionResult> {
-  const prompt = `Generate an implementation plan for: ${featureName}
-
-Spec:
-${specContent}
-
-Clarifications:
-${clarificationsContent}
-
-Include:
-1. Technical Context
-2. Architecture Overview
-3. Implementation Steps
-4. Dependencies
-5. Testing Strategy
-
-Format as markdown.`;
-
-  const content = await callAI(prompt, settings);
-
-  return { content };
-}
-
-/**
- * Generate tasks content
- */
-async function generateTasksContent(
-  featureName: string,
-  specContent: string,
-  planContent: string,
-  settings: { apiKey: string; baseUrl?: string; model?: string }
-): Promise<StageTransitionResult> {
-  const prompt = `Generate a task breakdown for: ${featureName}
-
-Spec:
-${specContent}
-
-Plan:
-${planContent}
-
-Include:
-1. Phases (at least 2-3 phases)
-2. Tasks with descriptions
-3. Dependencies between tasks
-4. Suggested order
-
-Format as task list markdown with checkboxes.`;
-
-  const content = await callAI(prompt, settings);
-
-  return { content };
-}
-
-/**
- * Call AI API (OpenAI-compatible)
- */
-async function callAI(
-  prompt: string,
-  settings: { apiKey: string; baseUrl?: string; model?: string }
-): Promise<string> {
-  const baseUrl = settings.baseUrl || 'https://api.openai.com/v1';
-  const model = settings.model || 'gpt-4o';
-
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${settings.apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant that generates software specification documents.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.7,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`AI API error: ${response.status} - ${error}`);
+  if (spec.userStories?.length) {
+    sections.push('## User Stories\n');
+    for (const story of spec.userStories) {
+      sections.push(`### ${story.id}: ${story.title}`);
+      sections.push(story.description);
+      if (story.acceptanceCriteria?.length) {
+        sections.push('**Acceptance Criteria:**');
+        sections.push(story.acceptanceCriteria.map((c: string) => `- ${c}`).join('\n'));
+      }
+      sections.push('');
+    }
   }
 
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || '';
+  if (spec.functionalRequirements?.length) {
+    sections.push('## Functional Requirements\n');
+    sections.push(spec.functionalRequirements.map((r: string) => `- ${r}`).join('\n'));
+    sections.push('');
+  }
+
+  if (spec.edgeCases?.length) {
+    sections.push('## Edge Cases\n');
+    sections.push(spec.edgeCases.map((e: string) => `- ${e}`).join('\n'));
+    sections.push('');
+  }
+
+  if (spec.successCriteria?.length) {
+    sections.push('## Success Criteria\n');
+    sections.push(spec.successCriteria.map((s: string) => `- ${s}`).join('\n'));
+    sections.push('');
+  }
+
+  return sections.join('\n');
+}
+
+// Helper: format plan result to markdown
+function formatPlan(plan: any): string {
+  const sections: string[] = [];
+
+  if (plan.summary) {
+    sections.push('## Summary\n');
+    sections.push(plan.summary);
+    sections.push('');
+  }
+
+  if (plan.technicalContext) {
+    sections.push('## Technical Context\n');
+    const ctx = plan.technicalContext;
+    if (ctx.language) sections.push(`- **Language:** ${ctx.language}`);
+    if (ctx.platform) sections.push(`- **Platform:** ${ctx.platform}`);
+    if (ctx.storage) sections.push(`- **Storage:** ${ctx.storage}`);
+    if (ctx.testing) sections.push(`- **Testing:** ${ctx.testing}`);
+    if (ctx.dependencies?.length) {
+      sections.push(`- **Dependencies:** ${ctx.dependencies.join(', ')}`);
+    }
+    sections.push('');
+  }
+
+  if (plan.projectStructure) {
+    sections.push('## Project Structure\n');
+    if (plan.projectStructure.decision) sections.push(plan.projectStructure.decision);
+    if (plan.projectStructure.structure) sections.push(`\`\`\`\n${plan.projectStructure.structure}\n\`\`\``);
+    sections.push('');
+  }
+
+  return sections.join('\n');
+}
+
+// Helper: format tasks result to markdown
+function formatTasks(tasks: any): string {
+  const sections: string[] = [];
+
+  if (tasks.phases?.length) {
+    for (const phase of tasks.phases) {
+      sections.push(`## ${phase.name}\n`);
+      if (phase.purpose) sections.push(`_${phase.purpose}_\n`);
+      if (phase.tasks?.length) {
+        for (const task of phase.tasks) {
+          sections.push(`- [${task.id}] ${task.description}${task.userStory ? ` (${task.userStory})` : ''}`);
+        }
+      }
+      if (phase.checkpoint) sections.push(`\n**Checkpoint:** ${phase.checkpoint}`);
+      sections.push('');
+    }
+  }
+
+  return sections.join('\n');
+}
+
+// Helper: parse clarifications markdown back into structured format
+function parseClarifications(content: string): { question: string; answer: string }[] {
+  if (!content) return [];
+
+  const lines = content.split('\n').filter(l => l.trim());
+  const results: { question: string; answer: string }[] = [];
+
+  for (const line of lines) {
+    const match = line.match(/\*\*(.+?)\*\*/);
+    if (match) {
+      results.push({ question: match[1], answer: '' });
+    }
+  }
+
+  return results;
 }

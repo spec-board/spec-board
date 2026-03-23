@@ -35,7 +35,7 @@ export default function Home() {
     const timeout = setTimeout(() => controller.abort(), 5000);
     
     try {
-      const response = await fetch('/api/projects', { signal: controller.signal });
+      const response = await fetch('/api/project-list', { signal: controller.signal });
       if (response.ok) {
         const data = await response.json();
         setProjects(data);
@@ -69,7 +69,7 @@ export default function Home() {
     if (!deleteProject) return;
 
     try {
-      const response = await fetch(`/api/projects/${deleteProject.name}`, {
+      const response = await fetch(`/api/project/${deleteProject.name}`, {
         method: 'DELETE',
       });
 

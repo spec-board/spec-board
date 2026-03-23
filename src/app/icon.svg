@@ -1,1 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" fill="#4a9eca" rx="4"/><rect width="5" height="16" x="2" y="4" fill="#fff" opacity=".3" rx="1"/><rect width="5" height="12" x="9" y="4" fill="#fff" opacity=".5" rx="1"/><rect width="5" height="8" x="16" y="4" fill="#fff" opacity=".7" rx="1"/><path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 12l3 3 7-7"/></svg>
+<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer square frame -->
+  <rect x="2" y="2" width="20" height="20" rx="4" stroke="#e4e4e7" stroke-width="1.8" fill="#09090b"/>
+  <!-- Top-left block (filled) -->
+  <rect x="5.5" y="5.5" width="5" height="5" rx="1.2" fill="#fafafa"/>
+  <!-- Top-right line -->
+  <rect x="13.5" y="6.5" width="5" height="1.5" rx="0.75" fill="#a1a1aa"/>
+  <!-- Mid-right line -->
+  <rect x="13.5" y="9.5" width="3.5" height="1.5" rx="0.75" fill="#a1a1aa" opacity="0.5"/>
+  <!-- Bottom-left block (outlined) -->
+  <rect x="5.5" y="14" width="5" height="5.5" rx="1.2" stroke="#a1a1aa" stroke-width="1.2" fill="none"/>
+  <!-- Bottom-right block (outlined) -->
+  <rect x="13.5" y="14" width="5" height="5.5" rx="1.2" stroke="#a1a1aa" stroke-width="1.2" fill="none"/>
+</svg>
