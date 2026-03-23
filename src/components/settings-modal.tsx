@@ -605,6 +605,7 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
   const [adding, setAdding] = useState(false);
   const [customModel, setCustomModel] = useState('');
   const [customUrl, setCustomUrl] = useState('');
+  const [apiKeyInput, setApiKeyInput] = useState('');
 
   const handleAdd = async () => {
     if (!selected) return;
@@ -618,6 +619,7 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
         label: preset.label + (customModel ? ` (${customModel})` : ''),
         baseUrl: customUrl || preset.baseUrl,
         model: customModel || preset.model,
+        ...(apiKeyInput.trim() ? { apiKey: apiKeyInput.trim() } : {}),
       }),
     });
     setAdding(false);
@@ -672,9 +674,17 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
         </div>
       </div>
 
-      {/* Override fields for non-OAuth presets */}
+      {/* Config fields for API Key presets */}
       {selected && !PROVIDER_PRESETS[selected]?.oauthOnly && (
         <div className="space-y-2">
+          <div>
+            <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
+              API Key <span className="text-red-400">*</span>
+            </label>
+            <input type="password" value={apiKeyInput} onChange={(e) => setApiKeyInput(e.target.value)}
+              placeholder={PROVIDER_PRESETS[selected]?.apiKeyPlaceholder || 'Enter API key'}
+              className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors" />
+          </div>
           {!PROVIDER_PRESETS[selected]?.fixedBaseUrl && (
             <div>
               <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
