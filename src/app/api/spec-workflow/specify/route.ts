@@ -87,7 +87,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in specify:', error);
-    return NextResponse.json({ error: 'Failed to generate spec' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to generate spec';
+    const status = message.includes('API key') ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 

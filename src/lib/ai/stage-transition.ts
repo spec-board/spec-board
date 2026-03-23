@@ -39,9 +39,7 @@ export async function generateStageTransitionContent(
         specContent: specMarkdown,
       });
 
-      const clarificationsMarkdown = clarifications
-        .map((c, i) => `${i + 1}. **${c.question}**\n   _${c.context || ''}_`)
-        .join('\n\n');
+      const clarificationsMarkdown = formatClarificationsMarkdown(clarifications);
 
       return {
         content: specMarkdown,
@@ -76,6 +74,15 @@ export async function generateStageTransitionContent(
   }
 }
 
+// Helper: split "As a …, I want …, so that …" into separate lines
+function formatStoryDescription(desc: string): string {
+  if (!desc) return '';
+  // Try to split on the "As a / I want / so that" pattern
+  return desc
+    .replace(/,?\s*(I want|i want|Tôi muốn|tôi muốn)/gi, ',\n$1')
+    .replace(/,?\s*(so that|So that|để|Để)/gi, ',\n$1');
+}
+
 // Helper: format spec result to markdown
 function formatSpec(spec: any): string {
   const sections: string[] = [];
@@ -83,35 +90,45 @@ function formatSpec(spec: any): string {
   if (spec.userStories?.length) {
     sections.push('## User Stories\n');
     for (const story of spec.userStories) {
-      sections.push(`### ${story.id}: ${story.title}`);
-      sections.push(story.description);
+      sections.push(`### ${story.id}: ${story.title}\n`);
+      sections.push(formatStoryDescription(story.description) + '\n');
       if (story.acceptanceCriteria?.length) {
-        sections.push('**Acceptance Criteria:**');
+        sections.push('#### ACCEPTANCE CRITERIA\n');
         sections.push(story.acceptanceCriteria.map((c: string) => `- ${c}`).join('\n'));
+        sections.push('');
       }
-      sections.push('');
+      sections.push('\n---\n');
     }
   }
 
   if (spec.functionalRequirements?.length) {
-    sections.push('## Functional Requirements\n');
-    sections.push(spec.functionalRequirements.map((r: string) => `- ${r}`).join('\n'));
+    sections.push('## FUNCTIONAL REQUIREMENTS\n');
+    sections.push(spec.functionalRequirements.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n'));
     sections.push('');
   }
 
   if (spec.edgeCases?.length) {
-    sections.push('## Edge Cases\n');
+    sections.push('## EDGE CASES\n');
     sections.push(spec.edgeCases.map((e: string) => `- ${e}`).join('\n'));
     sections.push('');
   }
 
   if (spec.successCriteria?.length) {
-    sections.push('## Success Criteria\n');
+    sections.push('## SUCCESS CRITERIA\n');
     sections.push(spec.successCriteria.map((s: string) => `- ${s}`).join('\n'));
     sections.push('');
   }
 
   return sections.join('\n');
+}
+
+// Helper: safely convert any value to a markdown-safe string
+function toStr(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string') return val;
+  if (Array.isArray(val)) return val.map(toStr).join(', ');
+  if (typeof val === 'object') return JSON.stringify(val, null, 2);
+  return String(val);
 }
 
 // Helper: format plan result to markdown
@@ -120,27 +137,50 @@ function formatPlan(plan: any): string {
 
   if (plan.summary) {
     sections.push('## Summary\n');
-    sections.push(plan.summary);
+    sections.push(toStr(plan.summary));
     sections.push('');
   }
 
   if (plan.technicalContext) {
     sections.push('## Technical Context\n');
     const ctx = plan.technicalContext;
-    if (ctx.language) sections.push(`- **Language:** ${ctx.language}`);
-    if (ctx.platform) sections.push(`- **Platform:** ${ctx.platform}`);
-    if (ctx.storage) sections.push(`- **Storage:** ${ctx.storage}`);
-    if (ctx.testing) sections.push(`- **Testing:** ${ctx.testing}`);
-    if (ctx.dependencies?.length) {
-      sections.push(`- **Dependencies:** ${ctx.dependencies.join(', ')}`);
+    if (typeof ctx === 'string') {
+      sections.push(ctx);
+    } else {
+      if (ctx.language) sections.push(`- **Language:** ${toStr(ctx.language)}`);
+      if (ctx.platform) sections.push(`- **Platform:** ${toStr(ctx.platform)}`);
+      if (ctx.storage) sections.push(`- **Storage:** ${toStr(ctx.storage)}`);
+      if (ctx.testing) sections.push(`- **Testing:** ${toStr(ctx.testing)}`);
+      if (ctx.dependencies) {
+        sections.push(`- **Dependencies:** ${toStr(ctx.dependencies)}`);
+      }
     }
     sections.push('');
   }
 
   if (plan.projectStructure) {
     sections.push('## Project Structure\n');
-    if (plan.projectStructure.decision) sections.push(plan.projectStructure.decision);
-    if (plan.projectStructure.structure) sections.push(`\`\`\`\n${plan.projectStructure.structure}\n\`\`\``);
+    const ps = plan.projectStructure;
+    if (typeof ps === 'string') {
+      sections.push(ps);
+    } else {
+      if (ps.decision) sections.push(toStr(ps.decision));
+      if (ps.structure) {
+        const structStr = toStr(ps.structure);
+        sections.push(`\`\`\`\n${structStr}\n\`\`\``);
+      }
+    }
+    sections.push('');
+  }
+
+  // Catch any remaining top-level keys we didn't handle
+  const handled = new Set(['summary', 'technicalContext', 'projectStructure']);
+  for (const key of Object.keys(plan)) {
+    if (handled.has(key)) continue;
+    const val = plan[key];
+    if (val === null || val === undefined) continue;
+    sections.push(`## ${key.charAt(0).toUpperCase() + key.slice(1)}\n`);
+    sections.push(toStr(val));
     sections.push('');
   }
 
@@ -168,13 +208,54 @@ function formatTasks(tasks: any): string {
   return sections.join('\n');
 }
 
+// Helper: format clarifications to canonical markdown (same as clarify/route.ts)
+function formatClarificationsMarkdown(questions: { question: string; context?: string; answer?: string }[]): string {
+  const date = new Date().toISOString().split('T')[0];
+  let content = `# Clarifications\n\n`;
+  content += `**Date**: ${date}\n\n`;
+  content += `## Questions & Answers\n\n`;
+
+  for (const item of questions) {
+    const contextSuffix = item.context ? `\n_${item.context}_` : '';
+    content += `### Q: ${item.question}${contextSuffix}\n\n`;
+    if (item.answer) {
+      content += `**A**: ${item.answer}\n\n`;
+    } else {
+      content += `**A**: _Pending_\n\n`;
+    }
+  }
+
+  return content;
+}
+
 // Helper: parse clarifications markdown back into structured format
 function parseClarifications(content: string): { question: string; answer: string }[] {
   if (!content) return [];
 
+  // Try canonical format first (### Q: ...)
+  const sections = content.split(/^### Q:\s*/m).filter(s => s.trim());
+  if (sections.length > 0 && content.includes('### Q:')) {
+    const results: { question: string; answer: string }[] = [];
+    for (const section of sections) {
+      const lines = section.trim().split('\n');
+      const question = lines[0]?.trim() || '';
+      if (!question || question.startsWith('#')) continue;
+      let answer = '';
+      for (const line of lines) {
+        const m = line.match(/^\*\*A\*\*:\s*(.+)$/);
+        if (m && m[1] !== '_Pending_') {
+          answer = m[1].trim();
+          break;
+        }
+      }
+      results.push({ question, answer });
+    }
+    if (results.length > 0) return results;
+  }
+
+  // Fallback: old numbered format (1. **Question** _context_)
   const lines = content.split('\n').filter(l => l.trim());
   const results: { question: string; answer: string }[] = [];
-
   for (const line of lines) {
     const match = line.match(/\*\*(.+?)\*\*/);
     if (match) {

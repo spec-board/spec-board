@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, LogIn, LogOut, Loader2, Copy, Check, Plus, Trash2, ChevronUp, ChevronDown, Power, Download } from 'lucide-react';
+import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, LogOut, Loader2, Copy, Check, Plus, Trash2, ChevronUp, ChevronDown, Power, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore, type AIProvider, type SettingsSection } from '@/lib/settings-store';
 import { ReadmeViewer } from '@/components/readme-viewer';
@@ -119,7 +119,7 @@ function ShortcutsContent() {
             onClick={() => setShortcutsEnabled(!shortcutsEnabled)}
             className={cn(
               'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-              shortcutsEnabled ? 'bg-green-500' : 'bg-[var(--secondary)]'
+              shortcutsEnabled ? 'bg-[var(--foreground)]' : 'bg-[var(--secondary)]'
             )}
             role="switch"
             aria-checked={shortcutsEnabled}
@@ -156,100 +156,19 @@ function ShortcutsContent() {
 }
 
 const LANGUAGE_OPTIONS: { value: string; label: string; flag: string }[] = [
-  { value: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
   { value: 'en', label: 'English', flag: '🇺🇸' },
-  { value: 'zh', label: '中文', flag: '🇨🇳' },
-  { value: 'ja', label: '日本語', flag: '🇯🇵' },
-  { value: 'ko', label: '한국어', flag: '🇰🇷' },
+  { value: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
 ];
 
-function AppearanceContent() {
-  const { language, setLanguage } = useSettingsStore();
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold mb-1">Appearance</h2>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          Customize how SpecBoard looks
-        </p>
-      </div>
 
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-sm font-medium">Theme</span>
-            <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
-              Choose light, dark, or match your system
-            </p>
-          </div>
-          <ThemeToggle />
-        </div>
-
-        <div className="h-px bg-[var(--border)]" />
-
-        <div>
-          <div className="mb-2">
-            <span className="text-sm font-medium">AI Output Language</span>
-            <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
-              Language for AI-generated specs, plans, and tasks
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {LANGUAGE_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setLanguage(opt.value as any)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors',
-                  language === opt.value
-                    ? 'border-[var(--ring)] bg-[var(--accent)] font-medium'
-                    : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
-                )}
-              >
-                <span>{opt.flag}</span>
-                <span>{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string; oauthOnly?: boolean; fixedBaseUrl?: boolean }> = {
-  codex: {
-    label: 'OpenAI Codex',
+const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string; fixedBaseUrl?: boolean }> = {
+  openai: {
+    label: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
-    model: 'codex-mini-latest',
-    apiKeyPlaceholder: '',
-    description: 'Code-optimized models via OpenAI account',
-    oauthOnly: true,
-  },
-  qwen: {
-    label: 'Qwen',
-    baseUrl: 'https://chat.qwen.ai/api/v1',
-    model: 'qwen-max',
-    apiKeyPlaceholder: '',
-    description: 'Qwen-Max, Qwen-Plus via qwen.ai account',
-    oauthOnly: true,
-  },
-  kimi: {
-    label: 'Kimi',
-    baseUrl: 'https://api.kimi.ai/v1',
-    model: 'kimi-latest',
-    apiKeyPlaceholder: '',
-    description: 'Kimi models via Moonshot account',
-    oauthOnly: true,
-  },
-  iflow: {
-    label: 'iFlow',
-    baseUrl: 'https://apis.iflow.cn/v1',
-    model: 'Qwen3-Coder',
-    apiKeyPlaceholder: '',
-    description: 'Free AI models: Kimi K2, Qwen3, DeepSeek v3',
-    oauthOnly: true,
+    model: 'gpt-4o',
+    apiKeyPlaceholder: 'sk-...',
+    description: 'GPT-4o, o3, Codex mini via API key',
   },
   mistral: {
     label: 'Mistral / Codestral',
@@ -304,7 +223,8 @@ function DeviceCodeFlow({ provider, onSuccess }: { provider: string; onSuccess: 
       setUserCode(data.user_code);
       setVerificationUri(data.verification_uri);
       setPolling(true);
-      window.open(data.verification_uri, '_blank', 'noopener');
+      // Open verification page in new tab
+      window.open(data.verification_uri, '_blank', 'noopener,noreferrer');
 
       const interval = (data.interval || 5) * 1000;
       pollingRef.current = setInterval(async () => {
@@ -351,12 +271,12 @@ function DeviceCodeFlow({ provider, onSuccess }: { provider: string; onSuccess: 
               {userCode}
             </code>
             <button onClick={handleCopy} className="p-2 rounded-lg hover:bg-[var(--secondary)] transition-colors" title="Copy code">
-              {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-[var(--muted-foreground)]" />}
+              {copied ? <Check className="w-4 h-4 text-[var(--foreground)]" /> : <Copy className="w-4 h-4 text-[var(--muted-foreground)]" />}
             </button>
           </div>
           <a href={verificationUri} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
-            Open verification page <ExternalLink className="w-3 h-3" />
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] underline underline-offset-2 hover:opacity-80 transition-opacity">
+            Open verification page <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
         <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted-foreground)]">
@@ -370,7 +290,7 @@ function DeviceCodeFlow({ provider, onSuccess }: { provider: string; onSuccess: 
     <div className="space-y-2">
       <button onClick={startFlow}
         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg hover:opacity-90 transition-opacity">
-        <LogIn className="w-4 h-4" /> Login with {OAUTH_PROVIDERS[provider]?.name || provider}
+        Login with {OAUTH_PROVIDERS[provider]?.name || provider}
       </button>
       {error && <p className="text-xs text-red-400 text-center">{error}</p>}
     </div>
@@ -422,14 +342,22 @@ function PKCEFlow({ provider, onSuccess }: { provider: string; onSuccess: () => 
       scope: (config.scopes || []).join(' '), state,
       code_challenge: codeChallenge, code_challenge_method: 'S256',
     });
-    window.open(`${config.authorizeUrl}?${params}`, 'oauth-popup', 'width=600,height=700');
+    if (config.audience) {
+      params.set('audience', config.audience);
+    }
+    // Codex CLI simplified flow skips unnecessary consent screens
+    if (provider === 'codex') {
+      params.set('codex_cli_simplified_flow', 'true');
+    }
+    const authUrl = `${config.authorizeUrl}?${params}`;
+    window.open(authUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <div className="space-y-2">
       <button onClick={startFlow} disabled={loading}
         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity">
-        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+        {loading && <Loader2 className="w-4 h-4 animate-spin" />}
         Login with {OAUTH_PROVIDERS[provider]?.name || provider}
       </button>
       {error && <p className="text-xs text-red-400 text-center">{error}</p>}
@@ -449,12 +377,12 @@ function OAuthConnected({ provider, onDisconnect }: { provider: string; onDiscon
   return (
     <div className="flex items-center justify-between px-3 py-2.5 bg-[var(--secondary)]/50 border border-[var(--border)] rounded-lg">
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-green-500" />
+        <div className="w-2 h-2 rounded-full bg-[var(--foreground)]" />
         <span className="text-sm">Connected via {config?.name || provider}</span>
       </div>
       <button onClick={handleDisconnect} disabled={disconnecting}
         className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--muted-foreground)] hover:text-red-400 transition-colors">
-        {disconnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3 h-3" />} Disconnect
+        {disconnecting && <Loader2 className="w-3 h-3 animate-spin" />} Disconnect
       </button>
     </div>
   );
@@ -475,17 +403,19 @@ interface ProviderItem {
 
 // Single provider row in the list
 function ProviderRow({
-  item, index, total,
+  item, index, total, autoExpand,
   onToggle, onMoveUp, onMoveDown, onDelete, onOAuthSuccess,
 }: {
-  item: ProviderItem; index: number; total: number;
+  item: ProviderItem; index: number; total: number; autoExpand?: boolean;
   onToggle: () => void; onMoveUp: () => void; onMoveDown: () => void;
   onDelete: () => void; onOAuthSuccess: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(autoExpand ?? false);
+  useEffect(() => {
+    if (autoExpand) setExpanded(true);
+  }, [autoExpand]);
   const preset = PROVIDER_PRESETS[item.provider];
-  const isOAuth = preset?.oauthOnly;
-  const hasAuth = item.hasApiKey || item.hasOAuth;
+  const hasAuth = item.hasApiKey;
 
   return (
     <div className={cn(
@@ -503,7 +433,7 @@ function ProviderRow({
         <button onClick={() => setExpanded(!expanded)} className="flex-1 text-left min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium truncate">{item.label}</span>
-            {hasAuth && <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />}
+            {hasAuth && <span className="w-1.5 h-1.5 rounded-full bg-[var(--foreground)] shrink-0" />}
             {!hasAuth && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />}
           </div>
           <span className="text-[10px] text-[var(--muted-foreground)] truncate block">{item.model}</span>
@@ -519,43 +449,37 @@ function ProviderRow({
             className="p-1 rounded hover:bg-[var(--secondary)] disabled:opacity-30 transition-colors" title="Move down">
             <ChevronDown className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
           </button>
-          <button onClick={onToggle}
-            className={cn('p-1 rounded transition-colors', item.enabled ? 'hover:bg-[var(--secondary)]' : 'hover:bg-[var(--secondary)]')}
-            title={item.enabled ? 'Disable' : 'Enable'}>
-            <Power className={cn('w-3.5 h-3.5', item.enabled ? 'text-green-500' : 'text-[var(--muted-foreground)]')} />
+          <button
+            onClick={onToggle}
+            role="switch"
+            aria-checked={item.enabled}
+            title={item.enabled ? 'Disable' : 'Enable'}
+            className={cn(
+              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
+              item.enabled ? 'bg-[var(--foreground)]' : 'bg-[var(--border)]'
+            )}
+          >
+            <span
+              className={cn(
+                'pointer-events-none inline-block h-4 w-4 rounded-full bg-[var(--background)] shadow-sm ring-0 transition-transform',
+                item.enabled ? 'translate-x-4' : 'translate-x-0'
+              )}
+            />
           </button>
-          <button onClick={onDelete}
-            className="p-1 rounded hover:bg-red-500/10 transition-colors" title="Remove">
-            <Trash2 className="w-3.5 h-3.5 text-[var(--muted-foreground)] hover:text-red-400" />
+          <button
+            onClick={onDelete}
+            className="p-1 rounded hover:bg-[var(--secondary)] transition-colors"
+            title="Remove provider"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)]" />
           </button>
         </div>
       </div>
 
-      {/* Expanded: auth section */}
+      {/* Expanded: API key section */}
       {expanded && (
         <div className="px-3 pb-3 pt-1 border-t border-[var(--border)] space-y-2">
-          {isOAuth && !item.hasOAuth && (
-            item.provider === 'codex'
-              ? <PKCEFlow provider={item.provider} onSuccess={onOAuthSuccess} />
-              : <DeviceCodeFlow provider={item.provider} onSuccess={onOAuthSuccess} />
-          )}
-          {isOAuth && item.hasOAuth && (
-            <div className="flex items-center justify-between px-2 py-1.5 bg-[var(--secondary)]/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-xs">OAuth connected</span>
-              </div>
-              <button onClick={async () => {
-                await fetch(`/api/settings/ai/providers/oauth?providerId=${item.id}`, { method: 'DELETE' });
-                onOAuthSuccess();
-              }} className="text-[10px] text-[var(--muted-foreground)] hover:text-red-400 transition-colors">
-                Disconnect
-              </button>
-            </div>
-          )}
-          {!isOAuth && (
-            <ProviderApiKeyInput providerId={item.id} hasApiKey={item.hasApiKey} onSaved={onOAuthSuccess} />
-          )}
+          <ProviderApiKeyInput providerId={item.id} hasApiKey={item.hasApiKey} onSaved={onOAuthSuccess} />
           {!preset?.fixedBaseUrl && (
             <div className="text-[10px] text-[var(--muted-foreground)]">
               Base URL: <span className="font-mono">{item.baseUrl}</span>
@@ -575,11 +499,18 @@ function ProviderApiKeyInput({ providerId, hasApiKey, onSaved }: { providerId: s
   const handleSave = async () => {
     if (!apiKey.trim()) return;
     setSaving(true);
-    await fetch('/api/settings/ai/providers', {
+    // Save to provider-configs
+    await fetch('/api/settings/ai/provider-configs', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: providerId, apiKey: apiKey.trim() }),
     });
+    // Also save to legacy appSettings for getProvider() compatibility
+    await fetch('/api/settings/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey: apiKey.trim() }),
+    }).catch(() => {});
     setApiKey('');
     setSaving(false);
     onSaved();
@@ -599,83 +530,92 @@ function ProviderApiKeyInput({ providerId, hasApiKey, onSaved }: { providerId: s
   );
 }
 
-// Add provider dialog
-function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () => void }) {
+// Add API Key provider dialog
+function AddApiKeyProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [customModel, setCustomModel] = useState('');
   const [customUrl, setCustomUrl] = useState('');
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [error, setError] = useState('');
+
+  const apiKeyPresets = Object.entries(PROVIDER_PRESETS);
 
   const handleAdd = async () => {
     if (!selected) return;
     setAdding(true);
-    const preset = PROVIDER_PRESETS[selected];
-    await fetch('/api/settings/ai/providers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        provider: selected,
-        label: preset.label + (customModel ? ` (${customModel})` : ''),
-        baseUrl: customUrl || preset.baseUrl,
-        model: customModel || preset.model,
-        ...(apiKeyInput.trim() ? { apiKey: apiKeyInput.trim() } : {}),
-      }),
-    });
-    setAdding(false);
-    onAdd();
+    setError('');
+    try {
+      const preset = PROVIDER_PRESETS[selected];
+      const baseUrl = customUrl || preset.baseUrl;
+      const model = customModel || preset.model;
+      const apiKey = apiKeyInput.trim();
+
+      // Save to provider-configs table
+      const res = await fetch('/api/settings/ai/provider-configs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: selected,
+          label: preset.label + (customModel ? ` (${customModel})` : ''),
+          baseUrl,
+          model,
+          apiKey,
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        setError(errData.error || 'Failed to add provider');
+        return;
+      }
+
+      // Also save to legacy appSettings so getProvider() works immediately
+      await fetch('/api/settings/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: selected,
+          baseUrl,
+          model,
+          apiKey,
+        }),
+      }).catch(() => { /* non-critical */ });
+
+      onAdd();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add provider');
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
     <div className="space-y-3 p-3 bg-[var(--secondary)]/30 rounded-lg border border-[var(--border)]">
-      <div className="text-xs font-medium text-[var(--muted-foreground)]">Add Provider</div>
-
-      {/* OAuth2 Providers */}
-      <div>
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">OAuth2</span>
-          <div className="flex-1 h-px bg-[var(--border)]" />
-        </div>
-        <div className="grid grid-cols-4 gap-1.5">
-          {Object.entries(PROVIDER_PRESETS).filter(([, p]) => p.oauthOnly).map(([key, preset]) => (
-            <button key={key} onClick={() => setSelected(key)}
-              className={cn(
-                'flex flex-col items-start px-2 py-2 rounded-lg border text-left transition-colors',
-                selected === key
-                  ? 'border-[var(--ring)] bg-[var(--accent)]'
-                  : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
-              )}>
-              <span className="text-xs font-medium">{preset.label}</span>
-              <span className="text-[9px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
-            </button>
-          ))}
-        </div>
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-medium text-[var(--muted-foreground)]">Add Provider</div>
+        <button onClick={onClose} className="p-0.5 rounded hover:bg-[var(--secondary)] transition-colors">
+          <X className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
+        </button>
       </div>
 
-      {/* API Key Providers */}
-      <div>
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">API Key</span>
-          <div className="flex-1 h-px bg-[var(--border)]" />
-        </div>
-        <div className="grid grid-cols-4 gap-1.5">
-          {Object.entries(PROVIDER_PRESETS).filter(([, p]) => !p.oauthOnly).map(([key, preset]) => (
-            <button key={key} onClick={() => setSelected(key)}
-              className={cn(
-                'flex flex-col items-start px-2 py-2 rounded-lg border text-left transition-colors',
-                selected === key
-                  ? 'border-[var(--ring)] bg-[var(--accent)]'
-                  : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
-              )}>
-              <span className="text-xs font-medium">{preset.label}</span>
+      <div className="flex flex-col gap-1">
+        {apiKeyPresets.map(([key, preset]) => (
+          <button key={key} onClick={() => { setSelected(key); setCustomModel(''); setCustomUrl(''); setApiKeyInput(''); setError(''); }}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2 rounded-lg border text-left transition-colors',
+              selected === key
+                ? 'border-[var(--ring)] bg-[var(--accent)]'
+                : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
+            )}>
+            <div className="min-w-0">
+              <span className="text-xs font-medium block">{preset.label}</span>
               <span className="text-[9px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
-            </button>
-          ))}
-        </div>
+            </div>
+          </button>
+        ))}
       </div>
 
-      {/* Config fields for API Key presets */}
-      {selected && !PROVIDER_PRESETS[selected]?.oauthOnly && (
+      {selected && (
         <div className="space-y-2">
           <div>
             <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
@@ -688,7 +628,7 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
           {!PROVIDER_PRESETS[selected]?.fixedBaseUrl && (
             <div>
               <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
-                Base URL <span className="opacity-60">(optional override)</span>
+                Base URL <span className="opacity-60">(optional)</span>
               </label>
               <input type="text" value={customUrl} onChange={(e) => setCustomUrl(e.target.value)}
                 placeholder={PROVIDER_PRESETS[selected]?.baseUrl || 'https://api.openai.com/v1'}
@@ -697,25 +637,20 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
           )}
           <div>
             <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
-              Model <span className="opacity-60">(optional override)</span>
+              Model <span className="opacity-60">(default: {PROVIDER_PRESETS[selected]?.model || 'gpt-4o'})</span>
             </label>
             <input type="text" value={customModel} onChange={(e) => setCustomModel(e.target.value)}
               placeholder={PROVIDER_PRESETS[selected]?.model || 'gpt-4o'}
               className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)]" />
           </div>
+          {error && <p className="text-xs text-red-400">{error}</p>}
+          <button onClick={handleAdd}
+            disabled={!apiKeyInput.trim() || adding}
+            className="w-full px-3 py-1.5 text-xs bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors">
+            {adding ? 'Adding...' : 'Add Provider'}
+          </button>
         </div>
       )}
-
-      <div className="flex gap-2">
-        <button onClick={handleAdd} disabled={!selected || adding}
-          className="flex-1 px-3 py-1.5 text-xs bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors">
-          {adding ? 'Adding...' : 'Add'}
-        </button>
-        <button onClick={onClose}
-          className="px-3 py-1.5 text-xs border border-[var(--border)] rounded-lg hover:bg-[var(--secondary)] transition-colors">
-          Cancel
-        </button>
-      </div>
     </div>
   );
 }
@@ -723,7 +658,8 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
 function AIContent() {
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
+  const [showAddApiKey, setShowAddApiKey] = useState(false);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
@@ -731,7 +667,7 @@ function AIContent() {
     setImporting(true);
     setImportResult(null);
     try {
-      const res = await fetch('/api/settings/ai/providers/import-env', { method: 'POST' });
+      const res = await fetch('/api/settings/ai/provider-configs/import-env', { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
         setImportResult({
@@ -751,7 +687,7 @@ function AIContent() {
 
   const loadProviders = useCallback(async () => {
     try {
-      const res = await fetch('/api/settings/ai/providers');
+      const res = await fetch('/api/settings/ai/provider-configs');
       if (res.ok) {
         const data = await res.json();
         setProviders(data);
@@ -763,12 +699,22 @@ function AIContent() {
   useEffect(() => { loadProviders(); }, [loadProviders]);
 
   const handleToggle = async (id: string, enabled: boolean) => {
-    await fetch('/api/settings/ai/providers', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, enabled: !enabled }),
-    });
-    loadProviders();
+    // Optimistic update - toggle immediately in UI
+    setProviders(prev => prev.map(p => p.id === id ? { ...p, enabled: !enabled } : p));
+    try {
+      const res = await fetch('/api/settings/ai/provider-configs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, enabled: !enabled }),
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setProviders(prev => prev.map(p => p.id === id ? { ...p, enabled } : p));
+      }
+    } catch {
+      // Revert on error
+      setProviders(prev => prev.map(p => p.id === id ? { ...p, enabled } : p));
+    }
   };
 
   const handleMove = async (index: number, direction: 'up' | 'down') => {
@@ -782,7 +728,7 @@ function AIContent() {
       priority: i === index ? newProviders[swapIndex].priority : i === swapIndex ? newProviders[index].priority : p.priority,
     }));
 
-    await fetch('/api/settings/ai/providers', {
+    await fetch('/api/settings/ai/provider-configs', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reorder }),
@@ -791,12 +737,52 @@ function AIContent() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/settings/ai/providers?id=${id}`, { method: 'DELETE' });
+    try {
+      const res = await fetch(`/api/settings/ai/provider-configs?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Failed to delete provider:', errData.error || res.statusText);
+      }
+    } catch (err) {
+      console.error('Failed to delete provider:', err);
+    }
+    setConfirmingDeleteId(null);
     loadProviders();
   };
 
+  const { language, setLanguage } = useSettingsStore();
+
   return (
     <div className="space-y-6">
+      {/* AI Output Language */}
+      <div>
+        <h2 className="text-lg font-semibold mb-1">AI Output Language</h2>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          Language for AI-generated specs, plans, and tasks
+        </p>
+      </div>
+
+      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+        <div className="flex flex-wrap gap-2">
+          {LANGUAGE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setLanguage(opt.value as any)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors',
+                language === opt.value
+                  ? 'border-[var(--ring)] bg-[var(--accent)] font-medium'
+                  : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
+              )}
+            >
+              <span>{opt.flag}</span>
+              <span>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* AI Providers */}
       <div>
         <h2 className="text-lg font-semibold mb-1">AI Providers</h2>
         <p className="text-sm text-[var(--muted-foreground)]">
@@ -821,33 +807,67 @@ function AIContent() {
               item={item}
               index={index}
               total={providers.length}
+              autoExpand={false}
               onToggle={() => handleToggle(item.id, item.enabled)}
               onMoveUp={() => handleMove(index, 'up')}
               onMoveDown={() => handleMove(index, 'down')}
-              onDelete={() => handleDelete(item.id)}
-              onOAuthSuccess={loadProviders}
+              onDelete={() => setConfirmingDeleteId(item.id)}
+              onOAuthSuccess={() => loadProviders()}
             />
           ))
         )}
       </div>
 
-      {/* Add provider */}
-      {showAdd ? (
-        <AddProviderDialog
-          onAdd={() => { setShowAdd(false); loadProviders(); }}
-          onClose={() => setShowAdd(false)}
+      {/* Delete confirmation modal */}
+      {confirmingDeleteId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setConfirmingDeleteId(null)} />
+          <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl p-5 w-[320px] space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div>
+              <h3 className="text-sm font-semibold">Remove provider</h3>
+              <p className="text-xs text-[var(--muted-foreground)] mt-1 leading-relaxed">
+                Are you sure you want to remove <span className="font-medium text-[var(--foreground)]">{providers.find(p => p.id === confirmingDeleteId)?.label || 'this provider'}</span>? This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmingDeleteId(null)}
+                className="px-3 py-1.5 text-xs rounded-lg border border-[var(--border)] hover:bg-[var(--secondary)] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmingDeleteId)}
+                className="px-3 py-1.5 text-xs rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add provider dialog */}
+      {showAddApiKey && (
+        <AddApiKeyProviderDialog
+          onAdd={() => { setShowAddApiKey(false); loadProviders(); }}
+          onClose={() => setShowAddApiKey(false)}
         />
-      ) : (
+      )}
+
+      {/* Action buttons */}
+      {!showAddApiKey && (
         <div className="flex gap-2">
-          <button onClick={() => setShowAdd(true)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
-            <Plus className="w-4 h-4" /> Add Provider
+          <button onClick={() => setShowAddApiKey(true)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
+            <Plus className="w-3.5 h-3.5" />
+            Add Provider
           </button>
           <button onClick={handleImportEnv} disabled={importing}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)] disabled:opacity-50"
-            title="Import providers from environment variables (.env)">
-            {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Import .env
+            className="flex items-center justify-center gap-2 px-4 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)] disabled:opacity-50"
+            title="Import from environment variables">
+            {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            Env
           </button>
         </div>
       )}
@@ -857,7 +877,7 @@ function AIContent() {
         <div className={cn(
           'text-xs text-center py-1.5 px-3 rounded-lg',
           importResult.type === 'success'
-            ? 'text-green-500 bg-green-500/10'
+            ? 'text-[var(--foreground)] bg-[var(--secondary)]/50'
             : 'text-[var(--muted-foreground)] bg-[var(--secondary)]/30'
         )}>
           {importResult.message}
@@ -916,11 +936,10 @@ function AboutContent() {
           className={cn(
             'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
             activeTab === 'readme'
-              ? 'border-blue-500 text-[var(--foreground)]'
+              ? 'border-[var(--foreground)] text-[var(--foreground)]'
               : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
         >
-          <FileText className="w-4 h-4 inline-block mr-2" />
           README
         </button>
         <button
@@ -928,11 +947,10 @@ function AboutContent() {
           className={cn(
             'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
             activeTab === 'changelog'
-              ? 'border-blue-500 text-[var(--foreground)]'
+              ? 'border-[var(--foreground)] text-[var(--foreground)]'
               : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
         >
-          <History className="w-4 h-4 inline-block mr-2" />
           Changelog
         </button>
       </div>
@@ -953,7 +971,7 @@ function AboutContent() {
                   href={appInfo.licenseUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="text-[var(--foreground)] underline underline-offset-2 hover:opacity-70 flex items-center gap-1"
                 >
                   {appInfo.license}
                   <ExternalLink className="w-3 h-3" />
@@ -964,7 +982,7 @@ function AboutContent() {
                   href={appInfo.repository}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="text-[var(--foreground)] underline underline-offset-2 hover:opacity-70 flex items-center gap-1"
                 >
                   <Github className="w-4 h-4" />
                   GitHub
@@ -989,11 +1007,10 @@ function AboutContent() {
   );
 }
 
-const MENU_ITEMS: { id: SettingsSection; label: string; icon: React.ReactNode }[] = [
-  { id: 'ai', label: 'AI Settings', icon: <Sparkles className="w-4 h-4" /> },
-  { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
-  { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
-  { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
+const MENU_ITEMS: { id: SettingsSection; label: string }[] = [
+  { id: 'ai', label: 'AI Settings' },
+  { id: 'shortcuts', label: 'Shortcuts' },
+  { id: 'about', label: 'About' },
 ];
 
 export function SettingsModal() {
@@ -1065,10 +1082,9 @@ export function SettingsModal() {
                       ? 'bg-[var(--secondary)] text-[var(--foreground)]'
                       : 'text-[var(--muted-foreground)] hover:bg-[var(--secondary)]/50 hover:text-[var(--foreground)]'
                   )}
-                >
-                  {item.icon}
-                  {item.label}
-                </button>
+                  >
+                    {item.label}
+                  </button>
               ))}
             </nav>
           </aside>
@@ -1076,9 +1092,8 @@ export function SettingsModal() {
           {/* Right content area */}
           <main className="flex-1 p-6 overflow-y-auto">
             {activeSection === 'ai' && <AIContent />}
-            {activeSection === 'shortcuts' && <ShortcutsContent />}
-            {activeSection === 'appearance' && <AppearanceContent />}
-            {activeSection === 'about' && <AboutContent />}
+  {activeSection === 'shortcuts' && <ShortcutsContent />}
+  {activeSection === 'about' && <AboutContent />}
           </main>
         </div>
       </div>

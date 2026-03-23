@@ -111,7 +111,7 @@ export function SplitView({
       <div
         className={cn(
           'flex flex-col overflow-hidden border-r border-[var(--border)]',
-          focusedPane === 'left' && 'ring-2 ring-blue-500/30 ring-inset'
+          focusedPane === 'left' && 'ring-2 ring-[var(--ring)] ring-inset'
         )}
         style={{ width: leftWidth }}
         onClick={() => onFocusChange('left')}
@@ -129,8 +129,8 @@ export function SplitView({
       {/* Resizable divider */}
       <div
         className={cn(
-          'w-1 bg-[var(--border)] hover:bg-blue-500/50 cursor-col-resize transition-colors flex-shrink-0',
-          isDragging && 'bg-blue-500'
+          'w-1 bg-[var(--border)] hover:bg-[var(--muted-foreground)]/50 cursor-col-resize transition-colors flex-shrink-0',
+          isDragging && 'bg-[var(--foreground)]'
         )}
         onMouseDown={handleMouseDown}
         role="separator"
@@ -158,7 +158,7 @@ export function SplitView({
       <div
         className={cn(
           'flex flex-col overflow-hidden',
-          focusedPane === 'right' && 'ring-2 ring-blue-500/30 ring-inset'
+          focusedPane === 'right' && 'ring-2 ring-[var(--ring)] ring-inset'
         )}
         style={{ width: rightWidth }}
         onClick={() => onFocusChange('right')}

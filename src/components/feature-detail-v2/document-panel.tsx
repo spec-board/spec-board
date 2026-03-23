@@ -18,10 +18,12 @@ export function DocumentPanel({
 }: DocumentPanelProps) {
   const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
 
-  // Get current document content
+  // Get current document content (sanitize stale [object Object] from old data)
   const currentContent = useMemo(() => {
     const option = documentOptions.find(o => o.type === selectedDocument);
-    return option?.content || null;
+    const raw = option?.content || null;
+    if (!raw) return null;
+    return raw.replace(/\[object Object\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
   }, [documentOptions, selectedDocument]);
 
   // Scroll to highlighted task when it changes
@@ -95,7 +97,6 @@ export function DocumentPanel({
             onClick={onEditClarifications}
             className="ml-3 btn btn-primary btn-sm"
           >
-            <Edit3 className="w-3.5 h-3.5" />
             Edit
           </button>
         )}
@@ -104,16 +105,7 @@ export function DocumentPanel({
       {/* Document content */}
       <div
         ref={contentRef}
-        className={cn(
-          'flex-1 overflow-y-auto p-6',
-          'prose prose-sm max-w-none dark:prose-invert',
-          'prose-headings:text-[var(--foreground)]',
-          'prose-p:text-[var(--foreground)]',
-          'prose-code:text-[var(--primary)] prose-code:bg-[var(--accent-muted)] prose-code:px-1 prose-code:rounded',
-          'prose-pre:bg-[var(--muted)] prose-pre:text-[var(--foreground)]',
-          'prose-li:text-[var(--foreground)]',
-          'prose-a:text-[var(--primary)] prose-a:no-underline hover:prose-a:underline'
-        )}
+        className="flex-1 overflow-y-auto p-6"
       >
         <MarkdownRenderer content={currentContent} />
       </div>

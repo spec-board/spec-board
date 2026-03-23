@@ -59,18 +59,21 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in clarify:', error);
-    return NextResponse.json({ error: 'Failed to generate clarifications' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to generate clarifications';
+    const status = message.includes('API key') ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
-function generateClarificationsMarkdown(questions: { question: string; answer?: string }[]): string {
+function generateClarificationsMarkdown(questions: { question: string; context?: string; answer?: string }[]): string {
   const date = new Date().toISOString().split('T')[0];
   let content = `# Clarifications\n\n`;
   content += `**Date**: ${date}\n\n`;
 
   content += `## Questions & Answers\n\n`;
   for (const item of questions) {
-    content += `### Q: ${item.question}\n\n`;
+    const contextSuffix = item.context ? `\n_${item.context}_` : '';
+    content += `### Q: ${item.question}${contextSuffix}\n\n`;
     if (item.answer) {
       content += `**A**: ${item.answer}\n\n`;
     } else {

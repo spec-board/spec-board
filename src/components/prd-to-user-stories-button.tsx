@@ -37,9 +37,9 @@ export function PRDToUserStoriesButton({
   };
 
   const variantClasses = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700',
-    ghost: 'hover:bg-gray-100',
-    outline: 'border border-gray-300 hover:bg-gray-50'
+    default: 'bg-[var(--foreground)] text-[var(--background)] hover:opacity-85',
+    ghost: 'hover:bg-[var(--accent)]',
+    outline: 'border border-[var(--border)] hover:bg-[var(--accent)]'
   };
 
   return (
@@ -47,14 +47,13 @@ export function PRDToUserStoriesButton({
       <button
         onClick={() => setIsModalOpen(true)}
         className={cn(
-          'inline-flex items-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+          'inline-flex items-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2',
           sizeClasses[size],
           variantClasses[variant],
           className
         )}
         aria-label="Generate user stories from PRD"
       >
-        <Sparkles className="w-4 h-4" />
         <span>Generate from PRD</span>
       </button>
 

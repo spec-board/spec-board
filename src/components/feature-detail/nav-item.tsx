@@ -52,7 +52,7 @@ export function NavItem({
       className={cn(
         'w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors group focus-ring',
         isActive
-          ? 'bg-blue-500/20'
+          ? 'bg-[var(--accent)]'
           : isSelected
           ? 'bg-[var(--secondary)] text-[var(--foreground)]'
           : 'text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]'
@@ -82,7 +82,7 @@ export function NavItem({
           className={cn(
             'text-xs px-1.5 py-0.5 rounded',
             taskCount.completed === taskCount.total
-              ? 'bg-green-500/20'
+              ? 'bg-[var(--secondary)]'
               : 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
           )}
           style={taskCount.completed === taskCount.total ? { color: 'var(--tag-text-success)' } : undefined}

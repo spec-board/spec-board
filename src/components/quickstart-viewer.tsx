@@ -235,7 +235,6 @@ function DevelopmentCommandsSection({ commands, title }: { commands: { title: st
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Play className="w-4 h-4" style={{ color: 'var(--tag-text-orange)' }} />
         <h3 className="font-semibold">{title ?? 'Development Commands'}</h3>
         <span className="text-xs text-[var(--muted-foreground)] ml-auto">{commands.length} commands</span>
       </button>
@@ -269,7 +268,6 @@ function ProjectScriptsSection({ scripts }: { scripts?: { title: string; content
         className="flex items-center gap-2 w-full text-left mb-2 hover:bg-[var(--secondary)]/30 p-2 rounded-lg transition-colors"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <ScrollText className="w-4 h-4" style={{ color: 'var(--tag-text-warning)' }} />
         <h3 className="font-semibold">{scripts.title}</h3>
       </button>
       {isExpanded && (

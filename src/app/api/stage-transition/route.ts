@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     const aiSettings = await getAISettings();
     if (!aiSettings.apiKey) {
       return NextResponse.json(
-        { error: 'AI provider is not configured. Please add an API key in Settings before generating specs.' },
+        { error: 'Please configure AI settings before using this feature.' },
         { status: 400 }
       );
     }

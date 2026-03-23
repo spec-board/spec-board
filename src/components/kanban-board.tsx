@@ -11,6 +11,7 @@ import { useSettingsStore } from '@/lib/settings-store';
 import { toast } from 'sonner';
 import { CreateFeatureModal } from './create-feature-modal';
 import { CircularProgress, DualCircularProgress } from './circular-progress';
+import { InlineMarkdown } from './markdown-renderer';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'specs', 'plan', 'tasks'];
 
@@ -147,14 +148,14 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
           )}
           {/* Target stage indicator - shows when feature is being dragged to new column */}
           {targetStageLabel && (
-            <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-500 rounded font-medium">
+            <span className="text-xs px-1.5 py-0.5 bg-[var(--secondary)] text-[var(--foreground)] rounded font-medium">
               → {targetStageLabel}
             </span>
           )}
           {/* Status indicator - checkmark when complete */}
           {isComplete ? (
             <CheckCircle2
-              className="w-4 h-4 text-green-500 flex-shrink-0"
+              className="w-4 h-4 text-[var(--foreground)] flex-shrink-0"
               aria-label="Complete"
             />
           ) : null}
@@ -166,9 +167,7 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {/* Description (if exists) */}
           {feature.description && (
-            <span className="truncate flex-1" title={feature.description}>
-              {feature.description}
-            </span>
+            <InlineMarkdown content={feature.description} className="truncate flex-1" />
           )}
 
           {/* Progress rings - show when has tasks or checklist */}
@@ -346,7 +345,7 @@ function KanbanColumnComponent({
       <div
         className={cn(
           'flex-1 min-h-[200px]',
-          isDropTarget && 'ring-2 ring-blue-500 ring-inset bg-blue-500/5'
+          isDropTarget && 'ring-2 ring-[var(--ring)] ring-inset bg-[var(--accent)]'
         )}
         role="list"
         aria-labelledby={`column-${column}-heading`}
@@ -486,6 +485,40 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     return response.json();
   }, []);
 
+  // Helper: check if a feature has unanswered clarification questions
+  const checkClarificationsAnswered = useCallback(async (featureId: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/features/${featureId}`);
+      if (!res.ok) return true; // If fetch fails, don't block
+      const feature = await res.json();
+      const content = feature.clarificationsContent || '';
+      if (!content) return true; // No clarifications = all good
+
+      // Count total questions
+      const totalQuestions = (content.match(/^### Q:/gm) || []).length
+        || (content.match(/^\d+\.\s*\*\*/gm) || []).length;
+      if (totalQuestions === 0) return true;
+
+      // Count pending (unanswered) via **A**: _Pending_ markers
+      const pendingCount = (content.match(/\*\*A\*\*:\s*_Pending_/g) || []).length;
+      // Count actually answered (NOT _Pending_)
+      const answeredCount = (content.match(/\*\*A\*\*:\s*(?!_Pending_).+/g) || []).length;
+      const unanswered = totalQuestions - answeredCount;
+
+      if (pendingCount > 0 || unanswered > 0) {
+        const remaining = Math.max(pendingCount, unanswered);
+        toast.error(
+          `Please answer all clarification questions before continuing. ${remaining} of ${totalQuestions} question${remaining > 1 ? 's' : ''} still unanswered.`,
+          { duration: 5000 }
+        );
+        return false;
+      }
+      return true;
+    } catch {
+      return true; // Don't block on network errors
+    }
+  }, []);
+
   // Run pipeline steps sequentially, pausing at specs if clarifications are generated
   const runPipeline = useCallback(async (
     featureId: string,
@@ -496,6 +529,15 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     const totalSteps = steps.length;
 
     try {
+      // If transitioning FROM specs, ensure all clarifications are answered first
+      if (steps.length > 0 && steps[startIndex]?.from === 'specs') {
+        const allAnswered = await checkClarificationsAnswered(featureId);
+        if (!allAnswered) {
+          setIsLoading(false);
+          return;
+        }
+      }
+
       for (let i = startIndex; i < steps.length; i++) {
         const step = steps[i];
         const stepNum = i + 1;
@@ -551,9 +593,14 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
   const resumePipeline = useCallback(async () => {
     if (!pendingPipeline) return;
     const { featureId, remainingSteps } = pendingPipeline;
+
+    // Check all clarifications are answered before resuming
+    const allAnswered = await checkClarificationsAnswered(featureId);
+    if (!allAnswered) return;
+
     setPendingPipeline(null);
     await runPipeline(featureId, remainingSteps, 0);
-  }, [pendingPipeline, runPipeline]);
+  }, [pendingPipeline, runPipeline, checkClarificationsAnswered]);
 
   // Handle drop - trigger multi-step pipeline
   const handleDrop = useCallback((targetColumn: KanbanColumn) => async (e: React.DragEvent) => {
@@ -884,7 +931,7 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
               </h3>
             </div>
             <p className="text-sm text-[var(--muted-foreground)] leading-relaxed">
-              To generate specs, plans, and tasks automatically, you need to configure an AI provider with a valid API key. This is required for stage transitions.
+              Please configure AI settings before using this feature. Go to Settings to add your AI provider.
             </p>
           </div>
 

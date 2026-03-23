@@ -351,7 +351,7 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
                 Core Principles ({constitution.principles?.length ?? 0})
               </h2>
               <div className="space-y-3">
-                {constitution.principles.map((principle, index) => (
+                {constitution.principles?.map((principle, index) => (
                   <PrincipleCard key={index} principle={principle} index={index} />
                 ))}
               </div>
@@ -359,7 +359,7 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
           )}
 
           {/* Other Sections (Quality Standards, Development Workflow, Governance, etc.) */}
-          {constitution.sections.map((section, sectionIndex) => {
+          {constitution.sections?.map((section, sectionIndex) => {
             const Icon = getSectionIcon(section.name);
             const hasSubsections = section.subsections && section.subsections.length > 0;
 

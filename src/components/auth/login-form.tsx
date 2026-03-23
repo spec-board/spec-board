@@ -129,7 +129,7 @@ export function LoginForm({ mode = 'signin', onSuccess, redirectTo = '/' }: Logi
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="btn btn-primary btn-md w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
           {formMode === 'signin' ? 'Sign In' : 'Create Account'}

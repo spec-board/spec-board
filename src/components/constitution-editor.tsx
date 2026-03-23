@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Loader2, Eye, Edit3, RefreshCw, History, Clock } from 'lucide-react';
+import { Loader2, Eye, Edit3, RefreshCw, History, Clock, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MarkdownRenderer } from './markdown-renderer';
 
 interface Principle {
   name: string;
@@ -40,6 +41,76 @@ interface ConstitutionEditorProps {
     regenerateWithAI?: boolean;
   }) => Promise<void>;
   isSaving: boolean;
+}
+
+function VersionCard({ version, isLatest }: { version: ConstitutionVersion; isLatest: boolean }) {
+  const [isExpanded, setIsExpanded] = useState(isLatest);
+
+  return (
+    <div className="bg-card border border-border rounded-lg overflow-hidden">
+      {/* Header - always visible */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center gap-3 p-4 hover:bg-secondary/30 transition-colors text-left"
+      >
+        {isExpanded ? (
+          <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        )}
+
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="font-mono text-sm font-medium">v{version.version}</span>
+          {isLatest && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--secondary)] text-[var(--foreground)]">
+              latest
+            </span>
+          )}
+          <span className={cn(
+            "text-xs px-2 py-0.5 rounded-full",
+            version.changeType === 'create' && "bg-[var(--secondary)] text-[var(--foreground)]",
+            version.changeType === 'update' && "bg-[var(--secondary)] text-[var(--muted-foreground)]",
+            version.changeType === 'minor' && "bg-[var(--secondary)] text-[var(--muted-foreground)]",
+            version.changeType === 'major' && "bg-[var(--secondary)] text-[var(--foreground)]"
+          )}>
+            {version.changeType}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
+          <Clock className="w-3 h-3" />
+          {new Date(version.createdAt).toLocaleDateString()} {new Date(version.createdAt).toLocaleTimeString()}
+        </div>
+      </button>
+
+      {/* Expanded content */}
+      {isExpanded && (
+        <div className="px-4 pb-4 pl-11 space-y-4">
+          {version.changeNote && (
+            <p className="text-sm text-muted-foreground italic">{version.changeNote}</p>
+          )}
+
+          {/* Full content rendered as markdown */}
+          {version.content ? (
+            <div className="border border-border rounded-lg p-4 bg-background">
+              <MarkdownRenderer content={version.content} />
+            </div>
+          ) : version.principles && version.principles.length > 0 ? (
+            /* Fallback: show principles if no full content */
+            <div className="space-y-2 border-t border-border pt-3">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Principles:</p>
+              {version.principles.map((principle, pIndex) => (
+                <div key={pIndex} className="text-sm p-3 bg-background border border-border rounded-lg">
+                  <span className="font-medium">{principle.name}</span>
+                  <p className="text-muted-foreground mt-1">{principle.description}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function ConstitutionEditor({
@@ -210,50 +281,7 @@ export function ConstitutionEditor({
           {versions && versions.length > 0 ? (
             <div className="space-y-3">
               {versions.map((version, index) => (
-                <div
-                  key={version.id}
-                  className="p-4 bg-card border border-border rounded-lg space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-medium">v{version.version}</span>
-                      {index === 0 && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-500">
-                          latest
-                        </span>
-                      )}
-                      <span className={cn(
-                        "text-xs px-2 py-0.5 rounded-full",
-                        version.changeType === 'create' && "bg-green-500/20 text-green-500",
-                        version.changeType === 'update' && "bg-blue-500/20 text-blue-500",
-                        version.changeType === 'minor' && "bg-yellow-500/20 text-yellow-500",
-                        version.changeType === 'major' && "bg-red-500/20 text-red-500"
-                      )}>
-                        {version.changeType}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      {new Date(version.createdAt).toLocaleDateString()} {new Date(version.createdAt).toLocaleTimeString()}
-                    </div>
-                  </div>
-
-                  {version.changeNote && (
-                    <p className="text-sm text-muted-foreground">{version.changeNote}</p>
-                  )}
-
-                  {version.principles && version.principles.length > 0 && (
-                    <div className="space-y-2 pt-2 border-t border-border">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Principles at this version:</p>
-                      {version.principles.map((principle, pIndex) => (
-                        <div key={pIndex} className="text-sm">
-                          <span className="font-medium">{principle.name}</span>
-                          <p className="text-muted-foreground text-xs mt-0.5">{principle.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <VersionCard key={version.id} version={version} isLatest={index === 0} />
               ))}
             </div>
           ) : (

@@ -245,10 +245,7 @@ export function AnalysisViewer({ analysis, featurePath, className }: AnalysisVie
           {/* Save button for empty state (T018) */}
           <button
             onClick={() => setIsSaveModalOpen(true)}
-            className={cn(
-              'flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg',
-              'bg-blue-600 hover:bg-blue-700 text-white transition-colors'
-            )}
+            className="btn btn-primary btn-md w-full"
           >
             <Save className="w-4 h-4" />
             Save Analysis
@@ -273,8 +270,8 @@ export function AnalysisViewer({ analysis, featurePath, className }: AnalysisVie
           className={cn(
             'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg',
             notification.type === 'success'
-              ? 'bg-green-600 text-white'
-              : 'bg-red-600 text-white'
+              ? 'bg-[var(--foreground)] text-[var(--background)]'
+              : 'bg-[var(--foreground)] text-[var(--background)]'
           )}
           role="alert"
         >

@@ -1,11 +1,12 @@
 /**
  * OAuth provider configurations for AI providers
- * Supports Device Code flow (Qwen, Kimi) and PKCE Authorization Code flow (Codex)
+ * Supports PKCE Authorization Code flow (Codex)
  */
 
 export interface OAuthProviderConfig {
   name: string;
   flow: 'device_code' | 'pkce';
+  baseUrl?: string;
   // Device Code flow endpoints
   deviceAuthorizationUrl?: string;
   tokenUrl?: string;
@@ -13,38 +14,12 @@ export interface OAuthProviderConfig {
   // PKCE flow endpoints
   authorizeUrl?: string;
   scopes?: string[];
+  audience?: string;
 }
 
 export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
-  codex: {
-    name: 'OpenAI Codex',
-    flow: 'pkce',
-    authorizeUrl: 'https://auth.openai.com/oauth/authorize',
-    tokenUrl: 'https://auth.openai.com/oauth/token',
-    clientId: 'app_EMoamEEZ73f0CkXaXp7hrann',
-    scopes: ['openid', 'profile', 'email', 'offline_access'],
-  },
-  qwen: {
-    name: 'Qwen',
-    flow: 'device_code',
-    deviceAuthorizationUrl: 'https://chat.qwen.ai/api/v1/auths/device/code',
-    tokenUrl: 'https://chat.qwen.ai/api/v1/auths/device/token',
-    clientId: 'qwen-cli',
-  },
-  kimi: {
-    name: 'Kimi',
-    flow: 'device_code',
-    deviceAuthorizationUrl: 'https://auth.kimi.com/api/oauth/device_authorization',
-    tokenUrl: 'https://auth.kimi.com/api/oauth/token',
-    clientId: '17e5f671-d194-4dfb-9706-5516cb48c098',
-  },
-  iflow: {
-    name: 'iFlow',
-    flow: 'device_code',
-    deviceAuthorizationUrl: 'https://apis.iflow.cn/v1/auth/device/code',
-    tokenUrl: 'https://apis.iflow.cn/v1/auth/device/token',
-    clientId: 'iflow-cli',
-  },
+  // OAuth providers removed - Codex CLI client_id only works with localhost:1455
+  // To add OAuth providers in the future, register a custom OAuth app with the provider
 };
 
 // PKCE helpers
