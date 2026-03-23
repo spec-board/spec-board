@@ -1,5 +1,5 @@
 'use client';
-// project page - updated 2026-03-23
+
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -23,7 +23,6 @@ export default function ProjectPage() {
   const router = useRouter();
   const projectSlug = params.name as string;
 
-  // Zustand store for sharing project with feature detail modals
   const setProjectStore = useProjectStore(state => state.setProject);
 
   const [project, setProject] = useState<Project | null>(null);
@@ -36,13 +35,11 @@ export default function ProjectPage() {
   const loadProject = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
-    // Add timeout to prevent hanging on slow/failing API calls
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
-    
+
     try {
-      // Unified endpoint - use kanban view for lightweight query
       const response = await fetch('/api/project/' + projectSlug + '/data?view=kanban', {
         cache: 'no-store',
         signal: controller.signal,
@@ -55,16 +52,11 @@ export default function ProjectPage() {
       }
       const data: Project & { projectId?: string } = await response.json();
       setProject(data);
-
-      // Also set in Zustand store for feature detail modals
       setProjectStore(data);
 
-      // Set project ID if available (for database-first projects)
       if (data.projectId) {
         setProjectId(data.projectId);
       }
-
-      // Set project path if available (for filesystem-based projects)
       if (data.path) {
         setProjectPath(data.path);
       }
@@ -80,22 +72,18 @@ export default function ProjectPage() {
     }
   }, [projectSlug]);
 
-  // Load project on mount
   useEffect(() => {
     loadProject();
   }, [loadProject]);
 
-  // Navigate to feature detail page
   const handleFeatureClick = (feature: Feature) => {
     router.push('/projects/' + projectSlug + '/features/' + feature.id);
   };
 
-  // Navigate to feature detail page with clarifications section
   const handleFeatureClarificationsClick = (feature: Feature) => {
     router.push('/projects/' + projectSlug + '/features/' + feature.id + '?section=clarifications');
   };
 
-  // Update project name (displayName)
   const handleProjectNameChange = useCallback(async (newName: string) => {
     try {
       const response = await fetch('/api/project/' + projectSlug, {
@@ -111,7 +99,6 @@ export default function ProjectPage() {
     }
   }, [projectSlug]);
 
-  // Update project description
   const handleDescriptionChange = useCallback(async (description: string) => {
     try {
       const response = await fetch('/api/project/' + projectSlug, {
@@ -127,10 +114,9 @@ export default function ProjectPage() {
     }
   }, [projectSlug]);
 
-  // Save description and generate constitution with AI
   const handleSaveAndGenerateConstitution = useCallback(async (description: string) => {
     if (!projectId) {
-      console.error('Project ID not available');
+      toast.error('Project ID not available');
       return;
     }
 
@@ -156,7 +142,6 @@ export default function ProjectPage() {
 
       const result = await response.json();
 
-      // Map API response to Constitution type expected by UI
       const apiConst = result.constitution;
       const mappedConstitution = apiConst ? {
         rawContent: apiConst.content || '',
@@ -170,7 +155,6 @@ export default function ProjectPage() {
         versions: [],
       } : null;
 
-      // Update project state with new constitution
       setProject(prev => prev ? {
         ...prev,
         description: result.description || description,
@@ -218,7 +202,6 @@ export default function ProjectPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Unified Header */}
       <Header
         variant="project"
         projectName={project?.name}
@@ -227,10 +210,8 @@ export default function ProjectPage() {
         onProjectNameChange={handleProjectNameChange}
       />
 
-      {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="space-y-6">
-          {/* Project Info Row: bubble + description */}
           <div className="flex items-start gap-4">
             <ProjectInfoBubble
               constitution={project.constitution}
@@ -250,7 +231,6 @@ export default function ProjectPage() {
             )}
           </div>
 
-          {/* Kanban board */}
           <div>
             <KanbanBoard
               features={project.features}

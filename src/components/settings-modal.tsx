@@ -812,12 +812,22 @@ function AIContent() {
   useEffect(() => { loadProviders(); }, [loadProviders]);
 
   const handleToggle = async (id: string, enabled: boolean) => {
-    await fetch('/api/settings/ai/providers', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, enabled: !enabled }),
-    });
-    loadProviders();
+    // Optimistic update - toggle immediately in UI
+    setProviders(prev => prev.map(p => p.id === id ? { ...p, enabled: !enabled } : p));
+    try {
+      const res = await fetch('/api/settings/ai/providers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, enabled: !enabled }),
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setProviders(prev => prev.map(p => p.id === id ? { ...p, enabled } : p));
+      }
+    } catch {
+      // Revert on error
+      setProviders(prev => prev.map(p => p.id === id ? { ...p, enabled } : p));
+    }
   };
 
   const handleMove = async (index: number, direction: 'up' | 'down') => {
