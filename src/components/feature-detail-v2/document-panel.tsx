@@ -103,16 +103,7 @@ export function DocumentPanel({
       {/* Document content */}
       <div
         ref={contentRef}
-        className={cn(
-          'flex-1 overflow-y-auto p-6',
-          'prose prose-sm max-w-none dark:prose-invert',
-          'prose-headings:text-[var(--foreground)]',
-          'prose-p:text-[var(--foreground)]',
-          'prose-code:text-[var(--primary)] prose-code:bg-[var(--accent-muted)] prose-code:px-1 prose-code:rounded',
-          'prose-pre:bg-[var(--muted)] prose-pre:text-[var(--foreground)]',
-          'prose-li:text-[var(--foreground)]',
-          'prose-a:text-[var(--primary)] prose-a:no-underline hover:prose-a:underline'
-        )}
+        className="flex-1 overflow-y-auto p-6"
       >
         <MarkdownRenderer content={currentContent} />
       </div>

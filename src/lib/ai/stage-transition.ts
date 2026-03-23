@@ -83,19 +83,19 @@ function formatSpec(spec: any): string {
   if (spec.userStories?.length) {
     sections.push('## User Stories\n');
     for (const story of spec.userStories) {
-      sections.push(`### ${story.id}: ${story.title}`);
-      sections.push(story.description);
+      sections.push(`### ${story.id}: ${story.title}\n`);
+      sections.push(`> ${story.description}\n`);
       if (story.acceptanceCriteria?.length) {
-        sections.push('**Acceptance Criteria:**');
+        sections.push('#### Acceptance Criteria\n');
         sections.push(story.acceptanceCriteria.map((c: string) => `- ${c}`).join('\n'));
       }
-      sections.push('');
+      sections.push('\n---\n');
     }
   }
 
   if (spec.functionalRequirements?.length) {
     sections.push('## Functional Requirements\n');
-    sections.push(spec.functionalRequirements.map((r: string) => `- ${r}`).join('\n'));
+    sections.push(spec.functionalRequirements.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n'));
     sections.push('');
   }
 

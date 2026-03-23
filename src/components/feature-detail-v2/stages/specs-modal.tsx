@@ -111,11 +111,9 @@ export function SpecsModal({
               onChange={setSelectedDoc}
             />
           </div>
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-6">
             {selectedDocContent ? (
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <MarkdownRenderer content={selectedDocContent} />
-              </div>
+              <MarkdownRenderer content={selectedDocContent} />
             ) : (
               <div className="flex items-center justify-center h-full text-[var(--muted-foreground)]">
                 <p>No content available. Transition from backlog to generate spec.</p>
