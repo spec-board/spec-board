@@ -465,7 +465,7 @@ model AppSettings {
 
 model AIProviderConfig {
   id          String   @id @default(uuid())
-  provider    String   // openai, qwen, codex, kimi, iflow, custom
+  provider    String   // openai, qwen, codex, kimi, iflow, anthropic, gemini, mistral
   label       String   // Display name
   baseUrl     String   // API base URL
   model       String   // Model name
