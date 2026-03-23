@@ -121,7 +121,7 @@ export function ClarificationForm({
           questions.map((item, index) => (
             <div key={index} className={cn('space-y-2', readOnly && 'opacity-80')}>
               <label className="block text-sm font-medium text-[var(--foreground)]">
-                <span className="text-[var(--muted-foreground)]">Q{index + 1}:</span>{' '}
+                <span className="text-[var(--muted-foreground)]">{index + 1}.</span>{' '}
                 <InlineMarkdown content={item.question} />
               </label>
               {readOnly ? (
