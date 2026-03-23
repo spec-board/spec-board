@@ -175,7 +175,6 @@ function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
   // Format 1: Canonical (### Q: question\n_context_)
   if (content.includes('### Q:')) {
     const sections = content.split(/^### Q:\s*/m);
-
     for (const section of sections) {
       if (!section.trim()) continue;
 
@@ -214,18 +213,28 @@ function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
   // Format 2: Legacy numbered list (1. **Question** _context_)
   const lines = content.split('\n').filter(l => l.trim());
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i].trim();
     const match = line.match(/^\d+\.\s*\*\*(.+?)\*\*/);
     if (match) {
-      // Check next line for _context_
       let context = '';
-      const nextLine = lines[i + 1]?.trim();
-      if (nextLine) {
-        const ctxMatch = nextLine.match(/^_(.+)_$/);
-        if (ctxMatch) {
-          context = ctxMatch[1];
+
+      // Check for inline context on same line: 1. **Question** _context_
+      const inlineCtx = line.match(/\*\*\s+_(.+)_\s*$/);
+      if (inlineCtx) {
+        context = inlineCtx[1];
+      }
+
+      // Check next line for _context_ on separate line
+      if (!context) {
+        const nextLine = lines[i + 1]?.trim();
+        if (nextLine) {
+          const ctxMatch = nextLine.match(/^_(.+)_$/);
+          if (ctxMatch) {
+            context = ctxMatch[1];
+          }
         }
       }
+
       questions.push({ question: match[1], context, answer: '' });
     }
   }
