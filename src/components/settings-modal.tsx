@@ -160,30 +160,7 @@ const LANGUAGE_OPTIONS: { value: string; label: string; flag: string }[] = [
   { value: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
 ];
 
-function AppearanceContent() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold mb-1">Appearance</h2>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          Customize how SpecBoard looks
-        </p>
-      </div>
 
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-sm font-medium">Theme</span>
-            <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
-              Choose light, dark, or match your system
-            </p>
-          </div>
-          <ThemeToggle />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string; fixedBaseUrl?: boolean }> = {
   openai: {
@@ -1033,7 +1010,6 @@ function AboutContent() {
 const MENU_ITEMS: { id: SettingsSection; label: string }[] = [
   { id: 'ai', label: 'AI Settings' },
   { id: 'shortcuts', label: 'Shortcuts' },
-  { id: 'appearance', label: 'Appearance' },
   { id: 'about', label: 'About' },
 ];
 
@@ -1116,9 +1092,8 @@ export function SettingsModal() {
           {/* Right content area */}
           <main className="flex-1 p-6 overflow-y-auto">
             {activeSection === 'ai' && <AIContent />}
-            {activeSection === 'shortcuts' && <ShortcutsContent />}
-            {activeSection === 'appearance' && <AppearanceContent />}
-            {activeSection === 'about' && <AboutContent />}
+  {activeSection === 'shortcuts' && <ShortcutsContent />}
+  {activeSection === 'about' && <AboutContent />}
           </main>
         </div>
       </div>
