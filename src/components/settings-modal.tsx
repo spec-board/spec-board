@@ -434,6 +434,10 @@ function PKCEFlow({ provider, onSuccess }: { provider: string; onSuccess: () => 
     if (config.audience) {
       params.set('audience', config.audience);
     }
+    // Codex CLI simplified flow skips unnecessary consent screens
+    if (provider === 'codex') {
+      params.set('codex_cli_simplified_flow', 'true');
+    }
     const authUrl = `${config.authorizeUrl}?${params}`;
     try {
       const popup = window.open(authUrl, 'oauth-popup', 'width=600,height=700');
