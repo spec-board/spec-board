@@ -157,6 +157,12 @@ export default function FeaturePage() {
 
   return (
     <>
+      <FeatureDetailByStage
+        feature={feature}
+        onClose={handleClose}
+        onDelete={handleDelete}
+        onStageChange={handleStageChange}
+      />
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         title="Delete Feature"
@@ -167,12 +173,6 @@ export default function FeaturePage() {
         onConfirm={handleDeleteConfirm}
         onCancel={() => setShowDeleteConfirm(false)}
         isLoading={isDeleting}
-      />
-      <FeatureDetailByStage
-        feature={feature}
-        onClose={handleClose}
-        onDelete={handleDelete}
-        onStageChange={handleStageChange}
       />
     </>
   );
