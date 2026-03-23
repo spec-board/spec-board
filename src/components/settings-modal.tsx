@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, LogIn, LogOut, Loader2, Copy, Check, Plus, Trash2, ChevronUp, ChevronDown, Power } from 'lucide-react';
+import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, LogIn, LogOut, Loader2, Copy, Check, Plus, Trash2, ChevronUp, ChevronDown, Power, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore, type AIProvider, type SettingsSection } from '@/lib/settings-store';
 import { ReadmeViewer } from '@/components/readme-viewer';
@@ -724,6 +724,30 @@ function AIContent() {
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+
+  const handleImportEnv = async () => {
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const res = await fetch('/api/settings/ai/providers/import-env', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        setImportResult({
+          message: data.message,
+          type: data.imported?.length > 0 ? 'success' : 'info',
+        });
+        if (data.imported?.length > 0) loadProviders();
+      } else {
+        setImportResult({ message: data.error || 'Import failed', type: 'info' });
+      }
+    } catch {
+      setImportResult({ message: 'Network error', type: 'info' });
+    }
+    setImporting(false);
+    setTimeout(() => setImportResult(null), 4000);
+  };
 
   const loadProviders = useCallback(async () => {
     try {
@@ -814,10 +838,30 @@ function AIContent() {
           onClose={() => setShowAdd(false)}
         />
       ) : (
-        <button onClick={() => setShowAdd(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
-          <Plus className="w-4 h-4" /> Add Provider
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowAdd(true)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
+            <Plus className="w-4 h-4" /> Add Provider
+          </button>
+          <button onClick={handleImportEnv} disabled={importing}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)] disabled:opacity-50"
+            title="Import providers from environment variables (.env)">
+            {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Import .env
+          </button>
+        </div>
+      )}
+
+      {/* Import result message */}
+      {importResult && (
+        <div className={cn(
+          'text-xs text-center py-1.5 px-3 rounded-lg',
+          importResult.type === 'success'
+            ? 'text-green-500 bg-green-500/10'
+            : 'text-[var(--muted-foreground)] bg-[var(--secondary)]/30'
+        )}>
+          {importResult.message}
+        </div>
       )}
     </div>
   );
