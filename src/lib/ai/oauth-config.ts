@@ -28,14 +28,7 @@ export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
     scopes: ['openid', 'profile', 'email', 'offline_access'],
     audience: 'https://api.openai.com/v1',
   },
-  qwen: {
-    name: 'Qwen',
-    flow: 'device_code',
-    baseUrl: 'https://chat.qwen.ai/api/v1',
-    deviceAuthorizationUrl: 'https://chat.qwen.ai/api/v1/auths/device/code',
-    tokenUrl: 'https://chat.qwen.ai/api/v1/auths/device/token',
-    clientId: 'qwen-cli',
-  },
+
   kimi: {
     name: 'Kimi',
     flow: 'device_code',
