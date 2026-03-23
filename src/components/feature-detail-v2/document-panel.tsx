@@ -18,10 +18,12 @@ export function DocumentPanel({
 }: DocumentPanelProps) {
   const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
 
-  // Get current document content
+  // Get current document content (sanitize stale [object Object] from old data)
   const currentContent = useMemo(() => {
     const option = documentOptions.find(o => o.type === selectedDocument);
-    return option?.content || null;
+    const raw = option?.content || null;
+    if (!raw) return null;
+    return raw.replace(/\[object Object\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
   }, [documentOptions, selectedDocument]);
 
   // Scroll to highlighted task when it changes
