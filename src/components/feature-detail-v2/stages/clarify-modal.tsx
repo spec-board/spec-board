@@ -141,7 +141,6 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
             disabled={!hasSpec}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
           >
-            <HelpCircle className="w-4 h-4" />
             Generate Questions
           </button>
         )

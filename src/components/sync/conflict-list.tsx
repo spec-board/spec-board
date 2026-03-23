@@ -128,7 +128,6 @@ export function ConflictList({
           onClick={fetchConflicts}
           className="mt-2 text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
         >
-          <RefreshCw className="w-3 h-3" />
           Retry
         </button>
       </div>

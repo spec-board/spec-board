@@ -370,7 +370,7 @@ function DeviceCodeFlow({ provider, onSuccess }: { provider: string; onSuccess: 
     <div className="space-y-2">
       <button onClick={startFlow}
         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg hover:opacity-90 transition-opacity">
-        <LogIn className="w-4 h-4" /> Login with {OAUTH_PROVIDERS[provider]?.name || provider}
+        Login with {OAUTH_PROVIDERS[provider]?.name || provider}
       </button>
       {error && <p className="text-xs text-red-400 text-center">{error}</p>}
     </div>
@@ -429,7 +429,7 @@ function PKCEFlow({ provider, onSuccess }: { provider: string; onSuccess: () => 
     <div className="space-y-2">
       <button onClick={startFlow} disabled={loading}
         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity">
-        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+        {loading && <Loader2 className="w-4 h-4 animate-spin" />}
         Login with {OAUTH_PROVIDERS[provider]?.name || provider}
       </button>
       {error && <p className="text-xs text-red-400 text-center">{error}</p>}
@@ -454,7 +454,7 @@ function OAuthConnected({ provider, onDisconnect }: { provider: string; onDiscon
       </div>
       <button onClick={handleDisconnect} disabled={disconnecting}
         className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--muted-foreground)] hover:text-red-400 transition-colors">
-        {disconnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3 h-3" />} Disconnect
+        {disconnecting && <Loader2 className="w-3 h-3 animate-spin" />} Disconnect
       </button>
     </div>
   );
@@ -841,12 +841,12 @@ function AIContent() {
         <div className="flex gap-2">
           <button onClick={() => setShowAdd(true)}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
-            <Plus className="w-4 h-4" /> Add Provider
+            Add Provider
           </button>
           <button onClick={handleImportEnv} disabled={importing}
             className="flex items-center gap-2 px-4 py-2.5 text-sm border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)] disabled:opacity-50"
             title="Import providers from environment variables (.env)">
-            {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {importing && <Loader2 className="w-4 h-4 animate-spin" />}
             Import .env
           </button>
         </div>
@@ -920,7 +920,6 @@ function AboutContent() {
               : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
         >
-          <FileText className="w-4 h-4 inline-block mr-2" />
           README
         </button>
         <button
@@ -932,7 +931,6 @@ function AboutContent() {
               : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
         >
-          <History className="w-4 h-4 inline-block mr-2" />
           Changelog
         </button>
       </div>
@@ -989,11 +987,11 @@ function AboutContent() {
   );
 }
 
-const MENU_ITEMS: { id: SettingsSection; label: string; icon: React.ReactNode }[] = [
-  { id: 'ai', label: 'AI Settings', icon: <Sparkles className="w-4 h-4" /> },
-  { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
-  { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
-  { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
+const MENU_ITEMS: { id: SettingsSection; label: string }[] = [
+  { id: 'ai', label: 'AI Settings' },
+  { id: 'shortcuts', label: 'Shortcuts' },
+  { id: 'appearance', label: 'Appearance' },
+  { id: 'about', label: 'About' },
 ];
 
 export function SettingsModal() {
@@ -1065,10 +1063,9 @@ export function SettingsModal() {
                       ? 'bg-[var(--secondary)] text-[var(--foreground)]'
                       : 'text-[var(--muted-foreground)] hover:bg-[var(--secondary)]/50 hover:text-[var(--foreground)]'
                   )}
-                >
-                  {item.icon}
-                  {item.label}
-                </button>
+                  >
+                    {item.label}
+                  </button>
               ))}
             </nav>
           </aside>

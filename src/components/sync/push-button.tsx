@@ -112,10 +112,8 @@ export function PushButton({
         disabled={isPushing || disabled || specs.length === 0}
         className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
       >
-        {isPushing ? (
+        {isPushing && (
           <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Upload className="w-4 h-4" />
         )}
         <span>
           {isPushing

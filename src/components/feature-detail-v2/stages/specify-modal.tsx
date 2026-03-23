@@ -99,10 +99,7 @@ export function SpecifyModal({ feature, onClose, onStageChange, onDelete, onGene
               Generating...
             </>
           ) : (
-            <>
-              <Play className="w-4 h-4" />
-              Generate Spec
-            </>
+            'Generate Spec'
           )}
         </button>
       }

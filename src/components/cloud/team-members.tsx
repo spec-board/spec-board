@@ -299,7 +299,6 @@ export function TeamMembers({
                             onClick={() => handleRemoveMember(member.userId)}
                             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                           >
-                            <UserMinus className="w-4 h-4" />
                             Remove member
                           </button>
                         </div>

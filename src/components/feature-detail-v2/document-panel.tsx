@@ -95,7 +95,6 @@ export function DocumentPanel({
             onClick={onEditClarifications}
             className="ml-3 btn btn-primary btn-sm"
           >
-            <Edit3 className="w-3.5 h-3.5" />
             Edit
           </button>
         )}

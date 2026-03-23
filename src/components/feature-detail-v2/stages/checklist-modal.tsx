@@ -148,7 +148,6 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
             disabled={!hasPlan}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
           >
-            <CheckSquare className="w-4 h-4" />
             Generate Checklist
           </button>
         )

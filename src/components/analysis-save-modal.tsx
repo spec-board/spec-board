@@ -184,14 +184,7 @@ export function AnalysisSaveModal({
             )}
             aria-label={isSaving ? 'Saving...' : 'Save analysis'}
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save'
-            )}
+            {isSaving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>

@@ -65,13 +65,10 @@ export function BacklogModal({ feature, onClose, onStageChange, onDelete }: Base
           disabled={isGenerating}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
         >
-          {isGenerating ? (
+          {isGenerating && (
             <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <FileText className="w-4 h-4" />
           )}
           Generate Spec
-          <ArrowRight className="w-4 h-4" />
         </button>
       }
       showNavigation={false}
@@ -110,10 +107,8 @@ export function BacklogModal({ feature, onClose, onStageChange, onDelete }: Base
               disabled={isGenerating}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
             >
-              {isGenerating ? (
+              {isGenerating && (
                 <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <FileText className="w-4 h-4" />
               )}
               Generate Spec
             </button>

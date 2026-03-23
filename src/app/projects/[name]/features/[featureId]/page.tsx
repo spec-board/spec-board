@@ -142,7 +142,6 @@ export default function FeaturePage() {
             onClick={() => router.push('/projects/' + projectSlug)}
             className="btn btn-secondary btn-sm mx-auto"
           >
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back to Project
           </button>
         </div>
