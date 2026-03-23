@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, LogIn, LogOut, Loader2, Copy, Check, Plus, Trash2, ChevronUp, ChevronDown, Power, Download } from 'lucide-react';
+import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, LogOut, Loader2, Copy, Check, Plus, Trash2, ChevronUp, ChevronDown, Power, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore, type AIProvider, type SettingsSection } from '@/lib/settings-store';
 import { ReadmeViewer } from '@/components/readme-viewer';
@@ -218,17 +218,14 @@ function AppearanceContent() {
   );
 }
 
-const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string; oauthOnly?: boolean; fixedBaseUrl?: boolean }> = {
-  codex: {
-    label: 'OpenAI Codex',
+const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string; fixedBaseUrl?: boolean }> = {
+  openai: {
+    label: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
-    model: 'codex-mini-latest',
-    apiKeyPlaceholder: '',
-    description: 'Code-optimized models via OpenAI account',
-    oauthOnly: true,
+    model: 'gpt-4o',
+    apiKeyPlaceholder: 'sk-...',
+    description: 'GPT-4o, o3, Codex mini via API key',
   },
-
-
   mistral: {
     label: 'Mistral / Codestral',
     baseUrl: 'https://api.mistral.ai/v1',
@@ -474,8 +471,7 @@ function ProviderRow({
     if (autoExpand) setExpanded(true);
   }, [autoExpand]);
   const preset = PROVIDER_PRESETS[item.provider];
-  const isOAuth = preset?.oauthOnly;
-  const hasAuth = item.hasApiKey || item.hasOAuth;
+  const hasAuth = item.hasApiKey;
 
   return (
     <div className={cn(
@@ -536,31 +532,10 @@ function ProviderRow({
         </div>
       </div>
 
-      {/* Expanded: auth section */}
+      {/* Expanded: API key section */}
       {expanded && (
         <div className="px-3 pb-3 pt-1 border-t border-[var(--border)] space-y-2">
-          {isOAuth && !item.hasOAuth && (
-            item.provider === 'codex'
-              ? <PKCEFlow provider={item.provider} onSuccess={onOAuthSuccess} />
-              : <DeviceCodeFlow provider={item.provider} onSuccess={onOAuthSuccess} />
-          )}
-          {isOAuth && item.hasOAuth && (
-            <div className="flex items-center justify-between px-2 py-1.5 bg-[var(--secondary)]/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-xs">OAuth connected</span>
-              </div>
-              <button onClick={async () => {
-                await fetch(`/api/settings/ai/provider-configs/oauth?providerId=${item.id}`, { method: 'DELETE' });
-                onOAuthSuccess();
-              }} className="text-[10px] text-[var(--muted-foreground)] hover:text-red-400 transition-colors">
-                Disconnect
-              </button>
-            </div>
-          )}
-          {!isOAuth && (
-            <ProviderApiKeyInput providerId={item.id} hasApiKey={item.hasApiKey} onSaved={onOAuthSuccess} />
-          )}
+          <ProviderApiKeyInput providerId={item.id} hasApiKey={item.hasApiKey} onSaved={onOAuthSuccess} />
           {!preset?.fixedBaseUrl && (
             <div className="text-[10px] text-[var(--muted-foreground)]">
               Base URL: <span className="font-mono">{item.baseUrl}</span>
@@ -661,7 +636,7 @@ function AddApiKeyProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClos
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [error, setError] = useState('');
 
-  const apiKeyPresets = Object.entries(PROVIDER_PRESETS).filter(([, p]) => !p.oauthOnly);
+  const apiKeyPresets = Object.entries(PROVIDER_PRESETS);
 
   const handleAdd = async () => {
     if (!selected) return;
@@ -696,7 +671,7 @@ function AddApiKeyProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClos
   return (
     <div className="space-y-3 p-3 bg-[var(--secondary)]/30 rounded-lg border border-[var(--border)]">
       <div className="flex items-center justify-between">
-        <div className="text-xs font-medium text-[var(--muted-foreground)]">Add API Key Provider</div>
+        <div className="text-xs font-medium text-[var(--muted-foreground)]">Add Provider</div>
         <button onClick={onClose} className="p-0.5 rounded hover:bg-[var(--secondary)] transition-colors">
           <X className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
         </button>
@@ -762,7 +737,6 @@ function AddApiKeyProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClos
 function AIContent() {
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showAddOAuth, setShowAddOAuth] = useState(false);
   const [showAddApiKey, setShowAddApiKey] = useState(false);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
@@ -921,13 +895,7 @@ function AIContent() {
         </div>
       )}
 
-      {/* Add provider dialogs */}
-      {showAddOAuth && (
-        <AddOAuthProviderDialog
-          onDone={() => { setShowAddOAuth(false); loadProviders(); }}
-          onClose={() => setShowAddOAuth(false)}
-        />
-      )}
+      {/* Add provider dialog */}
       {showAddApiKey && (
         <AddApiKeyProviderDialog
           onAdd={() => { setShowAddApiKey(false); loadProviders(); }}
@@ -936,20 +904,15 @@ function AIContent() {
       )}
 
       {/* Action buttons */}
-      {!showAddOAuth && !showAddApiKey && (
+      {!showAddApiKey && (
         <div className="flex gap-2">
-          <button onClick={() => setShowAddOAuth(true)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
-            <LogIn className="w-3.5 h-3.5" />
-            OAuth
-          </button>
           <button onClick={() => setShowAddApiKey(true)}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
             <Plus className="w-3.5 h-3.5" />
-            API Key
+            Add Provider
           </button>
           <button onClick={handleImportEnv} disabled={importing}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)] disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)] disabled:opacity-50"
             title="Import from environment variables">
             {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
             Env

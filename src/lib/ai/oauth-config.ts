@@ -18,18 +18,8 @@ export interface OAuthProviderConfig {
 }
 
 export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
-  codex: {
-    name: 'OpenAI Codex',
-    flow: 'pkce',
-    baseUrl: 'https://api.openai.com/v1',
-    authorizeUrl: 'https://auth.openai.com/oauth/authorize',
-    tokenUrl: 'https://auth.openai.com/oauth/token',
-    clientId: 'app_EMoamEEZ73f0CkXaXp7hrann',
-    scopes: ['openid', 'profile', 'email', 'offline_access'],
-    audience: 'https://api.openai.com/v1',
-  },
-
-
+  // OAuth providers removed - Codex CLI client_id only works with localhost:1455
+  // To add OAuth providers in the future, register a custom OAuth app with the provider
 };
 
 // PKCE helpers
