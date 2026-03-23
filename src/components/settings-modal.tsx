@@ -967,22 +967,22 @@ function AIContent() {
 
       {/* Action buttons */}
       {!showAddOAuth && !showAddApiKey && (
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-1.5">
           <button onClick={() => setShowAddOAuth(true)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
+            className="flex items-center gap-2.5 px-3 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
             <LogIn className="w-3.5 h-3.5" />
             OAuth Login
           </button>
           <button onClick={() => setShowAddApiKey(true)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
+            className="flex items-center gap-2.5 px-3 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
             <Plus className="w-3.5 h-3.5" />
             API Key
           </button>
           <button onClick={handleImportEnv} disabled={importing}
-            className="flex items-center justify-center gap-2 px-4 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)] disabled:opacity-50"
+            className="flex items-center gap-2.5 px-3 py-2 text-xs border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)] disabled:opacity-50"
             title="Import from environment variables">
             {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-            Env
+            Import from environment
           </button>
         </div>
       )}
