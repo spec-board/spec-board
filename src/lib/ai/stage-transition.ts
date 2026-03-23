@@ -122,25 +122,38 @@ function formatSpec(spec: any): string {
   return sections.join('\n');
 }
 
+// Helper: safely convert any value to a markdown-safe string
+function toStr(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string') return val;
+  if (Array.isArray(val)) return val.map(toStr).join(', ');
+  if (typeof val === 'object') return JSON.stringify(val, null, 2);
+  return String(val);
+}
+
 // Helper: format plan result to markdown
 function formatPlan(plan: any): string {
   const sections: string[] = [];
 
   if (plan.summary) {
     sections.push('## Summary\n');
-    sections.push(plan.summary);
+    sections.push(toStr(plan.summary));
     sections.push('');
   }
 
   if (plan.technicalContext) {
     sections.push('## Technical Context\n');
     const ctx = plan.technicalContext;
-    if (ctx.language) sections.push(`- **Language:** ${ctx.language}`);
-    if (ctx.platform) sections.push(`- **Platform:** ${ctx.platform}`);
-    if (ctx.storage) sections.push(`- **Storage:** ${ctx.storage}`);
-    if (ctx.testing) sections.push(`- **Testing:** ${ctx.testing}`);
-    if (ctx.dependencies?.length) {
-      sections.push(`- **Dependencies:** ${ctx.dependencies.join(', ')}`);
+    if (typeof ctx === 'string') {
+      sections.push(ctx);
+    } else {
+      if (ctx.language) sections.push(`- **Language:** ${toStr(ctx.language)}`);
+      if (ctx.platform) sections.push(`- **Platform:** ${toStr(ctx.platform)}`);
+      if (ctx.storage) sections.push(`- **Storage:** ${toStr(ctx.storage)}`);
+      if (ctx.testing) sections.push(`- **Testing:** ${toStr(ctx.testing)}`);
+      if (ctx.dependencies) {
+        sections.push(`- **Dependencies:** ${toStr(ctx.dependencies)}`);
+      }
     }
     sections.push('');
   }
@@ -151,12 +164,23 @@ function formatPlan(plan: any): string {
     if (typeof ps === 'string') {
       sections.push(ps);
     } else {
-      if (ps.decision) sections.push(ps.decision);
+      if (ps.decision) sections.push(toStr(ps.decision));
       if (ps.structure) {
-        const structStr = typeof ps.structure === 'string' ? ps.structure : JSON.stringify(ps.structure, null, 2);
+        const structStr = toStr(ps.structure);
         sections.push(`\`\`\`\n${structStr}\n\`\`\``);
       }
     }
+    sections.push('');
+  }
+
+  // Catch any remaining top-level keys we didn't handle
+  const handled = new Set(['summary', 'technicalContext', 'projectStructure']);
+  for (const key of Object.keys(plan)) {
+    if (handled.has(key)) continue;
+    const val = plan[key];
+    if (val === null || val === undefined) continue;
+    sections.push(`## ${key.charAt(0).toUpperCase() + key.slice(1)}\n`);
+    sections.push(toStr(val));
     sections.push('');
   }
 
