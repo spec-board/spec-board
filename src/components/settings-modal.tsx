@@ -251,26 +251,33 @@ const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: 
     description: 'Free AI models: Kimi K2, Qwen3, DeepSeek v3',
     oauthOnly: true,
   },
+  mistral: {
+    label: 'Mistral / Codestral',
+    baseUrl: 'https://api.mistral.ai/v1',
+    model: 'codestral-latest',
+    apiKeyPlaceholder: 'sk-...',
+    description: 'Codestral, Mistral Large, Devstral via Mistral API',
+  },
   openai: {
-    label: 'OpenAI Compatible',
+    label: 'OpenAI Compatible API',
     baseUrl: 'https://api.openai.com/v1',
     model: 'gpt-4o',
     apiKeyPlaceholder: 'sk-...',
     description: 'OpenAI, Ollama, LM Studio, or any compatible API',
   },
   anthropic: {
-    label: 'Anthropic Claude',
+    label: 'Anthropic Claude Compatible API',
     baseUrl: 'https://api.anthropic.com',
     model: 'claude-sonnet-4-20250514',
     apiKeyPlaceholder: 'sk-ant-...',
-    description: 'Claude Sonnet, Opus, Haiku via Anthropic API',
+    description: 'Claude Sonnet, Opus, Haiku, or any Anthropic-compatible API',
   },
   gemini: {
-    label: 'Google Gemini',
+    label: 'Google Gemini Compatible API',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
     model: 'gemini-2.5-flash',
     apiKeyPlaceholder: 'AIza...',
-    description: 'Gemini 2.5 Flash/Pro via Google AI Studio',
+    description: 'Gemini 2.5 Flash/Pro, or any Gemini-compatible API',
   },
 };
 
