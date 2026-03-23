@@ -144,7 +144,7 @@ export function PRDToUserStoriesModal({
                   value={prdContent}
                   onChange={(e) => setPRDContent(e.target.value)}
                   placeholder="Paste your PRD content here..."
-                  className="w-full h-64 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full h-64 p-4 border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] rounded-lg resize-none focus:ring-2 focus:ring-[var(--ring)] focus:border-[var(--ring)]"
                   disabled={isProcessing}
                 />
                 <p className="mt-2 text-sm text-gray-500">

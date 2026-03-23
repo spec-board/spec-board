@@ -483,7 +483,7 @@ export function FeatureDetail({ feature, onClose, onDelete, hasConstitution = fa
           onDragLeave={handleDragLeave}
           className={cn(
             'flex-1 flex flex-col overflow-hidden relative',
-            draggedSection && 'ring-2 ring-blue-500/50 ring-inset'
+            draggedSection && 'ring-2 ring-[var(--ring)] ring-inset'
           )}
         >
           {draggedSection && (

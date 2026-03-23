@@ -195,13 +195,13 @@ export function ChecklistPanel({
                     className={cn(
                       "w-full px-4 py-3 flex items-start gap-3 text-left transition-colors",
                       "hover:bg-[var(--muted)]/50 disabled:opacity-50",
-                      item.checked && "bg-green-500/5"
+                      item.checked && "bg-[var(--secondary)]/50"
                     )}
                   >
                     {isSaving ? (
                       <Loader2 className="w-5 h-5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0 animate-spin" />
                     ) : item.checked ? (
-                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-5 h-5 text-[var(--foreground)] mt-0.5 flex-shrink-0" />
                     ) : (
                       <Circle className="w-5 h-5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
                     )}

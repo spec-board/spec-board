@@ -119,7 +119,7 @@ function ShortcutsContent() {
             onClick={() => setShortcutsEnabled(!shortcutsEnabled)}
             className={cn(
               'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-              shortcutsEnabled ? 'bg-green-500' : 'bg-[var(--secondary)]'
+              shortcutsEnabled ? 'bg-[var(--foreground)]' : 'bg-[var(--secondary)]'
             )}
             role="switch"
             aria-checked={shortcutsEnabled}
@@ -271,7 +271,7 @@ function DeviceCodeFlow({ provider, onSuccess }: { provider: string; onSuccess: 
               {userCode}
             </code>
             <button onClick={handleCopy} className="p-2 rounded-lg hover:bg-[var(--secondary)] transition-colors" title="Copy code">
-              {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-[var(--muted-foreground)]" />}
+              {copied ? <Check className="w-4 h-4 text-[var(--foreground)]" /> : <Copy className="w-4 h-4 text-[var(--muted-foreground)]" />}
             </button>
           </div>
           <a href={verificationUri} target="_blank" rel="noopener noreferrer"
@@ -377,7 +377,7 @@ function OAuthConnected({ provider, onDisconnect }: { provider: string; onDiscon
   return (
     <div className="flex items-center justify-between px-3 py-2.5 bg-[var(--secondary)]/50 border border-[var(--border)] rounded-lg">
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-green-500" />
+        <div className="w-2 h-2 rounded-full bg-[var(--foreground)]" />
         <span className="text-sm">Connected via {config?.name || provider}</span>
       </div>
       <button onClick={handleDisconnect} disabled={disconnecting}
@@ -433,7 +433,7 @@ function ProviderRow({
         <button onClick={() => setExpanded(!expanded)} className="flex-1 text-left min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium truncate">{item.label}</span>
-            {hasAuth && <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />}
+            {hasAuth && <span className="w-1.5 h-1.5 rounded-full bg-[var(--foreground)] shrink-0" />}
             {!hasAuth && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />}
           </div>
           <span className="text-[10px] text-[var(--muted-foreground)] truncate block">{item.model}</span>
@@ -877,7 +877,7 @@ function AIContent() {
         <div className={cn(
           'text-xs text-center py-1.5 px-3 rounded-lg',
           importResult.type === 'success'
-            ? 'text-green-500 bg-green-500/10'
+            ? 'text-[var(--foreground)] bg-[var(--secondary)]/50'
             : 'text-[var(--muted-foreground)] bg-[var(--secondary)]/30'
         )}>
           {importResult.message}
@@ -936,7 +936,7 @@ function AboutContent() {
           className={cn(
             'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
             activeTab === 'readme'
-              ? 'border-blue-500 text-[var(--foreground)]'
+              ? 'border-[var(--foreground)] text-[var(--foreground)]'
               : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
         >
@@ -947,7 +947,7 @@ function AboutContent() {
           className={cn(
             'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
             activeTab === 'changelog'
-              ? 'border-blue-500 text-[var(--foreground)]'
+              ? 'border-[var(--foreground)] text-[var(--foreground)]'
               : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           )}
         >
@@ -971,7 +971,7 @@ function AboutContent() {
                   href={appInfo.licenseUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="text-[var(--foreground)] underline underline-offset-2 hover:opacity-70 flex items-center gap-1"
                 >
                   {appInfo.license}
                   <ExternalLink className="w-3 h-3" />
@@ -982,7 +982,7 @@ function AboutContent() {
                   href={appInfo.repository}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="text-[var(--foreground)] underline underline-offset-2 hover:opacity-70 flex items-center gap-1"
                 >
                   <Github className="w-4 h-4" />
                   GitHub
