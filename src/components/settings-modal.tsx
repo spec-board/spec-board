@@ -243,6 +243,14 @@ const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: 
     description: 'Kimi models via Moonshot account',
     oauthOnly: true,
   },
+  iflow: {
+    label: 'iFlow',
+    baseUrl: 'https://apis.iflow.cn/v1',
+    model: 'Qwen3-Coder',
+    apiKeyPlaceholder: '',
+    description: 'Free AI models: Kimi K2, Qwen3, DeepSeek v3',
+    oauthOnly: true,
+  },
   openai: {
     label: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
@@ -442,7 +450,7 @@ function AIContent() {
 
   const getInitialPreset = () => {
     const p = aiSettings.provider;
-    if (p === 'qwen' || p === 'codex' || p === 'openai' || p === 'kimi') return p;
+    if (p === 'qwen' || p === 'codex' || p === 'openai' || p === 'kimi' || p === 'iflow') return p;
     return 'custom';
   };
 
@@ -507,7 +515,7 @@ function AIContent() {
         {/* Provider selection */}
         <div>
           <label className="text-xs text-[var(--muted-foreground)] block mb-1.5">Provider</label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => {
               const isConnected = aiSettings.oauthConnected && aiSettings.oauthProvider === key;
               return (
