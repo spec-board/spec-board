@@ -65,14 +65,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateClarificationsMarkdown(questions: { question: string; answer?: string }[]): string {
+function generateClarificationsMarkdown(questions: { question: string; context?: string; answer?: string }[]): string {
   const date = new Date().toISOString().split('T')[0];
   let content = `# Clarifications\n\n`;
   content += `**Date**: ${date}\n\n`;
 
   content += `## Questions & Answers\n\n`;
   for (const item of questions) {
-    content += `### Q: ${item.question}\n\n`;
+    const contextSuffix = item.context ? `\n_${item.context}_` : '';
+    content += `### Q: ${item.question}${contextSuffix}\n\n`;
     if (item.answer) {
       content += `**A**: ${item.answer}\n\n`;
     } else {
