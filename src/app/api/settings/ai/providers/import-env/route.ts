@@ -135,7 +135,7 @@ export async function POST() {
 
       await prisma.$executeRawUnsafe(
         `INSERT INTO "ai_provider_configs" ("id", "provider", "label", "baseUrl", "model", "apiKey", "priority", "enabled", "created_at", "updated_at")
-         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, true, NOW(), NOW())`,
+         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, true, NOW(), NOW())`,
         mapping.provider, mapping.label, baseUrl, model, apiKey, nextPriority++
       );
 
