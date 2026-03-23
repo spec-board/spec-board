@@ -12,6 +12,10 @@ import {
   Tag,
   FileText,
   X,
+  GitBranch,
+  HelpCircle,
+  CheckCircle2,
+  ExternalLink,
   Info,
   Settings,
 } from 'lucide-react';
