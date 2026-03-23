@@ -1,5 +1,5 @@
 'use client';
-// project-info-bubble - updated 2026-03-23
+
 import { useState, useRef, useEffect } from 'react';
 import { cn, formatRelativeTime, formatLocaleDate } from '@/lib/utils';
 import type { Constitution, Feature } from '@/types';
@@ -73,13 +73,10 @@ export function ProjectInfoBubble({
   }, [isOpen, showAIConfigDialog]);
 
   const handleSaveAndGenerate = async () => {
-    // Check if AI provider is configured before proceeding
     if (!aiSettings.hasApiKey && !aiSettings.apiKey) {
       setShowAIConfigDialog(true);
       return;
     }
-    // Save description first, then generate constitution
-    // Both operations update the description in the database
     await onDescriptionChange?.(editDescription);
     await onSaveAndGenerateConstitution?.(editDescription);
   };
@@ -124,7 +121,6 @@ export function ProjectInfoBubble({
                 )
               ) : (
                 <div className="space-y-6">
-                  {/* Constitution - Main content (largest section) */}
                   {hasConstitution && constitution ? (
                     <div>
                       <div className="flex items-center justify-between mb-3">
@@ -149,10 +145,8 @@ export function ProjectInfoBubble({
                     </div>
                   )}
 
-                  {/* Divider */}
                   <div className="border-t border-[var(--border)]" />
 
-                  {/* Project Description - compact, with edit toggle */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div>
@@ -212,7 +206,6 @@ export function ProjectInfoBubble({
         </div>
       )}
 
-      {/* AI Provider not configured dialog */}
       {showAIConfigDialog && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl w-full max-w-md mx-4 shadow-2xl">
@@ -272,6 +265,9 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
     setExpandedSections(newExpanded);
   };
 
+  const principles = constitution.principles ?? [];
+  const sections = constitution.sections ?? [];
+
   return (
     <div className="space-y-4">
       {(constitution.ratifiedDate || constitution.lastAmendedDate) && (
@@ -280,11 +276,11 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
           {constitution.lastAmendedDate && <div className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /><span>Last Amended: {formatLocaleDate(constitution.lastAmendedDate)}</span></div>}
         </div>
       )}
-      {constitution.principles?.length > 0 && (
+      {principles.length > 0 && (
         <div>
           <h4 className="text-sm font-medium mb-2 flex items-center gap-2"><Shield className="w-4 h-4 text-[var(--muted-foreground)]" />Core Principles</h4>
           <div className="space-y-2">
-            {constitution.principles?.map((principle, index) => (
+            {principles.map((principle, index) => (
               <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden">
                 <button onClick={() => togglePrinciple(index)} className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left">
                   <span className="font-medium text-sm">{principle.name}</span>
@@ -296,11 +292,11 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
           </div>
         </div>
       )}
-      {constitution.sections?.length > 0 && (
+      {sections.length > 0 && (
         <div>
           <h4 className="text-sm font-medium mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-[var(--muted-foreground)]" />Additional Sections</h4>
           <div className="space-y-2">
-            {constitution.sections?.map((section, index) => (
+            {sections.map((section, index) => (
               <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden">
                 <button onClick={() => toggleSection(index)} className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left">
                   <span className="font-medium text-sm">{section.name}</span>
@@ -326,7 +322,6 @@ function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
     setExpandedVersions(newExpanded);
   };
 
-  // Build version history from constitution data - use versions array from API if available
   const versions = constitution.versions && constitution.versions.length > 0
     ? constitution.versions.map(v => ({
         id: v.id,
@@ -383,7 +378,6 @@ function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
               </button>
               {expandedVersions.has(v.id) && (
                 <div className="px-3 pb-3 space-y-3">
-                  {/* Project Description at this version */}
                   {v.projectDescription && (
                     <div>
                       <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Project Description</h4>
@@ -392,7 +386,6 @@ function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
                       </p>
                     </div>
                   )}
-                  {/* Change note if available */}
                   {v.changeNote && (
                     <div>
                       <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Change Note</h4>
@@ -401,7 +394,6 @@ function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
                       </p>
                     </div>
                   )}
-                  {/* Principles from this version */}
                   {v.principles && v.principles.length > 0 && (
                     <div>
                       <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Principles ({v.principles.length})</h4>
