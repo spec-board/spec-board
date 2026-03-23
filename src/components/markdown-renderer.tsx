@@ -165,9 +165,12 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           /* ---- Headings: docx-style hierarchy ---- */
           'prose-headings:text-[var(--foreground)] prose-headings:font-bold prose-headings:tracking-tight',
           'prose-h1:text-[1.35rem] prose-h1:leading-tight prose-h1:border-b-2 prose-h1:border-[var(--foreground)]/15 prose-h1:pb-3 prose-h1:mb-5 prose-h1:mt-8 first:prose-h1:mt-0',
-          'prose-h2:text-[1.1rem] prose-h2:leading-snug prose-h2:mt-8 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-[var(--border)]',
-          'prose-h3:text-[0.95rem] prose-h3:leading-snug prose-h3:mt-6 prose-h3:mb-2 prose-h3:font-semibold',
-          'prose-h4:text-[0.85rem] prose-h4:leading-snug prose-h4:mt-4 prose-h4:mb-1.5 prose-h4:font-semibold prose-h4:text-[var(--muted-foreground)]',
+          /* h2: section title -- centered, uppercase, generous spacing */
+          'prose-h2:text-[1.05rem] prose-h2:leading-snug prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:text-center prose-h2:uppercase prose-h2:tracking-widest prose-h2:border-b prose-h2:border-[var(--border)]',
+          /* h3: story title -- bold, left-aligned, extra bottom margin */
+          'prose-h3:text-[0.95rem] prose-h3:leading-snug prose-h3:mt-6 prose-h3:mb-3 prose-h3:font-bold',
+          /* h4: sub-section title -- uppercase, muted */
+          'prose-h4:text-[0.8rem] prose-h4:leading-snug prose-h4:mt-5 prose-h4:mb-2 prose-h4:font-semibold prose-h4:uppercase prose-h4:tracking-wider prose-h4:text-[var(--muted-foreground)]',
           /* ---- Body text ---- */
           'prose-p:text-[var(--foreground)] prose-p:leading-[1.75] prose-p:my-2.5 prose-p:text-[0.84rem]',
           'prose-a:[color:var(--link-color)] prose-a:no-underline hover:prose-a:underline prose-a:font-medium',
@@ -183,10 +186,10 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           '[&_li_p]:my-0.5',
           '[&_ul_ul]:mt-1.5 [&_ul_ul]:mb-0',
           '[&_ol_ol]:mt-1.5 [&_ol_ol]:mb-0',
-          /* ---- Blockquote ---- */
-          'prose-blockquote:border-l-[3px] prose-blockquote:border-l-[var(--primary)]/30 prose-blockquote:bg-[var(--secondary)]/40 prose-blockquote:rounded-r-lg prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:my-4 prose-blockquote:text-[var(--muted-foreground)] prose-blockquote:italic',
-          /* ---- HR ---- */
-          '[&_hr]:my-6 [&_hr]:border-[var(--border)]',
+          /* ---- Blockquote: story description block ---- */
+          'prose-blockquote:border-l-[3px] prose-blockquote:border-l-[var(--primary)]/25 prose-blockquote:bg-[var(--secondary)]/30 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:px-5 prose-blockquote:my-4 prose-blockquote:text-[var(--foreground)] prose-blockquote:not-italic prose-blockquote:text-[0.84rem] prose-blockquote:leading-[1.8]',
+          /* ---- HR: subtle divider between stories ---- */
+          '[&_hr]:my-8 [&_hr]:border-[var(--border)]/50 [&_hr]:border-dashed',
           /* ---- Table: clean grid ---- */
           '[&_table]:text-[0.8rem] [&_table]:border [&_table]:border-[var(--border)] [&_table]:border-collapse [&_table]:w-full [&_table]:my-4 [&_table]:rounded-lg [&_table]:overflow-hidden',
           '[&_thead]:bg-[var(--secondary)]',
