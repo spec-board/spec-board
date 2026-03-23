@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type Theme = 'light' | 'dark' | 'system';
-export type AIProvider = 'openai' | 'qwen' | 'codex' | 'kimi';
+export type AIProvider = 'openai' | 'qwen' | 'codex' | 'kimi' | 'iflow';
 export type OutputLanguage = 'vi' | 'en' | 'zh' | 'ja' | 'ko';
 
 interface AISettings {

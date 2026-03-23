@@ -38,6 +38,13 @@ export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
     tokenUrl: 'https://auth.kimi.com/api/oauth/token',
     clientId: '17e5f671-d194-4dfb-9706-5516cb48c098',
   },
+  iflow: {
+    name: 'iFlow',
+    flow: 'device_code',
+    deviceAuthorizationUrl: 'https://apis.iflow.cn/v1/auth/device/code',
+    tokenUrl: 'https://apis.iflow.cn/v1/auth/device/token',
+    clientId: 'iflow-cli',
+  },
 };
 
 // PKCE helpers
