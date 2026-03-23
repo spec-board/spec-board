@@ -87,7 +87,7 @@ export async function PUT(request: Request) {
     if (body.reorder && Array.isArray(body.reorder)) {
       for (const item of body.reorder) {
         await prisma.$executeRawUnsafe(
-          `UPDATE "ai_provider_configs" SET "priority" = $1, "updated_at" = NOW() WHERE "id" = $2`,
+          `UPDATE "ai_provider_configs" SET "priority" = $1, "updated_at" = NOW() WHERE "id" = $2::uuid`,
           item.priority, item.id
         );
       }
@@ -115,7 +115,7 @@ export async function PUT(request: Request) {
     values.push(id);
 
     const updated = await prisma.$queryRawUnsafe<ProviderRow[]>(
-      `UPDATE "ai_provider_configs" SET ${setClauses.join(', ')} WHERE "id" = $${paramIndex} RETURNING *`,
+      `UPDATE "ai_provider_configs" SET ${setClauses.join(', ')} WHERE "id" = $${paramIndex}::uuid RETURNING *`,
       ...values
     );
 
@@ -132,7 +132,8 @@ export async function PUT(request: Request) {
     });
   } catch (error) {
     console.error('Failed to update provider:', error);
-    return NextResponse.json({ error: 'Failed to update provider' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to update provider';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -146,12 +147,13 @@ export async function DELETE(request: Request) {
     }
 
     await prisma.$executeRawUnsafe(
-      `DELETE FROM "ai_provider_configs" WHERE "id" = $1`,
+      `DELETE FROM "ai_provider_configs" WHERE "id" = $1::uuid`,
       id
     );
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to delete provider:', error);
-    return NextResponse.json({ error: 'Failed to delete provider' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to delete provider';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

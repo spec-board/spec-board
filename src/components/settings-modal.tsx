@@ -493,14 +493,17 @@ interface ProviderItem {
 
 // Single provider row in the list
 function ProviderRow({
-  item, index, total,
+  item, index, total, autoExpand,
   onToggle, onMoveUp, onMoveDown, onDelete, onOAuthSuccess,
 }: {
-  item: ProviderItem; index: number; total: number;
+  item: ProviderItem; index: number; total: number; autoExpand?: boolean;
   onToggle: () => void; onMoveUp: () => void; onMoveDown: () => void;
   onDelete: () => void; onOAuthSuccess: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(autoExpand ?? false);
+  useEffect(() => {
+    if (autoExpand) setExpanded(true);
+  }, [autoExpand]);
   const preset = PROVIDER_PRESETS[item.provider];
   const isOAuth = preset?.oauthOnly;
   const hasAuth = item.hasApiKey || item.hasOAuth;
@@ -618,7 +621,7 @@ function ProviderApiKeyInput({ providerId, hasApiKey, onSaved }: { providerId: s
 }
 
 // Add provider dialog
-function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () => void }) {
+function AddProviderDialog({ onAdd, onClose }: { onAdd: (newId?: string, isOAuth?: boolean) => void; onClose: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [customModel, setCustomModel] = useState('');
@@ -646,7 +649,9 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
         console.error('Failed to add provider:', errData.error || res.statusText);
         return;
       }
-      onAdd();
+      const created = await res.json().catch(() => null);
+      const isOAuth = !!preset.oauthOnly;
+      onAdd(created?.id, isOAuth);
     } catch (err) {
       console.error('Failed to add provider:', err);
     } finally {
@@ -752,6 +757,7 @@ function AIContent() {
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [autoExpandId, setAutoExpandId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
@@ -849,11 +855,12 @@ function AIContent() {
               item={item}
               index={index}
               total={providers.length}
+              autoExpand={autoExpandId === item.id}
               onToggle={() => handleToggle(item.id, item.enabled)}
               onMoveUp={() => handleMove(index, 'up')}
               onMoveDown={() => handleMove(index, 'down')}
               onDelete={() => handleDelete(item.id)}
-              onOAuthSuccess={loadProviders}
+              onOAuthSuccess={() => { setAutoExpandId(null); loadProviders(); }}
             />
           ))
         )}
@@ -862,7 +869,13 @@ function AIContent() {
       {/* Add provider */}
       {showAdd ? (
         <AddProviderDialog
-          onAdd={() => { setShowAdd(false); loadProviders(); }}
+          onAdd={(newId, isOAuth) => {
+            setShowAdd(false);
+            if (isOAuth && newId) {
+              setAutoExpandId(newId);
+            }
+            loadProviders();
+          }}
           onClose={() => setShowAdd(false)}
         />
       ) : (
