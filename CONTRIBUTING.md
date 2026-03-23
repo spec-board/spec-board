@@ -15,36 +15,41 @@ Thank you for your interest in contributing to SpecBoard! This project is licens
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL database (or Supabase)
-- pnpm (recommended)
-- Redis (for BullMQ background jobs)
+- PostgreSQL database (local or Supabase)
+- pnpm (required - see packageManager in package.json)
 
 ### Environment Variables
 
 ```bash
 # .env
 POSTGRES_PRISMA_URL="postgresql://user:password@localhost:5432/specboard"
+BETTER_AUTH_SECRET="your-secret-key"
 ```
 
 ### Commands
 
 ```bash
 # Development
-pnpm dev              # Start development server
-pnpm build            # Build for production
-pnpm start            # Start production server
+pnpm dev              # Start dev server with Turbopack (port 3000)
+pnpm dev:all         # Run dev server + worker (if needed)
+pnpm build           # Build for production
+pnpm start           # Start production server
 
 # Database
-pnpm prisma studio    # Open Prisma Studio
-pnpm prisma migrate dev   # Run migrations
-pnpm prisma generate  # Regenerate client
+pnpm db:studio       # Open Prisma Studio
+pnpm db:migrate      # Run migrations
+pnpm db:push         # Push schema to DB
+pnpm db:seed         # Seed database
+pnpm db:reset        # Reset database
 
 # Testing
-pnpm test             # Run tests (watch mode)
-pnpm test:run         # Run tests once
+pnpm test            # Run tests (watch mode)
+pnpm test:run       # Run tests once
+pnpm test:coverage  # Run tests with coverage
 
 # Type checking
-pnpm tsc --noEmit
+pnpm lint            # Run linter
+pnpm tsc --noEmit   # Type check
 ```
 
 ## Project Structure
@@ -81,13 +86,13 @@ spec-board/
 
 | Category | Technology |
 |----------|------------|
-| Framework | Next.js 16 (App Router) |
+| Framework | Next.js 16 (App Router, Turbopack) |
 | Language | TypeScript (strict mode) |
-| UI | React 19, Tailwind CSS v4, Lucide Icons |
+| UI | React 19, Tailwind CSS v4, shadcn/ui, Lucide Icons |
 | Database | PostgreSQL via Prisma ORM (Supabase) |
-| Job Queue | BullMQ + Redis |
+| Auth | Better Auth with OAuth |
 | State | Zustand (client) |
-| AI | Configurable (OpenAI-compatible) |
+| AI | Configurable (OpenAI, Anthropic, or any OpenAI-compatible API) |
 
 ### 4-Stage Workflow
 
@@ -95,7 +100,7 @@ spec-board/
 backlog --> specs --> plan --> tasks
 ```
 
-Each stage transition triggers AI-powered generation via BullMQ background jobs.
+Each stage transition triggers AI-powered generation via API routes.
 
 ### Design System
 
