@@ -93,7 +93,8 @@ export async function POST(request: NextRequest) {
           result.suggestedSections || []
         );
 
-        // Upsert constitution in database
+        // Upsert constitution in database (MUST update version in both create and update)
+        const isNewConstitution = !existingConstitution;
         const constitution = await prisma.constitution.upsert({
           where: { projectId },
           create: {
@@ -114,7 +115,6 @@ export async function POST(request: NextRequest) {
         });
 
         // Create version snapshot for history (read-only)
-        const isNewConstitution = !existingConstitution;
         await prisma.constitutionVersion.create({
           data: {
             constitutionId: constitution.id,
@@ -196,6 +196,10 @@ export async function POST(request: NextRequest) {
         additionalSections
       );
 
+      // Calculate version BEFORE upsert
+      const existingForVersion = await prisma.constitution.findUnique({ where: { projectId }, select: { version: true } });
+      const newVersion = existingForVersion ? incrementVersion(existingForVersion.version, principles, additionalSections || []) : '1.0.0';
+
       const constitution = await prisma.constitution.upsert({
         where: { projectId },
         create: {
@@ -203,20 +207,19 @@ export async function POST(request: NextRequest) {
           title: `${project.displayName || name || 'Project'} Constitution`,
           content,
           principles,
-          version: '1.0.0',
+          version: newVersion,
           ratifiedDate: new Date(),
           lastAmendedDate: new Date(),
         },
         update: {
           content,
           principles,
+          version: newVersion,
           lastAmendedDate: new Date(),
         },
       });
 
       // Create version snapshot for history (read-only)
-      const existingVersion = await prisma.constitution.findUnique({ where: { projectId }, select: { version: true } });
-      const newVersion = existingVersion ? incrementVersion(existingVersion.version, principles, additionalSections || []) : '1.0.0';
 
       await prisma.constitutionVersion.create({
         data: {
@@ -225,8 +228,8 @@ export async function POST(request: NextRequest) {
           content: content,
           description: generatedDescription,
           principles: principles as any,
-          changeType: existingVersion ? 'update' : 'create',
-          changeNote: existingVersion ? 'Principles updated by user' : 'Initial constitution created',
+          changeType: existingForVersion ? 'update' : 'create',
+          changeNote: existingForVersion ? 'Principles updated by user' : 'Initial constitution created',
         },
       }).catch(console.error);
 
@@ -261,6 +264,10 @@ export async function POST(request: NextRequest) {
           result.suggestedSections
         );
 
+        // Calculate version
+        const existingConst = await prisma.constitution.findUnique({ where: { projectId }, select: { version: true } });
+        const aiNewVersion = existingConst ? incrementVersion(existingConst.version, result.principles, result.suggestedSections || []) : '1.0.0';
+
         // Upsert constitution in database
         const constitution = await prisma.constitution.upsert({
           where: { projectId },
@@ -269,13 +276,14 @@ export async function POST(request: NextRequest) {
             title: `${project.displayName || name || 'Project'} Constitution`,
             content,
             principles: result.principles,
-            version: '1.0.0',
+            version: aiNewVersion,
             ratifiedDate: new Date(),
             lastAmendedDate: new Date(),
           },
           update: {
             content,
             principles: result.principles,
+            version: aiNewVersion,
             lastAmendedDate: new Date(),
           },
         });
@@ -284,12 +292,12 @@ export async function POST(request: NextRequest) {
         await prisma.constitutionVersion.create({
           data: {
             constitutionId: constitution.id,
-            version: '1.0.0',
+            version: aiNewVersion,
             content: content,
             description: project.description,
             principles: result.principles as any,
-            changeType: 'create',
-            changeNote: 'Initial constitution generated with AI',
+            changeType: existingConst ? 'update' : 'create',
+            changeNote: existingConst ? `Regenerated with AI (${existingConst.version} → ${aiNewVersion})` : 'Initial constitution generated with AI',
           },
         }).catch(console.error);
 
@@ -332,6 +340,10 @@ export async function POST(request: NextRequest) {
       additionalSections
     );
 
+    // Calculate version BEFORE upsert
+    const existingForManual = await prisma.constitution.findUnique({ where: { projectId }, select: { version: true } });
+    const manualVersion = existingForManual ? incrementVersion(existingForManual.version, principlesToUse, additionalSections || []) : '1.0.0';
+
     // Upsert constitution in database
     const constitution = await prisma.constitution.upsert({
       where: { projectId },
@@ -340,30 +352,29 @@ export async function POST(request: NextRequest) {
         title: `${project.displayName || name || 'Project'} Constitution`,
         content,
         principles: principlesToUse,
-        version: '1.0.0',
+        version: manualVersion,
         ratifiedDate: new Date(),
         lastAmendedDate: new Date(),
       },
       update: {
         content,
         principles: principlesToUse,
+        version: manualVersion,
         lastAmendedDate: new Date(),
       },
     });
 
     // Create version snapshot for history (read-only)
-    const existingVersion = await prisma.constitution.findUnique({ where: { projectId }, select: { version: true } });
-    const newVersion = existingVersion ? incrementVersion(existingVersion.version, principlesToUse, additionalSections || []) : '1.0.0';
 
     await prisma.constitutionVersion.create({
       data: {
         constitutionId: constitution.id,
-        version: newVersion,
+        version: manualVersion,
         content: content,
         description: project.description,
         principles: principlesToUse as any,
-        changeType: existingVersion ? 'update' : 'create',
-        changeNote: existingVersion ? 'Principles updated by user' : 'Initial constitution created',
+        changeType: existingForManual ? 'update' : 'create',
+        changeNote: existingForManual ? 'Principles updated by user' : 'Initial constitution created',
       },
     }).catch(console.error);
 

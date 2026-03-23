@@ -313,7 +313,9 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
 }
 
 function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
-  const [expandedVersions, setExpandedVersions] = useState<Set<string>>(new Set());
+  // Auto-expand the latest version
+  const latestId = constitution.versions?.[0]?.id || 'current';
+  const [expandedVersions, setExpandedVersions] = useState<Set<string>>(new Set([latestId]));
 
   const toggleVersion = (id: string) => {
     const newExpanded = new Set(expandedVersions);
@@ -378,14 +380,6 @@ function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
               </button>
               {expandedVersions.has(v.id) && (
                 <div className="px-3 pb-3 space-y-3">
-                  {v.projectDescription && (
-                    <div>
-                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Project Description</h4>
-                      <p className="text-sm text-[var(--foreground)] bg-[var(--secondary)]/30 p-2 rounded">
-                        {v.projectDescription}
-                      </p>
-                    </div>
-                  )}
                   {v.changeNote && (
                     <div>
                       <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Change Note</h4>
@@ -394,19 +388,42 @@ function ConstitutionHistory({ constitution }: { constitution: Constitution }) {
                       </p>
                     </div>
                   )}
-                  {v.principles && v.principles.length > 0 && (
+                  {v.projectDescription && (
                     <div>
-                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Principles ({v.principles.length})</h4>
-                      <ul className="text-sm space-y-1">
-                        {v.principles.map((p: any, i: number) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <Shield className="w-3.5 h-3.5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
-                            <span>{p.name}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Project Description</h4>
+                      <p className="text-sm text-[var(--foreground)] bg-[var(--secondary)]/30 p-2 rounded">
+                        {v.projectDescription}
+                      </p>
                     </div>
                   )}
+                  {/* Full constitution content */}
+                  {v.content ? (
+                    <div>
+                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Full Content</h4>
+                      <div className="text-sm bg-[var(--secondary)]/20 border border-[var(--border)] p-4 rounded-lg prose-sm max-w-none">
+                        <MarkdownRenderer content={v.content} />
+                      </div>
+                    </div>
+                  ) : v.principles && v.principles.length > 0 ? (
+                    <div>
+                      <h4 className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Principles ({v.principles.length})</h4>
+                      <div className="space-y-2">
+                        {v.principles.map((p: any, i: number) => (
+                          <div key={i} className="text-sm p-3 bg-[var(--secondary)]/20 border border-[var(--border)] rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <Shield className="w-3.5 h-3.5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="font-medium">{p.name}</span>
+                                {p.description && (
+                                  <p className="text-[var(--muted-foreground)] mt-1">{p.description}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
