@@ -7,7 +7,7 @@ import { KanbanSkeleton } from '@/components/skeleton';
 import type { Project, Feature } from '@/types';
 import { useProjectStore } from '@/lib/store';
 import { toast } from 'sonner';
-import { ProjectInfoBubble } from '@/components/project-info-bubble';
+import { ProjectInfoBubble } from '@/components/project-info-panel';
 import { KanbanBoard } from '@/components/kanban-board';
 
 export default function ProjectPage() {
