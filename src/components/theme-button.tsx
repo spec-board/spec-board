@@ -52,7 +52,7 @@ export function ThemeButton() {
 
       {open && (
         <div
-          className={`absolute right-0 top-full mt-1 min-w-[110px] rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-md z-50 p-0.5 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top-right ${
+          className={`absolute right-0 top-full mt-1 w-[88px] rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-md z-50 p-0.5 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top-right ${
             visible
               ? 'opacity-100 scale-100 translate-y-0'
               : 'opacity-0 scale-90 -translate-y-1.5'
@@ -65,7 +65,7 @@ export function ThemeButton() {
               <button
                 key={opt.value}
                 onClick={() => { setTheme(opt.value); closeDropdown(); }}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-md transition-all duration-150 ease-out ${
+                className={`w-full flex items-center gap-1.5 px-2 py-1 text-xs rounded-md transition-all duration-150 ease-out ${
                   isActive
                     ? 'text-[var(--foreground)] bg-[var(--accent)] font-medium'
                     : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]'
@@ -76,7 +76,7 @@ export function ThemeButton() {
                   transition: `opacity 150ms ease-out ${i * 40}ms, transform 150ms ease-out ${i * 40}ms`,
                 }}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-3 h-3" />
                 {opt.label}
               </button>
             );
