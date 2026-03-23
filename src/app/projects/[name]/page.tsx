@@ -1,5 +1,5 @@
 'use client';
-
+// project page - updated 2026-03-23
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';

@@ -1,4 +1,4 @@
-// AI Service exports
+// AI Service exports - updated 2026-03-23
 export * from './types';
 export * from './mock';
 export * from './settings';
