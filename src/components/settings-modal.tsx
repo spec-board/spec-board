@@ -228,22 +228,7 @@ const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: 
     oauthOnly: true,
   },
 
-  kimi: {
-    label: 'Kimi',
-    baseUrl: 'https://api.kimi.ai/v1',
-    model: 'kimi-latest',
-    apiKeyPlaceholder: '',
-    description: 'Kimi models via Moonshot account',
-    oauthOnly: true,
-  },
-  iflow: {
-    label: 'iFlow',
-    baseUrl: 'https://apis.iflow.cn/v1',
-    model: 'Qwen3-Coder',
-    apiKeyPlaceholder: '',
-    description: 'Free AI models: Kimi K2, Qwen3, DeepSeek v3',
-    oauthOnly: true,
-  },
+
   mistral: {
     label: 'Mistral / Codestral',
     baseUrl: 'https://api.mistral.ai/v1',

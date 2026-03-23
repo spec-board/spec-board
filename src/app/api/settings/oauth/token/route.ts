@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const tokenParams = new URLSearchParams();
 
     if (config.flow === 'device_code' && device_code) {
-      // Device code token exchange (Qwen, Kimi)
+      // Device code token exchange
       tokenParams.set('grant_type', 'urn:ietf:params:oauth:grant-type:device_code');
       tokenParams.set('device_code', device_code);
       tokenParams.set('client_id', config.clientId || '');
@@ -94,8 +94,6 @@ export async function POST(request: Request) {
       // Get model from PROVIDER_PRESETS equivalent
       const defaultModels: Record<string, string> = {
         codex: 'codex-mini-latest',
-        kimi: 'kimi-latest',
-        iflow: 'Qwen3-Coder',
       };
 
       await prisma.$executeRawUnsafe(
