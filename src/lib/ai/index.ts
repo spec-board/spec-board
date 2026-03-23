@@ -156,9 +156,7 @@ export async function generateConstitution(options: {
   principles: Array<{ name: string; description: string }>;
   suggestedSections: Array<{ name: string; content: string }>;
 }> {
-  const provider = await getProvider();
-  console.log(`[AI] Generating constitution with ${provider}`);
-
+  console.log(`[AI] Generating constitution...`);
   return aiService.generateConstitution(options);
 }
 
