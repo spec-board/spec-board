@@ -8,6 +8,7 @@ import { InlineMarkdown } from '@/components/markdown-renderer';
 
 export interface ClarificationQuestion {
   question: string;
+  context?: string;
   answer?: string;
 }
 
@@ -120,9 +121,17 @@ export function ClarificationForm({
         ) : (
           questions.map((item, index) => (
             <div key={index} className={cn('space-y-2', readOnly && 'opacity-80')}>
-              <label className="block text-sm font-medium text-[var(--foreground)]">
-                <InlineMarkdown content={item.question} />
-              </label>
+              <div>
+                <label className="block text-sm font-medium text-[var(--foreground)]">
+                  <span className="text-[var(--muted-foreground)] mr-1.5">{index + 1}.</span>
+                  <InlineMarkdown content={item.question} />
+                </label>
+                {item.context && (
+                  <p className="text-xs text-[var(--muted-foreground)] mt-1 leading-relaxed pl-4">
+                    {item.context}
+                  </p>
+                )}
+              </div>
               {readOnly ? (
                 <div className="px-3 py-2 rounded-md text-sm bg-[var(--muted)] text-[var(--foreground)] border border-[var(--border)]">
                   {item.answer || <span className="italic text-[var(--muted-foreground)]">No answer provided</span>}
@@ -163,7 +172,7 @@ function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
 
   const questions: ClarificationQuestion[] = [];
 
-  // Format 1: Canonical (### Q: question)
+  // Format 1: Canonical (### Q: question\n_context_)
   if (content.includes('### Q:')) {
     const sections = content.split(/^### Q:\s*/m);
 
@@ -171,16 +180,24 @@ function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
       if (!section.trim()) continue;
 
       const lines = section.trim().split('\n');
-      // First line is the question (may contain trailing _context_)
       let question = lines[0]?.trim() || '';
 
       // Skip header sections
       if (!question || question.startsWith('#')) continue;
 
-      // Find answer line
+      // Extract context (italic line below question: _context text_)
+      let context = '';
       let answer = '';
-      for (const line of lines) {
-        const answerMatch = line.match(/^\*\*A\*\*:\s*(.+)$/);
+      for (const line of lines.slice(1)) {
+        const trimmed = line.trim();
+        // Context line: _text_ (italic markdown)
+        const contextMatch = trimmed.match(/^_(.+)_$/);
+        if (contextMatch && !context) {
+          context = contextMatch[1];
+          continue;
+        }
+        // Answer line
+        const answerMatch = trimmed.match(/^\*\*A\*\*:\s*(.+)$/);
         if (answerMatch) {
           answer = answerMatch[1].trim();
           break;
@@ -188,7 +205,7 @@ function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
       }
 
       const filteredAnswer = answer === '_Pending_' ? '' : answer;
-      questions.push({ question, answer: filteredAnswer });
+      questions.push({ question, context, answer: filteredAnswer });
     }
 
     if (questions.length > 0) return questions;
@@ -196,10 +213,20 @@ function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
 
   // Format 2: Legacy numbered list (1. **Question** _context_)
   const lines = content.split('\n').filter(l => l.trim());
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const match = line.match(/^\d+\.\s*\*\*(.+?)\*\*/);
     if (match) {
-      questions.push({ question: match[1], answer: '' });
+      // Check next line for _context_
+      let context = '';
+      const nextLine = lines[i + 1]?.trim();
+      if (nextLine) {
+        const ctxMatch = nextLine.match(/^_(.+)_$/);
+        if (ctxMatch) {
+          context = ctxMatch[1];
+        }
+      }
+      questions.push({ question: match[1], context, answer: '' });
     }
   }
 
