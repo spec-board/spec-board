@@ -993,7 +993,7 @@ export function SettingsModal() {
       />
 
       {/* Modal */}
-      <div className="relative w-[90vw] max-w-[900px] h-[80vh] max-h-[700px] bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-[90vw] max-w-[900px] h-[85vh] max-h-[900px] bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
           <h1 className="text-lg font-bold">Settings</h1>
