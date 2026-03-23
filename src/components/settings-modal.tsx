@@ -741,7 +741,7 @@ function AddApiKeyProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClos
           )}
           <div>
             <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
-              Model <span className="text-[var(--foreground)]">*</span>
+              Model <span className="opacity-60">(default: {PROVIDER_PRESETS[selected]?.model || 'gpt-4o'})</span>
             </label>
             <input type="text" value={customModel} onChange={(e) => setCustomModel(e.target.value)}
               placeholder={PROVIDER_PRESETS[selected]?.model || 'gpt-4o'}
@@ -749,7 +749,7 @@ function AddApiKeyProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClos
           </div>
           {error && <p className="text-xs text-red-400">{error}</p>}
           <button onClick={handleAdd}
-            disabled={!apiKeyInput.trim() || adding || !(customModel || PROVIDER_PRESETS[selected]?.model)}
+            disabled={!apiKeyInput.trim() || adding}
             className="w-full px-3 py-1.5 text-xs bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors">
             {adding ? 'Adding...' : 'Add Provider'}
           </button>
