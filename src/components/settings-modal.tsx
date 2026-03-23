@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, LogIn, LogOut, Loader2, Copy, Check } from 'lucide-react';
+import { X, Keyboard, Info, Github, ExternalLink, FileText, History, Palette, Sparkles, LogIn, LogOut, Loader2, Copy, Check, Plus, Trash2, ChevronUp, ChevronDown, Power } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore, type AIProvider, type SettingsSection } from '@/lib/settings-store';
 import { ReadmeViewer } from '@/components/readme-viewer';
@@ -445,147 +445,311 @@ function OAuthConnected({ provider, onDisconnect }: { provider: string; onDiscon
   );
 }
 
-function AIContent() {
-  const { aiSettings, setAISettings, loadSettings } = useSettingsStore();
+// Provider config from API
+interface ProviderItem {
+  id: string;
+  provider: string;
+  label: string;
+  baseUrl: string;
+  model: string;
+  enabled: boolean;
+  priority: number;
+  hasApiKey: boolean;
+  hasOAuth: boolean;
+}
 
-  const getInitialPreset = () => {
-    const p = aiSettings.provider;
-    if (p === 'qwen' || p === 'codex' || p === 'openai' || p === 'kimi' || p === 'iflow') return p;
-    return 'custom';
-  };
+// Single provider row in the list
+function ProviderRow({
+  item, index, total,
+  onToggle, onMoveUp, onMoveDown, onDelete, onOAuthSuccess,
+}: {
+  item: ProviderItem; index: number; total: number;
+  onToggle: () => void; onMoveUp: () => void; onMoveDown: () => void;
+  onDelete: () => void; onOAuthSuccess: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const preset = PROVIDER_PRESETS[item.provider];
+  const isOAuth = preset?.oauthOnly;
+  const hasAuth = item.hasApiKey || item.hasOAuth;
 
-  const [selectedPreset, setSelectedPreset] = useState(getInitialPreset());
-  const [formData, setFormData] = useState({
-    provider: aiSettings.provider,
-    baseUrl: aiSettings.baseUrl || '',
-    apiKey: '',
-    model: aiSettings.model || '',
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  return (
+    <div className={cn(
+      'border rounded-lg transition-colors',
+      item.enabled ? 'border-[var(--border)]' : 'border-[var(--border)] opacity-50',
+    )}>
+      {/* Header row */}
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        {/* Priority badge */}
+        <span className="flex items-center justify-center w-5 h-5 rounded text-[10px] font-mono font-bold bg-[var(--secondary)] text-[var(--muted-foreground)] shrink-0">
+          {index + 1}
+        </span>
 
-  const handlePresetChange = (preset: string) => {
-    setSelectedPreset(preset);
-    const config = PROVIDER_PRESETS[preset];
-    if (config) {
-      setFormData(prev => ({
-        ...prev,
-        provider: preset === 'custom' ? 'openai' : preset as AIProvider,
-        baseUrl: config.baseUrl,
-        model: config.model,
-      }));
-    }
-  };
+        {/* Provider info */}
+        <button onClick={() => setExpanded(!expanded)} className="flex-1 text-left min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium truncate">{item.label}</span>
+            {hasAuth && <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />}
+            {!hasAuth && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />}
+          </div>
+          <span className="text-[10px] text-[var(--muted-foreground)] truncate block">{item.model}</span>
+        </button>
+
+        {/* Actions */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button onClick={onMoveUp} disabled={index === 0}
+            className="p-1 rounded hover:bg-[var(--secondary)] disabled:opacity-30 transition-colors" title="Move up">
+            <ChevronUp className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
+          </button>
+          <button onClick={onMoveDown} disabled={index === total - 1}
+            className="p-1 rounded hover:bg-[var(--secondary)] disabled:opacity-30 transition-colors" title="Move down">
+            <ChevronDown className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
+          </button>
+          <button onClick={onToggle}
+            className={cn('p-1 rounded transition-colors', item.enabled ? 'hover:bg-[var(--secondary)]' : 'hover:bg-[var(--secondary)]')}
+            title={item.enabled ? 'Disable' : 'Enable'}>
+            <Power className={cn('w-3.5 h-3.5', item.enabled ? 'text-green-500' : 'text-[var(--muted-foreground)]')} />
+          </button>
+          <button onClick={onDelete}
+            className="p-1 rounded hover:bg-red-500/10 transition-colors" title="Remove">
+            <Trash2 className="w-3.5 h-3.5 text-[var(--muted-foreground)] hover:text-red-400" />
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded: auth section */}
+      {expanded && (
+        <div className="px-3 pb-3 pt-1 border-t border-[var(--border)] space-y-2">
+          {isOAuth && !item.hasOAuth && (
+            item.provider === 'codex'
+              ? <PKCEFlow provider={item.provider} onSuccess={onOAuthSuccess} />
+              : <DeviceCodeFlow provider={item.provider} onSuccess={onOAuthSuccess} />
+          )}
+          {isOAuth && item.hasOAuth && (
+            <div className="flex items-center justify-between px-2 py-1.5 bg-[var(--secondary)]/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-xs">OAuth connected</span>
+              </div>
+              <button onClick={async () => {
+                await fetch(`/api/settings/ai/providers/oauth?providerId=${item.id}`, { method: 'DELETE' });
+                onOAuthSuccess();
+              }} className="text-[10px] text-[var(--muted-foreground)] hover:text-red-400 transition-colors">
+                Disconnect
+              </button>
+            </div>
+          )}
+          {!isOAuth && (
+            <ProviderApiKeyInput providerId={item.id} hasApiKey={item.hasApiKey} onSaved={onOAuthSuccess} />
+          )}
+          <div className="text-[10px] text-[var(--muted-foreground)]">
+            Base URL: <span className="font-mono">{item.baseUrl}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// API key input for non-OAuth providers
+function ProviderApiKeyInput({ providerId, hasApiKey, onSaved }: { providerId: string; hasApiKey: boolean; onSaved: () => void }) {
+  const [apiKey, setApiKey] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    setIsSaving(true);
-    await setAISettings({
-      provider: formData.provider,
-      baseUrl: formData.baseUrl.trim() || undefined,
-      apiKey: formData.apiKey.trim() || undefined,
-      model: formData.model.trim() || undefined,
+    if (!apiKey.trim()) return;
+    setSaving(true);
+    await fetch('/api/settings/ai/providers', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: providerId, apiKey: apiKey.trim() }),
     });
-    await loadSettings();
-    setIsSaving(false);
-    setSaved(true);
-    setFormData(prev => ({ ...prev, apiKey: '' }));
-    setTimeout(() => setSaved(false), 2000);
+    setApiKey('');
+    setSaving(false);
+    onSaved();
   };
 
-  const handleOAuthSuccess = async () => {
-    await loadSettings();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  return (
+    <div className="flex gap-2">
+      <input type="password" value={hasApiKey ? '***' : apiKey}
+        onChange={(e) => setApiKey(e.target.value)}
+        placeholder="API key"
+        className="flex-1 px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors" />
+      <button onClick={handleSave} disabled={saving || (!apiKey.trim() && !hasApiKey)}
+        className="px-2 py-1.5 text-xs bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors">
+        {saving ? '...' : 'Save'}
+      </button>
+    </div>
+  );
+}
+
+// Add provider dialog
+function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [customModel, setCustomModel] = useState('');
+  const [customUrl, setCustomUrl] = useState('');
+
+  const handleAdd = async () => {
+    if (!selected) return;
+    setAdding(true);
+    const preset = PROVIDER_PRESETS[selected];
+    await fetch('/api/settings/ai/providers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: selected === 'custom' ? 'custom' : selected,
+        label: selected === 'custom' ? (customModel || 'Custom') : preset.label,
+        baseUrl: selected === 'custom' ? (customUrl || 'http://localhost:11434/v1') : preset.baseUrl,
+        model: selected === 'custom' ? (customModel || 'gpt-4o') : preset.model,
+      }),
+    });
+    setAdding(false);
+    onAdd();
   };
 
-  const handleDisconnect = async () => { await loadSettings(); };
+  return (
+    <div className="space-y-3 p-3 bg-[var(--secondary)]/30 rounded-lg border border-[var(--border)]">
+      <div className="text-xs font-medium text-[var(--muted-foreground)]">Add Provider</div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => (
+          <button key={key} onClick={() => setSelected(key)}
+            className={cn(
+              'flex flex-col items-start px-2 py-2 rounded-lg border text-left transition-colors',
+              selected === key
+                ? 'border-[var(--ring)] bg-[var(--accent)]'
+                : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
+            )}>
+            <span className="text-xs font-medium">{preset.label}</span>
+            <span className="text-[9px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
+          </button>
+        ))}
+      </div>
 
-  const activePreset = PROVIDER_PRESETS[selectedPreset] || PROVIDER_PRESETS.custom;
-  const isOAuthOnly = activePreset.oauthOnly;
-  const isOAuthConnected = aiSettings.oauthConnected && aiSettings.oauthProvider === selectedPreset;
+      {/* Custom fields */}
+      {selected === 'custom' && (
+        <div className="space-y-2">
+          <input type="text" value={customUrl} onChange={(e) => setCustomUrl(e.target.value)}
+            placeholder="Base URL (e.g., http://localhost:11434/v1)"
+            className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)]" />
+          <input type="text" value={customModel} onChange={(e) => setCustomModel(e.target.value)}
+            placeholder="Model name (e.g., llama3, mistral)"
+            className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)]" />
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button onClick={handleAdd} disabled={!selected || adding}
+          className="flex-1 px-3 py-1.5 text-xs bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors">
+          {adding ? 'Adding...' : 'Add'}
+        </button>
+        <button onClick={onClose}
+          className="px-3 py-1.5 text-xs border border-[var(--border)] rounded-lg hover:bg-[var(--secondary)] transition-colors">
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AIContent() {
+  const [providers, setProviders] = useState<ProviderItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+
+  const loadProviders = useCallback(async () => {
+    try {
+      const res = await fetch('/api/settings/ai/providers');
+      if (res.ok) {
+        const data = await res.json();
+        setProviders(data);
+      }
+    } catch { /* ignore */ }
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => { loadProviders(); }, [loadProviders]);
+
+  const handleToggle = async (id: string, enabled: boolean) => {
+    await fetch('/api/settings/ai/providers', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, enabled: !enabled }),
+    });
+    loadProviders();
+  };
+
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
+    const newProviders = [...providers];
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= newProviders.length) return;
+
+    // Swap priorities
+    const reorder = newProviders.map((p, i) => ({
+      id: p.id,
+      priority: i === index ? newProviders[swapIndex].priority : i === swapIndex ? newProviders[index].priority : p.priority,
+    }));
+
+    await fetch('/api/settings/ai/providers', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reorder }),
+    });
+    loadProviders();
+  };
+
+  const handleDelete = async (id: string) => {
+    await fetch(`/api/settings/ai/providers?id=${id}`, { method: 'DELETE' });
+    loadProviders();
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold mb-1">AI Settings</h2>
-        <p className="text-sm text-[var(--muted-foreground)]">Configure AI provider for feature generation</p>
+        <h2 className="text-lg font-semibold mb-1">AI Providers</h2>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          Add multiple providers for load balancing. Higher priority (top) is tried first; failed requests auto-fallback to the next.
+        </p>
       </div>
 
-      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-4">
-        {/* Provider selection */}
-        <div>
-          <label className="text-xs text-[var(--muted-foreground)] block mb-1.5">Provider</label>
-          <div className="grid grid-cols-3 gap-2">
-            {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => {
-              const isConnected = aiSettings.oauthConnected && aiSettings.oauthProvider === key;
-              return (
-                <button key={key} onClick={() => handlePresetChange(key)}
-                  className={cn(
-                    'relative flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-lg border text-left transition-colors',
-                    selectedPreset === key
-                      ? 'border-[var(--ring)] bg-[var(--accent)]'
-                      : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
-                  )}>
-                  <span className="text-sm font-medium">{preset.label}</span>
-                  <span className="text-[10px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
-                  {isConnected && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-green-500" />}
-                </button>
-              );
-            })}
+      {/* Provider list */}
+      <div className="space-y-2">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-4 h-4 animate-spin text-[var(--muted-foreground)]" />
           </div>
-        </div>
-
-        {/* OAuth-only providers: show login/connected state only */}
-        {isOAuthOnly && (
-          <div>
-            <label className="text-xs text-[var(--muted-foreground)] block mb-1.5">Authentication</label>
-            {isOAuthConnected ? (
-              <OAuthConnected provider={selectedPreset} onDisconnect={handleDisconnect} />
-            ) : selectedPreset === 'codex' ? (
-              <PKCEFlow provider={selectedPreset} onSuccess={handleOAuthSuccess} />
-            ) : (
-              <DeviceCodeFlow provider={selectedPreset} onSuccess={handleOAuthSuccess} />
-            )}
+        ) : providers.length === 0 ? (
+          <div className="text-center py-6 text-sm text-[var(--muted-foreground)]">
+            No providers configured. Add one to get started.
           </div>
+        ) : (
+          providers.map((item, index) => (
+            <ProviderRow
+              key={item.id}
+              item={item}
+              index={index}
+              total={providers.length}
+              onToggle={() => handleToggle(item.id, item.enabled)}
+              onMoveUp={() => handleMove(index, 'up')}
+              onMoveDown={() => handleMove(index, 'down')}
+              onDelete={() => handleDelete(item.id)}
+              onOAuthSuccess={loadProviders}
+            />
+          ))
         )}
-
-        {/* API key config: only for openai and custom */}
-        {!isOAuthOnly && (
-          <>
-            <div>
-              <label className="text-xs text-[var(--muted-foreground)] block mb-1">
-                Base URL {selectedPreset !== 'custom' && <span className="opacity-60">(auto-filled)</span>}
-              </label>
-              <input type="text" value={formData.baseUrl}
-                onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                placeholder={selectedPreset === 'custom' ? 'http://localhost:11434/v1' : activePreset.baseUrl}
-                className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors" />
-            </div>
-            <div>
-              <label className="text-xs text-[var(--muted-foreground)] block mb-1">API Key</label>
-              <input type="password" value={aiSettings.hasApiKey ? '***' : formData.apiKey}
-                onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                placeholder={activePreset.apiKeyPlaceholder}
-                className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors" />
-            </div>
-            <div>
-              <label className="text-xs text-[var(--muted-foreground)] block mb-1">
-                Model {selectedPreset !== 'custom' && <span className="opacity-60">(auto-filled)</span>}
-              </label>
-              <input type="text" value={formData.model}
-                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                placeholder={selectedPreset === 'custom' ? 'gpt-4o, llama3, mistral, etc.' : activePreset.model}
-                className="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)] transition-colors" />
-            </div>
-            <button onClick={handleSave} disabled={isSaving}
-              className="w-full px-4 py-2 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors">
-              {isSaving ? 'Saving...' : 'Save'}
-            </button>
-          </>
-        )}
-
-        {saved && <div className="text-xs text-green-500 text-center">Settings saved successfully</div>}
       </div>
+
+      {/* Add provider */}
+      {showAdd ? (
+        <AddProviderDialog
+          onAdd={() => { setShowAdd(false); loadProviders(); }}
+          onClose={() => setShowAdd(false)}
+        />
+      ) : (
+        <button onClick={() => setShowAdd(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-dashed border-[var(--border)] rounded-lg hover:border-[var(--ring)]/50 hover:bg-[var(--secondary)]/30 transition-colors text-[var(--muted-foreground)]">
+          <Plus className="w-4 h-4" /> Add Provider
+        </button>
+      )}
     </div>
   );
 }
