@@ -697,7 +697,7 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
           )}
           <div>
             <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
-              Model <span className="opacity-60">(optional override)</span>
+              Model <span className="text-[var(--foreground)]">*</span>
             </label>
             <input type="text" value={customModel} onChange={(e) => setCustomModel(e.target.value)}
               placeholder={PROVIDER_PRESETS[selected]?.model || 'gpt-4o'}
@@ -707,7 +707,7 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
       )}
 
       <div className="flex gap-2">
-        <button onClick={handleAdd} disabled={!selected || adding}
+        <button onClick={handleAdd} disabled={!selected || adding || !(customModel || PROVIDER_PRESETS[selected]?.model)}
           className="flex-1 px-3 py-1.5 text-xs bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg disabled:opacity-50 transition-colors">
           {adding ? 'Adding...' : 'Add'}
         </button>

@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
     const created = await prisma.$queryRawUnsafe<ProviderRow[]>(
       `INSERT INTO "ai_provider_configs" ("id", "provider", "label", "baseUrl", "model", "apiKey", "priority", "enabled", "created_at", "updated_at")
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, true, NOW(), NOW())
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, true, NOW(), NOW())
        RETURNING *`,
       provider, label, baseUrl, model, apiKey || null, nextPriority
     );
