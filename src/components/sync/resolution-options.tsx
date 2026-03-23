@@ -42,10 +42,8 @@ export function ResolutionOptions({
           disabled={isCheckingAutoMerge || isResolving}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 disabled:opacity-50 rounded-lg transition-colors"
         >
-          {isCheckingAutoMerge ? (
+          {isCheckingAutoMerge && (
             <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
-          ) : (
-            <Wand2 className="w-4 h-4 text-purple-500" />
           )}
           <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
             {isCheckingAutoMerge ? 'Checking auto-merge...' : 'Try Auto-Merge'}

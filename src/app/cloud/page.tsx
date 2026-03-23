@@ -151,14 +151,12 @@ export default function CloudProjectsPage() {
               onClick={() => setShowConnectModal(true)}
               className="flex items-center gap-2 px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-[var(--secondary)] transition-colors"
             >
-              <LinkIcon className="w-4 h-4" />
               Join with Code
             </button>
             <button
               onClick={() => setShowNewForm(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
-              <Plus className="w-4 h-4" />
               New Project
             </button>
           </div>
@@ -173,7 +171,6 @@ export default function CloudProjectsPage() {
                 onClick={() => router.push('/auth/login')}
                 className="mt-2 flex items-center gap-2 text-sm text-blue-500 hover:underline"
               >
-                <LogIn className="w-4 h-4" />
                 Go to Sign In
               </button>
             )}
@@ -200,14 +197,12 @@ export default function CloudProjectsPage() {
                 onClick={() => setShowConnectModal(true)}
                 className="flex items-center gap-2 px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-[var(--secondary)] transition-colors"
               >
-                <LinkIcon className="w-4 h-4" />
                 Join with Code
               </button>
               <button
                 onClick={() => setShowNewForm(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
-                <Plus className="w-4 h-4" />
                 Create Project
               </button>
             </div>

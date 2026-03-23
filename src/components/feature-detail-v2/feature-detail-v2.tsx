@@ -261,8 +261,7 @@ export function FeatureDetailV2({
               className="btn btn-danger btn-sm"
               aria-label="Delete feature"
             >
-              <Trash2 className="w-4 h-4 mr-1.5" />
-              Delete Feature
+            Delete Feature
             </button>
           </div>
         )}

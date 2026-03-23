@@ -213,7 +213,6 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
             disabled={!hasAllDocs}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
           >
-            <BarChart3 className="w-4 h-4" />
             Run Analysis
           </button>
         ) : null

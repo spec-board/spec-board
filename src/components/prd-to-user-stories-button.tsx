@@ -54,7 +54,6 @@ export function PRDToUserStoriesButton({
         )}
         aria-label="Generate user stories from PRD"
       >
-        <Sparkles className="w-4 h-4" />
         <span>Generate from PRD</span>
       </button>
 

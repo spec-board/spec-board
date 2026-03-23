@@ -115,14 +115,14 @@ export function ProjectInfoBubble({
                 onClick={() => setActiveTab('info')}
                 className={cn('flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors', activeTab === 'info' ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]')}
               >
-                <Info className="w-4 h-4" /> Project Info
+                Project Info
               </button>
               {hasConstitution && (
                 <button
                   onClick={() => setActiveTab('history')}
                   className={cn('flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors', activeTab === 'history' ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]')}
                 >
-                  <ScrollText className="w-4 h-4" /> Constitution History
+                  Constitution History
                   {constitution?.version && <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--secondary)]">v{constitution.version}</span>}
                 </button>
               )}
@@ -158,7 +158,6 @@ export function ProjectInfoBubble({
                           </>
                         ) : (
                           <>
-                            <Wand2 className="w-4 h-4" />
                             Save & Generate Constitution
                           </>
                         )}
