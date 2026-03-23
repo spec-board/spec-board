@@ -557,9 +557,12 @@ function ProviderRow({
               )}
             />
           </button>
-          <button onClick={onDelete}
-            className="p-1 rounded hover:bg-[var(--secondary)] transition-colors" title="Remove">
-            <Trash2 className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
+          <button
+            onClick={onDelete}
+            className="p-1 rounded hover:bg-[var(--secondary)] transition-colors"
+            title="Remove provider"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)]" />
           </button>
         </div>
       </div>
@@ -837,7 +840,17 @@ function AIContent() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/settings/ai/providers?id=${id}`, { method: 'DELETE' });
+    const provider = providers.find(p => p.id === id);
+    if (!confirm(`Remove "${provider?.label || 'this provider'}"?`)) return;
+    try {
+      const res = await fetch(`/api/settings/ai/providers?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Failed to delete provider:', errData.error || res.statusText);
+      }
+    } catch (err) {
+      console.error('Failed to delete provider:', err);
+    }
     loadProviders();
   };
 
