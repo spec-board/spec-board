@@ -59,7 +59,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in clarify:', error);
-    return NextResponse.json({ error: 'Failed to generate clarifications' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to generate clarifications';
+    const status = message.includes('API key') ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 

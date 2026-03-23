@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in analyze:', error);
-    return NextResponse.json({ error: 'Failed to analyze documents' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to analyze documents';
+    const status = message.includes('API key') ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 

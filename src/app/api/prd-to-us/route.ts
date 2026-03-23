@@ -118,9 +118,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error processing PRD:', error);
+    const message = error instanceof Error ? error.message : 'Failed to process PRD';
+    const status = message.includes('API key') ? 401 : 500;
     return NextResponse.json(
-      { error: 'Failed to process PRD' },
-      { status: 500 }
+      { error: message },
+      { status }
     );
   }
 }

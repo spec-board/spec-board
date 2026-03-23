@@ -163,7 +163,8 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
         });
 
         if (!response.ok) {
-          throw new Error('Failed to generate analysis');
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to generate analysis');
         }
 
         const data = await response.json();

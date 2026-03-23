@@ -7,6 +7,7 @@ import { Header } from '@/components/header';
 import { KanbanSkeleton } from '@/components/skeleton';
 import type { Project, Feature } from '@/types';
 import { useProjectStore } from '@/lib/store';
+import { toast } from 'sonner';
 
 const KanbanBoard = dynamic(() => import('@/components/kanban-board').then(m => ({ default: m.KanbanBoard })), {
   loading: () => <KanbanSkeleton />,
@@ -148,7 +149,8 @@ export default function ProjectPage() {
 
       if (!response.ok) {
         const err = await response.json();
-        console.error('Failed to generate constitution:', err.error || err.message);
+        const errorMessage = err.error || err.message || 'Failed to generate constitution';
+        toast.error(errorMessage);
         return;
       }
 
@@ -176,7 +178,8 @@ export default function ProjectPage() {
         hasConstitution: !!mappedConstitution,
       } : null);
     } catch (error) {
-      console.error('Failed to generate constitution:', error);
+      const message = error instanceof Error ? error.message : 'Failed to generate constitution';
+      toast.error(message);
     } finally {
       setIsGeneratingConstitution(false);
     }
