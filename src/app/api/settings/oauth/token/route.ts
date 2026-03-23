@@ -94,7 +94,6 @@ export async function POST(request: Request) {
       // Get model from PROVIDER_PRESETS equivalent
       const defaultModels: Record<string, string> = {
         codex: 'codex-mini-latest',
-        qwen: 'qwen-max',
         kimi: 'kimi-latest',
         iflow: 'Qwen3-Coder',
       };

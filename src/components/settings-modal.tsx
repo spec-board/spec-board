@@ -227,14 +227,7 @@ const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: 
     description: 'Code-optimized models via OpenAI account',
     oauthOnly: true,
   },
-  qwen: {
-    label: 'Qwen',
-    baseUrl: 'https://chat.qwen.ai/api/v1',
-    model: 'qwen-max',
-    apiKeyPlaceholder: '',
-    description: 'Qwen-Max, Qwen-Plus via qwen.ai account',
-    oauthOnly: true,
-  },
+
   kimi: {
     label: 'Kimi',
     baseUrl: 'https://api.kimi.ai/v1',
