@@ -551,16 +551,42 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     if (!pendingPipeline) return;
     const { featureId, remainingSteps } = pendingPipeline;
 
-    // Check if all clarifications are answered before resuming
-    const feature = features.find(f => f.id === featureId);
-    if (feature?.clarificationsContent) {
-      const content = feature.clarificationsContent;
-      // Check for unanswered questions: look for **A**: _Pending_ markers
-      const pendingCount = (content.match(/\*\*A\*\*:\s*_Pending_/g) || []).length;
-      // Also check legacy format: questions without any answer
-      const totalQuestions = (content.match(/^### Q:/gm) || []).length
-        || (content.match(/^\d+\.\s*\*\*/gm) || []).length;
+    // Fetch the LATEST feature data from the server (not stale state)
+    try {
+      const res = await fetch(`/api/features/${featureId}`);
+      if (res.ok) {
+        const freshFeature = await res.json();
+        const content = freshFeature.clarificationsContent || '';
 
+        if (content) {
+          // Count total questions and answered questions
+          const totalQuestions = (content.match(/^### Q:/gm) || []).length
+            || (content.match(/^\d+\.\s*\*\*/gm) || []).length;
+
+          // Count pending (unanswered) questions via **A**: _Pending_ markers
+          const pendingCount = (content.match(/\*\*A\*\*:\s*_Pending_/g) || []).length;
+
+          // For canonical format: count answers that are NOT _Pending_
+          const answeredCount = (content.match(/\*\*A\*\*:\s*(?!_Pending_).+/g) || []).length;
+
+          // Must have answered ALL questions -- no pending allowed
+          const unanswered = totalQuestions - answeredCount;
+
+          if (pendingCount > 0 || unanswered > 0) {
+            const remaining = Math.max(pendingCount, unanswered);
+            toast.error(
+              `Please answer all clarification questions before continuing. ${remaining} of ${totalQuestions} question${remaining > 1 ? 's' : ''} still unanswered.`,
+              { duration: 5000 }
+            );
+            return;
+          }
+        }
+      }
+    } catch {
+      // If fetch fails, fall back to local data check
+      const feature = features.find(f => f.id === featureId);
+      const content = feature?.clarificationsContent || '';
+      const pendingCount = (content.match(/\*\*A\*\*:\s*_Pending_/g) || []).length;
       if (pendingCount > 0) {
         toast.error(
           `Please answer all clarification questions before continuing. ${pendingCount} question${pendingCount > 1 ? 's' : ''} remaining.`,
