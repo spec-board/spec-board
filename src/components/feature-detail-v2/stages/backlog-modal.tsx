@@ -38,7 +38,8 @@ export function BacklogModal({ feature, onClose, onStageChange, onDelete }: Base
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate specification');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to generate specification');
       }
 
       toast.success('Specification generated');

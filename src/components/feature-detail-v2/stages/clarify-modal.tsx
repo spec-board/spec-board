@@ -88,7 +88,8 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
         });
 
         if (!response.ok) {
-          throw new Error('Failed to generate clarification questions');
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to generate clarification questions');
         }
 
         const data = await response.json();

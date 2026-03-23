@@ -90,7 +90,8 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate analysis');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to generate analysis');
       }
 
       setAnalysisStatus('ready');

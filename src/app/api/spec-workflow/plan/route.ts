@@ -114,7 +114,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in plan:', error);
-    return NextResponse.json({ error: 'Failed to generate plan' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to generate plan';
+    const status = message.includes('API key') ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
