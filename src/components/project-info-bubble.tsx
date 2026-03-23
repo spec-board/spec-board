@@ -20,7 +20,9 @@ import {
   Info,
   Wand2,
   ScrollText,
+  Settings,
 } from 'lucide-react';
+import { useSettingsStore } from '@/lib/settings-store';
 
 interface ProjectInfoBubbleProps {
   constitution: Constitution | null;
@@ -48,6 +50,8 @@ export function ProjectInfoBubble({
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'history'>('info');
   const [editDescription, setEditDescription] = useState(description || '');
+  const [showAIConfigDialog, setShowAIConfigDialog] = useState(false);
+  const { aiSettings, openSettings } = useSettingsStore();
 
   useEffect(() => {
     if (isOpen) {
@@ -60,15 +64,21 @@ export function ProjectInfoBubble({
     function handleEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         setIsOpen(false);
+        setShowAIConfigDialog(false);
       }
     }
-    if (isOpen) {
+    if (isOpen || showAIConfigDialog) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [isOpen]);
+  }, [isOpen, showAIConfigDialog]);
 
   const handleSaveAndGenerate = async () => {
+    // Check if AI provider is configured before proceeding
+    if (!aiSettings.hasApiKey && !aiSettings.apiKey) {
+      setShowAIConfigDialog(true);
+      return;
+    }
     // Save description first, then generate constitution
     // Both operations update the description in the database
     await onDescriptionChange?.(editDescription);
@@ -165,6 +175,45 @@ export function ProjectInfoBubble({
               {activeTab === 'history' && hasConstitution && constitution && (
                 <ConstitutionHistory constitution={constitution} />
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Provider not configured dialog */}
+      {showAIConfigDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl w-full max-w-md mx-4 shadow-2xl">
+            <div className="px-6 pt-6 pb-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-[var(--foreground)]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                  AI Provider Required
+                </h3>
+              </div>
+              <p className="text-sm text-[var(--muted-foreground)] leading-relaxed">
+                To generate the project Constitution, you need to configure an AI provider with a valid API key in Settings first.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-6 pb-6 pt-2">
+              <button
+                onClick={() => setShowAIConfigDialog(false)}
+                className="btn btn-ghost btn-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowAIConfigDialog(false);
+                  setIsOpen(false);
+                  openSettings('ai');
+                }}
+                className="btn btn-primary btn-sm"
+              >
+                Go to Settings
+              </button>
             </div>
           </div>
         </div>
