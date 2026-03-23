@@ -252,18 +252,25 @@ const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: 
     oauthOnly: true,
   },
   openai: {
-    label: 'OpenAI',
+    label: 'OpenAI Compatible',
     baseUrl: 'https://api.openai.com/v1',
     model: 'gpt-4o',
     apiKeyPlaceholder: 'sk-...',
-    description: 'GPT-4o and other OpenAI models (API key)',
+    description: 'OpenAI, Ollama, LM Studio, or any compatible API',
   },
-  custom: {
-    label: 'Custom',
-    baseUrl: '',
-    model: '',
-    apiKeyPlaceholder: 'API key',
-    description: 'Ollama, LM Studio, or any OpenAI-compatible API',
+  anthropic: {
+    label: 'Anthropic Claude',
+    baseUrl: 'https://api.anthropic.com',
+    model: 'claude-sonnet-4-20250514',
+    apiKeyPlaceholder: 'sk-ant-...',
+    description: 'Claude Sonnet, Opus, Haiku via Anthropic API',
+  },
+  gemini: {
+    label: 'Google Gemini',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    model: 'gemini-2.5-flash',
+    apiKeyPlaceholder: 'AIza...',
+    description: 'Gemini 2.5 Flash/Pro via Google AI Studio',
   },
 };
 
@@ -597,10 +604,10 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        provider: selected === 'custom' ? 'custom' : selected,
-        label: selected === 'custom' ? (customModel || 'Custom') : preset.label,
-        baseUrl: selected === 'custom' ? (customUrl || 'http://localhost:11434/v1') : preset.baseUrl,
-        model: selected === 'custom' ? (customModel || 'gpt-4o') : preset.model,
+        provider: selected,
+        label: preset.label + (customModel ? ` (${customModel})` : ''),
+        baseUrl: customUrl || preset.baseUrl,
+        model: customModel || preset.model,
       }),
     });
     setAdding(false);
@@ -610,7 +617,7 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
   return (
     <div className="space-y-3 p-3 bg-[var(--secondary)]/30 rounded-lg border border-[var(--border)]">
       <div className="text-xs font-medium text-[var(--muted-foreground)]">Add Provider</div>
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-4 gap-1.5">
         {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => (
           <button key={key} onClick={() => setSelected(key)}
             className={cn(
@@ -625,15 +632,25 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
         ))}
       </div>
 
-      {/* Custom fields */}
-      {selected === 'custom' && (
+      {/* Override fields for non-OAuth presets */}
+      {selected && !PROVIDER_PRESETS[selected]?.oauthOnly && (
         <div className="space-y-2">
-          <input type="text" value={customUrl} onChange={(e) => setCustomUrl(e.target.value)}
-            placeholder="Base URL (e.g., http://localhost:11434/v1)"
-            className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)]" />
-          <input type="text" value={customModel} onChange={(e) => setCustomModel(e.target.value)}
-            placeholder="Model name (e.g., llama3, mistral)"
-            className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)]" />
+          <div>
+            <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
+              Base URL <span className="opacity-60">(optional override)</span>
+            </label>
+            <input type="text" value={customUrl} onChange={(e) => setCustomUrl(e.target.value)}
+              placeholder={PROVIDER_PRESETS[selected]?.baseUrl || 'https://api.openai.com/v1'}
+              className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)]" />
+          </div>
+          <div>
+            <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
+              Model <span className="opacity-60">(optional override)</span>
+            </label>
+            <input type="text" value={customModel} onChange={(e) => setCustomModel(e.target.value)}
+              placeholder={PROVIDER_PRESETS[selected]?.model || 'gpt-4o'}
+              className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)]" />
+          </div>
         </div>
       )}
 
