@@ -346,7 +346,7 @@ class AIService {
     // Fallback: use legacy single-provider settings (for backward compatibility)
     const apiKey = await this.getApiKey();
     if (!apiKey) {
-      throw new Error('No API key configured. Please add an AI provider in settings.');
+      throw new Error('Please configure AI settings before using this feature.');
     }
 
     const baseUrl = await this.getBaseUrl();

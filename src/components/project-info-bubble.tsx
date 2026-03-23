@@ -193,7 +193,7 @@ export function ProjectInfoBubble({
                 </h3>
               </div>
               <p className="text-sm text-[var(--muted-foreground)] leading-relaxed">
-                To generate the project Constitution, you need to configure an AI provider with a valid API key in Settings first.
+                Please configure AI settings before using this feature. Go to Settings to add your AI provider.
               </p>
             </div>
             <div className="flex items-center justify-end gap-2 px-6 pb-6 pt-2">
