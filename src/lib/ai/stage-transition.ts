@@ -39,9 +39,7 @@ export async function generateStageTransitionContent(
         specContent: specMarkdown,
       });
 
-      const clarificationsMarkdown = clarifications
-        .map((c, i) => `${i + 1}. **${c.question}**\n   _${c.context || ''}_`)
-        .join('\n\n');
+      const clarificationsMarkdown = formatClarificationsMarkdown(clarifications);
 
       return {
         content: specMarkdown,
@@ -178,13 +176,54 @@ function formatTasks(tasks: any): string {
   return sections.join('\n');
 }
 
+// Helper: format clarifications to canonical markdown (same as clarify/route.ts)
+function formatClarificationsMarkdown(questions: { question: string; context?: string; answer?: string }[]): string {
+  const date = new Date().toISOString().split('T')[0];
+  let content = `# Clarifications\n\n`;
+  content += `**Date**: ${date}\n\n`;
+  content += `## Questions & Answers\n\n`;
+
+  for (const item of questions) {
+    const contextSuffix = item.context ? `\n_${item.context}_` : '';
+    content += `### Q: ${item.question}${contextSuffix}\n\n`;
+    if (item.answer) {
+      content += `**A**: ${item.answer}\n\n`;
+    } else {
+      content += `**A**: _Pending_\n\n`;
+    }
+  }
+
+  return content;
+}
+
 // Helper: parse clarifications markdown back into structured format
 function parseClarifications(content: string): { question: string; answer: string }[] {
   if (!content) return [];
 
+  // Try canonical format first (### Q: ...)
+  const sections = content.split(/^### Q:\s*/m).filter(s => s.trim());
+  if (sections.length > 0 && content.includes('### Q:')) {
+    const results: { question: string; answer: string }[] = [];
+    for (const section of sections) {
+      const lines = section.trim().split('\n');
+      const question = lines[0]?.trim() || '';
+      if (!question || question.startsWith('#')) continue;
+      let answer = '';
+      for (const line of lines) {
+        const m = line.match(/^\*\*A\*\*:\s*(.+)$/);
+        if (m && m[1] !== '_Pending_') {
+          answer = m[1].trim();
+          break;
+        }
+      }
+      results.push({ question, answer });
+    }
+    if (results.length > 0) return results;
+  }
+
+  // Fallback: old numbered format (1. **Question** _context_)
   const lines = content.split('\n').filter(l => l.trim());
   const results: { question: string; answer: string }[] = [];
-
   for (const line of lines) {
     const match = line.match(/\*\*(.+?)\*\*/);
     if (match) {

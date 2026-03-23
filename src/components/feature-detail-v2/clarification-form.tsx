@@ -157,37 +157,50 @@ export function ClarificationForm({
   );
 }
 
-// Parse markdown content to extract Q&A
+// Parse markdown content to extract Q&A -- handles both canonical and legacy formats
 function parseClarificationsMarkdown(content: string): ClarificationQuestion[] {
+  if (!content) return [];
+
   const questions: ClarificationQuestion[] = [];
 
-  // Split content by Q: sections and parse each
-  const sections = content.split(/^### Q:/m);
+  // Format 1: Canonical (### Q: question)
+  if (content.includes('### Q:')) {
+    const sections = content.split(/^### Q:\s*/m);
 
-  for (const section of sections) {
-    if (!section.trim()) continue;
+    for (const section of sections) {
+      if (!section.trim()) continue;
 
-    // Extract question and answer
-    const lines = section.trim().split('\n');
-    let question = lines[0]?.trim() || '';
+      const lines = section.trim().split('\n');
+      // First line is the question (may contain trailing _context_)
+      let question = lines[0]?.trim() || '';
 
-    // Skip header sections (e.g., "# Clarifications", "## Questions & Answers")
-    if (!question || question.startsWith('#')) continue;
+      // Skip header sections
+      if (!question || question.startsWith('#')) continue;
 
-    // Find answer line
-    let answer = '';
-    for (const line of lines) {
-      const answerMatch = line.match(/^\*\*A\*\*:\s*(.+)$/);
-      if (answerMatch) {
-        answer = answerMatch[1].trim();
-        break;
+      // Find answer line
+      let answer = '';
+      for (const line of lines) {
+        const answerMatch = line.match(/^\*\*A\*\*:\s*(.+)$/);
+        if (answerMatch) {
+          answer = answerMatch[1].trim();
+          break;
+        }
       }
+
+      const filteredAnswer = answer === '_Pending_' ? '' : answer;
+      questions.push({ question, answer: filteredAnswer });
     }
 
-    // Filter out "_Pending_" as empty answer
-    const filteredAnswer = answer === '_Pending_' ? '' : answer;
+    if (questions.length > 0) return questions;
+  }
 
-    questions.push({ question, answer: filteredAnswer });
+  // Format 2: Legacy numbered list (1. **Question** _context_)
+  const lines = content.split('\n').filter(l => l.trim());
+  for (const line of lines) {
+    const match = line.match(/^\d+\.\s*\*\*(.+?)\*\*/);
+    if (match) {
+      questions.push({ question: match[1], answer: '' });
+    }
   }
 
   return questions;
