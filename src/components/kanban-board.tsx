@@ -485,6 +485,40 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     return response.json();
   }, []);
 
+  // Helper: check if a feature has unanswered clarification questions
+  const checkClarificationsAnswered = useCallback(async (featureId: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/features/${featureId}`);
+      if (!res.ok) return true; // If fetch fails, don't block
+      const feature = await res.json();
+      const content = feature.clarificationsContent || '';
+      if (!content) return true; // No clarifications = all good
+
+      // Count total questions
+      const totalQuestions = (content.match(/^### Q:/gm) || []).length
+        || (content.match(/^\d+\.\s*\*\*/gm) || []).length;
+      if (totalQuestions === 0) return true;
+
+      // Count pending (unanswered) via **A**: _Pending_ markers
+      const pendingCount = (content.match(/\*\*A\*\*:\s*_Pending_/g) || []).length;
+      // Count actually answered (NOT _Pending_)
+      const answeredCount = (content.match(/\*\*A\*\*:\s*(?!_Pending_).+/g) || []).length;
+      const unanswered = totalQuestions - answeredCount;
+
+      if (pendingCount > 0 || unanswered > 0) {
+        const remaining = Math.max(pendingCount, unanswered);
+        toast.error(
+          `Please answer all clarification questions before continuing. ${remaining} of ${totalQuestions} question${remaining > 1 ? 's' : ''} still unanswered.`,
+          { duration: 5000 }
+        );
+        return false;
+      }
+      return true;
+    } catch {
+      return true; // Don't block on network errors
+    }
+  }, []);
+
   // Run pipeline steps sequentially, pausing at specs if clarifications are generated
   const runPipeline = useCallback(async (
     featureId: string,
@@ -495,6 +529,15 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     const totalSteps = steps.length;
 
     try {
+      // If transitioning FROM specs, ensure all clarifications are answered first
+      if (steps.length > 0 && steps[startIndex]?.from === 'specs') {
+        const allAnswered = await checkClarificationsAnswered(featureId);
+        if (!allAnswered) {
+          setIsLoading(false);
+          return;
+        }
+      }
+
       for (let i = startIndex; i < steps.length; i++) {
         const step = steps[i];
         const stepNum = i + 1;
@@ -551,54 +594,13 @@ export function KanbanBoard({ features, onFeatureClick, projectPath, projectId, 
     if (!pendingPipeline) return;
     const { featureId, remainingSteps } = pendingPipeline;
 
-    // Fetch the LATEST feature data from the server (not stale state)
-    try {
-      const res = await fetch(`/api/features/${featureId}`);
-      if (res.ok) {
-        const freshFeature = await res.json();
-        const content = freshFeature.clarificationsContent || '';
-
-        if (content) {
-          // Count total questions and answered questions
-          const totalQuestions = (content.match(/^### Q:/gm) || []).length
-            || (content.match(/^\d+\.\s*\*\*/gm) || []).length;
-
-          // Count pending (unanswered) questions via **A**: _Pending_ markers
-          const pendingCount = (content.match(/\*\*A\*\*:\s*_Pending_/g) || []).length;
-
-          // For canonical format: count answers that are NOT _Pending_
-          const answeredCount = (content.match(/\*\*A\*\*:\s*(?!_Pending_).+/g) || []).length;
-
-          // Must have answered ALL questions -- no pending allowed
-          const unanswered = totalQuestions - answeredCount;
-
-          if (pendingCount > 0 || unanswered > 0) {
-            const remaining = Math.max(pendingCount, unanswered);
-            toast.error(
-              `Please answer all clarification questions before continuing. ${remaining} of ${totalQuestions} question${remaining > 1 ? 's' : ''} still unanswered.`,
-              { duration: 5000 }
-            );
-            return;
-          }
-        }
-      }
-    } catch {
-      // If fetch fails, fall back to local data check
-      const feature = features.find(f => f.id === featureId);
-      const content = feature?.clarificationsContent || '';
-      const pendingCount = (content.match(/\*\*A\*\*:\s*_Pending_/g) || []).length;
-      if (pendingCount > 0) {
-        toast.error(
-          `Please answer all clarification questions before continuing. ${pendingCount} question${pendingCount > 1 ? 's' : ''} remaining.`,
-          { duration: 5000 }
-        );
-        return;
-      }
-    }
+    // Check all clarifications are answered before resuming
+    const allAnswered = await checkClarificationsAnswered(featureId);
+    if (!allAnswered) return;
 
     setPendingPipeline(null);
     await runPipeline(featureId, remainingSteps, 0);
-  }, [pendingPipeline, runPipeline, features]);
+  }, [pendingPipeline, runPipeline, checkClarificationsAnswered]);
 
   // Handle drop - trigger multi-step pipeline
   const handleDrop = useCallback((targetColumn: KanbanColumn) => async (e: React.DragEvent) => {
