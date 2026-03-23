@@ -218,7 +218,7 @@ function AppearanceContent() {
   );
 }
 
-const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string; oauthOnly?: boolean }> = {
+const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: string; apiKeyPlaceholder: string; description: string; oauthOnly?: boolean; fixedBaseUrl?: boolean }> = {
   codex: {
     label: 'OpenAI Codex',
     baseUrl: 'https://api.openai.com/v1',
@@ -257,6 +257,7 @@ const PROVIDER_PRESETS: Record<string, { label: string; baseUrl: string; model: 
     model: 'codestral-latest',
     apiKeyPlaceholder: 'sk-...',
     description: 'Codestral, Mistral Large, Devstral via Mistral API',
+    fixedBaseUrl: true,
   },
   openai: {
     label: 'OpenAI Compatible API',
@@ -555,9 +556,11 @@ function ProviderRow({
           {!isOAuth && (
             <ProviderApiKeyInput providerId={item.id} hasApiKey={item.hasApiKey} onSaved={onOAuthSuccess} />
           )}
-          <div className="text-[10px] text-[var(--muted-foreground)]">
-            Base URL: <span className="font-mono">{item.baseUrl}</span>
-          </div>
+          {!preset?.fixedBaseUrl && (
+            <div className="text-[10px] text-[var(--muted-foreground)]">
+              Base URL: <span className="font-mono">{item.baseUrl}</span>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -642,14 +645,16 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
       {/* Override fields for non-OAuth presets */}
       {selected && !PROVIDER_PRESETS[selected]?.oauthOnly && (
         <div className="space-y-2">
-          <div>
-            <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
-              Base URL <span className="opacity-60">(optional override)</span>
-            </label>
-            <input type="text" value={customUrl} onChange={(e) => setCustomUrl(e.target.value)}
-              placeholder={PROVIDER_PRESETS[selected]?.baseUrl || 'https://api.openai.com/v1'}
-              className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)]" />
-          </div>
+          {!PROVIDER_PRESETS[selected]?.fixedBaseUrl && (
+            <div>
+              <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
+                Base URL <span className="opacity-60">(optional override)</span>
+              </label>
+              <input type="text" value={customUrl} onChange={(e) => setCustomUrl(e.target.value)}
+                placeholder={PROVIDER_PRESETS[selected]?.baseUrl || 'https://api.openai.com/v1'}
+                className="w-full px-2 py-1.5 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg outline-none focus:border-[var(--ring)]" />
+            </div>
+          )}
           <div>
             <label className="text-[9px] text-[var(--muted-foreground)] block mb-0.5">
               Model <span className="opacity-60">(optional override)</span>
