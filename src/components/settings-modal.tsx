@@ -610,20 +610,30 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
   const handleAdd = async () => {
     if (!selected) return;
     setAdding(true);
-    const preset = PROVIDER_PRESETS[selected];
-    await fetch('/api/settings/ai/providers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        provider: selected,
-        label: preset.label + (customModel ? ` (${customModel})` : ''),
-        baseUrl: customUrl || preset.baseUrl,
-        model: customModel || preset.model,
-        ...(apiKeyInput.trim() ? { apiKey: apiKeyInput.trim() } : {}),
-      }),
-    });
-    setAdding(false);
-    onAdd();
+    try {
+      const preset = PROVIDER_PRESETS[selected];
+      const res = await fetch('/api/settings/ai/providers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: selected,
+          label: preset.label + (customModel ? ` (${customModel})` : ''),
+          baseUrl: customUrl || preset.baseUrl,
+          model: customModel || preset.model,
+          ...(apiKeyInput.trim() ? { apiKey: apiKeyInput.trim() } : {}),
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Failed to add provider:', errData.error || res.statusText);
+        return;
+      }
+      onAdd();
+    } catch (err) {
+      console.error('Failed to add provider:', err);
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (

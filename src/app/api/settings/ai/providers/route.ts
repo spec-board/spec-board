@@ -57,7 +57,8 @@ export async function POST(request: Request) {
     const nextPriority = ((maxResult[0]?.max) ?? -1) + 1;
 
     const created = await prisma.$queryRawUnsafe<ProviderRow[]>(
-      `INSERT INTO "ai_provider_configs" ("id", "provider", "label", "baseUrl", "model", "apiKey", "priority", "enabled", "created_at", "updated_at")
+      `INSERT INTO "ai_provider_configs"
+        ("id", "provider", "label", "baseUrl", "model", "apiKey", "priority", "enabled", "created_at", "updated_at")
        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, true, NOW(), NOW())
        RETURNING *`,
       provider, label, baseUrl, model, apiKey || null, nextPriority
@@ -72,7 +73,8 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Failed to create provider:', error);
-    return NextResponse.json({ error: 'Failed to create provider' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to create provider';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
