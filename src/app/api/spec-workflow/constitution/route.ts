@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { generateConstitution, getProvider } from '@/lib/ai';
+import { generateConstitution } from '@/lib/ai';
 
 // Constitution generation types
 interface ConstitutionPrinciples {
@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
           data: { description }
         });
 
-        const provider = await getProvider();
         const result = await generateConstitution({
           projectName: project.displayName || name || 'Project',
           projectDescription: description,
@@ -142,7 +141,6 @@ export async function POST(request: NextRequest) {
           description,  // Return updated description
           versionChange: currentVersion ? `${currentVersion} → ${newVersion}` : `1.0.0 → ${newVersion}`,
           message: 'Description updated and constitution regenerated with AI',
-          provider
         });
       } catch (aiError) {
         console.error('AI generation error:', aiError);
@@ -251,7 +249,6 @@ export async function POST(request: NextRequest) {
     // Handle AI generation request (basic)
     if (generateWithAI) {
       try {
-        const provider = await getProvider();
         const result = await generateConstitution({
           projectName: project.displayName || name || 'Project',
           projectDescription: project.description || undefined,
@@ -308,7 +305,6 @@ export async function POST(request: NextRequest) {
             lastAmendedDate: constitution.lastAmendedDate,
           },
           message: 'Constitution generated with AI',
-          provider
         });
       } catch (aiError) {
         console.error('AI generation error:', aiError);
