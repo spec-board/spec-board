@@ -3,7 +3,7 @@
 > Visual dashboard that helps non-technical teams create, organize, and manage professional software specifications and documentation.
 
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Version](https://img.shields.io/badge/version-2.1.0-black.svg)
+![Version](https://img.shields.io/badge/version-2.2.0-black.svg)
 
 Turn ideas into structured specs -- no coding required. SpecBoard provides a drag-and-drop Kanban interface to move features through a 4-stage AI-powered pipeline: **Backlog** > **Specs** > **Plan** > **Tasks**.
 
@@ -40,22 +40,23 @@ AI-powered 4-stage workflow: backlog > specs > plan > tasks
 - **Kanban Board** -- 4-column pipeline (Backlog > Specs > Plan > Tasks) with drag-and-drop
 - **AI Spec Generation** -- Enter a feature name and description, AI generates spec, plan, and tasks
 - **Spec Workflow Wizard** -- 4-stage AI workflow with automatic stage transitions
+- **Multi-Provider AI** -- OAuth (Codex, Qwen, Kimi, iFlow) and API Key (OpenAI, Anthropic, etc.) providers with optimistic toggle
+- **Constitution System** -- AI-generated project constitution from description, with version history
 - **Skeleton Loading** -- Responsive loading screens with animated placeholders for every route
-- **Code Splitting** -- Dynamic imports for heavy components (KanbanBoard, FeatureDetail, modals)
 - **Deep Linking** -- Shareable URLs for projects and features
 - **Progress Tracking** -- Visual metrics for tasks, checklists, and user stories
 - **Accessible** -- WCAG 2.2 AA compliant with full keyboard navigation
 
 ### Cloud Sync & Collaboration
 - **Supabase PostgreSQL** -- Cloud database with Prisma ORM and connection pooling
-- **OAuth Authentication** -- Login with Google or GitHub
+- **OAuth Authentication** -- PKCE and Device Code flows for AI providers
 - **Team Collaboration** -- Role-based access control (VIEW, EDIT, ADMIN)
 - **Conflict Resolution** -- 3-way merge with visual diff viewer
 - **Version History** -- Last 30 versions retained per spec file
 
 ### Developer Experience
 - **Mono Design System** -- Minimal monochromatic UI with semantic design tokens
-- **System Theme** -- Follows device preference by default (light/dark/system)
+- **Theme Dropdown** -- Light, Dark, System modes with animated dropdown selector
 - **Split-View Modal** -- Resizable panes for viewing multiple sections simultaneously
 - **Keyboard Shortcuts** -- Navigate features and sections with number keys
 - **React Compiler** -- Automatic memoization for optimal re-rendering
@@ -110,7 +111,7 @@ pnpm dev
 ### Commands
 
 ```bash
-pnpm dev              # Start dev server (Turbopack)
+pnpm dev              # Start dev server
 pnpm build            # Production build
 pnpm start            # Start production server
 pnpm test             # Run tests (watch mode)
