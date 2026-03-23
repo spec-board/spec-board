@@ -10,10 +10,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid provider for device code flow' }, { status: 400 });
     }
 
+    const body = new URLSearchParams({ client_id: config.clientId || '' });
     const res = await fetch(config.deviceAuthorizationUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_id: config.clientId }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
     });
 
     if (!res.ok) {
