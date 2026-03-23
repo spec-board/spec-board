@@ -540,14 +540,26 @@ function ProviderRow({
             className="p-1 rounded hover:bg-[var(--secondary)] disabled:opacity-30 transition-colors" title="Move down">
             <ChevronDown className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
           </button>
-          <button onClick={onToggle}
-            className={cn('p-1 rounded transition-colors', item.enabled ? 'hover:bg-[var(--secondary)]' : 'hover:bg-[var(--secondary)]')}
-            title={item.enabled ? 'Disable' : 'Enable'}>
-            <Power className={cn('w-3.5 h-3.5', item.enabled ? 'text-green-500' : 'text-[var(--muted-foreground)]')} />
+          <button
+            onClick={onToggle}
+            role="switch"
+            aria-checked={item.enabled}
+            title={item.enabled ? 'Disable' : 'Enable'}
+            className={cn(
+              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
+              item.enabled ? 'bg-[var(--foreground)]' : 'bg-[var(--border)]'
+            )}
+          >
+            <span
+              className={cn(
+                'pointer-events-none inline-block h-4 w-4 rounded-full bg-[var(--background)] shadow-sm ring-0 transition-transform',
+                item.enabled ? 'translate-x-4' : 'translate-x-0'
+              )}
+            />
           </button>
           <button onClick={onDelete}
-            className="p-1 rounded hover:bg-red-500/10 transition-colors" title="Remove">
-            <Trash2 className="w-3.5 h-3.5 text-[var(--muted-foreground)] hover:text-red-400" />
+            className="p-1 rounded hover:bg-[var(--secondary)] transition-colors" title="Remove">
+            <Trash2 className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
           </button>
         </div>
       </div>
