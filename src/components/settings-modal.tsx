@@ -627,19 +627,49 @@ function AddProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClose: () 
   return (
     <div className="space-y-3 p-3 bg-[var(--secondary)]/30 rounded-lg border border-[var(--border)]">
       <div className="text-xs font-medium text-[var(--muted-foreground)]">Add Provider</div>
-      <div className="grid grid-cols-4 gap-1.5">
-        {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => (
-          <button key={key} onClick={() => setSelected(key)}
-            className={cn(
-              'flex flex-col items-start px-2 py-2 rounded-lg border text-left transition-colors',
-              selected === key
-                ? 'border-[var(--ring)] bg-[var(--accent)]'
-                : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
-            )}>
-            <span className="text-xs font-medium">{preset.label}</span>
-            <span className="text-[9px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
-          </button>
-        ))}
+
+      {/* OAuth2 Providers */}
+      <div>
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">OAuth2</span>
+          <div className="flex-1 h-px bg-[var(--border)]" />
+        </div>
+        <div className="grid grid-cols-4 gap-1.5">
+          {Object.entries(PROVIDER_PRESETS).filter(([, p]) => p.oauthOnly).map(([key, preset]) => (
+            <button key={key} onClick={() => setSelected(key)}
+              className={cn(
+                'flex flex-col items-start px-2 py-2 rounded-lg border text-left transition-colors',
+                selected === key
+                  ? 'border-[var(--ring)] bg-[var(--accent)]'
+                  : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
+              )}>
+              <span className="text-xs font-medium">{preset.label}</span>
+              <span className="text-[9px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* API Key Providers */}
+      <div>
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">API Key</span>
+          <div className="flex-1 h-px bg-[var(--border)]" />
+        </div>
+        <div className="grid grid-cols-4 gap-1.5">
+          {Object.entries(PROVIDER_PRESETS).filter(([, p]) => !p.oauthOnly).map(([key, preset]) => (
+            <button key={key} onClick={() => setSelected(key)}
+              className={cn(
+                'flex flex-col items-start px-2 py-2 rounded-lg border text-left transition-colors',
+                selected === key
+                  ? 'border-[var(--ring)] bg-[var(--accent)]'
+                  : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--ring)]/50'
+              )}>
+              <span className="text-xs font-medium">{preset.label}</span>
+              <span className="text-[9px] text-[var(--muted-foreground)] leading-tight">{preset.description}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Override fields for non-OAuth presets */}
