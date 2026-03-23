@@ -431,6 +431,9 @@ function PKCEFlow({ provider, onSuccess }: { provider: string; onSuccess: () => 
       scope: (config.scopes || []).join(' '), state,
       code_challenge: codeChallenge, code_challenge_method: 'S256',
     });
+    if (config.audience) {
+      params.set('audience', config.audience);
+    }
     const authUrl = `${config.authorizeUrl}?${params}`;
     try {
       const popup = window.open(authUrl, 'oauth-popup', 'width=600,height=700');
@@ -582,7 +585,7 @@ function ProviderRow({
                 <span className="text-xs">OAuth connected</span>
               </div>
               <button onClick={async () => {
-                await fetch(`/api/settings/ai/providers/oauth?providerId=${item.id}`, { method: 'DELETE' });
+                await fetch(`/api/settings/ai/provider-configs/oauth?providerId=${item.id}`, { method: 'DELETE' });
                 onOAuthSuccess();
               }} className="text-[10px] text-[var(--muted-foreground)] hover:text-red-400 transition-colors">
                 Disconnect
@@ -611,7 +614,7 @@ function ProviderApiKeyInput({ providerId, hasApiKey, onSaved }: { providerId: s
   const handleSave = async () => {
     if (!apiKey.trim()) return;
     setSaving(true);
-    await fetch('/api/settings/ai/providers', {
+    await fetch('/api/settings/ai/provider-configs', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: providerId, apiKey: apiKey.trim() }),
@@ -698,7 +701,7 @@ function AddApiKeyProviderDialog({ onAdd, onClose }: { onAdd: () => void; onClos
     setError('');
     try {
       const preset = PROVIDER_PRESETS[selected];
-      const res = await fetch('/api/settings/ai/providers', {
+      const res = await fetch('/api/settings/ai/provider-configs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -799,7 +802,7 @@ function AIContent() {
     setImporting(true);
     setImportResult(null);
     try {
-      const res = await fetch('/api/settings/ai/providers/import-env', { method: 'POST' });
+      const res = await fetch('/api/settings/ai/provider-configs/import-env', { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
         setImportResult({
@@ -819,7 +822,7 @@ function AIContent() {
 
   const loadProviders = useCallback(async () => {
     try {
-      const res = await fetch('/api/settings/ai/providers');
+      const res = await fetch('/api/settings/ai/provider-configs');
       if (res.ok) {
         const data = await res.json();
         setProviders(data);
@@ -834,7 +837,7 @@ function AIContent() {
     // Optimistic update - toggle immediately in UI
     setProviders(prev => prev.map(p => p.id === id ? { ...p, enabled: !enabled } : p));
     try {
-      const res = await fetch('/api/settings/ai/providers', {
+      const res = await fetch('/api/settings/ai/provider-configs', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, enabled: !enabled }),
@@ -860,7 +863,7 @@ function AIContent() {
       priority: i === index ? newProviders[swapIndex].priority : i === swapIndex ? newProviders[index].priority : p.priority,
     }));
 
-    await fetch('/api/settings/ai/providers', {
+    await fetch('/api/settings/ai/provider-configs', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reorder }),
@@ -870,7 +873,7 @@ function AIContent() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/settings/ai/providers?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/settings/ai/provider-configs?id=${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         console.error('Failed to delete provider:', errData.error || res.statusText);

@@ -6,6 +6,7 @@
 export interface OAuthProviderConfig {
   name: string;
   flow: 'device_code' | 'pkce';
+  baseUrl?: string;
   // Device Code flow endpoints
   deviceAuthorizationUrl?: string;
   tokenUrl?: string;
@@ -13,20 +14,24 @@ export interface OAuthProviderConfig {
   // PKCE flow endpoints
   authorizeUrl?: string;
   scopes?: string[];
+  audience?: string;
 }
 
 export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
   codex: {
     name: 'OpenAI Codex',
     flow: 'pkce',
-    authorizeUrl: 'https://auth.openai.com/oauth/authorize',
+    baseUrl: 'https://api.openai.com/v1',
+    authorizeUrl: 'https://auth.openai.com/authorize',
     tokenUrl: 'https://auth.openai.com/oauth/token',
     clientId: 'app_EMoamEEZ73f0CkXaXp7hrann',
     scopes: ['openid', 'profile', 'email', 'offline_access'],
+    audience: 'https://api.openai.com/v1',
   },
   qwen: {
     name: 'Qwen',
     flow: 'device_code',
+    baseUrl: 'https://chat.qwen.ai/api/v1',
     deviceAuthorizationUrl: 'https://chat.qwen.ai/api/v1/auths/device/code',
     tokenUrl: 'https://chat.qwen.ai/api/v1/auths/device/token',
     clientId: 'qwen-cli',
@@ -34,6 +39,7 @@ export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
   kimi: {
     name: 'Kimi',
     flow: 'device_code',
+    baseUrl: 'https://api.kimi.ai/v1',
     deviceAuthorizationUrl: 'https://auth.kimi.com/api/oauth/device_authorization',
     tokenUrl: 'https://auth.kimi.com/api/oauth/token',
     clientId: '17e5f671-d194-4dfb-9706-5516cb48c098',
@@ -41,6 +47,7 @@ export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
   iflow: {
     name: 'iFlow',
     flow: 'device_code',
+    baseUrl: 'https://apis.iflow.cn/v1',
     deviceAuthorizationUrl: 'https://apis.iflow.cn/v1/auth/device/code',
     tokenUrl: 'https://apis.iflow.cn/v1/auth/device/token',
     clientId: 'iflow-cli',
