@@ -1,6 +1,6 @@
 {
   "name": "spec-board",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Visual dashboard for creating and managing professional software specifications and documentation",
   "scripts": {
     "postinstall": "prisma generate",
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@e2b/code-interpreter": "^2.3.3",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^5.27.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
@@ -72,7 +72,7 @@
     "babel-plugin-react-compiler": "^19.1.0-rc.2",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^11.0.0",
-    "prisma": "^5.22.0",
+    "prisma": "^5.27.0",
     "tsx": "^4.21.0",
     "pm2": "^6.0.0",
     "vitest": "^4.0.16"
