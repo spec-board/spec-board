@@ -124,24 +124,24 @@
   --radius-xl: 0.75rem;
 }
 
-/* Light theme — mono */
+/* Light theme — warm mono, eye-friendly */
 .light {
-  --background: #fafafa;
-  --foreground: #09090b;
-  --card: #ffffff;
-  --card-foreground: #09090b;
-  --primary: #18181b;
-  --primary-foreground: #fafafa;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #09090b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #e4e4e7;
-  --accent-hover: #d4d4d8;
+  --background: #f5f3ef;
+  --foreground: #1a1a1a;
+  --card: #faf8f5;
+  --card-foreground: #1a1a1a;
+  --primary: #2c2c2e;
+  --primary-foreground: #f5f3ef;
+  --secondary: #edeae4;
+  --secondary-foreground: #1a1a1a;
+  --muted: #edeae4;
+  --muted-foreground: #78756e;
+  --accent: #e0ddd6;
+  --accent-hover: #d5d1c9;
   --accent-muted: rgba(0, 0, 0, 0.04);
-  --accent-foreground: #09090b;
-  --border: #e4e4e7;
-  --ring: #a1a1aa;
+  --accent-foreground: #1a1a1a;
+  --border: #ddd9d1;
+  --ring: #a8a49c;
 
   /* Typography, spacing, radius — inherit from :root */
 
@@ -182,24 +182,24 @@
   --tag-bg-indigo: rgba(0, 0, 0, 0.05);
   --tag-bg-pink: rgba(0, 0, 0, 0.05);
 
-  --progress-empty: #e4e4e7;
+  --progress-empty: #e0ddd6;
 
-  --status-not-started: #a1a1aa;
-  --status-in-progress: #52525b;
-  --status-complete: #18181b;
+  --status-not-started: #a8a49c;
+  --status-in-progress: #5c5952;
+  --status-complete: #2c2c2e;
 
-  --priority-p1: #09090b;
-  --priority-p2: #52525b;
-  --priority-p3: #a1a1aa;
+  --priority-p1: #1a1a1a;
+  --priority-p2: #5c5952;
+  --priority-p3: #a8a49c;
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.06);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.06);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.06);
-  --shadow-hover: 0 8px 12px -2px rgb(0 0 0 / 0.08);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.05);
+  --shadow-hover: 0 8px 12px -2px rgb(0 0 0 / 0.07);
 
-  --card-hover: #f9f9fa;
-  --border-hover: #d4d4d8;
+  --card-hover: #f0ede8;
+  --border-hover: #d0ccc4;
 }
 
 body {
