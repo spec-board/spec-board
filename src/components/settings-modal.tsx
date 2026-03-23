@@ -304,7 +304,16 @@ function DeviceCodeFlow({ provider, onSuccess }: { provider: string; onSuccess: 
       setUserCode(data.user_code);
       setVerificationUri(data.verification_uri);
       setPolling(true);
-      window.open(data.verification_uri, '_blank', 'noopener');
+      // Try to open popup, but don't fail if blocked
+      try {
+        const popup = window.open(data.verification_uri, '_blank', 'noopener');
+        if (!popup) {
+          // Popup was blocked - user can use the fallback link shown below
+          console.warn('Popup blocked - user should click the verification link manually');
+        }
+      } catch {
+        // Popup blocked - fallback link is shown in the polling UI
+      }
 
       const interval = (data.interval || 5) * 1000;
       pollingRef.current = setInterval(async () => {
@@ -355,8 +364,8 @@ function DeviceCodeFlow({ provider, onSuccess }: { provider: string; onSuccess: 
             </button>
           </div>
           <a href={verificationUri} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
-            Open verification page <ExternalLink className="w-3 h-3" />
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] underline underline-offset-2 hover:opacity-80 transition-opacity">
+            Open verification page <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
         <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted-foreground)]">
@@ -422,7 +431,16 @@ function PKCEFlow({ provider, onSuccess }: { provider: string; onSuccess: () => 
       scope: (config.scopes || []).join(' '), state,
       code_challenge: codeChallenge, code_challenge_method: 'S256',
     });
-    window.open(`${config.authorizeUrl}?${params}`, 'oauth-popup', 'width=600,height=700');
+    const authUrl = `${config.authorizeUrl}?${params}`;
+    try {
+      const popup = window.open(authUrl, 'oauth-popup', 'width=600,height=700');
+      if (!popup) {
+        // Popup blocked - navigate directly (callback will redirect back)
+        window.location.href = authUrl;
+      }
+    } catch {
+      window.location.href = authUrl;
+    }
   };
 
   return (
