@@ -41,21 +41,21 @@ export function ThemeButton() {
     <div ref={ref} className="relative">
       <button
         onClick={() => open ? closeDropdown() : openDropdown()}
-        className="btn-icon flex items-center gap-1"
+        className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md hover:bg-[var(--secondary)] transition-colors duration-150"
         aria-label={`Theme: ${current.label}`}
         aria-expanded={open}
         aria-haspopup="listbox"
       >
-        <CurrentIcon className="w-4 h-4" />
-        <ChevronDown className={`w-3 h-3 opacity-60 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <CurrentIcon className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
+        <ChevronDown className={`w-2.5 h-2.5 text-[var(--muted-foreground)] transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
         <div
-          className={`absolute right-0 top-full mt-1.5 min-w-[130px] rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg z-50 py-1 transition-all duration-150 ease-out origin-top-right ${
+          className={`absolute right-0 top-full mt-1 min-w-[110px] rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-md z-50 p-0.5 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top-right ${
             visible
               ? 'opacity-100 scale-100 translate-y-0'
-              : 'opacity-0 scale-95 -translate-y-1'
+              : 'opacity-0 scale-90 -translate-y-1.5'
           }`}
         >
           {themeOptions.map((opt, i) => {
@@ -65,14 +65,18 @@ export function ThemeButton() {
               <button
                 key={opt.value}
                 onClick={() => { setTheme(opt.value); closeDropdown(); }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-all duration-100 ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-md transition-all duration-150 ease-out ${
                   isActive
-                    ? 'text-[var(--foreground)] bg-[var(--accent)]'
+                    ? 'text-[var(--foreground)] bg-[var(--accent)] font-medium'
                     : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]'
                 }`}
-                style={{ transitionDelay: visible ? `${i * 30}ms` : '0ms' }}
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? 'translateY(0)' : 'translateY(-4px)',
+                  transition: `opacity 150ms ease-out ${i * 40}ms, transform 150ms ease-out ${i * 40}ms`,
+                }}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3.5 h-3.5" />
                 {opt.label}
               </button>
             );

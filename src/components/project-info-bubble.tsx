@@ -284,7 +284,7 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
         <div>
           <h4 className="text-sm font-medium mb-2 flex items-center gap-2"><Shield className="w-4 h-4 text-[var(--muted-foreground)]" />Core Principles</h4>
           <div className="space-y-2">
-            {constitution.principles.map((principle, index) => (
+            {constitution.principles?.map((principle, index) => (
               <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden">
                 <button onClick={() => togglePrinciple(index)} className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left">
                   <span className="font-medium text-sm">{principle.name}</span>
@@ -300,7 +300,7 @@ function ConstitutionContent({ constitution }: { constitution: Constitution }) {
         <div>
           <h4 className="text-sm font-medium mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-[var(--muted-foreground)]" />Additional Sections</h4>
           <div className="space-y-2">
-            {constitution.sections.map((section, index) => (
+            {constitution.sections?.map((section, index) => (
               <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden">
                 <button onClick={() => toggleSection(index)} className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors text-left">
                   <span className="font-medium text-sm">{section.name}</span>
