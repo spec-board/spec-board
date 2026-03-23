@@ -154,12 +154,26 @@ export default function ProjectPage() {
 
       const result = await response.json();
 
+      // Map API response to Constitution type expected by UI
+      const apiConst = result.constitution;
+      const mappedConstitution = apiConst ? {
+        rawContent: apiConst.content || '',
+        title: apiConst.title,
+        description: result.description || description,
+        principles: Array.isArray(apiConst.principles) ? apiConst.principles : [],
+        sections: [],
+        version: apiConst.version,
+        ratifiedDate: apiConst.ratifiedDate,
+        lastAmendedDate: apiConst.lastAmendedDate,
+        versions: [],
+      } : null;
+
       // Update project state with new constitution
       setProject(prev => prev ? {
         ...prev,
         description: result.description || description,
-        constitution: result.constitution,
-        hasConstitution: true,
+        constitution: mappedConstitution,
+        hasConstitution: !!mappedConstitution,
       } : null);
     } catch (error) {
       console.error('Failed to generate constitution:', error);

@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+interface ProviderRow {
+  provider: string;
+  baseUrl: string;
+}
+
 // Mapping from env var patterns to provider configs
 const ENV_PROVIDER_MAP: {
-  envKey: string;           // Environment variable name for API key
-  envBaseUrl?: string;      // Optional env var for custom base URL
-  envModel?: string;        // Optional env var for model override
+  envKey: string;
+  envBaseUrl?: string;
+  envModel?: string;
   provider: string;
   label: string;
   defaultBaseUrl: string;
   defaultModel: string;
 }[] = [
-  // OpenAI
   {
     envKey: 'OPENAI_API_KEY',
     envBaseUrl: 'OPENAI_BASE_URL',
@@ -21,7 +25,6 @@ const ENV_PROVIDER_MAP: {
     defaultBaseUrl: 'https://api.openai.com/v1',
     defaultModel: 'gpt-4o',
   },
-  // Anthropic
   {
     envKey: 'ANTHROPIC_API_KEY',
     envBaseUrl: 'ANTHROPIC_BASE_URL',
@@ -31,7 +34,6 @@ const ENV_PROVIDER_MAP: {
     defaultBaseUrl: 'https://api.anthropic.com',
     defaultModel: 'claude-sonnet-4-20250514',
   },
-  // Google Gemini
   {
     envKey: 'GEMINI_API_KEY',
     envBaseUrl: 'GEMINI_BASE_URL',
@@ -41,7 +43,6 @@ const ENV_PROVIDER_MAP: {
     defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
     defaultModel: 'gemini-2.5-flash',
   },
-  // Also support GOOGLE_API_KEY as alias
   {
     envKey: 'GOOGLE_API_KEY',
     envModel: 'GOOGLE_MODEL',
@@ -50,7 +51,6 @@ const ENV_PROVIDER_MAP: {
     defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
     defaultModel: 'gemini-2.5-flash',
   },
-  // Mistral
   {
     envKey: 'MISTRAL_API_KEY',
     envModel: 'MISTRAL_MODEL',
@@ -59,7 +59,6 @@ const ENV_PROVIDER_MAP: {
     defaultBaseUrl: 'https://api.mistral.ai/v1',
     defaultModel: 'codestral-latest',
   },
-  // Qwen (API key mode, not OAuth)
   {
     envKey: 'QWEN_API_KEY',
     envBaseUrl: 'QWEN_BASE_URL',
@@ -69,7 +68,6 @@ const ENV_PROVIDER_MAP: {
     defaultBaseUrl: 'https://chat.qwen.ai/api/v1',
     defaultModel: 'qwen-max',
   },
-  // iFlow
   {
     envKey: 'IFLOW_API_KEY',
     envModel: 'IFLOW_MODEL',
@@ -110,16 +108,16 @@ export async function POST() {
     const seen = new Set<string>();
 
     // Get existing providers to avoid duplicates
-    const existing = await prisma.aIProviderConfig.findMany({
-      select: { provider: true, baseUrl: true },
-    });
+    const existing = await prisma.$queryRawUnsafe<ProviderRow[]>(
+      `SELECT "provider", "baseUrl" FROM "ai_provider_configs"`
+    );
     const existingKeys = new Set(existing.map(e => `${e.provider}:${e.baseUrl}`));
 
     // Get max priority
-    const maxPriority = await prisma.aIProviderConfig.aggregate({
-      _max: { priority: true },
-    });
-    let nextPriority = (maxPriority._max.priority ?? -1) + 1;
+    const maxResult = await prisma.$queryRawUnsafe<[{ max: number | null }]>(
+      `SELECT MAX("priority") as max FROM "ai_provider_configs"`
+    );
+    let nextPriority = ((maxResult[0]?.max) ?? -1) + 1;
 
     for (const mapping of ENV_PROVIDER_MAP) {
       const apiKey = process.env[mapping.envKey];
@@ -129,24 +127,17 @@ export async function POST() {
       const baseUrl = (mapping.envBaseUrl && process.env[mapping.envBaseUrl]) || mapping.defaultBaseUrl;
       const model = (mapping.envModel && process.env[mapping.envModel]) || mapping.defaultModel;
 
-      // Skip if already exists with same provider+baseUrl
       const key = `${mapping.provider}:${baseUrl}`;
       if (existingKeys.has(key)) {
         skipped.push(`${mapping.label} (already exists)`);
         continue;
       }
 
-      await prisma.aIProviderConfig.create({
-        data: {
-          provider: mapping.provider,
-          label: mapping.label,
-          baseUrl,
-          model,
-          apiKey,
-          priority: nextPriority++,
-          enabled: true,
-        },
-      });
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "ai_provider_configs" ("id", "provider", "label", "baseUrl", "model", "apiKey", "priority", "enabled", "created_at", "updated_at")
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, true, NOW(), NOW())`,
+        mapping.provider, mapping.label, baseUrl, model, apiKey, nextPriority++
+      );
 
       imported.push(mapping.label);
     }
