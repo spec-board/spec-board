@@ -2,21 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import { Header } from '@/components/header';
 import { KanbanSkeleton } from '@/components/skeleton';
 import type { Project, Feature } from '@/types';
 import { useProjectStore } from '@/lib/store';
 import { toast } from 'sonner';
-
-const KanbanBoard = dynamic(() => import('@/components/kanban-board').then(m => ({ default: m.KanbanBoard })), {
-  loading: () => <KanbanSkeleton />,
-  ssr: false,
-});
-
-const ProjectInfoBubble = dynamic(() => import('@/components/project-info-bubble').then(m => ({ default: m.ProjectInfoBubble })), {
-  ssr: false,
-});
+import { ProjectInfoBubble } from '@/components/project-info-bubble';
+import { KanbanBoard } from '@/components/kanban-board';
 
 export default function ProjectPage() {
   const params = useParams();

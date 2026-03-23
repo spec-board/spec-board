@@ -773,6 +773,7 @@ function AIContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [autoExpandId, setAutoExpandId] = useState<string | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
@@ -850,8 +851,6 @@ function AIContent() {
   };
 
   const handleDelete = async (id: string) => {
-    const provider = providers.find(p => p.id === id);
-    if (!confirm(`Remove "${provider?.label || 'this provider'}"?`)) return;
     try {
       const res = await fetch(`/api/settings/ai/providers?id=${id}`, { method: 'DELETE' });
       if (!res.ok) {
@@ -861,6 +860,7 @@ function AIContent() {
     } catch (err) {
       console.error('Failed to delete provider:', err);
     }
+    setConfirmingDeleteId(null);
     loadProviders();
   };
 
@@ -894,12 +894,41 @@ function AIContent() {
               onToggle={() => handleToggle(item.id, item.enabled)}
               onMoveUp={() => handleMove(index, 'up')}
               onMoveDown={() => handleMove(index, 'down')}
-              onDelete={() => handleDelete(item.id)}
+              onDelete={() => setConfirmingDeleteId(item.id)}
               onOAuthSuccess={() => { setAutoExpandId(null); loadProviders(); }}
             />
           ))
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {confirmingDeleteId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setConfirmingDeleteId(null)} />
+          <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl p-5 w-[320px] space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div>
+              <h3 className="text-sm font-semibold">Remove provider</h3>
+              <p className="text-xs text-[var(--muted-foreground)] mt-1 leading-relaxed">
+                Are you sure you want to remove <span className="font-medium text-[var(--foreground)]">{providers.find(p => p.id === confirmingDeleteId)?.label || 'this provider'}</span>? This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmingDeleteId(null)}
+                className="px-3 py-1.5 text-xs rounded-lg border border-[var(--border)] hover:bg-[var(--secondary)] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmingDeleteId)}
+                className="px-3 py-1.5 text-xs rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add provider */}
       {showAdd ? (
