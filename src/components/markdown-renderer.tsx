@@ -1,12 +1,106 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { remark } from 'remark';
 import remarkGfm from 'remark-gfm';
 import html from 'remark-html';
 import DOMPurify from 'dompurify';
 import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+/* ------------------------------------------------------------------ */
+/*  InlineMarkdown -- lightweight, synchronous inline markdown render  */
+/*  Handles: **bold**, *italic*, `code`, [links](url), ~~strike~~     */
+/* ------------------------------------------------------------------ */
+
+interface InlineMarkdownProps {
+  content: string;
+  className?: string;
+  as?: 'span' | 'p' | 'div';
+}
+
+/**
+ * Converts a markdown string into React elements synchronously.
+ * Suitable for short text like questions, descriptions, labels etc.
+ * For full documents use <MarkdownRenderer /> instead.
+ */
+export function InlineMarkdown({ content, className, as: Tag = 'span' }: InlineMarkdownProps) {
+  const elements = useMemo(() => parseInlineMarkdown(content), [content]);
+  return <Tag className={className}>{elements}</Tag>;
+}
+
+type InlineNode = string | JSX.Element;
+
+let _inlineKey = 0;
+function nextKey() {
+  return `im-${++_inlineKey}`;
+}
+
+function parseInlineMarkdown(text: string): InlineNode[] {
+  if (!text) return [];
+
+  // Order matters: bold before italic, strikethrough, code, link
+  const TOKEN_RE =
+    /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(__(.+?)__)|(~~(.+?)~~)|(`(.+?)`)|(\[([^\]]+)\]\(([^)]+)\))/g;
+
+  const result: InlineNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = TOKEN_RE.exec(text)) !== null) {
+    // Push preceding plain text
+    if (match.index > lastIndex) {
+      result.push(text.slice(lastIndex, match.index));
+    }
+
+    if (match[1]) {
+      // **bold**
+      result.push(<strong key={nextKey()}>{match[2]}</strong>);
+    } else if (match[3]) {
+      // *italic*
+      result.push(<em key={nextKey()}>{match[4]}</em>);
+    } else if (match[5]) {
+      // __underline/bold__
+      result.push(<strong key={nextKey()}>{match[6]}</strong>);
+    } else if (match[7]) {
+      // ~~strikethrough~~
+      result.push(<del key={nextKey()}>{match[8]}</del>);
+    } else if (match[9]) {
+      // `code`
+      result.push(
+        <code key={nextKey()} className="bg-[var(--secondary)] px-1 py-0.5 rounded text-[0.9em]">
+          {match[10]}
+        </code>
+      );
+    } else if (match[11]) {
+      // [text](url)
+      result.push(
+        <a
+          key={nextKey()}
+          href={match[13]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--link-color)] hover:underline"
+        >
+          {match[12]}
+        </a>
+      );
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Trailing text
+  if (lastIndex < text.length) {
+    result.push(text.slice(lastIndex));
+  }
+
+  return result;
+}
+
+/* ------------------------------------------------------------------ */
+/*  MarkdownRenderer -- full async markdown-to-HTML renderer           */
+/* ------------------------------------------------------------------ */
 
 interface MarkdownRendererProps {
   content: string;

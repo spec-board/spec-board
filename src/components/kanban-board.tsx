@@ -11,6 +11,7 @@ import { useSettingsStore } from '@/lib/settings-store';
 import { toast } from 'sonner';
 import { CreateFeatureModal } from './create-feature-modal';
 import { CircularProgress, DualCircularProgress } from './circular-progress';
+import { InlineMarkdown } from './markdown-renderer';
 
 const COLUMNS: KanbanColumn[] = ['backlog', 'specs', 'plan', 'tasks'];
 
@@ -166,9 +167,7 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {/* Description (if exists) */}
           {feature.description && (
-            <span className="truncate flex-1" title={feature.description}>
-              {feature.description}
-            </span>
+            <InlineMarkdown content={feature.description} className="truncate flex-1" />
           )}
 
           {/* Progress rings - show when has tasks or checklist */}

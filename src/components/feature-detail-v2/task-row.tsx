@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Check, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TaskRowProps } from './types';
+import { InlineMarkdown } from '@/components/markdown-renderer';
 
 export function TaskRow({ task, onClick, isSelected }: TaskRowProps) {
   const [isToggling, setIsToggling] = useState(false);
@@ -78,14 +79,13 @@ export function TaskRow({ task, onClick, isSelected }: TaskRowProps) {
       </span>
 
       {/* Task description */}
-      <span
+      <InlineMarkdown
+        content={task.description}
         className={cn(
           'flex-1 text-sm truncate',
           isCompleted ? 'text-[var(--muted-foreground)] line-through' : 'text-[var(--foreground)]'
         )}
-      >
-        {task.description}
-      </span>
+      />
 
       {/* Parallel indicator */}
       {task.parallel && (

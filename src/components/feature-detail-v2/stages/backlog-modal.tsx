@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { FileText, ArrowRight, Loader2 } from 'lucide-react';
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
-import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { MarkdownRenderer, InlineMarkdown } from '@/components/markdown-renderer';
 import { useProjectStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { getStageConfig } from '../base/types';
@@ -82,7 +82,7 @@ export function BacklogModal({ feature, onClose, onStageChange, onDelete }: Base
           </h3>
           <div className="prose prose-sm max-w-none dark:prose-invert">
             {feature.description ? (
-              <p className="text-[var(--foreground)]">{feature.description}</p>
+              <InlineMarkdown content={feature.description} as="p" className="text-[var(--foreground)]" />
             ) : (
               <p className="text-[var(--muted-foreground)] italic">
                 No description provided.

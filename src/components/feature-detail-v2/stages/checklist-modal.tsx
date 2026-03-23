@@ -5,7 +5,7 @@ import { Loader2, CheckSquare, AlertCircle, CheckCircle, Circle, ArrowRight } fr
 import { BaseModal } from '../base/base-modal';
 import type { BaseModalProps } from '../base/types';
 import type { DocumentType } from '../types';
-import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { MarkdownRenderer, InlineMarkdown } from '@/components/markdown-renderer';
 import { DocumentSelector } from '../document-selector';
 import { getDocumentOptions } from '../types';
 import { cn } from '@/lib/utils';
@@ -319,14 +319,15 @@ export function ChecklistModal({ feature, onClose, onStageChange, onDelete, onGe
                           ) : (
                             <Circle className="w-5 h-5 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
                           )}
-                          <span className={cn(
-                            "text-sm",
-                            item.checked
-                              ? "text-[var(--foreground)] line-through opacity-70"
-                              : "text-[var(--foreground)]"
-                          )}>
-                            {item.text}
-                          </span>
+                          <InlineMarkdown
+                            content={item.text}
+                            className={cn(
+                              "text-sm",
+                              item.checked
+                                ? "text-[var(--foreground)] line-through opacity-70"
+                                : "text-[var(--foreground)]"
+                            )}
+                          />
                         </div>
                       ))}
                     </div>

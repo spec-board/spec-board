@@ -17,7 +17,7 @@ import { ConstitutionViewer } from '@/components/constitution-viewer';
 import { FeatureClarity } from '@/components/clarity-history';
 import { TaskGroupList } from '@/components/task-group';
 import { Tooltip } from '@/components/tooltip';
-import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { MarkdownRenderer, InlineMarkdown } from '@/components/markdown-renderer';
 import { FileText, CheckCircle2, Circle, Zap } from 'lucide-react';
 import type { Task, TaskPhase } from '@/types';
 
@@ -250,12 +250,14 @@ function TaskItem({ task, hideUserStory = false }: { task: Task; hideUserStory?:
             </span>
           )}
         </div>
-        <p className={cn(
-          'text-sm mt-1',
-          task.completed && 'text-[var(--muted-foreground)] line-through'
-        )}>
-          {task.description}
-        </p>
+        <InlineMarkdown
+          content={task.description}
+          as="p"
+          className={cn(
+            'text-sm mt-1',
+            task.completed && 'text-[var(--muted-foreground)] line-through'
+          )}
+        />
         {task.filePath && (
           <p className="text-xs text-[var(--muted-foreground)] mt-1 font-mono">
             {task.filePath}
