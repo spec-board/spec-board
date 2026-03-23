@@ -1,3 +1,4 @@
+// providers route - uuid-safe queries (updated 2026-03-23)
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
