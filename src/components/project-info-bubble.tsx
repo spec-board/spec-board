@@ -1,5 +1,5 @@
 'use client';
-
+// project-info-bubble - updated 2026-03-23
 import { useState, useRef, useEffect } from 'react';
 import { cn, formatRelativeTime, formatLocaleDate } from '@/lib/utils';
 import type { Constitution, Feature } from '@/types';
@@ -151,7 +151,10 @@ export function ProjectInfoBubble({
                   {/* Project Description - compact, with edit toggle */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide">Project Description</h3>
+                      <div>
+                        <h3 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide">Project Description</h3>
+                        <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">Changes here will regenerate the Constitution</p>
+                      </div>
                       {!isEditingDescription && (
                         <button
                           onClick={() => setIsEditingDescription(true)}
