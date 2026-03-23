@@ -147,8 +147,16 @@ function formatPlan(plan: any): string {
 
   if (plan.projectStructure) {
     sections.push('## Project Structure\n');
-    if (plan.projectStructure.decision) sections.push(plan.projectStructure.decision);
-    if (plan.projectStructure.structure) sections.push(`\`\`\`\n${plan.projectStructure.structure}\n\`\`\``);
+    const ps = plan.projectStructure;
+    if (typeof ps === 'string') {
+      sections.push(ps);
+    } else {
+      if (ps.decision) sections.push(ps.decision);
+      if (ps.structure) {
+        const structStr = typeof ps.structure === 'string' ? ps.structure : JSON.stringify(ps.structure, null, 2);
+        sections.push(`\`\`\`\n${structStr}\n\`\`\``);
+      }
+    }
     sections.push('');
   }
 

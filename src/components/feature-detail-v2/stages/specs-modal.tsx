@@ -77,7 +77,7 @@ export function SpecsModal({
             ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center p-4">
-                  <HelpCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
+                  <HelpCircle className="w-12 h-12 mx-auto mb-4 text-[var(--muted-foreground)]" />
                   <p className="text-[var(--foreground)] font-medium mb-2">
                     No QnA for this feature
                   </p>

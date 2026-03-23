@@ -47,7 +47,7 @@ export function PRDToUserStoriesButton({
       <button
         onClick={() => setIsModalOpen(true)}
         className={cn(
-          'inline-flex items-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+          'inline-flex items-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2',
           sizeClasses[size],
           variantClasses[variant],
           className

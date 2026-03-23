@@ -163,7 +163,7 @@ function TasksMetadataSection({ metadata }: { metadata: TasksMetadata }) {
 
       {/* Organization note */}
       {metadata.organization && (
-        <div className="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+        <div className="flex items-start gap-2 p-3 bg-[var(--secondary)]/50 border border-[var(--border)] rounded-lg">
           <Info className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-info)' }} />
           <p className="text-sm" style={{ color: 'var(--tag-text-info)' }}>{metadata.organization}</p>
         </div>
@@ -289,7 +289,7 @@ function PhaseProgress({ phase }: { phase: TaskPhase }) {
       {total > 0 && (
         <div className="h-1.5 bg-[var(--secondary)] rounded-full overflow-hidden mb-3">
           <div
-            className="h-full bg-green-500 transition-all duration-300"
+            className="h-full bg-[var(--foreground)] transition-all duration-300"
             style={{ width: `${percentage}%` }}
           />
         </div>

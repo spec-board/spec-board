@@ -148,14 +148,14 @@ const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function Fea
           )}
           {/* Target stage indicator - shows when feature is being dragged to new column */}
           {targetStageLabel && (
-            <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-500 rounded font-medium">
+            <span className="text-xs px-1.5 py-0.5 bg-[var(--secondary)] text-[var(--foreground)] rounded font-medium">
               → {targetStageLabel}
             </span>
           )}
           {/* Status indicator - checkmark when complete */}
           {isComplete ? (
             <CheckCircle2
-              className="w-4 h-4 text-green-500 flex-shrink-0"
+              className="w-4 h-4 text-[var(--foreground)] flex-shrink-0"
               aria-label="Complete"
             />
           ) : null}
@@ -345,7 +345,7 @@ function KanbanColumnComponent({
       <div
         className={cn(
           'flex-1 min-h-[200px]',
-          isDropTarget && 'ring-2 ring-blue-500 ring-inset bg-blue-500/5'
+          isDropTarget && 'ring-2 ring-[var(--ring)] ring-inset bg-[var(--accent)]'
         )}
         role="list"
         aria-labelledby={`column-${column}-heading`}

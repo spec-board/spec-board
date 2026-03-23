@@ -205,7 +205,7 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
       onDelete={onDelete}
       headerActions={
         hasAnalysis ? (
-          <div className="text-sm text-green-500 font-medium">
+          <div className="text-sm text-[var(--foreground)] font-medium">
             Analysis Complete
           </div>
         ) : status !== 'generating' ? (
@@ -229,8 +229,8 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
 
           {!hasAllDocs && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                <AlertTriangle className="w-8 h-8 text-yellow-500" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--secondary)] flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
               <p className="text-[var(--foreground)] font-medium mb-2">
                 Missing Documents
@@ -243,7 +243,7 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
 
           {status === 'generating' && (
             <div className="text-center py-8">
-              <Loader2 className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin" />
+              <Loader2 className="w-8 h-8 mx-auto mb-4 text-[var(--foreground)] animate-spin" />
               <p className="text-[var(--foreground)] font-medium">
                 Analyzing Documents...
               </p>
@@ -254,8 +254,8 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
           )}
 
           {status === 'error' && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-red-500 mb-2">
+            <div className="bg-[var(--destructive)]/10 border border-[var(--destructive)]/20 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-[var(--destructive)] mb-2">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">Error</span>
               </div>
@@ -264,7 +264,7 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
               </p>
               <button
                 onClick={handleGenerateAnalysis}
-                className="text-sm text-blue-500 hover:text-blue-400"
+                className="text-sm text-[var(--foreground)] underline hover:opacity-70"
               >
                 Try again →
               </button>
@@ -273,8 +273,8 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
 
           {status === 'idle' && hasAllDocs && !hasAnalysis && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <BarChart3 className="w-8 h-8 text-blue-500" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--secondary)] flex items-center justify-center">
+                <BarChart3 className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
               <p className="text-[var(--foreground)] font-medium mb-2">
                 Document Analysis
@@ -311,7 +311,7 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
                       strokeLinecap="round"
                       className={cn(
                         "transition-all duration-500",
-                        overallScore >= 80 ? "text-green-500" : overallScore >= 50 ? "text-yellow-500" : "text-red-500"
+                        overallScore >= 80 ? "text-[var(--foreground)]" : overallScore >= 50 ? "text-[var(--muted-foreground)]" : "text-[var(--destructive)]"
                       )}
                     />
                   </svg>
@@ -353,19 +353,19 @@ export function AnalyzeModal({ feature, onClose, onStageChange, onDelete, onGene
                   </h4>
                   <div className="flex gap-3">
                     {issueCounts.error > 0 && (
-                      <div className="flex items-center gap-1 text-red-500">
+                      <div className="flex items-center gap-1 text-[var(--destructive)]">
                         <AlertCircle className="w-4 h-4" />
                         <span className="text-sm">{issueCounts.error}</span>
                       </div>
                     )}
                     {issueCounts.warning > 0 && (
-                      <div className="flex items-center gap-1 text-yellow-500">
+                      <div className="flex items-center gap-1 text-[var(--muted-foreground)]">
                         <AlertTriangle className="w-4 h-4" />
                         <span className="text-sm">{issueCounts.warning}</span>
                       </div>
                     )}
                     {issueCounts.info > 0 && (
-                      <div className="flex items-center gap-1 text-blue-500">
+                      <div className="flex items-center gap-1 text-[var(--muted-foreground)]">
                         <CheckCircle className="w-4 h-4" />
                         <span className="text-sm">{issueCounts.info}</span>
                       </div>
@@ -414,7 +414,7 @@ function ScoreBar({ label, score, icon }: { label: string; score: number; icon: 
           <span className="text-[var(--foreground)]">{label}</span>
           <span className={cn(
             "font-medium",
-            score >= 80 ? "text-green-500" : score >= 50 ? "text-yellow-500" : "text-red-500"
+            score >= 80 ? "text-[var(--foreground)]" : score >= 50 ? "text-[var(--muted-foreground)]" : "text-[var(--destructive)]"
           )}>
             {score}%
           </span>
@@ -423,7 +423,7 @@ function ScoreBar({ label, score, icon }: { label: string; score: number; icon: 
           <div
             className={cn(
               "h-full transition-all duration-500",
-              score >= 80 ? "bg-green-500" : score >= 50 ? "bg-yellow-500" : "bg-red-500"
+              score >= 80 ? "bg-[var(--foreground)]" : score >= 50 ? "bg-[var(--muted-foreground)]" : "bg-[var(--destructive)]"
             )}
             style={{ width: `${score}%` }}
           />

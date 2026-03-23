@@ -177,7 +177,7 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
       onDelete={onDelete}
       headerActions={
         hasAnalysis ? (
-          <div className="text-sm text-green-500 font-medium">
+          <div className="text-sm text-[var(--foreground)] font-medium">
             Analysis Complete
           </div>
         ) : analysisStatus !== 'generating' ? (
@@ -198,7 +198,7 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
           tabIndex={0}
           className={cn(
             "w-[40%] border-r border-[var(--border)] overflow-hidden outline-none",
-            focusedPanel === 'left' && 'ring-2 ring-inset ring-blue-500/20'
+            focusedPanel === 'left' && 'ring-2 ring-inset ring-[var(--ring)]'
           )}
         >
           <UserStoryPanel
@@ -218,7 +218,7 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
           tabIndex={0}
           className={cn(
             "w-[60%] overflow-hidden outline-none",
-            focusedPanel === 'right' && 'ring-2 ring-inset ring-blue-500/20'
+            focusedPanel === 'right' && 'ring-2 ring-inset ring-[var(--ring)]'
           )}
         >
           <DocumentPanel

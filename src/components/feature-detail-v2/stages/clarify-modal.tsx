@@ -154,7 +154,7 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
           {status === 'generating' && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <Loader2 className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin" />
+                <Loader2 className="w-8 h-8 mx-auto mb-4 text-[var(--foreground)] animate-spin" />
                 <p className="text-[var(--foreground)] font-medium mb-2">
                   Generating Clarification Questions
                 </p>
@@ -167,8 +167,8 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
 
           {status === 'error' && (
             <div className="flex items-center justify-center p-4">
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 max-w-md">
-                <div className="flex items-center gap-2 text-red-500 mb-2">
+              <div className="bg-[var(--destructive)]/10 border border-[var(--destructive)]/20 rounded-lg p-4 max-w-md">
+                <div className="flex items-center gap-2 text-[var(--destructive)] mb-2">
                   <AlertCircle className="w-5 h-5" />
                   <span className="font-medium">Generation Failed</span>
                 </div>
@@ -177,7 +177,7 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
                 </p>
                 <button
                   onClick={handleGenerateQuestions}
-                  className="text-sm text-blue-500 hover:text-blue-400"
+                  className="text-sm text-[var(--foreground)] underline hover:opacity-70"
                 >
                   Try again →
                 </button>
@@ -188,8 +188,8 @@ export function ClarifyModal({ feature, onClose, onStageChange, onDelete, onGene
           {status === 'idle' && !hasClarifications && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center max-w-md">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <HelpCircle className="w-8 h-8 text-blue-500" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--secondary)] flex items-center justify-center">
+                  <HelpCircle className="w-8 h-8 text-[var(--muted-foreground)]" />
                 </div>
                 <p className="text-[var(--foreground)] font-medium mb-2">
                   Clarify Your Requirements

@@ -66,7 +66,7 @@ function CommandCard({
           className={cn(
             'flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors',
             copied
-              ? 'bg-green-500/20'
+              ? 'bg-[var(--secondary)]'
               : 'bg-[var(--secondary)] hover:bg-[var(--secondary)]/80 text-[var(--muted-foreground)]'
           )}
           style={copied ? { color: 'var(--tag-text-success)' } : undefined}
@@ -115,7 +115,7 @@ export function SuggestedCommandCard({ suggestion }: SuggestedCommandCardProps) 
   // No suggestions - feature is complete
   if (!suggestion.primary && !suggestion.optional) {
     return (
-      <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+      <div className="bg-[var(--secondary)]/50 border border-[var(--border)] rounded-lg p-3">
         <div className="flex items-center gap-2">
           <Check className="w-4 h-4" style={{ color: 'var(--tag-text-success)' }} />
           <span className="text-sm font-medium" style={{ color: 'var(--tag-text-success)' }}>
