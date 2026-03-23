@@ -304,16 +304,8 @@ function DeviceCodeFlow({ provider, onSuccess }: { provider: string; onSuccess: 
       setUserCode(data.user_code);
       setVerificationUri(data.verification_uri);
       setPolling(true);
-      // Try to open popup, but don't fail if blocked
-      try {
-        const popup = window.open(data.verification_uri, '_blank', 'noopener');
-        if (!popup) {
-          // Popup was blocked - user can use the fallback link shown below
-          console.warn('Popup blocked - user should click the verification link manually');
-        }
-      } catch {
-        // Popup blocked - fallback link is shown in the polling UI
-      }
+      // Open verification page in new tab
+      window.open(data.verification_uri, '_blank', 'noopener,noreferrer');
 
       const interval = (data.interval || 5) * 1000;
       pollingRef.current = setInterval(async () => {
@@ -439,15 +431,7 @@ function PKCEFlow({ provider, onSuccess }: { provider: string; onSuccess: () => 
       params.set('codex_cli_simplified_flow', 'true');
     }
     const authUrl = `${config.authorizeUrl}?${params}`;
-    try {
-      const popup = window.open(authUrl, 'oauth-popup', 'width=600,height=700');
-      if (!popup) {
-        // Popup blocked - navigate directly (callback will redirect back)
-        window.location.href = authUrl;
-      }
-    } catch {
-      window.location.href = authUrl;
-    }
+    window.open(authUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
