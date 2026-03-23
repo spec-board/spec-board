@@ -1,6 +1,6 @@
 /**
  * OAuth provider configurations for AI providers
- * Supports Device Code flow (Qwen, Kimi) and PKCE Authorization Code flow (Codex)
+ * Supports PKCE Authorization Code flow (Codex)
  */
 
 export interface OAuthProviderConfig {
@@ -29,22 +29,7 @@ export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
     audience: 'https://api.openai.com/v1',
   },
 
-  kimi: {
-    name: 'Kimi',
-    flow: 'device_code',
-    baseUrl: 'https://api.kimi.ai/v1',
-    deviceAuthorizationUrl: 'https://auth.kimi.com/api/oauth/device_authorization',
-    tokenUrl: 'https://auth.kimi.com/api/oauth/token',
-    clientId: '17e5f671-d194-4dfb-9706-5516cb48c098',
-  },
-  iflow: {
-    name: 'iFlow',
-    flow: 'device_code',
-    baseUrl: 'https://apis.iflow.cn/v1',
-    deviceAuthorizationUrl: 'https://apis.iflow.cn/v1/auth/device/code',
-    tokenUrl: 'https://apis.iflow.cn/v1/auth/device/token',
-    clientId: 'iflow-cli',
-  },
+
 };
 
 // PKCE helpers
