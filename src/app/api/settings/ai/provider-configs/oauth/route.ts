@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     await prisma.$executeRawUnsafe(
-      `UPDATE "ai_provider_configs" SET "oauthToken" = $1, "oauthRefresh" = $2, "oauthExpiresAt" = $3, "updated_at" = NOW() WHERE "id" = $4`,
+      `UPDATE "ai_provider_configs" SET "oauthToken" = $1, "oauthRefresh" = $2, "oauthExpiresAt" = $3, "updated_at" = NOW() WHERE "id" = $4::uuid`,
       oauthToken,
       oauthRefresh || null,
       oauthExpiresAt ? new Date(oauthExpiresAt) : null,
@@ -39,7 +39,7 @@ export async function DELETE(request: Request) {
     }
 
     await prisma.$executeRawUnsafe(
-      `UPDATE "ai_provider_configs" SET "oauthToken" = NULL, "oauthRefresh" = NULL, "oauthExpiresAt" = NULL, "updated_at" = NOW() WHERE "id" = $1`,
+      `UPDATE "ai_provider_configs" SET "oauthToken" = NULL, "oauthRefresh" = NULL, "oauthExpiresAt" = NULL, "updated_at" = NOW() WHERE "id" = $1::uuid`,
       providerId
     );
 
