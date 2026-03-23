@@ -75,7 +75,7 @@ export function ProjectInfoBubble({
     await onSaveAndGenerateConstitution?.(editDescription);
   };
 
-  const principleCount = constitution?.principles.length ?? 0;
+  const principleCount = constitution?.principles?.length ?? 0;
   const featuresWithClarifications = features.filter(f => f.totalClarifications > 0);
 
   return (
