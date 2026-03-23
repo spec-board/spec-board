@@ -76,6 +76,15 @@ export async function generateStageTransitionContent(
   }
 }
 
+// Helper: split "As a …, I want …, so that …" into separate lines
+function formatStoryDescription(desc: string): string {
+  if (!desc) return '';
+  // Try to split on the "As a / I want / so that" pattern
+  return desc
+    .replace(/,?\s*(I want|i want|Tôi muốn|tôi muốn)/gi, ',\n$1')
+    .replace(/,?\s*(so that|So that|để|Để)/gi, ',\n$1');
+}
+
 // Helper: format spec result to markdown
 function formatSpec(spec: any): string {
   const sections: string[] = [];
@@ -84,29 +93,30 @@ function formatSpec(spec: any): string {
     sections.push('## User Stories\n');
     for (const story of spec.userStories) {
       sections.push(`### ${story.id}: ${story.title}\n`);
-      sections.push(`> ${story.description}\n`);
+      sections.push(formatStoryDescription(story.description) + '\n');
       if (story.acceptanceCriteria?.length) {
-        sections.push('#### Acceptance Criteria\n');
+        sections.push('#### ACCEPTANCE CRITERIA\n');
         sections.push(story.acceptanceCriteria.map((c: string) => `- ${c}`).join('\n'));
+        sections.push('');
       }
       sections.push('\n---\n');
     }
   }
 
   if (spec.functionalRequirements?.length) {
-    sections.push('## Functional Requirements\n');
+    sections.push('## FUNCTIONAL REQUIREMENTS\n');
     sections.push(spec.functionalRequirements.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n'));
     sections.push('');
   }
 
   if (spec.edgeCases?.length) {
-    sections.push('## Edge Cases\n');
+    sections.push('## EDGE CASES\n');
     sections.push(spec.edgeCases.map((e: string) => `- ${e}`).join('\n'));
     sections.push('');
   }
 
   if (spec.successCriteria?.length) {
-    sections.push('## Success Criteria\n');
+    sections.push('## SUCCESS CRITERIA\n');
     sections.push(spec.successCriteria.map((s: string) => `- ${s}`).join('\n'));
     sections.push('');
   }
