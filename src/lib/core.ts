@@ -4,7 +4,7 @@ import type { FeatureStage } from '@/types';
 
 const dmp = new DiffMatchPatch();
 
-const STAGE_PIPELINE: FeatureStage[] = ['backlog', 'specs', 'plan', 'tasks'];
+export const STAGE_PIPELINE: FeatureStage[] = ['backlog', 'specs', 'plan', 'tasks'];
 
 const STAGE_CONTEXT_MAP: Record<FeatureStage, string[]> = {
   backlog: ['description', 'constitution'],
@@ -13,7 +13,7 @@ const STAGE_CONTEXT_MAP: Record<FeatureStage, string[]> = {
   tasks: ['planContent', 'tasksContent', 'analysisContent'],
 };
 
-const CONTENT_FIELDS = {
+export const CONTENT_FIELDS = {
   spec: 'specContent',
   plan: 'planContent',
   tasks: 'tasksContent',
@@ -34,6 +34,10 @@ const FEATURE_SUMMARY_SELECT = {
   _count: { select: { tasks: true, userStories: true } },
 } as const;
 
+function getFieldValue(record: Record<string, unknown>, field: string): string | null {
+  return (record[field] as string | null) ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -48,6 +52,7 @@ async function resolveFeature(projectSlug: string, featureIdentifier: string) {
   const projectId = await resolveProjectId(projectSlug);
   const feature = await prisma.feature.findFirst({
     where: { projectId, OR: [{ id: featureIdentifier }, { featureId: featureIdentifier }] },
+    select: { id: true, featureId: true, name: true, stage: true },
   });
   if (!feature) throw new Error(`Feature "${featureIdentifier}" not found in project "${projectSlug}"`);
   return feature;
@@ -157,7 +162,7 @@ export async function getFeatureContent(projectSlug: string, featureIdentifier: 
   });
 
   if (!feature) throw new Error(`Feature "${featureIdentifier}" not found in project "${projectSlug}"`);
-  const content = (feature as Record<string, unknown>)[field] as string | null;
+  const content = getFieldValue(feature as Record<string, unknown>, field);
   if (!content) throw new Error(`No ${type} content for feature "${featureIdentifier}"`);
   return content;
 }
@@ -274,7 +279,7 @@ export async function updateFeatureContent(featureId: string, type: ContentType,
   if (patch) {
     const current = await prisma.feature.findUnique({ where: { id: featureId }, select: { [field]: true } });
     if (!current) throw new Error(`Feature "${featureId}" not found`);
-    const original = ((current as Record<string, unknown>)[field] as string) || '';
+    const original = getFieldValue(current as Record<string, unknown>, field) || '';
     const patches = dmp.patch_fromText(content);
     const [patched] = dmp.patch_apply(patches, original);
     return prisma.feature.update({ where: { id: featureId }, data: { [field]: patched } });
