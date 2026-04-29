@@ -11,27 +11,39 @@ SpecBoard turns ideas into structured specs through a 4-stage AI pipeline: **Bac
 
 ### Project Home
 
-Browse and manage your projects.
+Browse and manage your projects. Search, sort by name/features/updated date, and create new projects.
 
 ![Home](public/screenshots/home.png)
 
 ### Feature List
 
-Track features across pipeline stages with progress indicators.
+Track features across pipeline stages with color-coded status dots, stage labels, and task completion percentages. Add new features directly from the project view.
 
 ![Feature List](public/screenshots/feature-list.png)
 
+### Feature Detail
+
+Two-panel Jira-style layout: user stories and tasks on the left, document viewer on the right. Navigate between spec, plan, tasks, clarifications, and other documents using the dropdown selector.
+
+![Feature Detail](public/screenshots/feature-detail.png)
+
+### CodeMirror Editor
+
+Edit specs inline with markdown syntax highlighting. Toggle between edit and preview modes with the pencil/eye button. Changes auto-save to the database with a 1.5s debounce.
+
+![Editor](public/screenshots/editor.png)
+
 ### Mind Map
 
-Brainstorm ideas on a freeform canvas. Connect nodes, then convert them to features.
+Brainstorm ideas on a freeform React Flow canvas. Double-click to add nodes, drag from handles to connect them. Right-click for context menu (convert to feature, delete). Color picker for node customization.
 
 ![Mind Map](public/screenshots/mind-map.png)
 
-### Feature Detail
+### Settings
 
-Two-panel layout: user stories + tasks on the left, document viewer/editor on the right. Edit specs inline with CodeMirror. View impact analysis.
+Configure AI providers with priority-based load balancing. Add multiple providers (OpenAI, Anthropic, Gemini, Mistral), manage API keys, toggle providers on/off, and import from environment variables.
 
-![Feature Detail](public/screenshots/feature-detail.png)
+![Settings](public/screenshots/settings.png)
 
 ## Features
 
