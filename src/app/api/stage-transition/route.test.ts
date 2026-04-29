@@ -3,14 +3,21 @@ import { GET, POST } from './route';
 import { NextRequest } from 'next/server';
 
 // Mock Prisma
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
+vi.mock('@/lib/prisma', () => {
+  const prisma = {
     feature: {
       findUnique: vi.fn(),
       update: vi.fn(),
     },
-  },
-}));
+    appSettings: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
+    aIProviderConfig: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+  };
+  return { prisma, default: prisma };
+});
 
 // Mock AI stage-transition module
 vi.mock('@/lib/ai/stage-transition', () => ({
