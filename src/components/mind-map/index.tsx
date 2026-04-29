@@ -9,6 +9,7 @@ import {
   Panel,
   ReactFlowProvider,
   useReactFlow,
+  SelectionMode,
   type NodeOrigin,
   type OnConnectStart,
   type OnConnectEnd,
@@ -25,7 +26,7 @@ const nodeTypes = { mindmap: MindMapNode };
 const edgeTypes = { mindmap: MindMapEdge };
 const nodeOrigin: NodeOrigin = [0.5, 0.5];
 
-function MindMapCanvas({ projectSlug }: { projectSlug: string }) {
+function MindMapCanvas({ projectSlug, projectId }: { projectSlug: string; projectId: string | null }) {
   const nodes = useMindMapStore((s) => s.nodes);
   const edges = useMindMapStore((s) => s.edges);
   const isLoading = useMindMapStore((s) => s.isLoading);
@@ -36,6 +37,7 @@ function MindMapCanvas({ projectSlug }: { projectSlug: string }) {
   const onConnect = useMindMapStore((s) => s.onConnect);
   const addNode = useMindMapStore((s) => s.addNode);
   const loadFromServer = useMindMapStore((s) => s.loadFromServer);
+  const setProjectId = useMindMapStore((s) => s.setProjectId);
 
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
@@ -43,6 +45,10 @@ function MindMapCanvas({ projectSlug }: { projectSlug: string }) {
   useEffect(() => {
     loadFromServer(projectSlug);
   }, [projectSlug, loadFromServer]);
+
+  useEffect(() => {
+    if (projectId) setProjectId(projectId);
+  }, [projectId, setProjectId]);
 
   const onConnectStart: OnConnectStart = useCallback((_, { nodeId }) => {
     connectingNodeId.current = nodeId;
@@ -96,6 +102,7 @@ function MindMapCanvas({ projectSlug }: { projectSlug: string }) {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         nodeOrigin={nodeOrigin}
+        selectionMode={SelectionMode.Partial}
         fitView
         deleteKeyCode="Delete"
         className="bg-[var(--background)]"
@@ -118,10 +125,10 @@ function MindMapCanvas({ projectSlug }: { projectSlug: string }) {
   );
 }
 
-export function MindMapView({ projectSlug }: { projectSlug: string }) {
+export function MindMapView({ projectSlug, projectId }: { projectSlug: string; projectId: string | null }) {
   return (
     <ReactFlowProvider>
-      <MindMapCanvas projectSlug={projectSlug} />
+      <MindMapCanvas projectSlug={projectSlug} projectId={projectId} />
     </ReactFlowProvider>
   );
 }
