@@ -39,7 +39,11 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const { name, description, stage, order } = body;
+    const { name, description, stage, order,
+      specContent, planContent, tasksContent, clarificationsContent,
+      researchContent, dataModelContent, quickstartContent, analysisContent,
+      contractsContent, checklistsContent,
+    } = body;
 
     // Migration logic: handle stage transitions from old stages to 'specs'
     let finalStage = stage;
@@ -54,6 +58,16 @@ export async function PUT(
         ...(description !== undefined && { description }),
         ...(finalStage && { stage: finalStage }),
         ...(order !== undefined && { order }),
+        ...(specContent !== undefined && { specContent }),
+        ...(planContent !== undefined && { planContent }),
+        ...(tasksContent !== undefined && { tasksContent }),
+        ...(clarificationsContent !== undefined && { clarificationsContent }),
+        ...(researchContent !== undefined && { researchContent }),
+        ...(dataModelContent !== undefined && { dataModelContent }),
+        ...(quickstartContent !== undefined && { quickstartContent }),
+        ...(analysisContent !== undefined && { analysisContent }),
+        ...(contractsContent !== undefined && { contractsContent }),
+        ...(checklistsContent !== undefined && { checklistsContent }),
       },
       include: {
         userStories: true,
