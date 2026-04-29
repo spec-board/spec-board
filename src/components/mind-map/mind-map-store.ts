@@ -15,11 +15,13 @@ interface MindMapStore {
   nodes: MindMapFlowNode[];
   edges: MindMapFlowEdge[];
   projectSlug: string | null;
+  projectId: string | null;
   isLoading: boolean;
   isSaving: boolean;
   saveError: string | null;
 
   setProjectSlug: (slug: string) => void;
+  setProjectId: (id: string) => void;
   setNodes: (nodes: MindMapFlowNode[]) => void;
   setEdges: (edges: MindMapFlowEdge[]) => void;
   onNodesChange: (changes: NodeChange<MindMapFlowNode>[]) => void;
@@ -31,6 +33,8 @@ interface MindMapStore {
   deleteNode: (nodeId: string) => void;
   loadFromServer: (slug: string) => Promise<void>;
   saveToServer: () => Promise<void>;
+  convertToFeature: (nodeId: string) => Promise<boolean>;
+  convertGroupToFeature: (nodeIds: string[]) => Promise<boolean>;
 }
 
 function uid() {
@@ -54,15 +58,28 @@ export const useMindMapStore = create<MindMapStore>((set, get) => {
     }, 1500);
   }
 
+  function markNodeAsFeature(nodeId: string, featureId: string) {
+    set({
+      nodes: get().nodes.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, type: 'feature', featureId } }
+          : node
+      ),
+    });
+  }
+
   return {
     nodes: [],
     edges: [],
     projectSlug: null,
+    projectId: null,
     isLoading: false,
     isSaving: false,
     saveError: null,
 
     setProjectSlug: (slug) => set({ projectSlug: slug }),
+
+    setProjectId: (id) => set({ projectId: id }),
 
     setNodes: (nodes) => set({ nodes }),
 
@@ -159,11 +176,11 @@ export const useMindMapStore = create<MindMapStore>((set, get) => {
         }
         const data = await res.json();
 
-        const nodes: MindMapFlowNode[] = (data.nodes || []).map((n: { id: string; positionX: number; positionY: number; label: string; color: string; type: string }) => ({
+        const nodes: MindMapFlowNode[] = (data.nodes || []).map((n: { id: string; positionX: number; positionY: number; label: string; color: string; type: string; metadata?: { featureId?: string } }) => ({
           id: n.id,
           type: 'mindmap' as const,
           position: { x: n.positionX, y: n.positionY },
-          data: { label: n.label, color: n.color, type: n.type },
+          data: { label: n.label, color: n.color, type: n.type, featureId: n.metadata?.featureId },
         }));
 
         const edges: MindMapFlowEdge[] = (data.edges || []).map((e: { id: string; sourceId: string; targetId: string; label?: string }) => ({
@@ -196,6 +213,7 @@ export const useMindMapStore = create<MindMapStore>((set, get) => {
               positionX: n.position.x,
               positionY: n.position.y,
               type: n.data.type,
+              metadata: n.data.featureId ? { featureId: n.data.featureId } : null,
             })),
             edges: edges.map((e) => ({
               id: e.id,
@@ -211,6 +229,76 @@ export const useMindMapStore = create<MindMapStore>((set, get) => {
         set({ saveError: 'Failed to save mind map' });
       } finally {
         set({ isSaving: false });
+      }
+    },
+
+    convertToFeature: async (nodeId) => {
+      const { nodes, projectId } = get();
+      if (!projectId) return false;
+
+      const node = nodes.find((n) => n.id === nodeId);
+      if (!node || node.data.type === 'feature') return false;
+
+      try {
+        const res = await fetch('/api/features/backlog', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            name: node.data.label,
+            description: node.data.label,
+          }),
+        });
+
+        if (!res.ok) return false;
+
+        const data = await res.json();
+        const featureId = data.featureIdDb || data.featureId || data.id;
+        markNodeAsFeature(nodeId, featureId);
+        debouncedSave();
+        return true;
+      } catch {
+        return false;
+      }
+    },
+
+    convertGroupToFeature: async (nodeIds) => {
+      const { nodes, projectId } = get();
+      if (!projectId || nodeIds.length === 0) return false;
+
+      const selectedNodes = nodes.filter((n) => nodeIds.includes(n.id) && n.data.type !== 'feature');
+      if (selectedNodes.length === 0) return false;
+
+      const primaryNode = selectedNodes[0];
+      const childNodes = selectedNodes.slice(1);
+
+      const description = childNodes.length > 0
+        ? childNodes.map((n) => `- ${n.data.label}`).join('\n')
+        : primaryNode.data.label;
+
+      try {
+        const res = await fetch('/api/features/backlog', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId,
+            name: primaryNode.data.label,
+            description,
+          }),
+        });
+
+        if (!res.ok) return false;
+
+        const data = await res.json();
+        const featureId = data.featureIdDb || data.featureId || data.id;
+
+        for (const n of selectedNodes) {
+          markNodeAsFeature(n.id, featureId);
+        }
+        debouncedSave();
+        return true;
+      } catch {
+        return false;
       }
     },
   };
