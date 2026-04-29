@@ -1,24 +1,43 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { FileText, Edit3 } from 'lucide-react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { FileText, Edit3, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { DocumentPanelProps } from './types';
+import type { DocumentPanelProps, DocumentType } from './types';
 import { DocumentSelector } from './document-selector';
 import { getDocumentOptions } from './types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { MarkdownEditor } from '@/components/markdown-editor';
+
+const DOCUMENT_FIELD_MAP: Record<DocumentType, string> = {
+  spec: 'specContent',
+  plan: 'planContent',
+  tasks: 'tasksContent',
+  clarifications: 'clarificationsContent',
+  research: 'researchContent',
+  'data-model': 'dataModelContent',
+  quickstart: 'quickstartContent',
+  contract: 'contractsContent',
+  checklist: 'checklistsContent',
+  analysis: 'analysisContent',
+};
 
 export function DocumentPanel({
   feature,
+  featureId,
   selectedDocument,
   onDocumentChange,
   highlightTaskId,
   contentRef,
   onEditClarifications,
+  onContentSaved,
 }: DocumentPanelProps) {
   const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Get current document content (sanitize stale [object Object] from old data)
   const currentContent = useMemo(() => {
     const option = documentOptions.find(o => o.type === selectedDocument);
     const raw = option?.content || null;
@@ -26,18 +45,76 @@ export function DocumentPanel({
     return raw.replace(/\[object Object\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
   }, [documentOptions, selectedDocument]);
 
-  // Scroll to highlighted task when it changes
+  // Reset editing state when switching documents
   useEffect(() => {
-    if (highlightTaskId && contentRef.current) {
-      // Try to find the task ID in the content
+    setIsEditing(false);
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+  }, [selectedDocument]);
+
+  // Sync edit content when entering edit mode or content changes externally
+  useEffect(() => {
+    if (isEditing && currentContent) {
+      setEditContent(currentContent);
+    }
+  }, [isEditing]);
+
+  const handleToggleEdit = useCallback(() => {
+    if (!isEditing && currentContent) {
+      setEditContent(currentContent);
+    }
+    setIsEditing(prev => !prev);
+  }, [isEditing, currentContent]);
+
+  const handleContentChange = useCallback((value: string) => {
+    setEditContent(value);
+
+    // Debounced auto-save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(async () => {
+      const fieldName = DOCUMENT_FIELD_MAP[selectedDocument];
+      if (!fieldName || !featureId) return;
+
+      setIsSaving(true);
+      try {
+        const res = await fetch(`/api/features/${featureId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ [fieldName]: value }),
+        });
+        if (res.ok) {
+          onContentSaved?.();
+        }
+      } catch {
+        // Silent fail — user can retry with manual save
+      } finally {
+        setIsSaving(false);
+      }
+    }, 1500);
+  }, [selectedDocument, featureId, onContentSaved]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Scroll to highlighted task
+  useEffect(() => {
+    if (highlightTaskId && contentRef.current && !isEditing) {
       const taskElement = contentRef.current.querySelector(`[data-task-id="${highlightTaskId}"]`);
       if (taskElement) {
         taskElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Add highlight animation
         taskElement.classList.add('highlight-flash');
         setTimeout(() => taskElement.classList.remove('highlight-flash'), 2000);
       } else {
-        // Fallback: search for task ID text in the content
         const content = contentRef.current;
         const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
         let node;
@@ -54,13 +131,11 @@ export function DocumentPanel({
         }
       }
     }
-  }, [highlightTaskId, contentRef]);
+  }, [highlightTaskId, contentRef, isEditing]);
 
-  // Empty state when no content
-  if (!currentContent) {
+  if (!currentContent && !isEditing) {
     return (
       <div className="h-full flex flex-col bg-[var(--card)]">
-        {/* Header with selector */}
         <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)]">
           <DocumentSelector
             options={documentOptions}
@@ -68,8 +143,6 @@ export function DocumentPanel({
             onChange={onDocumentChange}
           />
         </div>
-
-        {/* Empty state */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <FileText className="w-12 h-12 text-[var(--muted-foreground)] opacity-50 mb-3" />
           <p className="text-sm text-[var(--muted-foreground)]">No content available</p>
@@ -83,7 +156,7 @@ export function DocumentPanel({
 
   return (
     <div className="h-full flex flex-col bg-[var(--card)]">
-      {/* Header with selector */}
+      {/* Header */}
       <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
         <div className="flex-1">
           <DocumentSelector
@@ -92,30 +165,56 @@ export function DocumentPanel({
             onChange={onDocumentChange}
           />
         </div>
-        {selectedDocument === 'clarifications' && onEditClarifications && (
-          <button
-            onClick={onEditClarifications}
-            className="ml-3 btn btn-primary btn-sm"
-          >
-            Edit
-          </button>
-        )}
+        <div className="flex items-center gap-2 ml-3">
+          {isSaving && (
+            <span className="text-xs text-[var(--muted-foreground)]">Saving...</span>
+          )}
+          {selectedDocument === 'clarifications' && !isEditing && onEditClarifications && (
+            <button
+              onClick={onEditClarifications}
+              className="btn btn-primary btn-sm"
+            >
+              Edit
+            </button>
+          )}
+          {currentContent && selectedDocument !== 'clarifications' && (
+            <button
+              onClick={handleToggleEdit}
+              className={cn(
+                "btn-icon",
+                isEditing && "bg-[var(--secondary)]"
+              )}
+              title={isEditing ? 'Preview' : 'Edit'}
+            >
+              {isEditing ? <Eye className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Document content */}
-      <div
-        ref={contentRef}
-        className="flex-1 overflow-y-auto p-6"
-      >
-        <MarkdownRenderer content={currentContent} />
-      </div>
+      {/* Content */}
+      {isEditing ? (
+        <div className="flex-1 overflow-hidden">
+          <MarkdownEditor
+            value={editContent}
+            onChange={handleContentChange}
+            placeholder="Write markdown here..."
+            className="h-full"
+          />
+        </div>
+      ) : (
+        <div
+          ref={contentRef}
+          className="flex-1 overflow-y-auto p-6"
+        >
+          <MarkdownRenderer content={currentContent || ''} />
+        </div>
+      )}
 
-      {/* CSS for highlight animation */}
       <style jsx global>{`
         .highlight-flash {
           animation: highlight-pulse 2s ease-out;
         }
-
         @keyframes highlight-pulse {
           0% {
             background-color: var(--accent-muted);
