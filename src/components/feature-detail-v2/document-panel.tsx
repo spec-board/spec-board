@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { FileText, Edit3, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { DocumentPanelProps, DocumentType } from './types';
+import type { DocumentPanelProps } from './types';
 import { DocumentSelector } from './document-selector';
 import { getDocumentOptions } from './types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
 import { MarkdownEditor } from '@/components/markdown-editor';
+import { ImpactGraph } from '@/components/impact-graph';
+import { useProjectStore } from '@/lib/store';
 
-const DOCUMENT_FIELD_MAP: Record<DocumentType, string> = {
+const DOCUMENT_FIELD_MAP: Record<string, string> = {
   spec: 'specContent',
   plan: 'planContent',
   tasks: 'tasksContent',
@@ -133,7 +135,7 @@ export function DocumentPanel({
     }
   }, [highlightTaskId, contentRef, isEditing]);
 
-  if (!currentContent && !isEditing) {
+  if (!currentContent && !isEditing && selectedDocument !== 'impact') {
     return (
       <div className="h-full flex flex-col bg-[var(--card)]">
         <div className="flex-shrink-0 px-4 py-3 border-b border-[var(--border)]">
@@ -177,7 +179,7 @@ export function DocumentPanel({
               Edit
             </button>
           )}
-          {currentContent && selectedDocument !== 'clarifications' && (
+          {currentContent && selectedDocument !== 'clarifications' && selectedDocument !== 'impact' && (
             <button
               onClick={handleToggleEdit}
               className={cn(
@@ -193,7 +195,14 @@ export function DocumentPanel({
       </div>
 
       {/* Content */}
-      {isEditing ? (
+      {selectedDocument === 'impact' ? (
+        <div className="flex-1 overflow-hidden">
+          <ImpactGraph
+            feature={feature}
+            constitution={useProjectStore.getState().project?.constitution || null}
+          />
+        </div>
+      ) : isEditing ? (
         <div className="flex-1 overflow-hidden">
           <MarkdownEditor
             value={editContent}
