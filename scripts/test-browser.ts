@@ -139,20 +139,23 @@ async function main() {
     fail('Add node button found');
   }
 
-  // Test double-click to add node
+  // Test double-click to add node (use far corner to avoid node overlap)
   const pane = page.locator('.react-flow__pane');
   if (await pane.count() > 0) {
-    const beforeCount2 = await page.locator('.react-flow__node').count();
-    await pane.dblclick({ position: { x: 600, y: 400 } });
-    await page.waitForTimeout(1000);
-    const afterCount2 = await page.locator('.react-flow__node').count();
-    afterCount2 > beforeCount2 ? pass('Double-click adds node', `${beforeCount2} → ${afterCount2}`) : fail('Double-click adds node');
+    const paneBox = await pane.boundingBox();
+    if (paneBox) {
+      const beforeCount2 = await page.locator('.react-flow__node').count();
+      await page.mouse.dblclick(paneBox.x + paneBox.width - 50, paneBox.y + paneBox.height - 50);
+      await page.waitForTimeout(1000);
+      const afterCount2 = await page.locator('.react-flow__node').count();
+      afterCount2 > beforeCount2 ? pass('Double-click adds node', `${beforeCount2} → ${afterCount2}`) : fail('Double-click adds node');
+    }
   }
 
   // Test node selection
   const firstNode = page.locator('.react-flow__node').first();
   if (await firstNode.count() > 0) {
-    await firstNode.click();
+    await firstNode.click({ force: true });
     await page.waitForTimeout(500);
 
     // Check if color picker appears
