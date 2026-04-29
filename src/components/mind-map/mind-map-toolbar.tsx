@@ -13,15 +13,13 @@ export function MindMapToolbar() {
   const updateNodeColor = useMindMapStore((s) => s.updateNodeColor);
   const saveToServer = useMindMapStore((s) => s.saveToServer);
   const isSaving = useMindMapStore((s) => s.isSaving);
-  const nodes = useMindMapStore((s) => s.nodes);
+  const selectedNode = useMindMapStore((s) => s.nodes.find((n) => n.selected));
   const { screenToFlowPosition } = useReactFlow();
 
   const handleAddNode = useCallback(() => {
     const position = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
     addNode(position);
   }, [addNode, screenToFlowPosition]);
-
-  const selectedNode = nodes.find((n) => n.selected);
 
   const handleDelete = useCallback(() => {
     if (selectedNode) {

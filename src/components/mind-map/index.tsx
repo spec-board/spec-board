@@ -25,22 +25,17 @@ const nodeTypes = { mindmap: MindMapNode };
 const edgeTypes = { mindmap: MindMapEdge };
 const nodeOrigin: NodeOrigin = [0.5, 0.5];
 
-interface MindMapCanvasProps {
-  projectSlug: string;
-}
-
-function MindMapCanvas({ projectSlug }: MindMapCanvasProps) {
-  const {
-    nodes,
-    edges,
-    isLoading,
-    isSaving,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
-    addNode,
-    loadFromServer,
-  } = useMindMapStore();
+function MindMapCanvas({ projectSlug }: { projectSlug: string }) {
+  const nodes = useMindMapStore((s) => s.nodes);
+  const edges = useMindMapStore((s) => s.edges);
+  const isLoading = useMindMapStore((s) => s.isLoading);
+  const isSaving = useMindMapStore((s) => s.isSaving);
+  const saveError = useMindMapStore((s) => s.saveError);
+  const onNodesChange = useMindMapStore((s) => s.onNodesChange);
+  const onEdgesChange = useMindMapStore((s) => s.onEdgesChange);
+  const onConnect = useMindMapStore((s) => s.onConnect);
+  const addNode = useMindMapStore((s) => s.addNode);
+  const loadFromServer = useMindMapStore((s) => s.loadFromServer);
 
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
@@ -97,7 +92,6 @@ function MindMapCanvas({ projectSlug }: MindMapCanvasProps) {
         onConnect={onConnect}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
-        onPaneClick={undefined}
         onDoubleClick={handlePaneDoubleClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -112,6 +106,11 @@ function MindMapCanvas({ projectSlug }: MindMapCanvasProps) {
         {isSaving && (
           <Panel position="bottom-right">
             <span className="text-xs text-[var(--muted-foreground)]">Saving...</span>
+          </Panel>
+        )}
+        {saveError && (
+          <Panel position="bottom-right">
+            <span className="text-xs text-red-400">{saveError}</span>
           </Panel>
         )}
       </ReactFlow>

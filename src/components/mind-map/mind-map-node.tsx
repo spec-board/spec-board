@@ -24,16 +24,11 @@ function MindMapNodeComponent({ id, data, selected }: NodeProps & { data: { labe
     setIsEditing(false);
   }, []);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        setIsEditing(false);
-      } else if (e.key === 'Escape') {
-        setIsEditing(false);
-      }
-    },
-    []
-  );
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      setIsEditing(false);
+    }
+  }, []);
 
   return (
     <div
@@ -52,10 +47,11 @@ function MindMapNodeComponent({ id, data, selected }: NodeProps & { data: { labe
           onChange={(e) => updateNodeLabel(id, e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="bg-transparent border-none outline-none text-center text-sm font-medium w-full text-gray-900"
+          className="bg-transparent border-none outline-none text-center text-sm font-medium w-full"
+          style={{ color: 'var(--foreground)' }}
         />
       ) : (
-        <span className="text-sm font-medium text-gray-900 select-none">
+        <span className="text-sm font-medium select-none" style={{ color: 'var(--foreground)' }}>
           {data.label}
         </span>
       )}
