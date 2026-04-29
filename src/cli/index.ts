@@ -11,9 +11,27 @@ import {
   searchFeatures,
   getFeaturesByStage,
   advanceFeature,
+  STAGE_PIPELINE,
+  CONTENT_FIELDS,
   type ContentType,
 } from '../lib/core';
+import { formatRelativeTime } from '@/lib/utils';
 import type { FeatureStage } from '@/types';
+
+function validateStage(value: string): FeatureStage {
+  if (!STAGE_PIPELINE.includes(value as FeatureStage)) {
+    throw new Error(`Invalid stage "${value}". Must be one of: ${STAGE_PIPELINE.join(', ')}`);
+  }
+  return value as FeatureStage;
+}
+
+function validateContentType(value: string): ContentType {
+  const valid = Object.keys(CONTENT_FIELDS);
+  if (!valid.includes(value)) {
+    throw new Error(`Invalid content type "${value}". Must be one of: ${valid.join(', ')}`);
+  }
+  return value as ContentType;
+}
 
 const program = new Command();
 
@@ -32,7 +50,7 @@ program
       return;
     }
     for (const p of projects) {
-      const ago = formatRelative(p.updatedAt);
+      const ago = formatRelativeTime(p.updatedAt.toISOString());
       console.log(`${p.name} — ${p.displayName} (${p.featureCount} features) [${ago}]`);
     }
   });
@@ -54,7 +72,7 @@ program
     }
 
     if (type) {
-      const content = await getFeatureContent(projectSlug, featureId, type as ContentType);
+      const content = await getFeatureContent(projectSlug, featureId, validateContentType(type));
       console.log(content);
       return;
     }
@@ -74,7 +92,7 @@ program
   .description('Output stage-aware context for AI agent consumption')
   .option('-s, --stage <stage>', 'Override stage (backlog, specs, plan, tasks)')
   .action(async (projectSlug: string, featureId: string, opts: { stage?: string }) => {
-    const context = await getFeatureContext(projectSlug, featureId, opts.stage as FeatureStage | undefined);
+    const context = await getFeatureContext(projectSlug, featureId, opts.stage ? validateStage(opts.stage) : undefined);
     console.log(context);
   });
 
@@ -99,7 +117,7 @@ program
   .description('Search features by text across names, descriptions, and content')
   .option('-s, --stage <stage>', 'Filter by stage (backlog, specs, plan, tasks)')
   .action(async (projectSlug: string, query: string, opts: { stage?: string }) => {
-    const results = await searchFeatures(projectSlug, query, opts.stage as FeatureStage | undefined);
+    const results = await searchFeatures(projectSlug, query, opts.stage ? validateStage(opts.stage) : undefined);
     if (results.length === 0) {
       console.log('No features found.');
       return;
@@ -119,7 +137,7 @@ program
       console.log(`backlog: ${b.backlog}  specs: ${b.specs}  plan: ${b.plan}  tasks: ${b.tasks}`);
       return;
     }
-    const features = await getFeaturesByStage(projectSlug, stage as FeatureStage);
+    const features = await getFeaturesByStage(projectSlug, validateStage(stage));
     if (features.length === 0) {
       console.log(`No features in "${stage}" stage.`);
       return;
@@ -141,14 +159,3 @@ program.parseAsync().catch((err) => {
   console.error(err.message);
   process.exit(1);
 });
-
-function formatRelative(date: Date): string {
-  const ms = Date.now() - new Date(date).getTime();
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
