@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings, ChevronRight, Pencil, Check, X } from 'lucide-react';
+import { Settings, ChevronRight, Pencil, Network } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
 import { Tooltip } from '@/components/tooltip';
 import { GitHubStars } from '@/components/github-stars';
@@ -183,6 +183,18 @@ export function Header({ variant, projectName, projectSlug, onNewProject, onProj
               >
                 New
               </button>
+            )}
+
+            {variant === 'project' && projectSlug && (
+              <Tooltip content="Mind Map" side="bottom">
+                <button
+                  onClick={() => router.push(`/projects/${projectSlug}/mind-map`)}
+                  className="btn-icon"
+                  aria-label="Mind Map"
+                >
+                  <Network className="w-4 h-4" />
+                </button>
+              </Tooltip>
             )}
 
             <Tooltip content="Toggle theme" side="bottom">
