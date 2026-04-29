@@ -10,7 +10,7 @@ export async function GET() {
     // Also check if any multi-provider configs are enabled
     let hasProviderConfigs = false;
     try {
-      const count = await prisma.providerConfig.count({
+      const count = await prisma.aIProviderConfig.count({
         where: { enabled: true },
       });
       hasProviderConfigs = count > 0;
