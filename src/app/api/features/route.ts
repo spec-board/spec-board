@@ -1,21 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// GET /api/features - List all features
+// GET /api/features - List features for a project
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
 
-    const where = projectId ? { projectId } : {};
+    if (!projectId) {
+      return NextResponse.json({ error: 'projectId is required' }, { status: 400 });
+    }
+
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const skip = parseInt(searchParams.get('skip') || '0');
 
     const features = await prisma.feature.findMany({
-      where,
+      where: { projectId },
       include: {
         userStories: { orderBy: { order: 'asc' } },
         tasks: { orderBy: { order: 'asc' } },
       },
       orderBy: { order: 'asc' },
+      take: limit,
+      skip,
     });
 
     return NextResponse.json(features);
@@ -58,7 +65,7 @@ export async function POST(request: NextRequest) {
         featureId,
         name,
         description,
-        stage: stage || 'specify',
+        stage: stage || 'backlog',
         order: order || 0,
       },
       include: {
