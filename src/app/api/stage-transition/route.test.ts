@@ -19,16 +19,26 @@ vi.mock('@/lib/prisma', () => {
   return { prisma, default: prisma };
 });
 
-// Mock AI stage-transition module
-vi.mock('@/lib/ai/stage-transition', () => ({
-  generateStageTransitionContent: vi.fn().mockResolvedValue({
-    content: 'Generated content',
-    clarifications: 'Generated clarifications',
+// Mock AI settings
+vi.mock('@/lib/ai/settings', () => ({
+  getAISettings: vi.fn().mockResolvedValue({
+    provider: 'openai',
+    apiKey: 'test-key',
+    baseUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4o',
   }),
+  getAppSettings: vi.fn().mockResolvedValue({ language: 'en' }),
+}));
+
+// Mock AI generation functions (used by the route's local generateStageTransitionContent)
+vi.mock('@/lib/ai', () => ({
+  generateSpec: vi.fn().mockResolvedValue({ userStories: [], functionalRequirements: [], edgeCases: [] }),
+  generateClarify: vi.fn().mockResolvedValue([]),
+  generatePlan: vi.fn().mockResolvedValue({ summary: 'Plan', technicalContext: {} }),
+  generateTasks: vi.fn().mockResolvedValue({ phases: [] }),
 }));
 
 import { prisma } from '@/lib/prisma';
-import { generateStageTransitionContent } from '@/lib/ai/stage-transition';
 
 describe('/api/stage-transition', () => {
   beforeEach(() => {
@@ -96,11 +106,9 @@ describe('/api/stage-transition', () => {
       };
 
       vi.mocked(prisma.feature.findUnique).mockResolvedValueOnce(mockFeature);
-      vi.mocked(prisma.feature.update).mockResolvedValueOnce({ ...mockFeature, stage: 'specs' });
-      vi.mocked(generateStageTransitionContent).mockResolvedValueOnce({
-        content: 'Generated spec content',
-        clarifications: 'Generated clarifications',
-      });
+      vi.mocked(prisma.feature.update)
+        .mockResolvedValueOnce(mockFeature) // jobStatus update
+        .mockResolvedValueOnce({ ...mockFeature, stage: 'specs' }); // final update
 
       const request = new NextRequest('http://localhost/api/stage-transition', {
         method: 'POST',
