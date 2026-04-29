@@ -1,15 +1,24 @@
 'use client';
 
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { FileText, Edit3, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentPanelProps } from './types';
 import { DocumentSelector } from './document-selector';
 import { getDocumentOptions } from './types';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
-import { MarkdownEditor } from '@/components/markdown-editor';
-import { ImpactGraph } from '@/components/impact-graph';
 import { useProjectStore } from '@/lib/store';
+
+const MarkdownEditor = dynamic(
+  () => import('@/components/markdown-editor').then(mod => mod.MarkdownEditor),
+  { ssr: false, loading: () => <div className="h-full flex items-center justify-center text-[var(--muted-foreground)]">Loading editor...</div> }
+);
+
+const ImpactGraph = dynamic(
+  () => import('@/components/impact-graph').then(mod => mod.ImpactGraph),
+  { ssr: false, loading: () => <div className="h-full flex items-center justify-center text-[var(--muted-foreground)]">Loading graph...</div> }
+);
 
 const DOCUMENT_FIELD_MAP: Record<string, string> = {
   spec: 'specContent',
@@ -34,6 +43,7 @@ export function DocumentPanel({
   onEditClarifications,
   onContentSaved,
 }: DocumentPanelProps) {
+  const constitution = useProjectStore(s => s.project?.constitution ?? null);
   const documentOptions = useMemo(() => getDocumentOptions(feature), [feature]);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
@@ -199,7 +209,7 @@ export function DocumentPanel({
         <div className="flex-1 overflow-hidden">
           <ImpactGraph
             feature={feature}
-            constitution={useProjectStore.getState().project?.constitution || null}
+            constitution={constitution}
           />
         </div>
       ) : isEditing ? (
