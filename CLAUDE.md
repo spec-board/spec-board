@@ -4,154 +4,117 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-SpecBoard is a visual dashboard for spec-kit projects with a Kanban board interface for tracking feature development. It uses a **database-first** architecture - all project content (specs, plans, tasks, clarifications) is stored in PostgreSQL.
+SpecBoard is a visual dashboard for spec-kit projects with a Kanban board interface for tracking feature development. It uses a **database-first** architecture — all project content (specs, plans, tasks, clarifications) is stored in PostgreSQL.
 
 **Legacy**: The `lib/parser.ts` module exists for parsing markdown files but is no longer used for the main data flow.
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router, Turbopack)
-- **Database**: PostgreSQL with Prisma ORM (uses Supabase for cloud deployments)
+- **Framework**: Next.js 16 (App Router)
+- **Database**: PostgreSQL with Prisma ORM (Supabase for cloud deployments)
 - **Auth**: Better Auth with OAuth (Google, GitHub)
 - **State**: Zustand
-- **UI**: Tailwind CSS v4, shadcn/ui components, Lucide icons
-- **AI**: Anthropic Claude API via `AIService` (configurable: OpenAI, Anthropic, or any OpenAI-compatible API)
+- **UI**: Tailwind CSS v4, shadcn/ui, Lucide icons
+- **AI**: Configurable via `AIService` — supports OpenAI, Anthropic, or any OpenAI-compatible API
 - **Code Execution**: E2B sandbox
 - **Package Manager**: pnpm
 
 ## Commands
 
 ```bash
-# Development
-pnpm dev              # Start dev server with Turbopack (port 3000)
-pnpm dev:all         # Run dev server + worker (if needed)
-pnpm build           # Production build
-pnpm start           # Start production server
+pnpm dev              # Start dev server (port 3000)
+pnpm dev:all          # Dev server + worker
+pnpm build            # Production build
+pnpm start            # Start production server
+pnpm lint             # Run linter
+pnpm tsc --noEmit     # Type check
 
 # Database
-pnpm db:studio       # Open Prisma Studio
-pnpm db:migrate      # Create migration
-pnpm db:push         # Push schema to DB
-pnpm db:seed         # Seed database
-pnpm db:reset        # Reset database (migrate reset --force)
+pnpm db:studio        # Open Prisma Studio
+pnpm db:migrate       # Create migration (prisma migrate dev)
+pnpm db:push          # Push schema to DB
+pnpm db:seed          # Seed database
+pnpm db:reset         # Reset database (migrate reset --force)
 
-# Testing
-pnpm test           # Run tests in watch mode
-pnpm test:run       # Run tests once
-pnpm test:coverage  # Run tests with coverage
-
-# Linting & Type check
-pnpm lint           # Run linter
-pnpm tsc --noEmit   # Type check
+# Testing (vitest)
+pnpm test             # Watch mode
+pnpm test:run         # Run once
+pnpm test:coverage    # With coverage
+pnpm vitest run src/lib/parser.test.ts  # Single file
 ```
 
 ## Architecture
 
-### Database-First
-
-All content is stored in PostgreSQL. The Feature model contains content fields:
-- `specContent`, `planContent`, `tasksContent`, `clarificationsContent`
-- `researchContent`, `dataModelContent`, `quickstartContent`
-- `contractsContent`, `checklistsContent`, `analysisContent`
-
-### Data Flow
+### Database-First Data Flow
 
 ```
 PostgreSQL → API Routes (/api/project/[name]/data) → Zustand Store → React UI
 ```
 
+The Feature model stores all content as text fields: `specContent`, `planContent`, `tasksContent`, `clarificationsContent`, `researchContent`, `dataModelContent`, `quickstartContent`, `contractsContent` (JSON), `checklistsContent` (JSON), `analysisContent`.
+
+### Database Models
+
+- **Project** → has many Features, has one Constitution
+- **Feature** → has many UserStories, has many Tasks; tracks background job status (`jobStatus`, `jobProgress`, `jobMessage`)
+- **UserStory** → belongs to Feature, has many Tasks
+- **Task** → belongs to Feature, optionally belongs to UserStory
+- **Constitution** → belongs to Project, has many ConstitutionVersions (version history)
+
 ### Workflow Stages
 
-Current feature workflow (4 stages):
+4-stage pipeline: **Backlog → Specs → Plan → Tasks**
+
 | Stage | Description |
 |-------|-------------|
 | `backlog` | Feature ideas and descriptions |
-| `specs` | Spec + Clarifications (merged from specify + clarify) |
-| `plan` | Implementation plan with checklist (merged from plan + checklist) |
-| `tasks` | Task breakdown + Analysis (final stage, analysis runs automatically) |
+| `specs` | Spec + Clarifications (merged from old specify + clarify stages) |
+| `plan` | Implementation plan + checklist |
+| `tasks` | Task breakdown + Analysis (analysis runs automatically) |
 
 ### URL Structure
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Home - project list from database |
-| `/projects/:slug` | Kanban board (slug from DB) |
-| `/projects/:slug/features/:id` | Feature detail modal |
-| `/projects/:slug` | Constitution via Project Info modal |
+| `/` | Home — project list from database |
+| `/projects/:name` | Kanban board |
+| `/projects/:name/features/:featureId` | Feature detail |
+| `/projects/:name/features/:featureId/spec` | Spec view |
+| `/projects/:name/features/:featureId/plan` | Plan view |
+| `/auth/login` | OAuth login |
 | `/cloud` | Cloud sync dashboard |
-| `/settings` | App settings |
+| `/shortcuts` | Keyboard shortcuts reference |
 
-**Important**: URLs use database slugs, not filesystem paths.
-
-## Core Features
-
-### SPECS Stage (New)
-The SPECS stage merges the old Specify and Clarify stages into one:
-- **Left panel**: Interactive Q&A (ClarificationForm)
-- **Right panel**: Document viewer with User Stories
-- **Auto-generate**: When transitioning from backlog → specs, both spec AND questions are generated
-
-### Plan Stage (Updated)
-The Plan stage now includes checklist:
-- When transitioning from specs → plan, both plan AND checklist are generated
-
-### Constitution System
-Project-level principles stored in database with version tracking and history. All editing is done via Project Info modal. Key files:
-- `src/components/constitution-editor.tsx` - Constitution editing UI (used in modal)
-- `src/components/project-info-bubble.tsx` - Project info modal with Constitution tabs
-
-### Project Info Modal
-Modal accessible via "Project Info" button on project page showing:
-- Project description (editable)
-- Constitution principles, version, dates
-- Constitution history (version timeline)
-
-### Feature Detail V2
-The primary feature detail UI. Located at `src/components/feature-detail-v2/`. This is the ONLY supported feature detail UI.
-
-### Keyboard Navigation
-- Full keyboard navigation support with number keys (1-4) to switch between stages
-- Navigate features with arrow keys when focus state is active
-
-## Core Patterns
+URLs use database slugs (Project `name` field), not filesystem paths.
 
 ### API Routes
 
-- `/api/projects` - CRUD for projects (name/slug stored in DB)
-- `/api/project/:name/data` - Load project data from database
-- `/api/browse` - List all projects from database
-- `/api/spec-workflow/specify` - Generate spec from description
-- `/api/spec-workflow/clarify` - Generate clarification questions
-- `/api/spec-workflow/plan` - Generate implementation plan
-- `/api/spec-workflow/checklist` - Generate quality checklist
-- `/api/spec-workflow/tasks` - Generate task breakdown
-- `/api/spec-workflow/analyze` - Analyze consistency
-- `/api/checklist` - Toggle checklist items
-- `/api/sync/*` - Cloud sync operations
-- `/api/auth/*` - Better Auth OAuth
+- `/api/projects` — CRUD for projects
+- `/api/project/:name/data` — Load full project data from database
+- `/api/browse` — List all projects
+- `/api/spec-workflow/specify` — Generate spec from description
+- `/api/spec-workflow/clarify` — Generate clarification questions
+- `/api/spec-workflow/plan` — Generate implementation plan
+- `/api/spec-workflow/checklist` — Generate quality checklist
+- `/api/spec-workflow/tasks` — Generate task breakdown
+- `/api/spec-workflow/analyze` — Analyze consistency
+- `/api/checklist` — Toggle checklist items
+- `/api/sync/*` — Cloud sync operations
+- `/api/auth/*` — Better Auth OAuth
 
 ### State Management
 
-Zustand store (`lib/store.ts`) manages:
-- `project`: Current loaded project
-- `selectedFeature`: Currently selected feature
-- `focusState`: Keyboard navigation (column, cardIndex, featureId)
+Zustand store (`src/lib/store.ts`) manages: `project`, `selectedFeature`, `focusState` (keyboard navigation with column/cardIndex/featureId).
 
 ### AI Integration
 
-All AI operations use `AIService` from `src/lib/ai/client.ts`. AI settings stored in database, retrieved via `getAISettings()`.
+All AI operations go through `AIService` from `src/lib/ai/client.ts`. Settings stored in database, retrieved via `getAISettings()`.
 
 ## Mandatory Policies
 
-### UI Requirements
-- **ALWAYS use FeatureDetailV2** (`src/components/feature-detail-v2/`) - the only supported UI
-- Never use `?legacy=true` to access old UI
-
-### AI Requirements
-- **ALWAYS use real AI** - call actual AI APIs, never mock data
+- **ALWAYS use FeatureDetailV2** (`src/components/feature-detail-v2/`) — the only supported feature detail UI
+- **ALWAYS use real AI** — call actual AI APIs via `AIService`, never mock data. If no API key is configured, throw an error.
 - Use `getAISettings()` to retrieve API keys from database
-- Use `AIService` from `src/lib/ai/client.ts` for all AI operations
-- If no API key configured, throw an error - do NOT fallback to fake data
 
 ## Code Conventions
 
@@ -159,15 +122,11 @@ All AI operations use `AIService` from `src/lib/ai/client.ts`. AI settings store
 - **Components**: `'use client'` directive, PascalCase, `cn()` for conditional classes
 - **Types**: Import from `@/types`
 - **Styling**: Tailwind CSS v4 with CSS variables (`var(--foreground)`, etc.)
+- **File naming**: kebab-case
 
 ## Testing
 
-Tests co-located with source files:
-- `src/lib/*.test.ts`
-- `src/app/api/**/*.test.ts`
-
-Run specific test: `pnpm vitest run src/lib/parser.test.ts`
-Run single test file: `pnpm test:run path/to/test.test.ts`
+Tests co-located with source files: `src/lib/*.test.ts`, `src/app/api/**/*.test.ts`
 
 ## Key Files
 
@@ -175,35 +134,27 @@ Run single test file: `pnpm test:run path/to/test.test.ts`
 |------|---------|
 | `src/app/api/project/[name]/data/route.ts` | Main DB-first data endpoint |
 | `src/lib/store.ts` | Zustand state management |
-| `src/lib/ai/client.ts` | AI service with real implementations |
+| `src/lib/ai/client.ts` | AI service (real implementations only) |
 | `prisma/schema.prisma` | Database schema |
 | `src/components/feature-detail-v2/` | Feature detail UI (ONLY supported) |
 | `src/components/kanban-board.tsx` | Kanban board with stage transitions |
-| `scripts/migrate-stages.ts` | Migration script for stage updates |
+| `src/lib/path-utils.ts` | Path validation (`isPathSafe()`) for security |
+| `scripts/migrate-stages.ts` | Migration script for stage changes |
 | `scripts/worker.ts` | BullMQ worker for background jobs |
-| `src/lib/path-utils.ts` | Path validation for security |
 
-## Migration Scripts
+## Stage Migrations
 
-When stages change, run migration scripts:
-```bash
-pnpm tsx scripts/migrate-stages.ts
-```
-
-This handles transitions like:
-- `specify` → `specs`
-- `clarify` → `specs`
-- `checklist` → `plan`
+When workflow stages change, run: `pnpm tsx scripts/migrate-stages.ts`
 
 ## Security
 
-All filesystem operations use `isPathSafe()` from `src/lib/path-utils.ts` to prevent directory traversal attacks. This validation is enforced in all API routes that handle file paths.
-
-XSS prevention: All HTML content is sanitized with DOMPurify before rendering.
+- All filesystem operations use `isPathSafe()` from `src/lib/path-utils.ts` to prevent directory traversal
+- HTML content sanitized with DOMPurify before rendering
 
 ## Environment Setup
 
 Copy `.env.example` to `.env` and configure:
-- `POSTGRES_PRISMA_URL` - PostgreSQL connection string
-- `BETTER_AUTH_SECRET` - Auth secret key
-- AI provider settings (API keys for OpenAI, Anthropic, etc.)
+- `DATABASE_URL` — PostgreSQL connection string
+- `POSTGRES_URL_NON_POOLING` — Direct connection (non-pooled, for migrations)
+- `BETTER_AUTH_SECRET` — Auth secret key
+- AI provider API keys (OpenAI, Anthropic, etc.)
