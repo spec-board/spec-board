@@ -48,6 +48,10 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+  nodesRef.current = nodes;
+  edgesRef.current = edges;
 
   // Load from server
   useEffect(() => {
@@ -106,22 +110,22 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
     onNodesChange(changes);
     const isDragging = changes.some(c => c.type === 'position' && 'dragging' in c && c.dragging);
     if (!isDragging) {
-      setNodes(curr => { saveToServer(curr, edges); return curr; });
+      setNodes(curr => { saveToServer(curr, edgesRef.current); return curr; });
     }
-  }, [onNodesChange, edges, saveToServer, setNodes]);
+  }, [onNodesChange, saveToServer, setNodes]);
 
   const handleEdgesChange = useCallback((changes: EdgeChange<MindMapFlowEdge>[]) => {
     onEdgesChange(changes);
-    setEdges(curr => { saveToServer(nodes, curr); return curr; });
-  }, [onEdgesChange, nodes, saveToServer, setEdges]);
+    setEdges(curr => { saveToServer(nodesRef.current, curr); return curr; });
+  }, [onEdgesChange, saveToServer, setEdges]);
 
   const handleConnect: OnConnect = useCallback((connection) => {
     setEdges(eds => {
       const newEdges = addEdge({ ...connection, id: uid(), type: 'mindmap' }, eds);
-      saveToServer(nodes, newEdges);
+      saveToServer(nodesRef.current, newEdges);
       return newEdges;
     });
-  }, [setEdges, nodes, saveToServer]);
+  }, [setEdges, saveToServer]);
 
   const addNewNode = useCallback((position: { x: number; y: number }, parentId?: string) => {
     const newNode: MindMapFlowNode = {
@@ -137,11 +141,11 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
           return newEdges;
         });
       } else {
-        saveToServer(updated, edges);
+        saveToServer(updated, edgesRef.current);
       }
       return updated;
     });
-  }, [setNodes, setEdges, edges, saveToServer]);
+  }, [setNodes, setEdges, saveToServer]);
 
   const onConnectStart: OnConnectStart = useCallback((_, { nodeId }) => {
     connectingNodeId.current = nodeId;
@@ -196,7 +200,7 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
           setEdges={setEdges}
           projectId={projectId}
           addNode={addNewNode}
-          saveToServer={() => saveToServer(nodes, edges)}
+          saveToServer={() => saveToServer(nodesRef.current, edgesRef.current)}
           isSaving={isSaving}
         />
         {isSaving && (
