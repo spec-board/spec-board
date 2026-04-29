@@ -8,15 +8,19 @@ import {
   getConstitution,
   createFeature,
   getFeatureContext,
+  searchFeatures,
+  getFeaturesByStage,
+  advanceFeature,
   type ContentType,
 } from '../lib/core';
+import type { FeatureStage } from '@/types';
 
 const program = new Command();
 
 program
   .name('specboard')
   .description('SpecBoard CLI — manage specs from the terminal')
-  .version('1.0.0');
+  .version('3.1.0');
 
 program
   .command('list')
@@ -28,7 +32,8 @@ program
       return;
     }
     for (const p of projects) {
-      console.log(`${p.name} — ${p.displayName} (${p.featureCount} features)`);
+      const ago = formatRelative(p.updatedAt);
+      console.log(`${p.name} — ${p.displayName} (${p.featureCount} features) [${ago}]`);
     }
   });
 
@@ -40,6 +45,7 @@ program
       const project = await getProject(projectSlug);
       console.log(`# ${project.displayName}`);
       if (project.description) console.log(project.description);
+      console.log(`\nStages: backlog=${project.stageBreakdown.backlog} specs=${project.stageBreakdown.specs} plan=${project.stageBreakdown.plan} tasks=${project.stageBreakdown.tasks}`);
       console.log(`\nFeatures (${project.features.length}):`);
       for (const f of project.features) {
         console.log(`  [${f.stage}] ${f.featureId} — ${f.name}`);
@@ -53,7 +59,7 @@ program
       return;
     }
 
-    const feature = await getFeature(projectSlug, featureId);
+    const feature = await getFeature(projectSlug, featureId, true);
     console.log(`# ${feature.name}`);
     console.log(`Stage: ${feature.stage} | ID: ${feature.featureId}`);
     if (feature.description) console.log(`\n${feature.description}`);
@@ -65,9 +71,10 @@ program
 
 program
   .command('context <project> <feature>')
-  .description('Output structured context for AI agent consumption')
-  .action(async (projectSlug: string, featureId: string) => {
-    const context = await getFeatureContext(projectSlug, featureId);
+  .description('Output stage-aware context for AI agent consumption')
+  .option('-s, --stage <stage>', 'Override stage (backlog, specs, plan, tasks)')
+  .action(async (projectSlug: string, featureId: string, opts: { stage?: string }) => {
+    const context = await getFeatureContext(projectSlug, featureId, opts.stage as FeatureStage | undefined);
     console.log(context);
   });
 
@@ -87,7 +94,61 @@ program
     console.log(constitution.content);
   });
 
+program
+  .command('search <project> <query>')
+  .description('Search features by text across names, descriptions, and content')
+  .option('-s, --stage <stage>', 'Filter by stage (backlog, specs, plan, tasks)')
+  .action(async (projectSlug: string, query: string, opts: { stage?: string }) => {
+    const results = await searchFeatures(projectSlug, query, opts.stage as FeatureStage | undefined);
+    if (results.length === 0) {
+      console.log('No features found.');
+      return;
+    }
+    for (const f of results) {
+      console.log(`  [${f.stage}] ${f.featureId} — ${f.name}`);
+    }
+  });
+
+program
+  .command('stage <project> [stage]')
+  .description('Show stage breakdown, or list features in a specific stage')
+  .action(async (projectSlug: string, stage?: string) => {
+    if (!stage) {
+      const project = await getProject(projectSlug);
+      const b = project.stageBreakdown;
+      console.log(`backlog: ${b.backlog}  specs: ${b.specs}  plan: ${b.plan}  tasks: ${b.tasks}`);
+      return;
+    }
+    const features = await getFeaturesByStage(projectSlug, stage as FeatureStage);
+    if (features.length === 0) {
+      console.log(`No features in "${stage}" stage.`);
+      return;
+    }
+    for (const f of features) {
+      console.log(`  ${f.featureId} — ${f.name}`);
+    }
+  });
+
+program
+  .command('advance <project> <feature>')
+  .description('Move feature to next pipeline stage')
+  .action(async (projectSlug: string, featureId: string) => {
+    const result = await advanceFeature(projectSlug, featureId);
+    console.log(`${result.name}: ${result.previousStage} → ${result.newStage}`);
+  });
+
 program.parseAsync().catch((err) => {
   console.error(err.message);
   process.exit(1);
 });
+
+function formatRelative(date: Date): string {
+  const ms = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
