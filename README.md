@@ -3,7 +3,7 @@
 > Spec management tool with AI-powered pipeline, mind map brainstorming, and MCP server for AI coding agents.
 
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Version](https://img.shields.io/badge/version-3.0.0-black.svg)
+![Version](https://img.shields.io/badge/version-3.1.0-black.svg)
 
 SpecBoard turns ideas into structured specs through a 4-stage AI pipeline: **Backlog → Specs → Plan → Tasks**. It combines a visual mind map for brainstorming, a CodeMirror editor for spec writing, and an MCP server that lets AI coding agents (Claude Code, Cursor, Copilot) read and write specs directly.
 
@@ -76,28 +76,39 @@ pnpm dev
 ## CLI & MCP
 
 ```bash
-# CLI
-pnpm cli list                              # List projects
+# CLI (8 commands)
+pnpm cli list                              # List projects (with last updated)
 pnpm cli get <project> <feature> spec      # Get spec content
-pnpm cli context <project> <feature>       # Structured context for AI agents
+pnpm cli context <project> <feature>       # Stage-aware context for AI agents
 pnpm cli create <project> <name> <desc>    # Create feature
+pnpm cli constitution <project>            # Get project constitution
+pnpm cli search <project> <query>          # Search features by text
+pnpm cli stage <project> [stage]           # Show stage breakdown or list by stage
+pnpm cli advance <project> <feature>       # Move feature to next stage
 
-# MCP Server (for AI coding agents)
+# MCP Server (17 tools, for AI coding agents)
 pnpm mcp
 ```
 
-### MCP Tools
+### MCP Tools (17)
 
 | Tool | Description |
 |------|-------------|
-| `list_projects` | List all projects |
-| `get_project` | Get project with features |
-| `get_feature` | Get feature with all content |
-| `get_spec` / `get_plan` / `get_tasks` | Get specific content |
-| `get_context` | Structured context for AI consumption |
+| `list_projects` | List all projects with feature counts and last updated date |
+| `get_project` | Get project overview with features and stage breakdown |
+| `get_feature` | Get feature details (summary by default, full content optional) |
+| `get_spec` / `get_plan` / `get_tasks` | Get specific content for a feature |
+| `get_constitution` | Get project constitution with recent versions |
+| `get_context` | Stage-aware context for AI agent consumption |
+| `search_features` | Search features by text across names, descriptions, and content |
+| `get_features_by_stage` | List features in a specific pipeline stage |
 | `create_feature` | Create feature in backlog |
-| `update_feature_content` | Update spec/plan/tasks |
-| `update_task_status` | Mark task complete |
+| `update_feature_content` | Update spec/plan/tasks (full replace or diff patch) |
+| `update_task_status` | Mark task complete/incomplete |
+| `advance_feature` | Move feature to next pipeline stage |
+| `update_feature_stage` | Set feature to a specific stage |
+| `propose_spec_change` | Preview a diff-based change without saving |
+| `report_implementation` | Record what was built (appends to analysis) |
 
 ## Tech Stack
 
