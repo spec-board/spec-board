@@ -244,11 +244,13 @@ export function FeatureDetailV2({
           >
             <DocumentPanel
               feature={localFeature}
+              featureId={feature.id}
               selectedDocument={selectedDocument}
               onDocumentChange={handleDocumentChange}
               highlightTaskId={highlightTaskId}
               contentRef={contentRef}
               onEditClarifications={() => setShowClarifyModal(true)}
+              onContentSaved={handleRefreshFeature}
             />
           </div>
         </div>
