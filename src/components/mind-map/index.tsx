@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ReactFlow,
   Controls,
@@ -9,14 +9,19 @@ import {
   Panel,
   ReactFlowProvider,
   useReactFlow,
+  useNodesState,
+  useEdgesState,
+  addEdge,
   SelectionMode,
   type NodeOrigin,
   type OnConnectStart,
   type OnConnectEnd,
+  type OnConnect,
+  type NodeChange,
+  type EdgeChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import { useMindMapStore } from './mind-map-store';
 import { MindMapNode } from './mind-map-node';
 import { MindMapEdge } from './mind-map-edge';
 import { MindMapToolbar } from './mind-map-toolbar';
@@ -26,76 +31,151 @@ const nodeTypes = { mindmap: MindMapNode };
 const edgeTypes = { mindmap: MindMapEdge };
 const nodeOrigin: NodeOrigin = [0.5, 0.5];
 
-function MindMapCanvas({ projectSlug, projectId }: { projectSlug: string; projectId: string | null }) {
-  const nodes = useMindMapStore((s) => s.nodes);
-  const edges = useMindMapStore((s) => s.edges);
-  const isLoading = useMindMapStore((s) => s.isLoading);
-  const isSaving = useMindMapStore((s) => s.isSaving);
-  const saveError = useMindMapStore((s) => s.saveError);
-  const onNodesChange = useMindMapStore((s) => s.onNodesChange);
-  const onEdgesChange = useMindMapStore((s) => s.onEdgesChange);
-  const onConnect = useMindMapStore((s) => s.onConnect);
-  const addNode = useMindMapStore((s) => s.addNode);
-  const loadFromServer = useMindMapStore((s) => s.loadFromServer);
-  const setProjectId = useMindMapStore((s) => s.setProjectId);
+function uid() { return crypto.randomUUID(); }
+
+interface MindMapCanvasProps {
+  projectSlug: string;
+  projectId: string | null;
+}
+
+function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
+  const [nodes, setNodes, onNodesChange] = useNodesState<MindMapFlowNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<MindMapFlowEdge>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const { screenToFlowPosition } = useReactFlow();
   const connectingNodeId = useRef<string | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Load from server
   useEffect(() => {
-    loadFromServer(projectSlug);
-  }, [projectSlug, loadFromServer]);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    setIsLoading(true);
+    fetch(`/api/projects/${projectSlug}/mind-map`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          setNodes((data.nodes || []).map((n: { id: string; positionX: number; positionY: number; label: string; color: string; type: string; metadata?: { featureId?: string } }) => ({
+            id: n.id,
+            type: 'mindmap' as const,
+            position: { x: n.positionX, y: n.positionY },
+            data: { label: n.label, color: n.color, type: n.type, featureId: n.metadata?.featureId },
+          })));
+          setEdges((data.edges || []).map((e: { id: string; sourceId: string; targetId: string }) => ({
+            id: e.id,
+            source: e.sourceId,
+            target: e.targetId,
+            type: 'mindmap' as const,
+          })));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, [projectSlug, setNodes, setEdges]);
 
-  useEffect(() => {
-    if (projectId) setProjectId(projectId);
-  }, [projectId, setProjectId]);
+  // Debounced save
+  const saveToServer = useCallback((currentNodes: MindMapFlowNode[], currentEdges: MindMapFlowEdge[]) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      setIsSaving(true);
+      setSaveError(null);
+      try {
+        const res = await fetch(`/api/projects/${projectSlug}/mind-map`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nodes: currentNodes.map(n => ({
+              id: n.id, label: n.data.label, color: n.data.color,
+              positionX: n.position.x, positionY: n.position.y,
+              type: n.data.type,
+              metadata: n.data.featureId ? { featureId: n.data.featureId } : null,
+            })),
+            edges: currentEdges.map(e => ({ id: e.id, sourceId: e.source, targetId: e.target })),
+          }),
+        });
+        if (!res.ok) setSaveError('Failed to save');
+      } catch { setSaveError('Failed to save'); }
+      finally { setIsSaving(false); }
+    }, 1500);
+  }, [projectSlug]);
+
+  // Wrap change handlers to trigger save
+  const handleNodesChange = useCallback((changes: NodeChange<MindMapFlowNode>[]) => {
+    onNodesChange(changes);
+    const isDragging = changes.some(c => c.type === 'position' && 'dragging' in c && c.dragging);
+    if (!isDragging) {
+      setNodes(curr => { saveToServer(curr, edges); return curr; });
+    }
+  }, [onNodesChange, edges, saveToServer, setNodes]);
+
+  const handleEdgesChange = useCallback((changes: EdgeChange<MindMapFlowEdge>[]) => {
+    onEdgesChange(changes);
+    setEdges(curr => { saveToServer(nodes, curr); return curr; });
+  }, [onEdgesChange, nodes, saveToServer, setEdges]);
+
+  const handleConnect: OnConnect = useCallback((connection) => {
+    setEdges(eds => {
+      const newEdges = addEdge({ ...connection, id: uid(), type: 'mindmap' }, eds);
+      saveToServer(nodes, newEdges);
+      return newEdges;
+    });
+  }, [setEdges, nodes, saveToServer]);
+
+  const addNewNode = useCallback((position: { x: number; y: number }, parentId?: string) => {
+    const newNode: MindMapFlowNode = {
+      id: uid(), type: 'mindmap', position,
+      data: { label: 'New Idea', color: '#f6ad55', type: 'default' },
+    };
+    setNodes(nds => {
+      const updated = [...nds, newNode];
+      if (parentId) {
+        setEdges(eds => {
+          const newEdges = [...eds, { id: uid(), source: parentId, target: newNode.id, type: 'mindmap' }];
+          saveToServer(updated, newEdges);
+          return newEdges;
+        });
+      } else {
+        saveToServer(updated, edges);
+      }
+      return updated;
+    });
+  }, [setNodes, setEdges, edges, saveToServer]);
 
   const onConnectStart: OnConnectStart = useCallback((_, { nodeId }) => {
     connectingNodeId.current = nodeId;
   }, []);
 
-  const onConnectEnd: OnConnectEnd = useCallback(
-    (event) => {
-      const target = event.target as Element;
-      const targetIsPane = target.classList.contains('react-flow__pane');
+  const onConnectEnd: OnConnectEnd = useCallback((event) => {
+    const target = event.target as Element;
+    if (target.classList.contains('react-flow__pane') && connectingNodeId.current) {
+      const position = screenToFlowPosition({
+        x: (event as MouseEvent).clientX,
+        y: (event as MouseEvent).clientY,
+      });
+      addNewNode(position, connectingNodeId.current);
+    }
+    connectingNodeId.current = null;
+  }, [screenToFlowPosition, addNewNode]);
 
-      if (targetIsPane && connectingNodeId.current) {
-        const position = screenToFlowPosition({
-          x: (event as MouseEvent).clientX,
-          y: (event as MouseEvent).clientY,
-        });
-        addNode(position, connectingNodeId.current);
-      }
-
-      connectingNodeId.current = null;
-    },
-    [screenToFlowPosition, addNode]
-  );
-
-  const handlePaneDoubleClick = useCallback(
-    (event: React.MouseEvent) => {
-      const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-      addNode(position);
-    },
-    [screenToFlowPosition, addNode]
-  );
+  const handlePaneDoubleClick = useCallback((event: React.MouseEvent) => {
+    const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    addNewNode(position);
+  }, [screenToFlowPosition, addNewNode]);
 
   if (isLoading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center text-[var(--muted-foreground)]">
-        Loading mind map...
-      </div>
-    );
+    return <div className="w-full h-full flex items-center justify-center text-[var(--muted-foreground)]">Loading mind map...</div>;
   }
 
   return (
     <div className="w-full h-full relative">
-      <ReactFlow<MindMapFlowNode, MindMapFlowEdge>
+      <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        onNodesChange={handleNodesChange}
+        onEdgesChange={handleEdgesChange}
+        onConnect={handleConnect}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
         onDoubleClick={handlePaneDoubleClick}
@@ -109,7 +189,16 @@ function MindMapCanvas({ projectSlug, projectId }: { projectSlug: string; projec
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--border)" />
         <Controls showInteractive={false} />
-        <MindMapToolbar />
+        <MindMapToolbar
+          nodes={nodes}
+          setNodes={setNodes}
+          edges={edges}
+          setEdges={setEdges}
+          projectId={projectId}
+          addNode={addNewNode}
+          saveToServer={() => saveToServer(nodes, edges)}
+          isSaving={isSaving}
+        />
         {isSaving && (
           <Panel position="bottom-right">
             <span className="text-xs text-[var(--muted-foreground)]">Saving...</span>

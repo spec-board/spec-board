@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { MindMapView } from '@/components/mind-map';
+import dynamic from 'next/dynamic';
+
+const MindMapView = dynamic(
+  () => import('@/components/mind-map').then(mod => mod.MindMapView),
+  { ssr: false, loading: () => <div className="w-full h-full flex items-center justify-center text-[var(--muted-foreground)]">Loading mind map...</div> }
+);
 
 export default function MindMapPage() {
   const params = useParams();
