@@ -1,7 +1,7 @@
 import type { Feature, Task, UserStory, TaskGroup } from '@/types';
 
 // Document types available in the dropdown
-export type DocumentType = 'spec' | 'plan' | 'clarifications' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist' | 'analysis';
+export type DocumentType = 'spec' | 'plan' | 'clarifications' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist' | 'analysis' | 'impact';
 
 export interface DocumentOption {
   type: DocumentType;
@@ -130,6 +130,12 @@ export function getDocumentOptions(feature: Feature): DocumentOption[] {
       label: 'Analysis',
       available: !!feature.analysisContent,
       content: feature.analysisContent,
+    },
+    {
+      type: 'impact',
+      label: 'Impact',
+      available: true,
+      content: null,
     },
   ];
 
