@@ -665,3 +665,38 @@ export interface DiffLine {
   oldLineNumber?: number;
   newLineNumber?: number;
 }
+
+// ============================================
+// Mind Map Types (Brainstorming Tool)
+// ============================================
+
+export type MindMapNodeType = 'default' | 'feature' | 'group';
+
+export interface MindMapNodeData {
+  id: string;
+  projectId: string;
+  label: string;
+  color: string;
+  positionX: number;
+  positionY: number;
+  parentId: string | null;
+  type: MindMapNodeType;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MindMapEdgeData {
+  id: string;
+  projectId: string;
+  sourceId: string;
+  targetId: string;
+  label?: string;
+  type: string;
+  createdAt: string;
+}
+
+export interface MindMapData {
+  nodes: MindMapNodeData[];
+  edges: MindMapEdgeData[];
+}
