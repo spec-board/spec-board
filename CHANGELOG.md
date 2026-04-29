@@ -7,6 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-04-29
+
+### Added
+- **Mind Map Canvas** — Freeform brainstorming tool built with React Flow (@xyflow/react):
+  - Create, edit, delete, and connect nodes on an infinite canvas
+  - Double-click canvas to add nodes, drag from handles to connect
+  - Color picker for node customization (6 preset colors)
+  - Auto-save with 1.5s debounce to PostgreSQL
+  - Separate Zustand store for mind map state
+  - New route: `/projects/:name/mind-map`
+  - New Prisma models: `MindMapNode`, `MindMapEdge`
+  - Full CRUD API: GET/PUT `/api/projects/:name/mind-map`, POST/PATCH/DELETE for nodes and edges
+- **Convert Mind Map to Features** — Bridge brainstorming and spec management:
+  - Right-click context menu on nodes: "Convert to Feature", "Delete"
+  - Toolbar button (Sparkles icon) for converting selected nodes
+  - Single node → 1 feature in backlog
+  - Multi-select group → 1 feature with child nodes as description
+  - Visual badge (link icon) on converted nodes
+  - Converted nodes cannot be converted again
+- **CodeMirror Editor** — Inline markdown editing in feature detail:
+  - Syntax highlighting with `@codemirror/lang-markdown`
+  - Dark/light theme support via `@codemirror/theme-one-dark`
+  - Edit/Preview toggle button in DocumentPanel
+  - Debounced auto-save (1.5s) to database via extended PUT `/api/features/:id`
+  - Feature API now accepts all content fields (specContent, planContent, tasksContent, etc.)
+- **Impact Analysis** — Visual dependency graph in feature detail:
+  - New "Impact" tab in DocumentPanel (always available)
+  - React Flow graph showing pipeline status: Spec → Plan → Tasks → Analysis
+  - Color-coded nodes: green (ok), yellow (warning), red (critical)
+  - Constitution drift detection (feature vs current constitution version)
+  - User story coverage check (stories without tasks)
+  - Issue list with severity icons
+  - Client-side computation — no AI or API calls needed
+- **MCP Server** — Model Context Protocol server for AI coding agents:
+  - 11 tools: `list_projects`, `get_project`, `get_feature`, `get_spec`, `get_plan`, `get_tasks`, `get_constitution`, `create_feature`, `update_feature_content`, `update_task_status`, `get_context`
+  - Stdio-based transport via `@modelcontextprotocol/sdk`
+  - Direct Prisma DB access (no HTTP overhead)
+  - Run with: `pnpm mcp`
+- **CLI** — Terminal interface for spec management:
+  - `specboard list` — List all projects
+  - `specboard get <project> [feature] [type]` — Get project, feature, or content
+  - `specboard context <project> <feature>` — Structured context for AI agents
+  - `specboard create <project> <name> <desc>` — Create feature in backlog
+  - `specboard constitution <project>` — Get project constitution
+  - Built with Commander, run with: `pnpm cli`
+- **Feature List** — Simple row-based feature list replacing Kanban board:
+  - Stage indicator dot with color coding
+  - Stage label badge
+  - Task progress percentage
+  - "Add feature" button with CreateFeatureModal integration
+
+### Changed
+- **Project Focus** — Stripped to core: spec writing, mind map, AI pipeline, impact analysis
+- **Settings Modal** — Rewritten from 1100 to 167 lines:
+  - Removed OAuth flows (Codex PKCE, Qwen/Kimi Device Code)
+  - Removed README/Changelog viewers
+  - Kept: AI provider management, keyboard shortcuts, about section
+- **Prisma Schema** — Cleaned up, removed 252 lines of unused models
+- **AI Module** — Removed mock export from index
+- **Next.js Config** — Added `turbopack: {}` for Next.js 16 compatibility, removed webpack cache hack
+- **README** — Complete rewrite reflecting new project focus with 4 new screenshots
+
+### Removed
+- **Cloud Sync** (~2,500 lines) — `src/lib/services/`, `src/lib/sync/`, `src/components/cloud/`, `src/components/sync/`, cloud API routes, cloud page
+- **Auth/OAuth** (~800 lines) — `src/lib/auth/`, `src/components/auth/`, auth API routes, login page, middleware
+- **Remote Drivers / E2B** (~1,200 lines) — `src/lib/drivers/`, `src/components/drivers/`, driver API routes, `src/types/drivers.ts`
+- **Legacy Feature Detail** (~2,500 lines) — `src/components/feature-detail/` (13 files, replaced by feature-detail-v2)
+- **Legacy Parser** (~1,800 lines) — `src/lib/parser.ts`, `src/lib/parser.test.ts` (database-first, no longer used)
+- **Queue/BullMQ** (~500 lines) — `src/lib/queue/`, `scripts/worker.ts`
+- **AI Mock** (~500 lines) — `src/lib/ai/mock.ts`
+- **Unused Components** (~1,000 lines) — `readme-viewer.tsx`, `changelog-viewer.tsx`, `project-selector.tsx`
+- **Kanban Board** (961 lines) — `src/components/kanban-board.tsx` (replaced by FeatureList)
+- **Prisma Models** — User, OAuthAccount, ApiToken, Session, CloudProject, SyncedSpec, ProjectMember, SyncEvent, ProjectLinkCode, SpecVersion, ConflictRecord, DriverConfig, RemoteSession, SyncManifest
+- **Cloud Sync Types** — MemberRole, SyncFileType, ConflictStatus, SyncEventType, CloudProjectSummary, SyncStatus, SyncConflict, DiffResult, DiffHunk, DiffLine
+- **Import/Export Routes** — `/api/import/markdown`, `/api/export/markdown`
+- **Token/Watch Routes** — `/api/tokens`, `/api/watch`
+- **Total removed**: ~18,000 lines (35% of codebase, 51K → 34K)
+
 ## [2.3.0] - 2026-03-23
 
 ### Added

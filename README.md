@@ -3,7 +3,7 @@
 > Spec management tool with AI-powered pipeline, mind map brainstorming, and MCP server for AI coding agents.
 
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Version](https://img.shields.io/badge/version-2.3.0-black.svg)
+![Version](https://img.shields.io/badge/version-3.0.0-black.svg)
 
 SpecBoard turns ideas into structured specs through a 4-stage AI pipeline: **Backlog → Specs → Plan → Tasks**. It combines a visual mind map for brainstorming, a CodeMirror editor for spec writing, and an MCP server that lets AI coding agents (Claude Code, Cursor, Copilot) read and write specs directly.
 
