@@ -1,6 +1,5 @@
-// AI Service exports - updated 2026-03-23
+// AI Service exports
 export * from './types';
-export * from './mock';
 export * from './settings';
 export { AIService, aiService } from './client';
 

@@ -223,6 +223,7 @@ export function TasksModal({ feature, onClose, onStageChange, onDelete }: BaseMo
         >
           <DocumentPanel
             feature={feature}
+            featureId={feature.id}
             selectedDocument={selectedDocument as any}
             onDocumentChange={handleDocumentChange as any}
             highlightTaskId={highlightTaskId}

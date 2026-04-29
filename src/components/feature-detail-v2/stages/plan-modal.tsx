@@ -201,6 +201,7 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
         <div className="w-[60%] overflow-hidden">
           <DocumentPanel
             feature={feature}
+            featureId={feature.id}
             selectedDocument={selectedDocument as any}
             onDocumentChange={handleDocumentChange as any}
             highlightTaskId={null}
