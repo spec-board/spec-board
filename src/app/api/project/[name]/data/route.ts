@@ -93,17 +93,24 @@ export async function GET(
                 },
                 tasks: {
                   orderBy: { order: 'asc' },
-                  include: {
-                    userStory: true,
+                  select: {
+                    id: true,
+                    taskId: true,
+                    title: true,
+                    status: true,
+                    userStory: { select: { storyId: true } },
                   },
                 },
-                constitutionVersion: true,
+                constitutionVersion: {
+                  select: { id: true, version: true, content: true, principles: true },
+                },
               },
             },
             constitution: {
               include: {
                 versions: {
                   orderBy: { createdAt: 'desc' },
+                  take: 10,
                 },
               },
             },
