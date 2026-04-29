@@ -22,7 +22,7 @@ This directory contains all application source code organized by Next.js App Rou
 | `app/page.tsx` | Home page - recent projects, open project modal |
 | `app/layout.tsx` | Root layout with metadata and global styles |
 | `app/globals.css` | Tailwind CSS and CSS variables |
-| `lib/parser.ts` | Core markdown parsing engine |
+| `lib/parser.ts` | Legacy markdown parsing (DB-first now) |
 | `lib/store.ts` | Zustand state management |
 | `types/index.ts` | All shared TypeScript types |
 
@@ -39,7 +39,8 @@ src/
 │   ├── projects/[name]/    # Project routes (slug-based)
 │   └── api/                # API routes
 ├── components/             # React components
-│   ├── feature-detail/     # Feature modal components
+│   ├── feature-detail-v2/  # Feature detail UI (ONLY supported)
+│   ├── feature-detail/     # Legacy (do not use)
 │   ├── kanban-board.tsx    # Kanban view
 │   ├── *-viewer.tsx        # Content viewers
 │   └── ...
@@ -64,11 +65,12 @@ src/
 
 ## Workflow Stages
 
-Current 5-stage workflow:
-- **backlog** → **specs** → **plan** → **tasks** → **analyze**
+Current 4-stage workflow (type `FeatureStage` in `types/index.ts`):
+- **backlog** → **specs** → **plan** → **tasks**
 
 The SPECS stage merges the old Specify + Clarify stages.
 The PLAN stage now includes checklist generation.
+Analysis runs automatically during the tasks stage.
 
 ## Patterns & Conventions
 
