@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { MindMapView } from '@/components/mind-map';
@@ -8,6 +9,22 @@ export default function MindMapPage() {
   const params = useParams();
   const router = useRouter();
   const projectSlug = params.name as string;
+  const [projectId, setProjectId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProjectId() {
+      try {
+        const res = await fetch(`/api/project/${projectSlug}/data?view=kanban`);
+        if (res.ok) {
+          const data = await res.json();
+          setProjectId(data.projectId || null);
+        }
+      } catch {
+        // projectId will remain null — convert feature won't work but canvas still loads
+      }
+    }
+    fetchProjectId();
+  }, [projectSlug]);
 
   return (
     <div className="h-screen flex flex-col bg-[var(--background)]">
@@ -23,11 +40,11 @@ export default function MindMapPage() {
           Mind Map
         </span>
         <span className="text-xs text-[var(--muted-foreground)]">
-          Double-click to add nodes. Drag from handles to connect.
+          Double-click to add nodes. Drag from handles to connect. Right-click for options.
         </span>
       </div>
       <div className="flex-1">
-        <MindMapView projectSlug={projectSlug} />
+        <MindMapView projectSlug={projectSlug} projectId={projectId} />
       </div>
     </div>
   );
