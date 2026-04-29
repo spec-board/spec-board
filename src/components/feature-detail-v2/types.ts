@@ -51,11 +51,13 @@ export interface TaskRowProps {
 // Props for DocumentPanel
 export interface DocumentPanelProps {
   feature: Feature;
+  featureId: string;
   selectedDocument: DocumentType;
   onDocumentChange: (doc: DocumentType) => void;
   highlightTaskId: string | null;
   contentRef: React.RefObject<HTMLDivElement | null>;
   onEditClarifications?: () => void;
+  onContentSaved?: () => void;
 }
 
 // Props for DocumentSelector
