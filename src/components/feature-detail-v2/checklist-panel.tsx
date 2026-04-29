@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { CheckCircle, Circle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Feature } from '@/types';
@@ -76,7 +76,7 @@ export function ChecklistPanel({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Update sections when content changes
-  useMemo(() => {
+  useEffect(() => {
     if (checklistsContent) {
       setSections(parseChecklistContent(checklistsContent));
     }
