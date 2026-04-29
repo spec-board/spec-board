@@ -2,6 +2,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import type { FeatureStage } from '@/types';
 import {
   listProjects,
   getProject,
@@ -18,11 +19,13 @@ import {
   updateFeatureStage,
   proposeSpecChange,
   reportImplementation,
+  STAGE_PIPELINE,
+  CONTENT_FIELDS,
   type ContentType,
 } from '../lib/core';
 
-const CONTENT_TYPES = ['spec', 'plan', 'tasks', 'clarifications', 'analysis', 'research', 'data-model', 'quickstart', 'contracts', 'checklists'] as const;
-const STAGES = ['backlog', 'specs', 'plan', 'tasks'] as const;
+const CONTENT_TYPES = Object.keys(CONTENT_FIELDS) as [ContentType, ...ContentType[]];
+const STAGES = [...STAGE_PIPELINE] as [FeatureStage, ...FeatureStage[]];
 
 const server = new McpServer({
   name: 'specboard',
