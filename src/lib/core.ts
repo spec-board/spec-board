@@ -1,5 +1,11 @@
 import { prisma } from './prisma';
 
+async function resolveProjectId(slug: string): Promise<string> {
+  const project = await prisma.project.findUnique({ where: { name: slug }, select: { id: true } });
+  if (!project) throw new Error(`Project "${slug}" not found`);
+  return project.id;
+}
+
 export async function listProjects() {
   const projects = await prisma.project.findMany({
     include: {
@@ -49,12 +55,11 @@ export async function getProject(slug: string) {
 }
 
 export async function getFeature(projectSlug: string, featureIdentifier: string) {
-  const project = await prisma.project.findUnique({ where: { name: projectSlug } });
-  if (!project) throw new Error(`Project "${projectSlug}" not found`);
+  const projectId = await resolveProjectId(projectSlug);
 
   const feature = await prisma.feature.findFirst({
     where: {
-      projectId: project.id,
+      projectId,
       OR: [{ id: featureIdentifier }, { featureId: featureIdentifier }],
     },
     include: {
@@ -83,33 +88,42 @@ const CONTENT_FIELDS = {
 export type ContentType = keyof typeof CONTENT_FIELDS;
 
 export async function getFeatureContent(projectSlug: string, featureIdentifier: string, type: ContentType) {
-  const feature = await getFeature(projectSlug, featureIdentifier);
+  const projectId = await resolveProjectId(projectSlug);
+
   const field = CONTENT_FIELDS[type];
-  const content = feature[field as keyof typeof feature] as string | null;
+  const feature = await prisma.feature.findFirst({
+    where: {
+      projectId,
+      OR: [{ id: featureIdentifier }, { featureId: featureIdentifier }],
+    },
+    select: { [field]: true },
+  });
+
+  if (!feature) throw new Error(`Feature "${featureIdentifier}" not found in project "${projectSlug}"`);
+  const content = (feature as Record<string, unknown>)[field] as string | null;
   if (!content) throw new Error(`No ${type} content for feature "${featureIdentifier}"`);
   return content;
 }
 
 export async function getConstitution(projectSlug: string) {
-  const project = await prisma.project.findUnique({
-    where: { name: projectSlug },
-    include: { constitution: { include: { versions: { orderBy: { createdAt: 'desc' }, take: 5 } } } },
+  const projectId = await resolveProjectId(projectSlug);
+  const constitution = await prisma.constitution.findUnique({
+    where: { projectId },
+    include: { versions: { orderBy: { createdAt: 'desc' }, take: 5 } },
   });
-  if (!project) throw new Error(`Project "${projectSlug}" not found`);
-  if (!project.constitution) throw new Error(`No constitution for project "${projectSlug}"`);
-  return project.constitution;
+  if (!constitution) throw new Error(`No constitution for project "${projectSlug}"`);
+  return constitution;
 }
 
 export async function createFeature(projectSlug: string, name: string, description: string) {
-  const project = await prisma.project.findUnique({ where: { name: projectSlug } });
-  if (!project) throw new Error(`Project "${projectSlug}" not found`);
+  const projectId = await resolveProjectId(projectSlug);
 
-  const count = await prisma.feature.count({ where: { projectId: project.id } });
+  const count = await prisma.feature.count({ where: { projectId } });
   const featureId = `${String(count + 1).padStart(3, '0')}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
 
   return prisma.feature.create({
     data: {
-      projectId: project.id,
+      projectId,
       featureId,
       name,
       description,
@@ -135,11 +149,10 @@ export async function updateTaskStatus(taskId: string, completed: boolean) {
 }
 
 export async function getFeatureContext(projectSlug: string, featureIdentifier: string) {
-  const feature = await getFeature(projectSlug, featureIdentifier);
-  let constitution: { content: string } | null = null;
-  try {
-    constitution = await getConstitution(projectSlug);
-  } catch {}
+  const [feature, constitution] = await Promise.all([
+    getFeature(projectSlug, featureIdentifier),
+    getConstitution(projectSlug).catch(() => null),
+  ]);
 
   const sections: string[] = [];
   sections.push(`# Feature: ${feature.name}`);
