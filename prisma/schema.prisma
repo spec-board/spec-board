@@ -89,6 +89,7 @@ model Feature {
   tasks       Task[]
 
   @@unique([projectId, featureId])
+  @@index([projectId, order])
   @@map("features")
 }
 
@@ -111,6 +112,7 @@ model UserStory {
   tasks       Task[]
 
   @@unique([featureId, storyId])
+  @@index([featureId, order])
   @@map("user_stories")
 }
 
@@ -135,6 +137,7 @@ model Task {
   userStory   UserStory? @relation(fields: [userStoryId], references: [id], onDelete: SetNull)
 
   @@unique([featureId, taskId])
+  @@index([featureId, order])
   @@map("tasks")
 }
 
