@@ -33,6 +33,8 @@ model Project {
   // Relations
   features       Feature[]
   constitution   Constitution?
+  mindMapNodes   MindMapNode[]
+  mindMapEdges   MindMapEdge[]
 
   @@map("projects")
 }
@@ -434,6 +436,51 @@ model SyncManifest {
   session     RemoteSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("sync_manifests")
+}
+
+// ============================================
+// Mind Map Models (Brainstorming Tool)
+// ============================================
+
+model MindMapNode {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  label     String   @default("New Idea")
+  color     String   @default("#f6ad55")
+  positionX Float    @default(0) @map("position_x")
+  positionY Float    @default(0) @map("position_y")
+  parentId  String?  @map("parent_id")
+  type      String   @default("default")
+  metadata  Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent      MindMapNode?  @relation("NodeHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    MindMapNode[] @relation("NodeHierarchy")
+  sourceEdges MindMapEdge[] @relation("SourceEdges")
+  targetEdges MindMapEdge[] @relation("TargetEdges")
+
+  @@map("mind_map_nodes")
+}
+
+model MindMapEdge {
+  id       String  @id @default(uuid())
+  projectId String @map("project_id")
+  sourceId String  @map("source_id")
+  targetId String  @map("target_id")
+  label    String?
+  type     String  @default("default")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  source  MindMapNode @relation("SourceEdges", fields: [sourceId], references: [id], onDelete: Cascade)
+  target  MindMapNode @relation("TargetEdges", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId])
+  @@map("mind_map_edges")
 }
 
 // ============================================
