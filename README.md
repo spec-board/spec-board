@@ -1,166 +1,116 @@
 # SpecBoard
 
-> Visual dashboard that helps non-technical teams create, organize, and manage professional software specifications and documentation.
+> Spec management tool with AI-powered pipeline, mind map brainstorming, and MCP server for AI coding agents.
 
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Version](https://img.shields.io/badge/version-2.3.0-black.svg)
 
-Turn ideas into structured specs -- no coding required. SpecBoard provides a drag-and-drop Kanban interface to move features through a 4-stage AI-powered pipeline: **Backlog** > **Specs** > **Plan** > **Tasks**.
+SpecBoard turns ideas into structured specs through a 4-stage AI pipeline: **Backlog → Specs → Plan → Tasks**. It combines a visual mind map for brainstorming, a CodeMirror editor for spec writing, and an MCP server that lets AI coding agents (Claude Code, Cursor, Copilot) read and write specs directly.
 
 ## Screenshots
 
-### Kanban Board
+### Project Home
 
-Track features across your development pipeline with a 4-column Kanban board showing progress metrics for tasks and checklists.
+Browse and manage your projects.
 
-![Kanban Board](https://github.com/spec-board/spec-board/blob/main/public/assests/board.png)
+![Home](public/screenshots/home.png)
 
-### Feature Detail View
+### Feature List
 
-Deep dive into specifications with structured user stories, acceptance scenarios, edge cases, and implementation guidance.
+Track features across pipeline stages with progress indicators.
 
-![Feature Detail](https://github.com/spec-board/spec-board/blob/main/public/assests/spec.png)
+![Feature List](public/screenshots/feature-list.png)
 
-### AI-Powered Spec Generation
+### Mind Map
 
-Generate complete feature specifications from natural language. Configure your preferred LLM provider (OpenAI, Anthropic, or any OpenAI-compatible API) with custom base URLs for self-hosted models.
+Brainstorm ideas on a freeform canvas. Connect nodes, then convert them to features.
 
-### Spec Workflow Wizard
+![Mind Map](public/screenshots/mind-map.png)
 
-AI-powered 4-stage workflow: backlog > specs > plan > tasks
+### Feature Detail
 
-<p align="center">
-  <img src="https://github.com/spec-board/spec-board/blob/main/public/assests/suggestion-next-action.png" alt="Next Action Suggestions" width="400" />
-  <img src="https://github.com/spec-board/spec-board/blob/main/public/assests/save-the-analysis.png" alt="Save Analysis Report" width="300" />
-</p>
+Two-panel layout: user stories + tasks on the left, document viewer/editor on the right. Edit specs inline with CodeMirror. View impact analysis.
+
+![Feature Detail](public/screenshots/feature-detail.png)
 
 ## Features
 
-### Core
-- **Kanban Board** -- 4-column pipeline (Backlog > Specs > Plan > Tasks) with drag-and-drop
-- **AI Spec Generation** -- Enter a feature name and description, AI generates spec, plan, and tasks
-- **Spec Workflow Wizard** -- 4-stage AI workflow with automatic stage transitions
-- **Multi-Provider AI** -- API Key providers (OpenAI, Anthropic, Gemini, Mistral, etc.) with optimistic toggle and preset defaults
-- **Constitution System** -- AI-generated project constitution from description, with version history
-- **Skeleton Loading** -- Responsive loading screens with animated placeholders for every route
-- **Deep Linking** -- Shareable URLs for projects and features
-- **Progress Tracking** -- Visual metrics for tasks, checklists, and user stories
-- **Accessible** -- WCAG 2.2 AA compliant with full keyboard navigation
-
-### Cloud Sync & Collaboration
-- **Supabase PostgreSQL** -- Cloud database with Prisma ORM and connection pooling
-- **OAuth Authentication** -- Login with Google or GitHub
-- **Team Collaboration** -- Role-based access control (VIEW, EDIT, ADMIN)
-- **Conflict Resolution** -- 3-way merge with visual diff viewer
-- **Version History** -- Last 30 versions retained per spec file
-
-### Developer Experience
-- **Mono Design System** -- Minimal monochromatic UI with semantic design tokens
-- **Theme Dropdown** -- Light, Dark, System modes with animated dropdown selector
-- **Split-View Modal** -- Resizable panes for viewing multiple sections simultaneously
-- **Keyboard Shortcuts** -- Navigate features and sections with number keys
-- **React Compiler** -- Automatic memoization for optimal re-rendering
-
-## How It Works
-
-```
-┌──────────────┐      ┌──────────────┐      ┌──────────────────┐
-│              │      │              │      │                  │
-│  spec-kit    │ ---> │  SpecBoard   │ ---> │   Kanban Board   │
-│  project     │      │  parses      │      │                  │
-│              │      │              │      │  ┌──┐┌──┐┌──┐┌──┐│
-│  specs/      │      │  spec.md     │      │  │B ││S ││P ││T ││
-│  ├─ feature/ │      │  plan.md     │      │  └──┘└──┘└──┘└──┘│
-│  │  ├─ spec  │      │  tasks.md    │      │                  │
-│  │  ├─ plan  │      │              │      │                  │
-│  │  ├─ tasks │      │              │      │                  │
-│  │  └─ ...   │      │              │      │                  │
-└──────────────┘      └──────────────┘      └──────────────────┘
-
-B = Backlog | S = Specs | P = Plan | T = Tasks
-```
+- **4-Stage AI Pipeline** — Backlog → Specs → Plan → Tasks with automatic generation
+- **Mind Map Canvas** — Freeform brainstorming with React Flow. Create nodes, connect ideas, convert to features
+- **CodeMirror Editor** — Inline markdown editing with syntax highlighting and auto-save
+- **Impact Analysis** — Visual dependency graph showing pipeline completeness and constitution drift
+- **MCP Server** — Expose specs to AI coding agents via Model Context Protocol
+- **CLI** — Manage specs from the terminal (`specboard list`, `specboard context`)
+- **Constitution System** — Project-level principles with version history
+- **Database-First** — All content stored in PostgreSQL, not scattered markdown files
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js 18+
-- pnpm
-- A Supabase project (or any PostgreSQL database)
-
-### Setup
-
 ```bash
+# Install
 pnpm install
+
+# Configure
 cp .env.example .env
-```
+# Set DATABASE_URL and POSTGRES_URL_NON_POOLING
 
-Add your database connection string to `.env`:
+# Database
+pnpm db:push
 
-```env
-POSTGRES_PRISMA_URL="postgresql://..."
-```
-
-Run the database migration and start the dev server:
-
-```bash
-pnpm prisma db push
+# Run
 pnpm dev
 ```
 
-### Commands
+## CLI & MCP
 
 ```bash
-pnpm dev              # Start dev server
-pnpm build            # Production build
-pnpm start            # Start production server
-pnpm test             # Run tests (watch mode)
-pnpm test:run         # Run tests once
-pnpm test:coverage    # Run tests with coverage
+# CLI
+pnpm cli list                              # List projects
+pnpm cli get <project> <feature> spec      # Get spec content
+pnpm cli context <project> <feature>       # Structured context for AI agents
+pnpm cli create <project> <name> <desc>    # Create feature
+
+# MCP Server (for AI coding agents)
+pnpm mcp
 ```
 
-## URL Structure
+### MCP Tools
 
-```
-/                                          Home (recent projects)
-/projects/{slug}                           Project board
-/projects/{slug}/features/{id}             Feature detail
-/settings                                  AI provider & app settings
-```
+| Tool | Description |
+|------|-------------|
+| `list_projects` | List all projects |
+| `get_project` | Get project with features |
+| `get_feature` | Get feature with all content |
+| `get_spec` / `get_plan` / `get_tasks` | Get specific content |
+| `get_context` | Structured context for AI consumption |
+| `create_feature` | Create feature in backlog |
+| `update_feature_content` | Update spec/plan/tasks |
+| `update_task_status` | Mark task complete |
 
 ## Tech Stack
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  FRONTEND                                               │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │
-│  │ Next.js │  │Tailwind │  │ Zustand │  │ Sonner  │   │
-│  │   16    │  │  CSS v4 │  │  State  │  │ Toasts  │   │
-│  └─────────┘  └─────────┘  └─────────┘  └─────────┘   │
-├─────────────────────────────────────────────────────────┤
-│  BACKEND                                                │
-│  ┌─────────┐  ┌─────────┐  ┌──────────┐  ┌─────────┐  │
-│  │ Next.js │  │ Prisma  │  │ Supabase │  │ BullMQ  │  │
-│  │   API   │  │   ORM   │  │ Postgres │  │  Queue  │  │
-│  └─────────┘  └─────────┘  └──────────┘  └─────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
+- **Framework**: Next.js 16 (App Router)
+- **Database**: PostgreSQL + Prisma ORM
+- **State**: Zustand
+- **UI**: Tailwind CSS v4, shadcn/ui, Lucide icons
+- **Mind Map**: React Flow (@xyflow/react)
+- **Editor**: CodeMirror
+- **AI**: Configurable — OpenAI, Anthropic, or any OpenAI-compatible API
+- **MCP**: @modelcontextprotocol/sdk
+- **CLI**: Commander
 
-## Documentation
+## Development
 
-| Document | Description |
-|----------|-------------|
-| [CLAUDE.md](CLAUDE.md) | Development guide for Claude Code |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Development guide, API reference |
-| [CHANGELOG.md](CHANGELOG.md) | Version history |
-| [PROJECT_INDEX.md](PROJECT_INDEX.md) | Codebase structure |
-| [docs/API.md](docs/API.md) | Complete API documentation |
-| [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) | Developer guide with examples |
+```bash
+pnpm dev              # Dev server (port 3000)
+pnpm build            # Production build
+pnpm lint             # Linter
+pnpm tsc --noEmit     # Type check
+pnpm test:run         # Tests
+pnpm db:studio        # Prisma Studio
+pnpm db:migrate       # Create migration
+```
 
 ## License
 
-Available under the [MIT License](LICENSE).
-
-### Contributing
-
-Contributions welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
+MIT
