@@ -7,6 +7,9 @@ vi.mock('./settings', () => ({
     apiKey: 'test-api-key',
     baseUrl: 'https://api.openai.com/v1',
     model: 'gpt-4o'
+  }),
+  getAppSettings: vi.fn().mockResolvedValue({
+    language: 'en'
   })
 }));
 
