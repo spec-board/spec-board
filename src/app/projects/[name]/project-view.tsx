@@ -8,7 +8,7 @@ import type { Project, Feature } from '@/types';
 import { useProjectStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { ProjectInfoBubble } from '@/components/project-info-panel';
-import { KanbanBoard } from '@/components/kanban-board';
+import { FeatureList } from '@/components/feature-list';
 
 export default function ProjectView() {
   const params = useParams();
@@ -224,10 +224,9 @@ export default function ProjectView() {
           </div>
 
           <div>
-            <KanbanBoard
+            <FeatureList
               features={project.features}
               onFeatureClick={handleFeatureClick}
-              projectPath={project.path}
               projectId={projectId || undefined}
               onRefresh={loadProject}
             />
