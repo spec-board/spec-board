@@ -164,6 +164,8 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
   }, [screenToFlowPosition, addNewNode]);
 
   const handlePaneDoubleClick = useCallback((event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('.react-flow__node')) return;
     const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
     addNewNode(position);
   }, [screenToFlowPosition, addNewNode]);
@@ -187,6 +189,7 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
         edgeTypes={edgeTypes}
         nodeOrigin={nodeOrigin}
         selectionMode={SelectionMode.Partial}
+        zoomOnDoubleClick={false}
         fitView
         deleteKeyCode="Delete"
         className="bg-[var(--background)]"
