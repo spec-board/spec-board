@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.31] - 2026-04-30
+## [0.0.310] - 2026-04-30
 
 ### Changed
 - **Performance: Parallel DB queries** — Project data route now runs project query and feature count in parallel via `Promise.all`
