@@ -1,10 +1,10 @@
 # Lib Directory
 
 ## Purpose
-Utilities, parsers, state management, AI client, auth, and business logic.
+Utilities, parsers, state management, AI client, and business logic.
 
 ## Overview
-This directory contains all non-component TypeScript code including markdown parsers, path utilities, Zustand stores, AI client, authentication, cloud sync services, and code execution drivers. Most code is server-only (uses Node.js fs), while stores work on client.
+This directory contains all non-component TypeScript code including markdown parsers, path utilities, Zustand stores, AI client, cloud sync services, and code execution drivers. Most code is server-only (uses Node.js fs), while stores work on client.
 
 ## Architecture
 
@@ -24,7 +24,6 @@ This directory contains all non-component TypeScript code including markdown par
 | `logger.ts` | Logging utilities | Both |
 | `rate-limit.ts` | Rate limiting middleware | Server only |
 | `ai/` | AI client (Anthropic Claude) | Server only |
-| `auth/` | Better Auth configuration | Server only |
 | `services/` | Cloud sync services | Server only |
 | `sync/` | Sync utilities | Server only |
 | `drivers/` | E2B code execution | Server only |
@@ -106,13 +105,6 @@ AI client using Anthropic Claude API:
 - `client.ts` - AIService class with real AI implementations
 - `types.ts` - AI request/response types
 
-### auth/ (Server Only)
-Better Auth configuration:
-- `config.ts` - Auth configuration
-- `client.ts` - Client-side auth helpers
-- `session.ts` - Session management
-- `api-token.ts` - API token management
-
 ### drivers/ (Server Only)
 E2B code execution:
 - `manager.ts` - Driver manager
@@ -165,7 +157,7 @@ Accessibility utilities:
 ## Dependencies
 
 - **Internal**: `@/types`
-- **External**: fs, path, zustand, prisma, gray-matter, clsx, tailwind-merge, better-auth, @e2b/code-interpreter
+- **External**: fs, path, zustand, prisma, gray-matter, clsx, tailwind-merge, @e2b/code-interpreter
 
 ## Common Tasks
 
