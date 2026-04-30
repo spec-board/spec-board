@@ -19,6 +19,8 @@ import type {
   GeneratedChecklist,
   AnalysisResult,
   GeneratedConstitution,
+  ViolationDetectionOptions,
+  ViolationReport,
   // Phase 1 artifacts
   GenerateResearchOptions,
   GenerateDataModelOptions,
@@ -526,6 +528,19 @@ Generate 5-7 core principles and 2-3 suggested sections.`;
   // Prompt builders
   // ========================================================================
 
+  async detectViolations(options: ViolationDetectionOptions): Promise<ViolationReport> {
+    const codeContext = options.codeFiles
+      .map(f => `### ${f.path}\n\`\`\`\n${f.content.substring(0, 5000)}\n\`\`\``)
+      .join('\n\n');
+
+    const content = await this.callAPI(
+      this.buildViolationPrompt(options.specContent, codeContext, options.planContent, options.tasksContent, options.constitution),
+      'You are a QA analyst that compares specifications against actual code implementations to detect violations and divergences.',
+      8192
+    );
+    return this.parseViolationResponse(content);
+  }
+
   private buildUserStoriesPrompt(prdContent: string, projectContext?: string): string {
     return `You are a product analyst. Generate user stories from the following PRD.
 
@@ -798,9 +813,82 @@ Generate analysis in JSON format:
 Return ONLY valid JSON, no other text.`;
   }
 
+  private buildViolationPrompt(
+    specContent: string,
+    codeContext: string,
+    planContent?: string,
+    tasksContent?: string,
+    constitution?: string
+  ): string {
+    return `You are a QA analyst. Compare the specification against the actual code implementation and identify violations where code diverges from spec.
+
+Spec Content:
+${specContent}
+${planContent ? `\nPlan Content:\n${planContent}` : ''}
+${tasksContent ? `\nTasks Content:\n${tasksContent}` : ''}
+${constitution ? `\nConstitution:\n${constitution}` : ''}
+
+Code Files:
+${codeContext}
+
+Analyze the code against the spec and generate a violation report in JSON format:
+{
+  "specConformance": {
+    "score": 85,
+    "status": "conformant|minor_violations|major_violations"
+  },
+  "violations": [
+    {
+      "severity": "error|warning|info",
+      "specSection": "Section of spec that is violated",
+      "codeFile": "path/to/file.ts",
+      "description": "What is wrong",
+      "expected": "What the spec says should happen",
+      "actual": "What the code actually does"
+    }
+  ],
+  "missingImplementations": ["Spec requirement not found in code"],
+  "extraImplementations": ["Code functionality not covered by spec"],
+  "summary": "Overall assessment"
+}
+
+Rules:
+- score 90-100 = conformant, 70-89 = minor_violations, below 70 = major_violations
+- Only report real violations, not style differences
+- "expected" should quote or reference the spec
+- "actual" should reference the code file and behavior
+
+Return ONLY valid JSON, no other text.`;
+  }
+
   // ========================================================================
   // Response parsers
   // ========================================================================
+
+  private parseViolationResponse(content: string): ViolationReport {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          specConformance: parsed.specConformance || { score: 0, status: 'major_violations' },
+          violations: parsed.violations || [],
+          missingImplementations: parsed.missingImplementations || [],
+          extraImplementations: parsed.extraImplementations || [],
+          summary: parsed.summary || 'Analysis complete',
+        };
+      }
+    } catch {
+      console.error('Failed to parse violation response');
+    }
+    return {
+      specConformance: { score: 0, status: 'major_violations' },
+      violations: [],
+      missingImplementations: [],
+      extraImplementations: [],
+      summary: 'Failed to parse violation analysis',
+    };
+  }
 
   private parseUserStoriesResponse(content: string): GeneratedUserStory[] {
     try {
