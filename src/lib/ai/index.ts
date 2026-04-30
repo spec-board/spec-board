@@ -2,6 +2,9 @@
 export * from './types';
 export * from './settings';
 export { AIService, aiService } from './client';
+export { validateSpecCompleteness, SPEC_TEMPLATE_SECTIONS } from './spec-template';
+export { orchestratePipeline } from './orchestrator';
+export { readCode, readLocalCode, readGitHubCode } from './violation-detector';
 
 import { aiService } from './client';
 import { getAISettings } from './settings';
@@ -14,6 +17,7 @@ import type {
   GenerateTasksOptions,
   GenerateChecklistOptions,
   AnalyzeOptions,
+  ViolationDetectionOptions,
   GeneratedUserStory,
   GeneratedSpecKit,
   GeneratedSpec,
@@ -22,6 +26,7 @@ import type {
   GeneratedTasks,
   GeneratedChecklist,
   AnalysisResult,
+  ViolationReport,
   AIProvider,
   // Phase 1 artifacts
   GenerateResearchOptions,
@@ -205,4 +210,11 @@ export async function generateContracts(options: GenerateContractsOptions): Prom
   console.log(`[AI] Generating contracts with ${provider}`);
 
   return aiService.generateContracts(options);
+}
+
+export async function detectViolations(options: ViolationDetectionOptions): Promise<ViolationReport> {
+  const provider = await getProvider();
+  console.log(`[AI] Detecting spec violations with ${provider}`);
+
+  return aiService.detectViolations(options);
 }
