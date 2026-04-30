@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.31] - 2026-04-30
+
+### Changed
+- **Performance: Parallel DB queries** — Project data route now runs project query and feature count in parallel via `Promise.all`
+- **Performance: Zustand selectors** — Shortcuts provider uses individual selectors to avoid unnecessary re-renders
+- **Performance: Mind map save optimization** — Only saves to server on meaningful changes (add/remove/drag-end), not on every node move
+- **Performance: Feature detail queries** — `getProject` drops unused select fields; `getFeatureDetail` parallelizes feature + constitution queries
+
+### Removed
+- **Better Auth** — Removed `better-auth` dependency, session cookie check in proxy handler, and all auth/OAuth references from docs
+- **Cloud sync route** — Removed `/cloud` route reference from docs (code was already removed in v3.0.0)
+
 ## [3.0.0] - 2026-04-29
 
 ### Added
