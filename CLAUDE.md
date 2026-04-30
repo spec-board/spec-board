@@ -12,7 +12,6 @@ SpecBoard is a visual dashboard for spec-kit projects with a Kanban board interf
 
 - **Framework**: Next.js 16 (App Router)
 - **Database**: PostgreSQL with Prisma ORM (Supabase for cloud deployments)
-- **Auth**: Better Auth with OAuth (Google, GitHub)
 - **State**: Zustand
 - **UI**: Tailwind CSS v4, shadcn/ui, Lucide icons
 - **AI**: Configurable via `AIService` — supports OpenAI, Anthropic, or any OpenAI-compatible API
@@ -81,8 +80,6 @@ The Feature model stores all content as text fields: `specContent`, `planContent
 | `/projects/:name/features/:featureId` | Feature detail |
 | `/projects/:name/features/:featureId/spec` | Spec view |
 | `/projects/:name/features/:featureId/plan` | Plan view |
-| `/auth/login` | OAuth login |
-| `/cloud` | Cloud sync dashboard |
 | `/shortcuts` | Keyboard shortcuts reference |
 
 URLs use database slugs (Project `name` field), not filesystem paths.
@@ -100,7 +97,6 @@ URLs use database slugs (Project `name` field), not filesystem paths.
 - `/api/spec-workflow/analyze` — Analyze consistency
 - `/api/checklist` — Toggle checklist items
 - `/api/sync/*` — Cloud sync operations
-- `/api/auth/*` — Better Auth OAuth
 
 ### State Management
 
@@ -156,5 +152,4 @@ When workflow stages change, run: `pnpm tsx scripts/migrate-stages.ts`
 Copy `.env.example` to `.env` and configure:
 - `DATABASE_URL` — PostgreSQL connection string
 - `POSTGRES_URL_NON_POOLING` — Direct connection (non-pooled, for migrations)
-- `BETTER_AUTH_SECRET` — Auth secret key
 - AI provider API keys (OpenAI, Anthropic, etc.)
