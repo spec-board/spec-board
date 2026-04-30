@@ -38,7 +38,7 @@ const program = new Command();
 program
   .name('specboard')
   .description('SpecBoard CLI — manage specs from the terminal')
-  .version('3.1.0');
+  .version('0.0.310');
 
 program
   .command('list')
