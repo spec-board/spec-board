@@ -29,7 +29,7 @@ const STAGES = [...STAGE_PIPELINE] as [FeatureStage, ...FeatureStage[]];
 
 const server = new McpServer({
   name: 'specboard',
-  version: '3.1.0',
+  version: '0.0.310',
 });
 
 // ---------------------------------------------------------------------------
