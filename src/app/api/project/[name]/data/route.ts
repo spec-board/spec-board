@@ -43,9 +43,9 @@ export async function GET(
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Max 100
     const skip = (page - 1) * limit;
 
-    // Optimized query based on view type
-    const project = view === 'kanban'
-      ? await prisma.project.findUnique({
+    // Run project query and feature count in parallel
+    const projectQuery = view === 'kanban'
+      ? prisma.project.findUnique({
           where: { name },
           include: {
             features: {
@@ -80,7 +80,7 @@ export async function GET(
             },
           },
         })
-      : await prisma.project.findUnique({
+      : prisma.project.findUnique({
           where: { name },
           include: {
             features: {
@@ -117,10 +117,10 @@ export async function GET(
           },
         });
 
-    // Get total feature count for pagination
-    const totalFeatures = await prisma.feature.count({
-      where: { project: { name } },
-    });
+    const [project, totalFeatures] = await Promise.all([
+      projectQuery,
+      prisma.feature.count({ where: { project: { name } } }),
+    ]);
 
     if (!project) {
       return NextResponse.json(
