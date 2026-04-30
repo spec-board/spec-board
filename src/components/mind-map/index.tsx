@@ -108,16 +108,22 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
   // Wrap change handlers to trigger save
   const handleNodesChange = useCallback((changes: NodeChange<MindMapFlowNode>[]) => {
     onNodesChange(changes);
-    const isDragging = changes.some(c => c.type === 'position' && 'dragging' in c && c.dragging);
-    if (!isDragging) {
-      setNodes(curr => { saveToServer(curr, edgesRef.current); return curr; });
+    const hasMeaningfulChange = changes.some(c =>
+      c.type === 'remove' || c.type === 'add' ||
+      (c.type === 'position' && 'dragging' in c && !c.dragging && c.position)
+    );
+    if (hasMeaningfulChange) {
+      saveToServer(nodesRef.current, edgesRef.current);
     }
-  }, [onNodesChange, saveToServer, setNodes]);
+  }, [onNodesChange, saveToServer]);
 
   const handleEdgesChange = useCallback((changes: EdgeChange<MindMapFlowEdge>[]) => {
     onEdgesChange(changes);
-    setEdges(curr => { saveToServer(nodesRef.current, curr); return curr; });
-  }, [onEdgesChange, saveToServer, setEdges]);
+    const hasMeaningfulChange = changes.some(c => c.type === 'remove' || c.type === 'add');
+    if (hasMeaningfulChange) {
+      saveToServer(nodesRef.current, edgesRef.current);
+    }
+  }, [onEdgesChange, saveToServer]);
 
   const handleConnect: OnConnect = useCallback((connection) => {
     setEdges(eds => {
