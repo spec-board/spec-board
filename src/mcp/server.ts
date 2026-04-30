@@ -19,10 +19,19 @@ import {
   updateFeatureStage,
   proposeSpecChange,
   reportImplementation,
+  resolveFeature,
   STAGE_PIPELINE,
   CONTENT_FIELDS,
   type ContentType,
 } from '../lib/core';
+import { prisma } from '../lib/prisma';
+import { generateSpec, generatePlan, generateTasks, analyzeDocuments } from '../lib/ai';
+import {
+  generateSpecMarkdown,
+  generatePlanMarkdown,
+  generateTasksMarkdown,
+  generateAnalysisMarkdown,
+} from '../lib/formatters';
 
 const CONTENT_TYPES = Object.keys(CONTENT_FIELDS) as [ContentType, ...ContentType[]];
 const STAGES = [...STAGE_PIPELINE] as [FeatureStage, ...FeatureStage[]];
@@ -183,6 +192,257 @@ server.tool('report_implementation', 'Record what was actually built for a featu
 }, async ({ featureId, notes }) => {
   const result = await reportImplementation(featureId, notes);
   return { content: [{ type: 'text', text: `Implementation report saved for "${result.name}"` }] };
+});
+
+// ---------------------------------------------------------------------------
+// Pipeline tools — AI-powered spec generation
+// ---------------------------------------------------------------------------
+
+server.tool('generate_spec', 'Generate a specification from feature description using AI. Advances feature to specs stage.', {
+  project: z.string().describe('Project slug'),
+  feature: z.string().describe('Feature ID or featureId'),
+}, async ({ project, feature: featureIdentifier }) => {
+  const feat = await resolveFeature(project, featureIdentifier);
+  const full = await prisma.feature.findUniqueOrThrow({
+    where: { id: feat.id },
+    select: { id: true, name: true, description: true, projectId: true },
+  });
+
+  const spec = await generateSpec({
+    featureName: full.name,
+    description: full.description || full.name,
+    projectContext: '',
+  });
+
+  const specContent = generateSpecMarkdown(spec, full.name);
+
+  await prisma.feature.update({
+    where: { id: full.id },
+    data: { specContent, stage: 'specs' },
+  });
+
+  if (spec.userStories?.length) {
+    await prisma.userStory.createMany({
+      data: spec.userStories.map((story: any, index: number) => ({
+        featureId: full.id,
+        storyId: story.id || `US${index + 1}`,
+        title: story.title,
+        description: story.description || null,
+        status: 'pending',
+        order: index,
+      })),
+    });
+  }
+
+  return { content: [{ type: 'text' as const, text: `Generated spec for "${full.name}" (stage → specs)\n\n${specContent}` }] };
+});
+
+server.tool('generate_plan', 'Generate an implementation plan from spec using AI. Advances feature to plan stage.', {
+  project: z.string().describe('Project slug'),
+  feature: z.string().describe('Feature ID or featureId'),
+}, async ({ project, feature: featureIdentifier }) => {
+  const feat = await resolveFeature(project, featureIdentifier);
+  const full = await prisma.feature.findUniqueOrThrow({
+    where: { id: feat.id },
+    select: { id: true, name: true, featureId: true, specContent: true, clarificationsContent: true, projectId: true },
+  });
+
+  if (!full.specContent) throw new Error(`Feature "${full.name}" has no spec content. Generate spec first.`);
+
+  const constitution = await prisma.constitution.findUnique({
+    where: { projectId: full.projectId },
+    select: { content: true },
+  });
+
+  const plan = await generatePlan({
+    specContent: full.specContent,
+    clarifications: undefined,
+    constitution: constitution?.content || undefined,
+  });
+
+  const planContent = generatePlanMarkdown(plan, full.name, full.featureId);
+
+  await prisma.feature.update({
+    where: { id: full.id },
+    data: { planContent, stage: 'plan' },
+  });
+
+  return { content: [{ type: 'text' as const, text: `Generated plan for "${full.name}" (stage → plan)\n\n${planContent}` }] };
+});
+
+server.tool('generate_tasks', 'Generate task breakdown from spec and plan using AI. Advances feature to tasks stage.', {
+  project: z.string().describe('Project slug'),
+  feature: z.string().describe('Feature ID or featureId'),
+}, async ({ project, feature: featureIdentifier }) => {
+  const feat = await resolveFeature(project, featureIdentifier);
+  const full = await prisma.feature.findUniqueOrThrow({
+    where: { id: feat.id },
+    select: { id: true, name: true, specContent: true, planContent: true },
+  });
+
+  if (!full.specContent || !full.planContent) {
+    throw new Error(`Feature "${full.name}" needs both spec and plan content. Generate them first.`);
+  }
+
+  const tasks = await generateTasks({
+    specContent: full.specContent,
+    planContent: full.planContent,
+  });
+
+  const tasksContent = generateTasksMarkdown(tasks, full.name);
+
+  await prisma.feature.update({
+    where: { id: full.id },
+    data: { tasksContent, stage: 'tasks' },
+  });
+
+  return { content: [{ type: 'text' as const, text: `Generated ${tasks.phases.reduce((n, p) => n + p.tasks.length, 0)} tasks for "${full.name}" (stage → tasks)\n\n${tasksContent}` }] };
+});
+
+server.tool('analyze', 'Analyze consistency across spec, plan, and tasks using AI.', {
+  project: z.string().describe('Project slug'),
+  feature: z.string().describe('Feature ID or featureId'),
+}, async ({ project, feature: featureIdentifier }) => {
+  const feat = await resolveFeature(project, featureIdentifier);
+  const full = await prisma.feature.findUniqueOrThrow({
+    where: { id: feat.id },
+    select: { id: true, name: true, specContent: true, planContent: true, tasksContent: true, projectId: true },
+  });
+
+  if (!full.specContent || !full.planContent || !full.tasksContent) {
+    throw new Error(`Feature "${full.name}" needs spec, plan, and tasks content for analysis.`);
+  }
+
+  const constitution = await prisma.constitution.findUnique({
+    where: { projectId: full.projectId },
+    select: { content: true },
+  });
+
+  const analysis = await analyzeDocuments({
+    specContent: full.specContent,
+    planContent: full.planContent,
+    tasksContent: full.tasksContent,
+    constitution: constitution?.content || undefined,
+  });
+
+  const analysisContent = generateAnalysisMarkdown(analysis);
+
+  await prisma.feature.update({
+    where: { id: full.id },
+    data: { analysisContent },
+  });
+
+  return { content: [{ type: 'text' as const, text: `Analysis for "${full.name}": ${analysis.isValid ? 'Valid' : 'Issues found'}\n\n${analysisContent}` }] };
+});
+
+server.tool('run_pipeline', 'Run full AI pipeline: generate spec → plan → tasks → analyze. Takes a backlog feature through all stages.', {
+  project: z.string().describe('Project slug'),
+  feature: z.string().describe('Feature ID or featureId'),
+}, async ({ project, feature: featureIdentifier }) => {
+  const feat = await resolveFeature(project, featureIdentifier);
+  const full = await prisma.feature.findUniqueOrThrow({
+    where: { id: feat.id },
+    select: { id: true, name: true, featureId: true, description: true, projectId: true },
+  });
+
+  const results: string[] = [];
+
+  const spec = await generateSpec({
+    featureName: full.name,
+    description: full.description || full.name,
+    projectContext: '',
+  });
+  const specContent = generateSpecMarkdown(spec, full.name);
+  await prisma.feature.update({ where: { id: full.id }, data: { specContent, stage: 'specs' } });
+  results.push(`✅ Spec: ${spec.userStories?.length || 0} user stories, ${spec.edgeCases?.length || 0} edge cases`);
+
+  if (spec.userStories?.length) {
+    await prisma.userStory.createMany({
+      data: spec.userStories.map((story: any, index: number) => ({
+        featureId: full.id,
+        storyId: story.id || `US${index + 1}`,
+        title: story.title,
+        description: story.description || null,
+        status: 'pending',
+        order: index,
+      })),
+    });
+  }
+
+  const constitution = await prisma.constitution.findUnique({
+    where: { projectId: full.projectId },
+    select: { content: true },
+  });
+
+  const plan = await generatePlan({
+    specContent,
+    constitution: constitution?.content || undefined,
+  });
+  const planContent = generatePlanMarkdown(plan, full.name, full.featureId);
+  await prisma.feature.update({ where: { id: full.id }, data: { planContent, stage: 'plan' } });
+  results.push(`✅ Plan: ${plan.summary?.substring(0, 100) || 'generated'}...`);
+
+  const tasks = await generateTasks({ specContent, planContent });
+  const tasksContent = generateTasksMarkdown(tasks, full.name);
+  await prisma.feature.update({ where: { id: full.id }, data: { tasksContent, stage: 'tasks' } });
+  const taskCount = tasks.phases.reduce((n, p) => n + p.tasks.length, 0);
+  results.push(`✅ Tasks: ${taskCount} tasks in ${tasks.phases.length} phases`);
+
+  const analysis = await analyzeDocuments({
+    specContent,
+    planContent,
+    tasksContent,
+    constitution: constitution?.content || undefined,
+  });
+  const analysisContent = generateAnalysisMarkdown(analysis);
+  await prisma.feature.update({ where: { id: full.id }, data: { analysisContent } });
+  results.push(`✅ Analysis: ${analysis.isValid ? 'Valid' : 'Issues found'}`);
+
+  return { content: [{ type: 'text' as const, text: `Pipeline complete for "${full.name}":\n\n${results.join('\n')}` }] };
+});
+
+// ---------------------------------------------------------------------------
+// Context tools
+// ---------------------------------------------------------------------------
+
+server.tool('get_project_context', 'Get complete project context in a single call — project info, constitution, all features with stages and content summaries', {
+  slug: z.string().describe('Project slug'),
+}, async ({ slug }) => {
+  const [project, constitution] = await Promise.all([
+    getProject(slug),
+    getConstitution(slug).catch(() => null),
+  ]);
+
+  const context = {
+    project: {
+      name: project.name,
+      displayName: project.displayName,
+      description: project.description,
+    },
+    constitution: constitution ? {
+      content: constitution.content,
+      version: constitution.version,
+    } : null,
+    features: project.features.map((f: any) => ({
+      id: f.id,
+      featureId: f.featureId,
+      name: f.name,
+      stage: f.stage,
+      hasSpec: !!f.specContent,
+      hasPlan: !!f.planContent,
+      hasTasks: !!f.tasksContent,
+      hasAnalysis: !!f.analysisContent,
+    })),
+    stages: {
+      backlog: project.features.filter((f: any) => f.stage === 'backlog').length,
+      specs: project.features.filter((f: any) => f.stage === 'specs').length,
+      plan: project.features.filter((f: any) => f.stage === 'plan').length,
+      tasks: project.features.filter((f: any) => f.stage === 'tasks').length,
+    },
+    totalFeatures: project.features.length,
+  };
+
+  return { content: [{ type: 'text' as const, text: JSON.stringify(context, null, 2) }] };
 });
 
 // ---------------------------------------------------------------------------
