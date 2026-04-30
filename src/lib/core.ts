@@ -98,8 +98,6 @@ export async function getProject(slug: string) {
         orderBy: { order: 'asc' },
         select: {
           id: true, featureId: true, name: true, description: true, stage: true,
-          specContent: true, planContent: true, tasksContent: true,
-          clarificationsContent: true, analysisContent: true,
           _count: { select: { tasks: true, userStories: true } },
         },
       },
@@ -211,9 +209,14 @@ export async function getFeaturesByStage(projectSlug: string, stage: FeatureStag
 }
 
 export async function getFeatureContext(projectSlug: string, featureIdentifier: string, stageOverride?: FeatureStage) {
+  const projectId = await resolveProjectId(projectSlug);
+
   const [feature, constitution] = await Promise.all([
-    getFeature(projectSlug, featureIdentifier, true),
-    getConstitution(projectSlug).catch(() => null),
+    getFullFeature(projectSlug, featureIdentifier, projectId),
+    prisma.constitution.findUnique({
+      where: { projectId },
+      include: { versions: { orderBy: { createdAt: 'desc' }, take: 5 } },
+    }),
   ]);
 
   const effectiveStage = (stageOverride ?? feature.stage) as FeatureStage;
