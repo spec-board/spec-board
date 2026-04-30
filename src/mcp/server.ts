@@ -25,7 +25,8 @@ import {
   type ContentType,
 } from '../lib/core';
 import { prisma } from '../lib/prisma';
-import { generateSpec, generatePlan, generateTasks, analyzeDocuments } from '../lib/ai';
+import { generateSpec, generatePlan, generateTasks, analyzeDocuments, detectViolations, orchestratePipeline, readCode } from '../lib/ai';
+import type { LocalCodeSource, GitHubCodeSource } from '../lib/ai/types';
 import {
   generateSpecMarkdown,
   generatePlanMarkdown,
@@ -444,6 +445,152 @@ server.tool('get_project_context', 'Get complete project context in a single cal
 
   return { content: [{ type: 'text' as const, text: JSON.stringify(context, null, 2) }] };
 });
+
+// ---------------------------------------------------------------------------
+// Orchestration tools
+// ---------------------------------------------------------------------------
+
+server.tool('orchestrate', 'Run orchestrated pipeline with parallel stages and verification. Phases: (spec+clarify) → plan → (tasks+checklist) → analyze', {
+  project: z.string().describe('Project slug'),
+  feature: z.string().describe('Feature ID or featureId'),
+}, async ({ project, feature: featureIdentifier }) => {
+  const feat = await resolveFeature(project, featureIdentifier);
+  const full = await prisma.feature.findUniqueOrThrow({
+    where: { id: feat.id },
+    select: { id: true, name: true, description: true, projectId: true },
+  });
+
+  const constitution = await prisma.constitution.findUnique({
+    where: { projectId: full.projectId },
+    select: { content: true },
+  });
+
+  const result = await orchestratePipeline({
+    projectId: full.projectId,
+    featureId: full.id,
+    featureName: full.name,
+    description: full.description || full.name,
+    constitution: constitution?.content || undefined,
+  });
+
+  const stagesSummary = result.stages
+    .map(s => `${s.status === 'success' ? '✅' : '❌'} ${s.stage} (${Math.round(s.duration / 1000)}s)${s.issues?.length ? ': ' + s.issues[0] : ''}`)
+    .join('\n');
+
+  return { content: [{ type: 'text' as const, text: `${result.summary}\n\n${stagesSummary}` }] };
+});
+
+// ---------------------------------------------------------------------------
+// Violation detection tools
+// ---------------------------------------------------------------------------
+
+server.tool('detect_violations', 'Compare spec against local code to find violations where implementation diverges from spec', {
+  project: z.string().describe('Project slug'),
+  feature: z.string().describe('Feature ID or featureId'),
+  codePath: z.string().describe('Absolute path to local code folder'),
+  include: z.array(z.string()).optional().describe('File patterns to include (e.g. ["src/", "lib/"])'),
+  exclude: z.array(z.string()).optional().describe('Patterns to exclude (e.g. ["test/", "dist/"])'),
+}, async ({ project, feature: featureIdentifier, codePath, include, exclude }) => {
+  const feat = await resolveFeature(project, featureIdentifier);
+  const full = await prisma.feature.findUniqueOrThrow({
+    where: { id: feat.id },
+    select: { id: true, name: true, specContent: true, planContent: true, tasksContent: true, projectId: true },
+  });
+
+  if (!full.specContent) throw new Error(`Feature "${full.name}" has no spec content.`);
+
+  const source: LocalCodeSource = { type: 'local', path: codePath, include, exclude };
+  const codeFiles = await readCode(source);
+
+  if (codeFiles.length === 0) throw new Error(`No code files found at "${codePath}"`);
+
+  const constitution = await prisma.constitution.findUnique({
+    where: { projectId: full.projectId },
+    select: { content: true },
+  });
+
+  const report = await detectViolations({
+    specContent: full.specContent,
+    planContent: full.planContent || undefined,
+    tasksContent: full.tasksContent || undefined,
+    codeFiles,
+    constitution: constitution?.content || undefined,
+  });
+
+  return { content: [{ type: 'text' as const, text: formatViolationReport(report, codeFiles.length) }] };
+});
+
+server.tool('detect_violations_github', 'Compare spec against GitHub repo code to find violations where implementation diverges from spec', {
+  project: z.string().describe('Project slug'),
+  feature: z.string().describe('Feature ID or featureId'),
+  owner: z.string().describe('GitHub repo owner'),
+  repo: z.string().describe('GitHub repo name'),
+  branch: z.string().optional().describe('Branch (default: main)'),
+  path: z.string().optional().describe('Subfolder in repo (e.g. "src/")'),
+  token: z.string().optional().describe('GitHub token for private repos'),
+}, async ({ project, feature: featureIdentifier, owner, repo, branch, path: subPath, token }) => {
+  const feat = await resolveFeature(project, featureIdentifier);
+  const full = await prisma.feature.findUniqueOrThrow({
+    where: { id: feat.id },
+    select: { id: true, name: true, specContent: true, planContent: true, tasksContent: true, projectId: true },
+  });
+
+  if (!full.specContent) throw new Error(`Feature "${full.name}" has no spec content.`);
+
+  const source: GitHubCodeSource = { type: 'github', owner, repo, branch, path: subPath, token };
+  const codeFiles = await readCode(source);
+
+  if (codeFiles.length === 0) throw new Error(`No code files found in ${owner}/${repo}`);
+
+  const constitution = await prisma.constitution.findUnique({
+    where: { projectId: full.projectId },
+    select: { content: true },
+  });
+
+  const report = await detectViolations({
+    specContent: full.specContent,
+    planContent: full.planContent || undefined,
+    tasksContent: full.tasksContent || undefined,
+    codeFiles,
+    constitution: constitution?.content || undefined,
+  });
+
+  return { content: [{ type: 'text' as const, text: formatViolationReport(report, codeFiles.length) }] };
+});
+
+function formatViolationReport(report: import('../lib/ai/types').ViolationReport, fileCount: number): string {
+  let text = `# Spec Violation Report\n\n`;
+  text += `**Score**: ${report.specConformance.score}/100 (${report.specConformance.status})\n`;
+  text += `**Files analyzed**: ${fileCount}\n`;
+  text += `**Violations**: ${report.violations.length}\n\n`;
+
+  if (report.violations.length > 0) {
+    text += `## Violations\n\n`;
+    for (const v of report.violations) {
+      const icon = v.severity === 'error' ? '🔴' : v.severity === 'warning' ? '🟡' : '🔵';
+      text += `${icon} **${v.severity.toUpperCase()}** in \`${v.codeFile}\`\n`;
+      text += `  Spec section: ${v.specSection}\n`;
+      text += `  Expected: ${v.expected}\n`;
+      text += `  Actual: ${v.actual}\n`;
+      text += `  ${v.description}\n\n`;
+    }
+  }
+
+  if (report.missingImplementations.length > 0) {
+    text += `## Missing Implementations\n\n`;
+    for (const m of report.missingImplementations) text += `- ${m}\n`;
+    text += `\n`;
+  }
+
+  if (report.extraImplementations.length > 0) {
+    text += `## Extra Implementations (not in spec)\n\n`;
+    for (const e of report.extraImplementations) text += `- ${e}\n`;
+    text += `\n`;
+  }
+
+  text += `## Summary\n\n${report.summary}`;
+  return text;
+}
 
 // ---------------------------------------------------------------------------
 // Start server
