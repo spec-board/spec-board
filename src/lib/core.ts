@@ -42,13 +42,13 @@ function getFieldValue(record: Record<string, unknown>, field: string): string |
 // Helpers
 // ---------------------------------------------------------------------------
 
-async function resolveProjectId(slug: string): Promise<string> {
+export async function resolveProjectId(slug: string): Promise<string> {
   const project = await prisma.project.findUnique({ where: { name: slug }, select: { id: true } });
   if (!project) throw new Error(`Project "${slug}" not found`);
   return project.id;
 }
 
-async function resolveFeature(projectSlug: string, featureIdentifier: string) {
+export async function resolveFeature(projectSlug: string, featureIdentifier: string) {
   const projectId = await resolveProjectId(projectSlug);
   const feature = await prisma.feature.findFirst({
     where: { projectId, OR: [{ id: featureIdentifier }, { featureId: featureIdentifier }] },
