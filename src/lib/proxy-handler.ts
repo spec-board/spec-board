@@ -1,7 +1,5 @@
 /**
- * Auth proxy handler for API routes (T021)
- * Protects cloud sync API routes with session validation
- * Includes rate limiting for sync endpoints (T083)
+ * API proxy handler for route protection and rate limiting (T083)
  */
 
 import { NextResponse } from 'next/server';
@@ -21,7 +19,6 @@ const PROTECTED_ROUTES = [
 
 // Routes that are always public (no auth needed)
 const PUBLIC_ROUTES = [
-  '/api/auth',
   '/api/health',
   '/api/project',
   '/api/project-list',
@@ -77,22 +74,6 @@ export function handleRequest(request: NextRequest) {
     // Check for API token (used by MCP server)
     const authHeader = request.headers.get('Authorization');
     if (authHeader?.startsWith('Bearer ')) {
-      const response = NextResponse.next();
-
-      if (isRateLimitedRoute) {
-        const identifier = getRequestIdentifier(request);
-        const headers = getRateLimitHeaders(identifier, pathname);
-        Object.entries(headers).forEach(([key, value]) => {
-          response.headers.set(key, value);
-        });
-      }
-
-      return response;
-    }
-
-    // Check for session cookie (used by web app)
-    const sessionCookie = request.cookies.get('better-auth.session_token');
-    if (sessionCookie) {
       const response = NextResponse.next();
 
       if (isRateLimitedRoute) {
