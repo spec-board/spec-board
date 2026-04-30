@@ -45,7 +45,6 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@xyflow/react": "^12.10.2",
-    "better-auth": "^1.4.10",
     "chokidar": "^5.0.0",
     "clsx": "^2.1.1",
     "commander": "^14.0.3",
