@@ -36,7 +36,9 @@ interface ShortcutsProviderProps {
 export function ShortcutsProvider({ children }: ShortcutsProviderProps) {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
-  const { focusState, setFocusState, clearFocusState } = useProjectStore();
+  const focusState = useProjectStore(s => s.focusState);
+  const setFocusState = useProjectStore(s => s.setFocusState);
+  const clearFocusState = useProjectStore(s => s.clearFocusState);
 
   const openHelp = useCallback(() => setIsHelpOpen(true), []);
   const closeHelp = useCallback(() => setIsHelpOpen(false), []);
