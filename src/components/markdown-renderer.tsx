@@ -29,7 +29,7 @@ export function InlineMarkdown({ content, className, as: Tag = 'span' }: InlineM
   return <Tag className={className}>{elements}</Tag>;
 }
 
-type InlineNode = string | JSX.Element;
+type InlineNode = string | React.ReactElement;
 
 let _inlineKey = 0;
 function nextKey() {

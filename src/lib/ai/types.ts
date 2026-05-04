@@ -364,3 +364,98 @@ export interface ContractError {
   status: number;
   message: string;
 }
+
+// ============================================================================
+// Structured Spec Template
+// ============================================================================
+
+export interface Requirement {
+  id: string;
+  description: string;
+  priority?: 'MUST' | 'SHOULD' | 'MAY';
+}
+
+export interface StructuredSpec {
+  problemStatement: string;
+  userStories: GeneratedUserStory[];
+  functionalRequirements: Requirement[];
+  nonFunctionalRequirements: Requirement[];
+  edgeCases: string[];
+  dataModel: string;
+  apiContracts: string;
+  successCriteria: string[];
+  keyEntities: string[];
+}
+
+// ============================================================================
+// Multi-Agent Orchestration
+// ============================================================================
+
+export interface StageResult {
+  stage: string;
+  status: 'success' | 'failed' | 'skipped';
+  duration: number;
+  content: string;
+  issues?: string[];
+}
+
+export interface OrchestrationResult {
+  stages: StageResult[];
+  summary: string;
+  totalDuration: number;
+}
+
+// ============================================================================
+// Spec Violation Detection
+// ============================================================================
+
+export interface LocalCodeSource {
+  type: 'local';
+  path: string;
+  include?: string[];
+  exclude?: string[];
+}
+
+export interface GitHubCodeSource {
+  type: 'github';
+  owner: string;
+  repo: string;
+  branch?: string;
+  path?: string;
+  token?: string;
+}
+
+export type CodeSource = LocalCodeSource | GitHubCodeSource;
+
+export interface ViolationDetectionOptions {
+  specContent: string;
+  planContent?: string;
+  tasksContent?: string;
+  codeFiles: CodeFile[];
+  constitution?: string;
+}
+
+export interface CodeFile {
+  path: string;
+  content: string;
+}
+
+export interface Violation {
+  severity: 'error' | 'warning' | 'info';
+  specSection: string;
+  codeFile: string;
+  description: string;
+  expected: string;
+  actual: string;
+}
+
+export interface ViolationReport {
+  specConformance: {
+    score: number;
+    status: 'conformant' | 'minor_violations' | 'major_violations';
+  };
+  violations: Violation[];
+  missingImplementations: string[];
+  extraImplementations: string[];
+  summary: string;
+}

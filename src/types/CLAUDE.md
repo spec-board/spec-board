@@ -10,7 +10,8 @@ This directory contains all shared TypeScript interfaces and types used througho
 
 | File | Purpose |
 |------|---------|
-| `index.ts` | All TypeScript type definitions |
+| `index.ts` | All shared TypeScript type definitions (668 lines) |
+| `drivers.ts` | Remote driver types (E2B, Docker, Daytona) |
 
 ## Type Categories
 
@@ -26,13 +27,14 @@ This directory contains all shared TypeScript interfaces and types used througho
 
 ### Feature Stages
 
+4-stage workflow (type `FeatureStage`):
+
 | Stage | Description |
 |-------|-------------|
 | `backlog` | Feature ideas and descriptions |
-| `specs` | Spec + Clarifications (merged from specify + clarify) |
+| `specs` | Spec + Clarifications (merged from old specify + clarify) |
 | `plan` | Implementation plan with checklist |
-| `tasks` | Task breakdown |
-| `analyze` | Consistency analysis |
+| `tasks` | Task breakdown + Analysis (analysis runs automatically) |
 
 ### Constitution Types
 
@@ -80,8 +82,8 @@ These are stored as string content in the database:
 ## Key Interfaces
 
 ```typescript
-// Feature stages (database-first) - CURRENT 5-stage workflow
-type FeatureStage = 'backlog' | 'specs' | 'plan' | 'tasks' | 'analyze';
+// Feature stages (database-first) - CURRENT 4-stage workflow
+type FeatureStage = 'backlog' | 'specs' | 'plan' | 'tasks';
 
 // Constitution with version tracking
 interface Constitution {

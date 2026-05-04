@@ -26,32 +26,9 @@
 
 ## Authentication
 
-### OAuth Authentication
-
-SpecBoard uses Better Auth for OAuth authentication with Google and GitHub providers.
-
-**Endpoints**: `/api/auth/*` (handled by Better Auth)
-
-**Supported Providers**:
-- Google OAuth 2.0
-- GitHub OAuth
-
-**Authentication Flow**:
-1. User clicks "Sign in with Google/GitHub"
-2. Redirected to OAuth provider
-3. User authorizes application
-4. Redirected back with authorization code
-5. Session created and stored in database
-6. Session cookie set (HTTP-only, secure)
-
-**Session Management**:
-- Sessions expire after 30 days of inactivity
-- Stored in PostgreSQL `sessions` table
-- Validated on each authenticated request
-
 ### API Tokens
 
-For MCP server integration, use API tokens instead of OAuth.
+For MCP server integration, use API tokens.
 
 #### Create API Token
 
@@ -306,7 +283,7 @@ GET /api/features?projectId=proj_123
     "projectId": "proj_123",
     "featureId": "001-user-auth",
     "name": "User Authentication",
-    "description": "Add OAuth login",
+    "description": "Add user dashboard",
     "stage": "backlog",
     "order": 0,
     "userStories": [...],
@@ -325,7 +302,7 @@ Content-Type: application/json
   "projectId": "proj_123",
   "featureId": "001-user-auth",
   "name": "User Authentication",
-  "description": "Add OAuth login",
+  "description": "Add user dashboard",
   "stage": "backlog",
   "order": 0
 }
@@ -338,7 +315,7 @@ Content-Type: application/json
   "projectId": "proj_123",
   "featureId": "001-user-auth",
   "name": "User Authentication",
-  "description": "Add OAuth login",
+  "description": "Add user dashboard",
   "stage": "backlog",
   "order": 0
 }
@@ -856,7 +833,7 @@ Content-Type: application/json
 {
   "projectId": "proj_123",
   "name": "User Authentication",
-  "description": "Add login/logout functionality with OAuth"
+  "description": "Add login/logout functionality"
 }
 ```
 

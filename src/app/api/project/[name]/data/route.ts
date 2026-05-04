@@ -43,9 +43,9 @@ export async function GET(
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Max 100
     const skip = (page - 1) * limit;
 
-    // Optimized query based on view type
-    const project = view === 'kanban'
-      ? await prisma.project.findUnique({
+    // Run project query and feature count in parallel
+    const projectQuery = view === 'kanban'
+      ? prisma.project.findUnique({
           where: { name },
           include: {
             features: {
@@ -80,7 +80,7 @@ export async function GET(
             },
           },
         })
-      : await prisma.project.findUnique({
+      : prisma.project.findUnique({
           where: { name },
           include: {
             features: {
@@ -93,27 +93,34 @@ export async function GET(
                 },
                 tasks: {
                   orderBy: { order: 'asc' },
-                  include: {
-                    userStory: true,
+                  select: {
+                    id: true,
+                    taskId: true,
+                    title: true,
+                    status: true,
+                    userStory: { select: { storyId: true } },
                   },
                 },
-                constitutionVersion: true,
+                constitutionVersion: {
+                  select: { id: true, version: true, content: true, principles: true },
+                },
               },
             },
             constitution: {
               include: {
                 versions: {
                   orderBy: { createdAt: 'desc' },
+                  take: 10,
                 },
               },
             },
           },
         });
 
-    // Get total feature count for pagination
-    const totalFeatures = await prisma.feature.count({
-      where: { project: { name } },
-    });
+    const [project, totalFeatures] = await Promise.all([
+      projectQuery,
+      prisma.feature.count({ where: { project: { name } } }),
+    ]);
 
     if (!project) {
       return NextResponse.json(

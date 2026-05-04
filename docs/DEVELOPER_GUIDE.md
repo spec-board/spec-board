@@ -51,16 +51,6 @@ DATABASE_URL="postgresql://user:password@localhost:5432/specboard"
 
 # Server
 PORT=3000
-
-# OAuth (optional, for cloud sync)
-GOOGLE_CLIENT_ID="your_google_client_id"
-GOOGLE_CLIENT_SECRET="your_google_client_secret"
-GITHUB_CLIENT_ID="your_github_client_id"
-GITHUB_CLIENT_SECRET="your_github_client_secret"
-
-# Better Auth
-BETTER_AUTH_SECRET="your_random_secret_key"
-BETTER_AUTH_URL="http://localhost:3000"
 ```
 
 4. **Start PostgreSQL** (using Docker):
@@ -626,16 +616,6 @@ REDIS_URL="redis://redis:6379"
 # Server
 PORT=3000
 NODE_ENV=production
-
-# OAuth
-GOOGLE_CLIENT_ID="production_client_id"
-GOOGLE_CLIENT_SECRET="production_secret"
-GITHUB_CLIENT_ID="production_client_id"
-GITHUB_CLIENT_SECRET="production_secret"
-
-# Better Auth
-BETTER_AUTH_SECRET="production_random_secret"
-BETTER_AUTH_URL="https://your-domain.com"
 ```
 
 ---
@@ -745,4 +725,3 @@ DEBUG=* pnpm dev
 - [Prisma Documentation](https://www.prisma.io/docs)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [Zustand Documentation](https://github.com/pmndrs/zustand)
-- [Better Auth Documentation](https://www.better-auth.com/docs)

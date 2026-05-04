@@ -3,96 +3,68 @@
 ## Purpose
 Database schema and migrations for PostgreSQL.
 
-## Overview
-This directory contains the Prisma ORM configuration for SpecBoard. Prisma manages the PostgreSQL database schema, migrations, and provides a type-safe client for database operations.
-
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `schema.prisma` | Database schema definition |
-| `migrations/` | Database migration history |
+| `schema.prisma` | Database schema (7 models) |
+| `migrations/` | 12 migration files |
+| `seed.ts` | Database seeding |
 
-## Database Schema
+## Database Models
 
-### Project Model
+```
+Project ──┬── Feature ──┬── UserStory ── Task
+          │             └── Task
+          └── Constitution ── ConstitutionVersion
 
-```prisma
-model Project {
-  id          String   @id @default(uuid())
-  name        String   @unique  // URL slug (e.g., "my-project")
-  displayName String              // Human-readable name
-  filePath    String              // Local filesystem path to spec files
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
+AppSettings (singleton)
 ```
 
-**Fields:**
+### Project
+- `name` (unique) — URL slug for routing
+- `displayName` — human-readable name
+- `isCloud` — cloud sync enabled
+- Relations: has many Features, has one Constitution
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `id` | UUID | Primary key |
-| `name` | String (unique) | URL-safe slug for routing |
-| `displayName` | String | Human-readable project name |
-| `filePath` | String | Filesystem path to spec-kit project |
-| `createdAt` | DateTime | Creation timestamp |
-| `updatedAt` | DateTime | Last update timestamp |
+### Feature
+- `stage` — backlog, specs, plan, tasks
+- Content fields: `specContent`, `planContent`, `tasksContent`, `clarificationsContent`, `researchContent`, `dataModelContent`, `quickstartContent`, `contractsContent` (JSON), `checklistsContent` (JSON), `analysisContent`
+- Job tracking: `jobStatus`, `jobProgress`, `jobMessage`
+- Relations: belongs to Project, has many UserStories + Tasks
 
-## Patterns & Conventions
+### UserStory
+- `storyId` — e.g., "US1"
+- Relations: belongs to Feature, has many Tasks
 
-- **Slug-based routing**: `name` field is used in URLs (`/projects/{name}`)
-- **Filesystem reference**: `filePath` links to actual spec-kit files
-- **Auto-timestamps**: `createdAt` and `updatedAt` managed by Prisma
-- **Snake case mapping**: Database columns use snake_case (`display_name`, `file_path`)
+### Task
+- `taskId` — e.g., "T001"
+- `priority` — P (High), M (Medium), L (Low)
+- Relations: belongs to Feature, optionally belongs to UserStory
 
-## Dependencies
+### Constitution
+- `content` — full markdown
+- `principles` — JSON array of {name, description}
+- Version tracking via `version`, `ratifiedDate`, `lastAmendedDate`
+- Relations: belongs to Project, has many ConstitutionVersions
 
-- **Internal**: Used by `src/lib/prisma.ts` singleton
-- **External**: `@prisma/client`, PostgreSQL
+### AppSettings
+- Singleton for AI configuration (provider, API keys, model settings)
 
-## Common Tasks
+## Conventions
 
-### Run migrations
-```bash
-npx prisma migrate dev
-```
-
-### Generate client
-```bash
-npx prisma generate
-```
-
-### Open Prisma Studio
-```bash
-npx prisma studio
-```
-
-### Reset database
-```bash
-npx prisma migrate reset
-```
-
-### Push schema changes (dev only)
-```bash
-npx prisma db push
-```
+- Snake case mapping: TypeScript `projectId` → DB `project_id`
+- Cascade deletes: Feature → UserStory → Task
+- Composite unique constraints: `[projectId, featureId]`, `[featureId, storyId]`, `[featureId, taskId]`
 
 ## Environment Variables
 
 | Variable | Purpose |
 |----------|---------|
-| `DATABASE_URL` | PostgreSQL connection string |
+| `DATABASE_URL` | PostgreSQL connection string (pooled) |
+| `POSTGRES_URL_NON_POOLING` | Direct connection (for migrations) |
 
-**Example:**
-```
-DATABASE_URL="postgresql://user:password@localhost:5432/specboard?schema=public"
-```
+## Dependencies
 
-## Important Notes
-
-- Prisma client is instantiated as singleton in `src/lib/prisma.ts`
-- Schema changes require migration (`prisma migrate dev`)
-- The `name` field must be URL-safe (lowercase, hyphens only)
-- `filePath` stores absolute filesystem paths
-- Database stores project metadata only; spec content is read from filesystem
+- **Internal**: Used by `src/lib/prisma.ts` singleton
+- **External**: `@prisma/client`, `prisma` (dev), PostgreSQL

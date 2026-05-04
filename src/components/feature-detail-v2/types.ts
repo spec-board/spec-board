@@ -1,7 +1,7 @@
 import type { Feature, Task, UserStory, TaskGroup } from '@/types';
 
 // Document types available in the dropdown
-export type DocumentType = 'spec' | 'plan' | 'clarifications' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist' | 'analysis';
+export type DocumentType = 'spec' | 'plan' | 'clarifications' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist' | 'analysis' | 'impact';
 
 export interface DocumentOption {
   type: DocumentType;
@@ -51,11 +51,13 @@ export interface TaskRowProps {
 // Props for DocumentPanel
 export interface DocumentPanelProps {
   feature: Feature;
+  featureId: string;
   selectedDocument: DocumentType;
   onDocumentChange: (doc: DocumentType) => void;
   highlightTaskId: string | null;
   contentRef: React.RefObject<HTMLDivElement | null>;
   onEditClarifications?: () => void;
+  onContentSaved?: () => void;
 }
 
 // Props for DocumentSelector
@@ -128,6 +130,12 @@ export function getDocumentOptions(feature: Feature): DocumentOption[] {
       label: 'Analysis',
       available: !!feature.analysisContent,
       content: feature.analysisContent,
+    },
+    {
+      type: 'impact',
+      label: 'Impact',
+      available: true,
+      content: null,
     },
   ];
 

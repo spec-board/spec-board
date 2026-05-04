@@ -33,6 +33,8 @@ model Project {
   // Relations
   features       Feature[]
   constitution   Constitution?
+  mindMapNodes   MindMapNode[]
+  mindMapEdges   MindMapEdge[]
 
   @@map("projects")
 }
@@ -87,6 +89,7 @@ model Feature {
   tasks       Task[]
 
   @@unique([projectId, featureId])
+  @@index([projectId, order])
   @@map("features")
 }
 
@@ -109,6 +112,7 @@ model UserStory {
   tasks       Task[]
 
   @@unique([featureId, storyId])
+  @@index([featureId, order])
   @@map("user_stories")
 }
 
@@ -133,6 +137,7 @@ model Task {
   userStory   UserStory? @relation(fields: [userStoryId], references: [id], onDelete: SetNull)
 
   @@unique([featureId, taskId])
+  @@index([featureId, order])
   @@map("tasks")
 }
 
@@ -189,251 +194,48 @@ model ConstitutionVersion {
 }
 
 // ============================================
-// Cloud Sync Models (011-cloud-spec-sync)
+// Mind Map Models (Brainstorming Tool)
 // ============================================
 
-// User account for cloud authentication
-model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  name          String?
-  passwordHash  String?   @map("password_hash") // null for OAuth-only users
-  avatarUrl     String?   @map("avatar_url")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  apiTokens         ApiToken[]
-  memberships       ProjectMember[]
-  ownedProjects     CloudProject[]  @relation("ProjectOwner")
-  syncEvents        SyncEvent[]
-  sessions          Session[]
-  specVersions      SpecVersion[]
-  resolvedConflicts ConflictRecord[]
-
-  @@map("users")
-}
-
-// OAuth account linking
-model OAuthAccount {
-  id           String   @id @default(uuid())
-  userId       String   @map("user_id")
-  provider     String   // "google", "github"
-  providerAccountId String @map("provider_account_id")
-  accessToken  String?  @map("access_token")
-  refreshToken String?  @map("refresh_token")
-  expiresAt    DateTime? @map("expires_at")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  @@unique([provider, providerAccountId])
-  @@map("oauth_accounts")
-}
-
-// API tokens for MCP authentication
-model ApiToken {
-  id          String    @id @default(uuid())
-  userId      String    @map("user_id")
-  name        String    // User-friendly name (e.g., "Claude Code Token")
-  token       String    @unique // The actual token value
-  expiresAt   DateTime? @map("expires_at")
-  revokedAt   DateTime? @map("revoked_at")
-  lastUsedAt  DateTime? @map("last_used_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-
-  // Relations
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("api_tokens")
-}
-
-// Cloud-hosted project
-model CloudProject {
-  id          String   @id @default(uuid())
-  name        String   // Display name
-  slug        String   @unique // URL-safe identifier
-  description String?
-  ownerId     String   @map("owner_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  owner       User            @relation("ProjectOwner", fields: [ownerId], references: [id])
-  specs       SyncedSpec[]
-  members     ProjectMember[]
-  syncEvents  SyncEvent[]
-  linkCodes   ProjectLinkCode[]
-
-  @@map("cloud_projects")
-}
-
-// Spec file stored in cloud
-model SyncedSpec {
-  id              String   @id @default(uuid())
-  cloudProjectId  String   @map("cloud_project_id")
-  featureId       String   @map("feature_id")  // e.g., "001-user-auth"
-  featureName     String?  @map("feature_name") // Human-readable name
-  fileType        String   @map("file_type")   // "spec", "plan", "tasks"
-  content         String   // Markdown content
-  version         Int      @default(1)
-  lastModifiedBy  String?  @map("last_modified_by")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  cloudProject    CloudProject     @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
-  versions        SpecVersion[]
-  conflicts       ConflictRecord[]
-
-  @@unique([cloudProjectId, featureId, fileType])
-  @@map("synced_specs")
-}
-
-// Project membership with roles
-model ProjectMember {
-  id              String   @id @default(uuid())
-  cloudProjectId  String   @map("cloud_project_id")
-  userId          String   @map("user_id")
-  role            String   @default("EDIT") // "VIEW", "EDIT", "ADMIN"
-  joinedAt        DateTime @default(now()) @map("joined_at")
-  lastSyncAt      DateTime? @map("last_sync_at")
-
-  // Relations
-  cloudProject    CloudProject @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([cloudProjectId, userId])
-  @@map("project_members")
-}
-
-// Sync event audit log
-model SyncEvent {
-  id               String   @id @default(uuid())
-  cloudProjectId   String   @map("cloud_project_id")
-  userId           String   @map("user_id")
-  eventType        String   @map("event_type") // "PUSH", "PULL", "CONFLICT"
-  featuresAffected String[] @map("features_affected")
-  createdAt        DateTime @default(now()) @map("created_at")
-
-  // Relations
-  cloudProject     CloudProject @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
-  user             User         @relation(fields: [userId], references: [id])
-
-  @@map("sync_events")
-}
-
-// Project link codes for connecting local projects
-model ProjectLinkCode {
-  id              String   @id @default(uuid())
-  cloudProjectId  String   @map("cloud_project_id")
-  code            String   @unique // 6-character code
-  expiresAt       DateTime @map("expires_at")
-  usedAt          DateTime? @map("used_at")
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  // Relations
-  cloudProject    CloudProject @relation(fields: [cloudProjectId], references: [id], onDelete: Cascade)
-
-  @@map("project_link_codes")
-}
-
-// Session for Better Auth (T007)
-model Session {
+model MindMapNode {
   id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  token     String   @unique
-  expiresAt DateTime @map("expires_at")
-  ipAddress String?  @map("ip_address")
-  userAgent String?  @map("user_agent")
+  projectId String   @map("project_id")
+  label     String   @default("New Idea")
+  color     String   @default("#f6ad55")
+  positionX Float    @default(0) @map("position_x")
+  positionY Float    @default(0) @map("position_y")
+  parentId  String?  @map("parent_id")
+  type      String   @default("default")
+  metadata  Json?
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  // Relations
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent      MindMapNode?  @relation("NodeHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    MindMapNode[] @relation("NodeHierarchy")
+  sourceEdges MindMapEdge[] @relation("SourceEdges")
+  targetEdges MindMapEdge[] @relation("TargetEdges")
 
-  @@map("sessions")
+  @@map("mind_map_nodes")
 }
 
-// Spec version history for conflict resolution (T013)
-model SpecVersion {
-  id          String   @id @default(uuid())
-  specId      String   @map("spec_id")
-  version     Int
-  content     String
-  checksum    String   // SHA-256 hash of content
-  modifiedBy  String   @map("modified_by")
-  createdAt   DateTime @default(now()) @map("created_at")
+model MindMapEdge {
+  id       String  @id @default(uuid())
+  projectId String @map("project_id")
+  sourceId String  @map("source_id")
+  targetId String  @map("target_id")
+  label    String?
+  type     String  @default("default")
 
-  // Relations
-  spec        SyncedSpec @relation(fields: [specId], references: [id], onDelete: Cascade)
-  modifier    User       @relation(fields: [modifiedBy], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
 
-  @@unique([specId, version])
-  @@map("spec_versions")
-}
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  source  MindMapNode @relation("SourceEdges", fields: [sourceId], references: [id], onDelete: Cascade)
+  target  MindMapNode @relation("TargetEdges", fields: [targetId], references: [id], onDelete: Cascade)
 
-// Conflict record for sync conflicts (T014)
-model ConflictRecord {
-  id            String   @id @default(uuid())
-  specId        String   @map("spec_id")
-  localContent  String   @map("local_content")
-  localChecksum String   @map("local_checksum")
-  cloudContent  String   @map("cloud_content")
-  cloudChecksum String   @map("cloud_checksum")
-  status        String   @default("PENDING") // PENDING, RESOLVED_LOCAL, RESOLVED_CLOUD, RESOLVED_MERGED
-  resolvedBy    String?  @map("resolved_by")
-  resolvedAt    DateTime? @map("resolved_at")
-  createdAt     DateTime @default(now()) @map("created_at")
-
-  // Relations
-  spec          SyncedSpec @relation(fields: [specId], references: [id], onDelete: Cascade)
-  resolver      User?      @relation(fields: [resolvedBy], references: [id])
-  
-  @@map("conflict_records")
-}
-
-// Remote driver configuration (Feature 010)
-model DriverConfig {
-  id          String   @id @default(uuid())
-  name        String   // Profile name (e.g., "E2B Production")
-  driverType  String   @map("driver_type") // 'e2b' | 'docker' | 'daytona'
-  settings    Json     // Driver-specific settings (JSON)
-  isDefault   Boolean  @default(false) @map("is_default")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  sessions    RemoteSession[]
-
-  @@map("driver_configs")
-}
-
-// Remote execution session
-model RemoteSession {
-  id           String   @id @default(uuid())
-  configId     String   @map("config_id")
-  status       String   // 'connecting' | 'active' | 'disconnected' | 'error'
-  startedAt    DateTime @default(now()) @map("started_at")
-  lastActivity DateTime @updatedAt @map("last_activity")
-  metadata     Json?    // Session-specific data (JSON)
-
-  config       DriverConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
-  syncManifests SyncManifest[]
-
-  @@map("remote_sessions")
-}
-
-// File synchronization manifest
-model SyncManifest {
-  id          String   @id @default(uuid())
-  sessionId   String   @map("session_id")
-  localPath   String   @map("local_path")
-  remotePath  String   @map("remote_path")
-  checksum    String
-  syncedAt    DateTime @default(now()) @map("synced_at")
-  direction   String   // 'upload' | 'download'
-
-  session     RemoteSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  @@map("sync_manifests")
+  @@unique([sourceId, targetId])
+  @@map("mind_map_edges")
 }
 
 // ============================================
@@ -469,10 +271,7 @@ model AIProviderConfig {
   label       String   // Display name
   baseUrl     String   // API base URL
   model       String   // Model name
-  apiKey      String?  // API key (for API key auth)
-  oauthToken  String?  // OAuth access token
-  oauthRefresh String? // OAuth refresh token
-  oauthExpiresAt DateTime? // OAuth token expiry
+  apiKey      String?  // API key
   enabled     Boolean  @default(true)
   priority    Int      @default(0) // Lower = higher priority (tried first)
   createdAt   DateTime @default(now()) @map("created_at")

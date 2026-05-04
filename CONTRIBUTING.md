@@ -23,7 +23,6 @@ Thank you for your interest in contributing to SpecBoard! This project is licens
 ```bash
 # .env
 POSTGRES_PRISMA_URL="postgresql://user:password@localhost:5432/specboard"
-BETTER_AUTH_SECRET="your-secret-key"
 ```
 
 ### Commands
@@ -90,7 +89,6 @@ spec-board/
 | Language | TypeScript (strict mode) |
 | UI | React 19, Tailwind CSS v4, shadcn/ui, Lucide Icons |
 | Database | PostgreSQL via Prisma ORM (Supabase) |
-| Auth | Better Auth with OAuth |
 | State | Zustand (client) |
 | AI | Configurable (OpenAI, Anthropic, or any OpenAI-compatible API) |
 
